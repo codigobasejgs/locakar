@@ -3,10 +3,12 @@
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
+import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { Logo } from "@/components/ui/logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { WHATSAPP_MESSAGES } from "@/lib/company";
+import { COMPANY, WHATSAPP_MESSAGES } from "@/lib/company";
 import { LANDING_NAV } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { getWhatsAppUrl } from "@/lib/whatsapp";
@@ -38,7 +40,7 @@ export function Header() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-40 border-b transition-[background-color,border-color,backdrop-filter] duration-500",
+        "fixed inset-x-0 top-0 z-40 border-b pt-[env(safe-area-inset-top)] transition-[background-color,border-color,backdrop-filter] duration-500",
         solid ? "border-white/8 bg-[rgb(5_5_5/0.82)] backdrop-blur-[20px]" : "border-transparent bg-transparent",
       )}
     >
@@ -60,6 +62,11 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="icon" className="hidden text-zinc-300 hover:text-white md:inline-flex">
+            <a href={COMPANY.instagram.url} target="_blank" rel="noopener noreferrer" aria-label={`Instagram da LOCAKAR (${COMPANY.instagram.handle})`}>
+              <InstagramIcon className="!size-5" />
+            </a>
+          </Button>
           <Button asChild variant="whatsapp" size="md" className="hidden md:inline-flex">
             <a href={getWhatsAppUrl(WHATSAPP_MESSAGES.availability)} target="_blank" rel="noopener noreferrer">
               <WhatsAppIcon className="size-4" />
@@ -86,7 +93,7 @@ export function Header() {
             id="mobile-menu"
             aria-label="Menu móvel"
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "calc(100dvh - 4rem)" }}
+            animate={{ opacity: 1, height: "calc(100dvh - 4rem - env(safe-area-inset-top))" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden border-t border-white/8 md:hidden"
@@ -110,13 +117,20 @@ export function Header() {
                 </motion.li>
               ))}
             </ul>
-            <div className="px-4">
+            <div className="flex flex-col gap-3 px-4">
               <Button asChild variant="whatsapp" size="lg" className="w-full">
                 <a href={getWhatsAppUrl(WHATSAPP_MESSAGES.availability)} target="_blank" rel="noopener noreferrer">
                   <WhatsAppIcon className="size-5" />
                   Falar no WhatsApp
                 </a>
               </Button>
+              <Button asChild variant="outline" size="lg" className="w-full">
+                <a href={COMPANY.instagram.url} target="_blank" rel="noopener noreferrer">
+                  <InstagramIcon className="size-5" />
+                  Siga {COMPANY.instagram.handle}
+                </a>
+              </Button>
+              <InstallButton appName={COMPANY.name} size="lg" variant="ghost" className="w-full" label="Instalar o app LOCAKAR" />
             </div>
           </motion.nav>
         )}

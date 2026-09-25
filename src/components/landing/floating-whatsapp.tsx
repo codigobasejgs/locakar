@@ -18,7 +18,7 @@ export function FloatingWhatsApp() {
       initial={{ opacity: 0, scale: 0.6 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 1.4, type: "spring", stiffness: 220, damping: 18 }}
-      className="group fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 grid size-14 place-items-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/40 transition-transform hover:scale-105 focus-visible:scale-105 animate-soft-pulse sm:right-6"
+      className="group fixed bottom-[max(1rem,calc(env(safe-area-inset-bottom)+0.5rem))] right-[max(1rem,env(safe-area-inset-right))] z-50 grid size-14 place-items-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/40 transition-transform hover:scale-105 focus-visible:scale-105 animate-soft-pulse sm:right-6"
     >
       <WhatsAppIcon className="size-7" />
       <span

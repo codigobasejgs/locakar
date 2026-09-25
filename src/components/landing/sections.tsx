@@ -12,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { Logo } from "@/components/ui/logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { COMPANY, WHATSAPP_MESSAGES } from "@/lib/company";
@@ -161,6 +162,15 @@ export function FinalCta() {
             <p className="text-sm text-zinc-400">
               WhatsApp <span className="font-semibold text-white">{COMPANY.whatsapp.display}</span>
             </p>
+            <a
+              href={COMPANY.instagram.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-medium text-zinc-300 transition-colors hover:text-white"
+            >
+              <InstagramIcon className="size-4 text-brand-soft" />
+              Acompanhe no Instagram {COMPANY.instagram.handle}
+            </a>
           </div>
         </div>
       </Reveal>

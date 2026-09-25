@@ -24,7 +24,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-ink px-4 py-10">
+    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-ink px-4 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2.5rem,env(safe-area-inset-top))]">
       <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-[48rem] -translate-x-1/2 rounded-full bg-magenta/20 blur-[120px]" aria-hidden />
       <div className="relative w-full max-w-sm">
         <div className="mb-8 flex justify-center">

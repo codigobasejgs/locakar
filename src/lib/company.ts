@@ -9,6 +9,10 @@ export const COMPANY = {
   },
   site: "www.locakar.com.br",
   siteUrl: "https://www.locakar.com.br",
+  instagram: {
+    handle: "@locakar",
+    url: "https://www.instagram.com/locakar",
+  },
   seo: {
     title: "LOCAKAR | Locadora de Veículos",
     description: "Aluguel de veículos com praticidade, segurança e atendimento personalizado.",

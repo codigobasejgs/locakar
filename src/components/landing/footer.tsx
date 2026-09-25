@@ -1,5 +1,7 @@
 import { Globe, Settings } from "lucide-react";
 import Link from "next/link";
+import { InstallButton } from "@/components/pwa/install-button";
+import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { Logo } from "@/components/ui/logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { COMPANY, WHATSAPP_MESSAGES } from "@/lib/company";
@@ -15,6 +17,7 @@ export function Footer() {
           <p className="mt-4 max-w-xs text-sm text-zinc-400">
             Mobilidade, praticidade e atendimento personalizado para você seguir o seu caminho.
           </p>
+          <InstallButton appName={COMPANY.name} size="sm" className="mt-5" label="Instalar o app" />
         </div>
 
         <nav aria-label="Rodapé">
@@ -45,6 +48,17 @@ export function Footer() {
               </a>
             </li>
             <li>
+              <a
+                href={COMPANY.instagram.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-zinc-300 hover:text-white"
+              >
+                <InstagramIcon className="size-4 text-brand-soft" />
+                {COMPANY.instagram.handle}
+              </a>
+            </li>
+            <li>
               <a href={COMPANY.siteUrl} className="inline-flex items-center gap-2 text-zinc-300 hover:text-white">
                 <Globe className="size-4 text-brand-soft" aria-hidden />
                 {COMPANY.site}
@@ -55,7 +69,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/6">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 pr-20 text-xs text-zinc-500 sm:px-6 sm:pr-24 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pr-20 text-xs text-zinc-500 sm:px-6 sm:pr-24 lg:px-8">
           <p>© 2026 {COMPANY.name}. Todos os direitos reservados.</p>
           {/* Acesso discreto à área interna (não é autenticação). Atalho: Ctrl + Shift + A */}
           <Link

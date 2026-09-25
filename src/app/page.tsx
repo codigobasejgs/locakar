@@ -16,6 +16,7 @@ const jsonLd = {
   telephone: COMPANY.whatsapp.international,
   logo: `${COMPANY.siteUrl}/logos/locakar-logo.png`,
   image: `${COMPANY.siteUrl}/opengraph-image.jpg`,
+  sameAs: [COMPANY.instagram.url],
 };
 
 export default function HomePage() {

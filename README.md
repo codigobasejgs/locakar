@@ -5,6 +5,7 @@ Frontend oficial da LOCAKAR: Landing Page cinematográfica + painel administrati
 
 - Site: **www.locakar.com.br**
 - WhatsApp: **(19) 99861-5873** — `https://wa.me/5519998615873`
+- Instagram: **@locakar** — `https://www.instagram.com/locakar`
 
 ## Stack
 
@@ -37,6 +38,9 @@ Os arquivos brutos fornecidos na raiz (`*.xlsx`, `*.mp4`, `*.jpg`, `*.ogg`) est�
 src/
   app/
     page.tsx                  Landing Page
+    manifest.webmanifest/     Manifest do app do site
+    offline/                  Página offline (fallback do service worker)
+    contato/                  /contato → WhatsApp (atalho do app)
     layout.tsx                SEO, fontes, OpenGraph
     icon.png / apple-icon.png / opengraph-image.jpg   (gerados do logo real)
     admin/
@@ -45,6 +49,7 @@ src/
       login/ vehicles/ clients/ rentals/ rentals/[id]/ reservations/
       expenses/ maintenance/ fines/ notes/ finance/ reports/ settings/
   components/
+    pwa/                      Registro do SW, avisos, botão Instalar
     landing/                  Header, Hero, Frota, seções, footer, vídeo de fundo
     admin/                    Shell, DataTable, gráficos, formulários
     layout/                   MotionProvider (prefers-reduced-motion)
@@ -52,10 +57,11 @@ src/
   data/
     fleet.ts                  Modelos exibidos no site (Mobi e Kwid)
     mock/                     Dados de demonstração 100% fictícios
-  hooks/                      useAdminData (estado + CRUD), useCrud (telas)
+  hooks/                      useAdminData, useCrud, usePwa (instalação, online, SW)
   lib/
     company.ts                Nome, WhatsApp, site, SEO — fonte única
     whatsapp.ts               getWhatsAppUrl(message?)
+    pwa.ts                    Nomes dos apps, cores, splash screens iOS
     constants.ts              Rotas, status, listas, cores de gráfico
     analytics.ts              Indicadores, séries mensais, alertas, CSV
     reservations.ts           Detecção de conflito de período por veículo
@@ -65,7 +71,9 @@ src/
   types/                      Modelos de domínio
 public/
   logos/  vehicles/  images/  video/
+  icons/  splash/  screenshots/  sw.js
 scripts/check.ts              Autoverificação sem framework de testes
+scripts/generate-pwa-assets.py  Gera ícones e splash screens a partir do logo
 ```
 
 ## Assets
@@ -82,6 +90,35 @@ scripts/check.ts              Autoverificação sem framework de testes
 ### Vídeo
 
 Camada `.video-background` (`position: fixed`, `z-index: 0`, `object-fit: cover`) atrás de toda a Landing, com overlay em gradiente, vinheta, glow roxo e grão sutil. `autoplay muted loop playsInline preload="metadata"` + `poster`. Com `prefers-reduced-motion` o vídeo fica pausado no poster. No mobile o overlay é mais escuro para leitura. O vídeo tem 1,8 MB — não há versão mobile separada; se trocar por um arquivo maior, gere uma versão otimizada e use `<source media>`.
+
+## PWA (app instalável)
+
+São **dois apps instaláveis**, cada um com manifest, ícone e escopo próprios:
+
+| App | Manifest | Escopo | Ícone |
+|---|---|---|---|
+| **LOCAKAR** (site) | `/manifest.webmanifest` | `/` | selo circular |
+| **LOCAKAR Gestão** (sistema) | `/admin/manifest.webmanifest` | `/admin` | logotipo |
+
+| Plataforma | Como instala |
+|---|---|
+| Android (Chrome, Edge, Samsung Internet) | Botão **Instalar app** (prompt nativo) ou menu do navegador |
+| Windows / macOS / Linux / ChromeOS (Chrome, Edge) | Botão **Instalar app** ou ícone de instalar na barra de endereço; abre em janela própria |
+| iPhone / iPad (Safari) | Botão **Instalar app** mostra o passo a passo: Compartilhar → Adicionar à Tela de Início |
+| macOS Safari 17+ | Arquivo → Adicionar ao Dock |
+
+Recursos:
+- **Service worker** (`public/sw.js`): páginas em network-first com fallback para cache e `/offline`; `/_next/static` em cache-first; imagens e fontes em stale-while-revalidate; o vídeo sempre vem da rede.
+- **Offline**: site e painel abrem sem internet (o painel funciona inteiro, porque os dados estão no `localStorage`). Aparece um aviso "Sem conexão".
+- **Atualização**: quando há deploy novo, aparece "Nova versão disponível → Atualizar". Ao mudar a lógica do `sw.js`, incremente `VERSION`.
+- **iOS**: 25 splash screens (iPhone SE até 16 Pro Max, todos os iPads em retrato e paisagem), status bar translúcida, `viewport-fit=cover` e margens de safe-area (notch, Dynamic Island, home indicator).
+- **Atalhos** do ícone (pressionar e segurar / botão direito): Frota e WhatsApp no site; Locações, Reservas, Veículos e Financeiro na gestão.
+- **Badge**: o ícone do app de gestão mostra o número de alertas (Chrome/Edge e iOS 16.4+).
+- **Desktop**: `window-controls-overlay` para visual de app nativo.
+
+Regerar ícones e splash após trocar o logo: `python scripts/generate-pwa-assets.py` (requer Pillow). O `npm run check` confirma que todos os arquivos existem.
+
+> O PWA exige **HTTPS** (a Vercel já fornece). Em `localhost` funciona para teste; o service worker só é registrado no build de produção (`npm run build && npm run start`).
 
 ## Admin
 

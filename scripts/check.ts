@@ -1,5 +1,8 @@
 /** Autoverificação da lógica pura. Rodar: `npm run check` (usa jiti, já instalado via Tailwind). */
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { appleStartupImages } from "../src/lib/pwa";
 import { findConflict } from "../src/lib/reservations";
 import { getWhatsAppUrl } from "../src/lib/whatsapp";
 import { addDays, cpfCheckDigits, hideCPF, isValidCPF, isValidPlate, maskCPF, maskPhone, monthKey } from "../src/lib/utils";
@@ -32,5 +35,14 @@ assert.equal(findConflict(booked, { vehicleId: "v1", startDate: "2026-10-11", en
 assert.equal(findConflict(booked, { vehicleId: "v2", startDate: "2026-10-01", endDate: "2026-10-12" }), undefined);
 assert.equal(findConflict(booked, { id: "a", vehicleId: "v1", startDate: "2026-10-02", endDate: "2026-10-05" }), undefined);
 assert.equal(findConflict([{ ...booked[0], status: "cancelled" }], { vehicleId: "v1", startDate: "2026-10-02", endDate: "2026-10-05" }), undefined);
+
+// PWA: cada splash declarada no <head> precisa existir em public/splash (gerador: scripts/generate-pwa-assets.py)
+const missing = appleStartupImages()
+  .map((img) => img.url)
+  .filter((url) => !existsSync(join(process.cwd(), "public", url)));
+assert.deepEqual(missing, [], `Splash screens ausentes: ${missing.join(", ")}`);
+for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "admin-180", "admin-192", "admin-512"]) {
+  assert.ok(existsSync(join(process.cwd(), "public/icons", `${icon}.png`)), `Ícone ausente: ${icon}`);
+}
 
 console.log("✓ check ok");

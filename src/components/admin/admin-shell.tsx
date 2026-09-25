@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Toaster } from "sonner";
+import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { AdminDataProvider, useAdminData } from "@/hooks/use-admin-data";
@@ -54,6 +55,7 @@ function SidebarFooter() {
   const router = useRouter();
   return (
     <div className="space-y-1 border-t border-line p-3">
+      <InstallButton appName="LOCAKAR Gestão" size="sm" variant="ghost" label="Instalar app de gestão" className="w-full justify-start px-3 sm:hidden" />
       <Link
         href={ROUTES.home}
         className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-white"
@@ -79,6 +81,12 @@ function AlertsBell() {
   const [open, setOpen] = useState(false);
   const alerts = useMemo(() => (data ? buildAlerts(data, settings, todayISO()) : []), [data, settings]);
   const urgent = alerts.filter((a) => a.tone === "danger").length;
+
+  // Número de alertas no ícone do app instalado (Chrome/Edge desktop e Android, Safari iOS 16.4+).
+  useEffect(() => {
+    if (!("setAppBadge" in navigator)) return;
+    (alerts.length ? navigator.setAppBadge(alerts.length) : navigator.clearAppBadge()).catch(() => {});
+  }, [alerts.length]);
 
   return (
     <div className="relative">
@@ -155,7 +163,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
   );
 
   return (
-    <header className="no-print sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-ink/85 px-4 backdrop-blur-xl sm:px-6">
+    <header className="no-print sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-line bg-ink/85 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl sm:px-6">
       <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Abrir menu" onClick={onMenu}>
         <Menu />
       </Button>
@@ -164,6 +172,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         <span className="mx-2 text-zinc-600">/</span>
         <span className="font-medium text-white">{item.label}</span>
       </nav>
+      <InstallButton appName="LOCAKAR Gestão" size="sm" variant="ghost" label="Instalar" className="hidden sm:inline-flex" />
       <span className="hidden rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300 md:inline">
         Modo demonstração · dados locais
       </span>
@@ -201,7 +210,7 @@ function Content({ children }: { children: React.ReactNode }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="print-area mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
+      className="print-area mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:py-8"
     >
       {data ? children : <Loading />}
     </motion.main>
@@ -228,7 +237,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     <AdminDataProvider>
       <div className="min-h-dvh bg-ink text-white">
         {/* Sidebar desktop */}
-        <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-[#070708] lg:flex">
+        <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-[#070708] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] lg:flex">
           <Link href={ROUTES.admin} className="flex h-16 items-center border-b border-line px-6" aria-label="Dashboard LOCAKAR">
             <Logo className="w-24" />
           </Link>
@@ -251,7 +260,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Menu administrativo"
-                className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-line bg-[#070708] lg:hidden"
+                className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-line bg-[#070708] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] lg:hidden"
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
