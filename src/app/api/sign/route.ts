@@ -20,7 +20,12 @@ export async function POST(request: Request) {
   }
   if (!body.accepted) return Response.json({ error: "É preciso aceitar os termos do contrato." }, { status: 422 });
 
-  const ip = (request.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || request.headers.get("x-real-ip") || "desconhecido";
+  // Cloudflare (proxy) → Vercel: o IP real do cliente vem em cf-connecting-ip; sem proxy, no x-forwarded-for.
+  const ip =
+    request.headers.get("cf-connecting-ip") ||
+    (request.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() ||
+    request.headers.get("x-real-ip") ||
+    "desconhecido";
   const ua = request.headers.get("user-agent") ?? "";
   const db = anon();
 
