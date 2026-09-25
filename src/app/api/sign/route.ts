@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { contractDocument } from "@/lib/documents";
+import { contractPdf } from "@/lib/pdf";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
@@ -47,31 +47,44 @@ export async function POST(request: Request) {
   // Via assinada por e-mail + confirmação por WhatsApp. Falha no envio não desfaz a assinatura (já registrada).
   const signed = data as { clientName: string; clientEmail?: string; clientPhone?: string; companyEmail?: string; id: string; rentalId: string };
   const when = new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
+
+  // Via assinada em PDF (sem a selfie: ela fica só com a LOCAKAR). CPF, IP e navegador já foram validados/gravados acima.
+  const { data: view } = await db.rpc("contract_for_signing", { p_token: body.token });
+  let pdf: { filename: string; content: Uint8Array } | undefined;
+  if (view) {
+    const cpf = (body.cpf ?? "").replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    const contract = { ...(view as Contract), id: signed.id, rentalId: signed.rentalId, status: "signed", signedCpf: cpf, signedIp: ip, signedUserAgent: ua } as Contract;
+    pdf = await contractPdf(contract)
+      .then((content) => ({ filename: `contrato-locakar-${signed.id.slice(0, 8)}.pdf`, content }))
+      .catch((e) => (console.error("geração do PDF:", e), undefined));
+  }
+
   await sendWhatsApp(db, {
     kind: "contract_signed",
     phone: signed.clientPhone,
     contractId: signed.id,
     rentalId: signed.rentalId,
+    document: pdf,
     text: [
       "✅ *Contrato assinado*",
       "",
       `Olá, ${signed.clientName.split(" ")[0]}! Recebemos sua assinatura em ${when}.`,
-      ...(signed.clientEmail ? ["A via assinada foi enviada para o seu e-mail."] : []),
+      pdf ? "Segue a via assinada do seu contrato em PDF." : "",
+      ...(signed.clientEmail ? ["Uma cópia também foi enviada para o seu e-mail."] : []),
       "",
       "_LOCAKAR · www.locakar.com.br_",
-    ].join("\n"),
+    ]
+      .filter((l, i, a) => l !== "" || a[i - 1] !== "")
+      .join("\n"),
   });
-  const { data: view } = await db.rpc("contract_for_signing", { p_token: body.token });
-  if (view) {
-    const contract = { ...(view as Contract), status: "signed" } as Contract;
-    const attachment = { filename: "contrato-assinado.html", content: contractDocument(contract) };
+  if (pdf) {
     const html = emailLayout({
       title: "Contrato assinado",
-      intro: `O contrato de locação de ${signed.clientName} foi assinado eletronicamente. A via assinada segue em anexo.`,
-      footerNote: "Abra o anexo no navegador para visualizar ou salvar em PDF.",
+      intro: `O contrato de locação de ${signed.clientName} foi assinado eletronicamente em ${when}. A via assinada, com o certificado de assinatura, segue em anexo (PDF).`,
+      footerNote: "Guarde este documento. O código SHA-256 impresso no PDF comprova que o conteúdo não foi alterado após a assinatura.",
     });
     for (const to of [signed.clientEmail, signed.companyEmail].filter(Boolean) as string[]) {
-      await sendEmail(db, { kind: "contract_signed", to, subject: "Contrato de locação assinado — LOCAKAR", html, attachments: [attachment], contractId: signed.id, rentalId: signed.rentalId }).catch(
+      await sendEmail(db, { kind: "contract_signed", to, subject: "Contrato de locação assinado — LOCAKAR", html, attachments: [pdf], contractId: signed.id, rentalId: signed.rentalId }).catch(
         (e) => console.error("envio da via assinada:", e),
       );
     }

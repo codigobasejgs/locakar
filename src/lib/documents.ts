@@ -1,7 +1,6 @@
 /**
  * Documentos imprimíveis (HTML autocontido): contrato assinado e termos de vistoria.
- * Usados na tela (impressão/PDF pelo navegador) e como anexo dos e-mails.
- * ponytail: HTML em vez de PDF para não adicionar gerador de PDF no servidor; o cliente salva em PDF pelo navegador.
+ * Uso interno do painel (impressão). Para o cliente (e-mail/WhatsApp) os documentos saem em PDF: ver lib/pdf.ts.
  */
 import type { Contract, Inspection } from "@/types";
 import { COMPANY } from "./company";

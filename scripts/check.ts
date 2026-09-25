@@ -98,4 +98,17 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
   assert.ok(existsSync(join(process.cwd(), "public/icons", `${icon}.png`)), `Ícone ausente: ${icon}`);
 }
 
+
+// PDF do contrato: gera, tem cabeçalho de PDF e o certificado quando assinado.
+{
+  const { contractPdf } = await import("../src/lib/pdf");
+  const bytes = await contractPdf({
+    id: "abc12345-0000", rentalId: "r1", status: "signed", token: "t", content: "CONTRATO DE LOCAÇÃO DE VEÍCULO\n\nLOCADORA\nRazão social: X\n\nCLÁUSULAS GERAIS\n1. OBJETO. Texto 🚗.",
+    contentHash: "a".repeat(64), clientName: "Fulano de Tal", clientCpf: "529.982.247-25", signedName: "Fulano de Tal", signedAt: new Date().toISOString(),
+  });
+  assert.equal(new TextDecoder().decode(bytes.slice(0, 5)), "%PDF-");
+  const { PDFDocument } = await import("pdf-lib");
+  assert.equal((await PDFDocument.load(bytes)).getPageCount(), 2, "contrato + certificado");
+}
+
 console.log("✓ check ok");

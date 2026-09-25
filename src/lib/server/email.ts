@@ -25,7 +25,7 @@ export interface OutgoingEmail {
   subject: string;
   html: string;
   replyTo?: string;
-  attachments?: { filename: string; content: string }[];
+  attachments?: { filename: string; content: Uint8Array }[];
   rentalId?: string;
   fineId?: string;
   contractId?: string;
@@ -43,7 +43,7 @@ export async function sendEmail(db: SupabaseClient, mail: OutgoingEmail) {
       subject: mail.subject,
       html: mail.html,
       replyTo: mail.replyTo,
-      attachments: mail.attachments?.map((a) => ({ filename: a.filename, content: Buffer.from(a.content, "utf8") })),
+      attachments: mail.attachments?.map((a) => ({ filename: a.filename, content: Buffer.from(a.content) })),
     });
     if (err) error = err.message;
     providerId = data?.id;

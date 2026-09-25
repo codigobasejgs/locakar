@@ -17,6 +17,8 @@ export interface OutgoingWhatsApp {
   fineId?: string;
   contractId?: string;
   alertKeys?: string[];
+  /** PDF enviado como documento; `text` vira a legenda. */
+  document?: { filename: string; content: Uint8Array };
 }
 
 /**
@@ -33,11 +35,16 @@ export async function sendWhatsApp(db: SupabaseClient, msg: OutgoingWhatsApp): P
   let error: string | undefined;
   let providerId: string | undefined;
   try {
-    const res = await fetch(`${base}/message/sendText/${encodeURIComponent(instance)}`, {
+    const doc = msg.document;
+    const res = await fetch(`${base}/message/${doc ? "sendMedia" : "sendText"}/${encodeURIComponent(instance)}`, {
       method: "POST",
       headers: { apikey: process.env.EVOLUTION_API_KEY!, "Content-Type": "application/json" },
-      body: JSON.stringify({ number, text: msg.text, linkPreview: true }),
-      signal: AbortSignal.timeout(15_000),
+      body: JSON.stringify(
+        doc
+          ? { number, mediatype: "document", mimetype: "application/pdf", fileName: doc.filename, caption: msg.text, media: Buffer.from(doc.content).toString("base64") }
+          : { number, text: msg.text, linkPreview: true },
+      ),
+      signal: AbortSignal.timeout(doc ? 30_000 : 15_000),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {

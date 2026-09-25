@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { COMPANY } from "@/lib/company";
 import { FUEL_LABEL } from "@/lib/contract";
-import { contractDocument, inspectionDocument } from "@/lib/documents";
+import { contractPdf, inspectionPdf } from "@/lib/pdf";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
@@ -29,7 +29,8 @@ interface Message {
   subject: string;
   html: string;
   whatsapp: string;
-  attachments?: { filename: string; content: string }[];
+  /** PDFs: vão todos no e-mail; no WhatsApp vai cada um como documento (o 1º com o texto como legenda). */
+  attachments?: { filename: string; content: Uint8Array }[];
   rentalId?: string;
   fineId?: string;
   contractId?: string;
@@ -50,7 +51,10 @@ async function deliver(db: SupabaseClient, m: Message, replyTo?: string) {
       errors.push((e as Error).message);
     }
   }
-  const wa = await sendWhatsApp(db, { kind: m.kind, phone: m.client.phone, text: m.whatsapp + WA_FOOTER, rentalId: m.rentalId, fineId: m.fineId, contractId: m.contractId });
+  const waBase = { kind: m.kind, phone: m.client.phone, rentalId: m.rentalId, fineId: m.fineId, contractId: m.contractId };
+  const [firstDoc, ...moreDocs] = m.attachments ?? [];
+  const wa = await sendWhatsApp(db, { ...waBase, text: m.whatsapp + WA_FOOTER, document: firstDoc });
+  if (wa.ok) for (const document of moreDocs) await sendWhatsApp(db, { ...waBase, text: document.filename.startsWith("contrato") ? "📄 Contrato assinado" : "📄 Documento", document });
   if (wa.ok) sent.push(`WhatsApp ${m.client.phone}`);
   else if (wa.error !== "WhatsApp não configurado.") errors.push(`WhatsApp: ${wa.error}`);
 
@@ -122,13 +126,16 @@ export async function POST(request: Request) {
       const delivery = body.kind === "delivery";
       const attachments = [
         {
-          filename: delivery ? "termo-de-entrega.html" : "termo-de-devolucao.html",
-          content: inspectionDocument(body.kind, inspection, { clientName: client.name, vehicle: vehicle.name, plate: vehicle.plate }),
+          filename: `${delivery ? "termo-de-entrega" : "termo-de-devolucao"}-${vehicle.plate}.pdf`,
+          content: await inspectionPdf(body.kind, inspection, { clientName: client.name, vehicle: vehicle.name, plate: vehicle.plate }),
         },
       ];
       if (delivery) {
         const { data } = await supabase.from("contracts").select("*").eq("rental_id", rental.id).eq("status", "signed").order("signed_at", { ascending: false }).limit(1);
-        if (data?.[0]) attachments.push({ filename: "contrato-assinado.html", content: contractDocument(fromRow<Contract>(data[0])) });
+        if (data?.[0]) {
+          const contract = fromRow<Contract>(data[0]);
+          attachments.push({ filename: `contrato-locakar-${contract.id.slice(0, 8)}.pdf`, content: await contractPdf(contract) });
+        }
       }
       const at = new Date(inspection.at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
       const damages = inspection.items.filter((i) => !i.ok).length;
@@ -150,7 +157,7 @@ export async function POST(request: Request) {
             ["Combustível", FUEL_LABEL[inspection.fuel]],
             ...(inspection.extraCharges ? ([["Valores adicionais", formatCurrency(inspection.extraCharges)]] as [string, string][]) : []),
           ],
-          footerNote: "Abra o anexo no navegador para visualizar ou salvar em PDF.",
+          footerNote: "Os documentos seguem em anexo, em PDF.",
         }),
         whatsapp: [
           delivery ? `🚗 *Veículo entregue* — ${vehicle.name} (${vehicle.plate})` : `✅ *Veículo devolvido* — ${vehicle.name} (${vehicle.plate})`,
@@ -162,7 +169,7 @@ export async function POST(request: Request) {
           ...(inspection.extraCharges ? [`• Valores adicionais: ${formatCurrency(inspection.extraCharges)}`] : []),
           "",
           delivery ? `Devolução prevista: ${formatDate(rental.endDate)}${rental.endTime ? ` às ${rental.endTime}` : ""}. Boa viagem! 🙌` : "Obrigado por escolher a LOCAKAR! 💜",
-          client.email ? "O termo completo foi enviado para o seu e-mail." : "",
+          "Segue o termo de vistoria em PDF.",
         ]
           .filter((l, i, a) => l !== "" || a[i - 1] !== "")
           .join("\n")
