@@ -3,8 +3,8 @@
 import { Bell, ExternalLink, LogOut, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { Toaster } from "sonner";
 import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,10 @@ import { Logo } from "@/components/ui/logo";
 import { AdminDataProvider, useAdminData } from "@/hooks/use-admin-data";
 import { buildAlerts } from "@/lib/analytics";
 import { authService } from "@/lib/auth";
+import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { ROUTES } from "@/lib/constants";
 import { cn, todayISO } from "@/lib/utils";
 import { ADMIN_NAV, findNavItem } from "./nav";
-
-const noopSubscribe = () => () => {};
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -52,7 +51,6 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function SidebarFooter() {
-  const router = useRouter();
   return (
     <div className="space-y-1 border-t border-line p-3">
       <InstallButton appName="LOCAKAR Gestão" size="sm" variant="ghost" label="Instalar app de gestão" className="w-full justify-start px-3 sm:hidden" />
@@ -66,7 +64,7 @@ function SidebarFooter() {
         type="button"
         onClick={async () => {
           await authService.signOut();
-          router.push(ROUTES.login);
+          window.location.assign(ROUTES.login);
         }}
         className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-white"
       >
@@ -155,12 +153,14 @@ function AlertsBell() {
 function Topbar({ onMenu }: { onMenu: () => void }) {
   const pathname = usePathname();
   const item = findNavItem(pathname);
-  // Sessão vive no sessionStorage: lida só no cliente, sem mismatch de hidratação.
-  const email = useSyncExternalStore(
-    noopSubscribe,
-    () => authService.getSession()?.email ?? null,
-    () => null,
-  );
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    authService.getSession().then((s) => alive && setEmail(s?.email ?? null));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
     <header className="no-print sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-line bg-ink/85 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl sm:px-6">
@@ -173,9 +173,11 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         <span className="font-medium text-white">{item.label}</span>
       </nav>
       <InstallButton appName="LOCAKAR Gestão" size="sm" variant="ghost" label="Instalar" className="hidden sm:inline-flex" />
-      <span className="hidden rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300 md:inline">
-        Modo demonstração · dados locais
-      </span>
+      {!isSupabaseEnabled && (
+        <span className="hidden rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300 md:inline">
+          Modo demonstração · dados locais
+        </span>
+      )}
       <AlertsBell />
       <div
         className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-magenta to-brand-deep text-xs font-bold uppercase"
@@ -201,8 +203,31 @@ function Loading() {
   );
 }
 
+function LoadError({ message }: { message: string }) {
+  return (
+    <div role="alert" className="mx-auto mt-10 max-w-lg rounded-2xl border border-red-400/25 bg-red-400/[0.06] p-6 text-center">
+      <p className="font-display text-lg font-semibold">Não foi possível carregar os dados</p>
+      <p className="mt-2 text-sm text-zinc-300">{message}</p>
+      <div className="mt-5 flex justify-center gap-2">
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Tentar novamente
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={async () => {
+            await authService.signOut();
+            window.location.assign(ROUTES.login);
+          }}
+        >
+          Sair
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function Content({ children }: { children: React.ReactNode }) {
-  const { data } = useAdminData();
+  const { data, loadError } = useAdminData();
   const pathname = usePathname();
   return (
     <motion.main
@@ -212,7 +237,7 @@ function Content({ children }: { children: React.ReactNode }) {
       transition={{ duration: 0.25, ease: "easeOut" }}
       className="print-area mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:py-8"
     >
-      {data ? children : <Loading />}
+      {loadError ? <LoadError message={loadError} /> : data ? children : <Loading />}
     </motion.main>
   );
 }

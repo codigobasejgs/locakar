@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { appleStartupImages } from "../src/lib/pwa";
 import { findConflict } from "../src/lib/reservations";
+import { fromRow, toRow } from "../src/repositories/mapping";
 import { getWhatsAppUrl } from "../src/lib/whatsapp";
 import { addDays, cpfCheckDigits, hideCPF, isValidCPF, isValidPlate, maskCPF, maskPhone, monthKey } from "../src/lib/utils";
 
@@ -35,6 +36,17 @@ assert.equal(findConflict(booked, { vehicleId: "v1", startDate: "2026-10-11", en
 assert.equal(findConflict(booked, { vehicleId: "v2", startDate: "2026-10-01", endDate: "2026-10-12" }), undefined);
 assert.equal(findConflict(booked, { id: "a", vehicleId: "v1", startDate: "2026-10-02", endDate: "2026-10-05" }), undefined);
 assert.equal(findConflict([{ ...booked[0], status: "cancelled" }], { vehicleId: "v1", startDate: "2026-10-02", endDate: "2026-10-05" }), undefined);
+
+// Mapeamento app ↔ Supabase: camelCase ↔ snake_case, undefined ↔ null, JSON aninhado intacto
+const receipts = [{ id: "r1", dueDate: "2026-10-01", amount: 650, paid: false }];
+const dbRow = toRow({ id: "x", clientId: "c1", kmEnd: undefined, weeklyRate: 650, receipts });
+assert.deepEqual(dbRow, { id: "x", client_id: "c1", km_end: null, weekly_rate: 650, receipts });
+assert.deepEqual(fromRow({ ...dbRow, created_at: "2026-01-01", updated_at: "2026-01-01" }), {
+  id: "x",
+  clientId: "c1",
+  weeklyRate: 650,
+  receipts,
+});
 
 // PWA: cada splash declarada no <head> precisa existir em public/splash (gerador: scripts/generate-pwa-assets.py)
 const missing = appleStartupImages()

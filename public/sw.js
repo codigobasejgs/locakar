@@ -1,11 +1,12 @@
 /* LOCAKAR — Service Worker
  * Navegação: network-first → cache → /offline
+ * /admin: nunca vai para o cache (dados autenticados); offline mostra /offline
  * /_next/static (hash imutável): cache-first
  * Imagens, ícones, fontes: stale-while-revalidate
  * Vídeo: rede (requisições Range não são cacheadas)
  * Troque VERSION a cada mudança relevante neste arquivo.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const PAGES = `locakar-pages-${VERSION}`;
 const STATIC = `locakar-static-${VERSION}`;
 const MEDIA = `locakar-media-${VERSION}`;
@@ -13,12 +14,10 @@ const KEEP = [PAGES, STATIC, MEDIA];
 const OFFLINE_URL = "/offline";
 const MAX_MEDIA = 80;
 
-// Shell mínimo: garante abertura offline do site e do painel já na primeira instalação.
+// Shell mínimo do site. O painel não é pré-cacheado: exige login e dados do Supabase.
 const PRECACHE = [
   OFFLINE_URL,
   "/",
-  "/admin",
-  "/admin/login",
   "/manifest.webmanifest",
   "/admin/manifest.webmanifest",
   "/logos/locakar-logo-light.png",
@@ -63,7 +62,8 @@ async function networkFirst(event) {
   const cache = await caches.open(PAGES);
   try {
     const response = (await event.preloadResponse) || (await fetch(event.request));
-    if (response.ok && response.type === "basic") cache.put(event.request, response.clone());
+    const isPrivate = new URL(event.request.url).pathname.startsWith("/admin");
+    if (response.ok && response.type === "basic" && !isPrivate) cache.put(event.request, response.clone());
     return response;
   } catch {
     return (

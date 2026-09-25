@@ -11,6 +11,7 @@ import { Checkbox, Field, Input, Select } from "@/components/ui/form";
 import { Logo } from "@/components/ui/logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useAdminData } from "@/hooks/use-admin-data";
+import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { COMPANY, WHATSAPP_MESSAGES } from "@/lib/company";
 import { getWhatsAppUrl } from "@/lib/whatsapp";
 import type { CompanySettings } from "@/types";
@@ -44,7 +45,7 @@ export default function SettingsPage() {
     <>
       <PageHeader
         title="Configurações"
-        description="Dados da empresa e preferências do painel (salvos neste navegador)."
+        description={`Dados da empresa e preferências do painel${isSupabaseEnabled ? "" : " (salvos neste navegador)"}.`}
         actions={<Button onClick={save}>Salvar alterações</Button>}
       />
 
@@ -113,6 +114,7 @@ export default function SettingsPage() {
           <Checkbox label="Recebimentos em atraso" checked={draft.notifyReceipts} onChange={(e) => set("notifyReceipts", e.target.checked)} />
         </Section>
 
+        {!isSupabaseEnabled && (
         <Card className="flex flex-col gap-4 border-red-400/20 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div>
             <h2 className="font-display text-base font-semibold">Dados de demonstração</h2>
@@ -122,6 +124,7 @@ export default function SettingsPage() {
             <RotateCcw /> Restaurar dados
           </Button>
         </Card>
+        )}
       </div>
 
       <ConfirmDialog

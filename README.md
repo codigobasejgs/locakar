@@ -1,7 +1,7 @@
 # LOCAKAR — Locadora de Veículos
 
 Frontend oficial da LOCAKAR: Landing Page cinematográfica + painel administrativo completo.
-**Somente frontend** — dados em `localStorage`, arquitetura pronta para Supabase.
+Dados no **Supabase** (Postgres + Auth + RLS); sem configuração, roda em modo demonstração com `localStorage`.
 
 - Site: **www.locakar.com.br**
 - WhatsApp: **(19) 99861-5873** — `https://wa.me/5519998615873`
@@ -27,7 +27,7 @@ Node.js ≥ 20.9.
 ## Deploy (GitHub → Vercel)
 
 1. `git init && git add . && git commit -m "LOCAKAR frontend"` e publique no GitHub.
-2. Na Vercel: **Add New → Project →** importe o repositório. Framework detectado: Next.js. Sem variáveis de ambiente.
+2. Na Vercel: **Add New → Project →** importe o repositório. Framework detectado: Next.js. Cadastre as variáveis `NEXT_PUBLIC_SUPABASE_*` (ver **Banco de dados**).
 3. Em **Domains**, aponte `www.locakar.com.br`.
 
 Os arquivos brutos fornecidos na raiz (`*.xlsx`, `*.mp4`, `*.jpg`, `*.ogg`) estão no `.gitignore`: a planilha contém dados pessoais reais e não deve ir para o repositório. Os assets usados pelo site já estão em `public/`.
@@ -123,19 +123,54 @@ Regerar ícones e splash após trocar o logo: `python scripts/generate-pwa-asset
 ## Admin
 
 - Acesso discreto: **Ctrl + Shift + A** ou a engrenagem pequena no rodapé.
-- **Isto não é segurança.** `/admin` está aberto até a integração com Supabase Auth.
+- O atalho é só conveniência. A proteção real é o login do Supabase + RLS (ver **Banco de dados**).
 - Módulos espelham as abas da planilha: VEÍCULOS, CLIENTES, LOCAÇÃO, RESERVA DE CARROS, DESPESAS, MANUTENÇÃO FROTA, MULTAS, ANOTAÇÕES (e as listas de validação de FORMULA (DADOS)).
 - Recursos: busca, filtros, ordenação, paginação, criar/editar/visualizar/excluir, máscaras (CPF, telefone, placa), CPF oculto nas listagens, conflito de reservas/locações, recebimentos semanais, alertas de vencimento (multas, CNH, IPVA/licenciamento, manutenção, recebimentos), relatórios com exportação CSV e impressão.
 
-## Dados mock e localStorage
+## Banco de dados (Supabase)
 
-- Na primeira abertura do painel, cada coleção é populada com dados fictícios (`src/data/mock`), com datas relativas ao dia atual.
-- Tudo persiste em `localStorage` com prefixo `locakar:v1:` — apenas no navegador atual.
-- **Configurações → Restaurar dados** limpa e recria a base de demonstração.
+O painel escolhe a persistência pelas variáveis de ambiente:
 
-## Integração futura com Supabase
+| Variáveis `NEXT_PUBLIC_SUPABASE_*` | Comportamento |
+|---|---|
+| **Definidas** | Supabase: login real (Supabase Auth), `/admin` protegido, dados no Postgres com RLS |
+| Ausentes | Modo demonstração: `localStorage` + dados fictícios, login visual |
 
-A UI só conhece a interface `Repository<T>` (`src/repositories/types.ts`):
+### Configuração (uma vez)
+
+1. **Variáveis**: copie `.env.example` para `.env.local` (já criado nesta máquina) e cadastre as mesmas na **Vercel → Settings → Environment Variables**:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://hhqtpsqcurjwnubfoeuv.supabase.co
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+   ```
+   A chave *publishable* é pública por design (vai para o navegador); quem protege os dados é o RLS.
+2. **Tabelas**: Supabase → **SQL Editor** → cole `supabase/migrations/20260925000000_init.sql` → **Run**.
+3. **Desligar cadastro público**: Authentication → Sign In / Providers → **Allow new users to sign up = OFF**.
+4. **Criar usuário da equipe**: Authentication → Users → **Add user** (e-mail + senha, marque *Auto Confirm User*).
+5. **Liberar o usuário no painel** (SQL Editor):
+   ```sql
+   insert into public.staff (user_id)
+   select id from auth.users where email = 'locakarveiculos@gmail.com'
+   on conflict do nothing;
+   ```
+6. Em **Authentication → URL Configuration**, defina **Site URL** = `https://www.locakar.com.br`.
+
+### Segurança
+
+- **RLS** em todas as tabelas: só usuários presentes em `public.staff` leem/escrevem. Estar logado não basta; visitantes anônimos não acessam nada.
+- `src/proxy.ts` renova a sessão e redireciona `/admin/*` para o login quando não há usuário válido (`getClaims`, JWT verificado).
+- Restrições no banco: placa válida e única, CPF único, datas coerentes, valores ≥ 0, status válidos e **reservas sobrepostas proibidas** (constraint de exclusão).
+- O service worker **não** guarda páginas do `/admin` em cache.
+
+### Estrutura
+
+- `src/lib/supabase/` — variáveis e cliente do navegador.
+- `src/repositories/supabase.ts` — `SupabaseRepository<T>` (mesma interface do localStorage; a UI não mudou).
+- `src/repositories/mapping.ts` — camelCase ↔ snake_case e mensagens de erro do Postgres.
+- `src/lib/auth.ts` — login/logout/sessão e verificação de acesso (`is_staff`).
+- `supabase/migrations/` — schema, índices, triggers e políticas.
+
+A UI só conhece `Repository<T>` (`src/repositories/types.ts`); `src/repositories/index.ts` escolhe a implementação:
 
 ```ts
 interface Repository<T> {
@@ -147,12 +182,9 @@ interface Repository<T> {
 }
 ```
 
-Passos:
+### Modo demonstração (sem Supabase)
 
-1. `npm i @supabase/supabase-js @supabase/ssr` e variáveis `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` na Vercel.
-2. Criar tabelas a partir de `src/types/index.ts` (recebimentos de `Rental.receipts` podem virar tabela `rental_receipts`).
-3. Implementar `SupabaseRepository<T>` e trocar as instâncias em `src/repositories/index.ts` — nenhum componente muda.
-4. Implementar `authService` (`src/lib/auth.ts`) com `supabase.auth`, proteger `/admin` em `src/proxy.ts` e ativar **Row Level Security** em todas as tabelas.
+Remova as variáveis para voltar ao modo demo: dados fictícios em `src/data/mock`, salvos no `localStorage` (prefixo `locakar:v1:`). **Configurações → Restaurar dados** recria a base de exemplo.
 
 ## O que não foi inventado
 
@@ -161,4 +193,3 @@ Nenhum depoimento, avaliação, número de clientes/veículos, tempo de mercado,
 ## Pendências conhecidas
 
 - Os três áudios fornecidos (`.ogg`) **não foram transcritos**: o ambiente de desenvolvimento não tinha ferramenta de transcrição disponível. Se contiverem requisitos, revisar e ajustar.
-- `/admin` sem autenticação real (ver acima).

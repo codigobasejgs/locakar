@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { authService } from "@/lib/auth";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 import { storage } from "@/lib/storage";
 import { repositories, settingsRepository } from "@/repositories";
@@ -10,6 +11,8 @@ import type { CompanySettings } from "@/types";
 
 interface AdminDataContextValue {
   data: Collections | null;
+  /** Falha ao carregar (ex.: banco sem tabelas, sem permissão). */
+  loadError: string | null;
   settings: CompanySettings;
   create<K extends CollectionKey>(key: K, item: EntityFor<K>): Promise<boolean>;
   update<K extends CollectionKey>(key: K, id: string, patch: Partial<EntityFor<K>>): Promise<boolean>;
@@ -24,6 +27,7 @@ const KEYS = Object.keys(repositories) as CollectionKey[];
 const repo = <K extends CollectionKey>(key: K) => repositories[key] as unknown as Repository<EntityFor<K>>;
 
 async function loadAll(): Promise<Collections> {
+  await authService.assertAccess();
   const lists = await Promise.all(KEYS.map((key) => repositories[key].getAll()));
   return Object.fromEntries(KEYS.map((key, i) => [key, lists[i]])) as Collections;
 }
@@ -37,16 +41,18 @@ function fail(error: unknown) {
 export function AdminDataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<Collections | null>(null);
   const [settings, setSettings] = useState<CompanySettings>(DEFAULT_SETTINGS);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
-    Promise.all([loadAll(), settingsRepository.get()])
+    loadAll()
+      .then(async (collections) => [collections, await settingsRepository.get()] as const)
       .then(([collections, stored]) => {
         if (!alive) return;
         setData(collections);
         setSettings(stored);
       })
-      .catch(fail);
+      .catch((e: unknown) => alive && setLoadError(e instanceof Error ? e.message : "Não foi possível carregar os dados."));
     return () => {
       alive = false;
     };
@@ -61,6 +67,7 @@ export function AdminDataProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<AdminDataContextValue>(
     () => ({
       data,
+      loadError,
       settings,
       async create(key, item) {
         try {
@@ -102,7 +109,7 @@ export function AdminDataProvider({ children }: { children: React.ReactNode }) {
         window.location.reload();
       },
     }),
-    [data, settings, patchCollection],
+    [data, loadError, settings, patchCollection],
   );
 
   return <AdminDataContext.Provider value={value}>{children}</AdminDataContext.Provider>;

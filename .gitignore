@@ -45,3 +45,5 @@ next-env.d.ts
 /*.mp4
 /*.ogg
 /*.jpg
+
+!.env.example
