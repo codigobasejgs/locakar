@@ -42,7 +42,10 @@ export async function sendWhatsApp(db: SupabaseClient, msg: OutgoingWhatsApp): P
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
       const detail = json?.response?.message ?? json?.message ?? `HTTP ${res.status}`;
-      error = typeof detail === "string" ? detail : JSON.stringify(detail).slice(0, 200);
+      // Evolution responde [{ exists: false }] quando o número não tem conta no WhatsApp.
+      error = Array.isArray(detail) && detail[0]?.exists === false
+        ? `O número ${number} não tem WhatsApp. Confira o DDD e o telefone cadastrado.`
+        : typeof detail === "string" ? detail : JSON.stringify(detail).slice(0, 200);
     } else providerId = json?.key?.id;
   } catch (e) {
     error = (e as Error).name === "TimeoutError" ? "Servidor do WhatsApp não respondeu." : (e as Error).message;
