@@ -1,9 +1,10 @@
 "use client";
 
-import { Bell, Building2, ExternalLink, FileSignature, Mail, Palette, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { Bell, Building2, ExternalLink, FileSignature, Mail, MessageCircle, Palette, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
+import { WhatsAppConnection } from "@/components/admin/whatsapp-connection";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/dialog";
@@ -109,6 +110,10 @@ export default function SettingsPage() {
               <RotateCcw /> Restaurar cláusulas padrão
             </Button>
           </div>
+        </Section>
+
+        <Section icon={MessageCircle} title="WhatsApp das notificações" description="Número que envia contratos, termos, comprovantes, multas e alertas automáticos aos clientes.">
+          <WhatsAppConnection />
         </Section>
 
         <Section icon={Mail} title="E-mails" description="Envio pelo Resend: contratos, termos de entrega/devolução, comprovantes e multas.">
