@@ -48,6 +48,7 @@ export interface Client {
   registeredAt: string;
   name: string;
   phone: string;
+  email?: string;
   cpf: string;
   address?: string;
   firstLicenseDate?: string;
@@ -82,6 +83,34 @@ export interface Rental {
   receipts: Receipt[];
   status: RentalStatus;
   notes?: string;
+  /** Vistoria na entrega do veículo ao cliente (check-out). */
+  deliveryInspection?: Inspection;
+  /** Vistoria na devolução (check-in). */
+  returnInspection?: Inspection;
+}
+
+export type FuelLevel = "empty" | "quarter" | "half" | "three_quarters" | "full";
+
+export interface InspectionItem {
+  key: string;
+  label: string;
+  ok: boolean;
+  note?: string;
+}
+
+export interface Inspection {
+  at: string; // ISO datetime
+  km: number;
+  fuel: FuelLevel;
+  items: InspectionItem[];
+  damages?: string;
+  notes?: string;
+  /** Pendências financeiras apuradas na devolução (combustível, avarias, limpeza...). */
+  extraCharges?: number;
+  staffName: string;
+  clientName: string;
+  /** Assinatura do cliente na vistoria (PNG em data URL). */
+  clientSignature: string;
 }
 
 export type ReservationStatus = "pending" | "confirmed" | "completed" | "cancelled";
@@ -155,7 +184,63 @@ export interface Note {
 }
 
 /** Preferências do painel. Dados institucionais (WhatsApp, site) são fixos em `lib/company.ts`. */
+export type ContractStatus = "pending" | "signed" | "cancelled";
+
+export interface Contract {
+  id: string;
+  rentalId: string;
+  status: ContractStatus;
+  token: string;
+  content: string;
+  contentHash?: string;
+  clientName: string;
+  clientCpf: string;
+  clientEmail?: string;
+  companySigner?: string;
+  companySignature?: string;
+  companyEmail?: string;
+  issuedAt?: string;
+  expiresAt?: string;
+  signedName?: string;
+  signedCpf?: string;
+  signature?: string;
+  signedAt?: string;
+  signedIp?: string;
+  signedUserAgent?: string;
+}
+
+export type EmailKind = "contract_signature" | "contract_signed" | "delivery" | "return" | "receipt" | "fine";
+
+export interface EmailLog {
+  id: string;
+  kind: EmailKind;
+  toEmail: string;
+  subject: string;
+  rentalId?: string;
+  fineId?: string;
+  contractId?: string;
+  providerId?: string;
+  status: "sent" | "failed";
+  error?: string;
+  createdAt?: string;
+}
+
+/** Dados da empresa usados nos contratos e comprovantes (não inventados: preenchidos pelo administrador). */
+export interface CompanyProfile {
+  legalName: string;
+  cnpj: string;
+  address: string;
+  email: string;
+  signerName: string;
+  /** Assinatura padrão do representante (PNG em data URL). */
+  signerSignature?: string;
+  contractCity: string;
+  /** Cláusulas gerais do contrato; editáveis em Configurações. */
+  contractTerms: string;
+}
+
 export interface CompanySettings {
+  company: CompanyProfile;
   pageSize: number;
   alertWindowDays: number;
   compactTables: boolean;

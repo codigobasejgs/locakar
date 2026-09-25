@@ -46,7 +46,9 @@ assert.deepEqual(fromRow({ ...dbRow, created_at: "2026-01-01", updated_at: "2026
   clientId: "c1",
   weeklyRate: 650,
   receipts,
+  createdAt: "2026-01-01",
 });
+assert.equal("created_at" in toRow({ id: "y", createdAt: "2026-01-01" }), false); // nunca enviado ao banco
 
 // PWA: cada splash declarada no <head> precisa existir em public/splash (gerador: scripts/generate-pwa-assets.py)
 const missing = appleStartupImages()

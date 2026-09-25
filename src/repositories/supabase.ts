@@ -2,6 +2,7 @@ import { getSupabase } from "@/lib/supabase/client";
 import type { CompanySettings } from "@/types";
 import { dbErrorMessage, fromRow, toRow } from "./mapping";
 import type { Entity, Repository, SettingsRepository } from "./types";
+import { mergeSettings } from "./types";
 
 type DbError = { code?: string; message: string } | null;
 
@@ -55,7 +56,7 @@ export class SupabaseSettingsRepository implements SettingsRepository {
 
   async get() {
     const found = check(await getSupabase().from("settings").select("data").eq("id", 1).maybeSingle());
-    return { ...this.defaults, ...((found?.data as Partial<CompanySettings>) ?? {}) };
+    return mergeSettings(this.defaults, found?.data as Partial<CompanySettings> | undefined);
   }
 
   async save(settings: CompanySettings) {

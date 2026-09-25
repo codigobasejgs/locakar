@@ -1,20 +1,22 @@
 "use client";
 
-import { Bell, Building2, ExternalLink, Palette, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { Bell, Building2, ExternalLink, FileSignature, Mail, Palette, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/dialog";
-import { Checkbox, Field, Input, Select } from "@/components/ui/form";
+import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Logo } from "@/components/ui/logo";
+import { SignaturePad } from "@/components/ui/signature-pad";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useAdminData } from "@/hooks/use-admin-data";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { COMPANY, WHATSAPP_MESSAGES } from "@/lib/company";
 import { getWhatsAppUrl } from "@/lib/whatsapp";
-import type { CompanySettings } from "@/types";
+import { DEFAULT_CONTRACT_TERMS } from "@/lib/contract";
+import type { CompanyProfile, CompanySettings } from "@/types";
 
 function Section({ icon: Icon, title, description, children }: { icon: typeof Bell; title: string; description: string; children: React.ReactNode }) {
   return (
@@ -36,9 +38,16 @@ export default function SettingsPage() {
   const [draft, setDraft] = useState<CompanySettings>(settings);
   const [confirmReset, setConfirmReset] = useState(false);
   const set = <K extends keyof CompanySettings>(key: K, value: CompanySettings[K]) => setDraft((d) => ({ ...d, [key]: value }));
+  const setCompany = <K extends keyof CompanyProfile>(key: K, value: CompanyProfile[K]) =>
+    setDraft((d) => ({ ...d, company: { ...d.company, [key]: value } }));
+  const [newSignature, setNewSignature] = useState<string | null>(null);
 
   const save = async () => {
-    if (await saveSettings(draft)) toast.success("Configurações salvas.");
+    const next = newSignature ? { ...draft, company: { ...draft.company, signerSignature: newSignature } } : draft;
+    if (await saveSettings(next)) {
+      setDraft(next);
+      toast.success("Configurações salvas.");
+    }
   };
 
   return (
@@ -61,6 +70,51 @@ export default function SettingsPage() {
           <Field label="Descrição" htmlFor="s-tagline">
             <Input id="s-tagline" value={COMPANY.tagline} readOnly />
           </Field>
+        </Section>
+
+        <Section icon={FileSignature} title="Dados para contratos" description="Aparecem no contrato de locação e nos termos. Obrigatórios para emitir contratos.">
+          <Field label="Razão social" htmlFor="c-legal" required>
+            <Input id="c-legal" value={draft.company.legalName} onChange={(e) => setCompany("legalName", e.target.value)} />
+          </Field>
+          <Field label="CNPJ" htmlFor="c-cnpj" required>
+            <Input id="c-cnpj" value={draft.company.cnpj} onChange={(e) => setCompany("cnpj", e.target.value)} placeholder="00.000.000/0000-00" />
+          </Field>
+          <Field label="Endereço" htmlFor="c-address" required className="sm:col-span-2">
+            <Input id="c-address" value={draft.company.address} onChange={(e) => setCompany("address", e.target.value)} />
+          </Field>
+          <Field label="Representante (quem assina)" htmlFor="c-signer" required>
+            <Input id="c-signer" value={draft.company.signerName} onChange={(e) => setCompany("signerName", e.target.value)} />
+          </Field>
+          <Field label="Cidade / foro" htmlFor="c-city" required>
+            <Input id="c-city" value={draft.company.contractCity} onChange={(e) => setCompany("contractCity", e.target.value)} placeholder="Ex.: Campinas/SP" />
+          </Field>
+          <Field label="E-mail da empresa" htmlFor="c-email" hint="Recebe cópia dos contratos assinados e as respostas dos clientes" className="sm:col-span-2">
+            <Input id="c-email" type="email" value={draft.company.email} onChange={(e) => setCompany("email", e.target.value)} />
+          </Field>
+          <div className="sm:col-span-2">
+            {draft.company.signerSignature && !newSignature && (
+              <div className="mb-2 flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={draft.company.signerSignature} alt="Assinatura atual do representante" className="h-14 rounded-lg bg-white px-2" />
+                <span className="text-xs text-muted">Assinatura atual. Desenhe abaixo para substituir.</span>
+              </div>
+            )}
+            <SignaturePad onChange={setNewSignature} label="Assinatura do representante (vai em todos os contratos)" />
+          </div>
+          <Field label="Cláusulas gerais" htmlFor="c-terms" hint="Modelo inicial: revise com um advogado antes de usar." className="sm:col-span-2">
+            <Textarea id="c-terms" rows={12} value={draft.company.contractTerms} onChange={(e) => setCompany("contractTerms", e.target.value)} />
+          </Field>
+          <div className="sm:col-span-2">
+            <Button variant="ghost" size="sm" onClick={() => setCompany("contractTerms", DEFAULT_CONTRACT_TERMS)}>
+              <RotateCcw /> Restaurar cláusulas padrão
+            </Button>
+          </div>
+        </Section>
+
+        <Section icon={Mail} title="E-mails" description="Envio pelo Resend: contratos, termos de entrega/devolução, comprovantes e multas.">
+          <p className="text-sm text-zinc-300 sm:col-span-2">
+            Os e-mails saem do servidor. Para enviar a qualquer destinatário, o domínio precisa estar verificado no Resend (ver README).
+          </p>
         </Section>
 
         <Section icon={Bell} title="WhatsApp" description="Número oficial usado em todos os CTAs comerciais.">

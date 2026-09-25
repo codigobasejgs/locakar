@@ -1,8 +1,10 @@
 "use client";
 
-import { BellRing, CircleDollarSign, Plus, TriangleAlert, UserSearch } from "lucide-react";
+import { BellRing, CircleDollarSign, Mail, Plus, TriangleAlert, UserSearch } from "lucide-react";
+import { toast } from "sonner";
 import { DeleteDialog, FormDialog } from "@/components/admin/crud-dialogs";
 import { DataTable, type Column } from "@/components/admin/data-table";
+import { EmailHistory } from "@/components/admin/email-history";
 import { DetailList, PageHeader } from "@/components/admin/page-header";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +13,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { useAdminData, useLookups } from "@/hooks/use-admin-data";
 import { numOrUndef, numToStr, strOrUndef, useCrud } from "@/hooks/use-crud";
+import { sendEmailRequest } from "@/lib/api";
 import { FINE_STATUS, statusOptions } from "@/lib/constants";
 import { addDays, daysBetween, formatCurrency, formatDate, newId, todayISO } from "@/lib/utils";
 import type { Fine, FineStatus } from "@/types";
@@ -93,6 +96,15 @@ export default function FinesPage() {
   const open = fines.filter((f) => effective(f) !== "paid");
   const upcoming = open.filter((f) => f.dueDate >= today && f.dueDate <= addDays(today, 15));
   const idPending = fines.filter((f) => f.status === "identify");
+
+  const notify = async (f: Fine) => {
+    try {
+      const to = await sendEmailRequest({ kind: "fine", fineId: f.id });
+      toast.success(`Notificação enviada para ${to}.`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
 
   const submit = () =>
     crud.save({
@@ -256,7 +268,16 @@ export default function FinesPage() {
         onOpenChange={(o) => !o && crud.setViewing(null)}
         title={v ? `Auto ${v.noticeNumber}` : ""}
         description={v?.description}
-        footer={v && <Button onClick={() => crud.openEdit(v)}>Editar</Button>}
+        footer={
+          v && (
+            <>
+              <Button variant="outline" onClick={() => notify(v)} disabled={!v.clientId}>
+                <Mail /> Notificar cliente por e-mail
+              </Button>
+              <Button onClick={() => crud.openEdit(v)}>Editar</Button>
+            </>
+          )
+        }
       >
         {v && (
           <DetailList
@@ -274,6 +295,11 @@ export default function FinesPage() {
               { label: "Observação", value: v.notes, wide: true },
             ]}
           />
+        )}
+        {v && (
+          <div className="mt-6">
+            <EmailHistory title="Notificações enviadas" filter={(e) => e.fineId === v.id} />
+          </div>
         )}
       </Dialog>
 

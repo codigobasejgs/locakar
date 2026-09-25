@@ -8,6 +8,7 @@ import type {
   ReservationStatus,
   VehicleStatus,
 } from "@/types";
+import { EMPTY_COMPANY } from "./contract";
 
 /* ---------- Rotas ---------- */
 
@@ -79,6 +80,12 @@ export const MAINTENANCE_STATUS: StatusMap<MaintenanceStatus> = {
 };
 
 /** Lista de validação "PAGO, EM ABERTO, ATRASADO" da aba VEÍCULOS. */
+export const CONTRACT_STATUS: StatusMap<import("@/types").ContractStatus> = {
+  pending: { label: "Aguardando assinatura", tone: "warning" },
+  signed: { label: "Assinado", tone: "success" },
+  cancelled: { label: "Cancelado", tone: "neutral" },
+};
+
 export const PAYMENT_STATE: StatusMap<PaymentState> = {
   paid: { label: "Pago", tone: "success" },
   open: { label: "Em aberto", tone: "warning" },
@@ -138,6 +145,7 @@ export const TONE_COLOR: Record<Tone, string> = {
 /* ---------- Configurações padrão ---------- */
 
 export const DEFAULT_SETTINGS: CompanySettings = {
+  company: EMPTY_COMPANY,
   pageSize: 10,
   alertWindowDays: 15,
   compactTables: false,

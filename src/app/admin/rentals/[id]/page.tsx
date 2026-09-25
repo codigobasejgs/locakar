@@ -1,9 +1,12 @@
 "use client";
 
-import { ChevronLeft, CircleDollarSign, Clock, Gauge, Pencil, Printer } from "lucide-react";
+import { ChevronLeft, CircleDollarSign, Clock, Gauge, Mail, Pencil, Printer } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { ContractPanel } from "@/components/admin/contract-panel";
+import { EmailHistory } from "@/components/admin/email-history";
+import { InspectionPanel } from "@/components/admin/inspection-panel";
 import { DetailList, PageHeader } from "@/components/admin/page-header";
 import { RentalForm, emptyRentalDraft, rentalToDraft } from "@/components/admin/rental-form";
 import { Badge, StatusBadge } from "@/components/ui/badge";
@@ -11,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, EmptyState, StatCard } from "@/components/ui/card";
 import { useAdminData, useLookups } from "@/hooks/use-admin-data";
 import { useCrud } from "@/hooks/use-crud";
+import { sendEmailRequest } from "@/lib/api";
 import { rentalDays, rentalKm, rentalPending, rentalReceived } from "@/lib/analytics";
 import { RENTAL_STATUS, ROUTES } from "@/lib/constants";
 import { formatCurrency, formatDate, formatNumber, hideCPF, todayISO } from "@/lib/utils";
@@ -45,6 +49,15 @@ export default function RentalDetailPage() {
   const toggleReceipt = async (receiptId: string) => {
     const receipts = rental.receipts.map((r) => (r.id === receiptId ? { ...r, paid: !r.paid } : r));
     if (await update("rentals", rental.id, { receipts })) toast.success("Recebimento atualizado.");
+  };
+
+  const sendReceipt = async (receiptId: string) => {
+    try {
+      const to = await sendEmailRequest({ kind: "receipt", rentalId: rental.id, receiptId });
+      toast.success(`Comprovante enviado para ${to}.`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
   };
 
   return (
@@ -88,6 +101,7 @@ export default function RentalDetailPage() {
               { label: "KM inicial", value: formatNumber(rental.kmStart) },
               { label: "KM final", value: formatNumber(rental.kmEnd) },
               { label: "Telefone do locatário", value: client?.phone },
+              { label: "E-mail do locatário", value: client?.email },
               { label: "CPF", value: client ? hideCPF(client.cpf) : "—" },
               { label: "Observação", value: rental.notes, wide: true },
             ]}
@@ -101,12 +115,12 @@ export default function RentalDetailPage() {
             {rental.receipts.map((r, i) => {
               const late = !r.paid && r.dueDate < today;
               return (
-                <li key={r.id}>
+                <li key={r.id} className="flex items-stretch gap-1">
                   <button
                     type="button"
                     onClick={() => toggleReceipt(r.id)}
                     aria-pressed={r.paid}
-                    className="flex w-full items-center justify-between gap-3 rounded-xl border border-line bg-white/[0.02] px-3 py-2.5 text-left text-sm transition-colors hover:border-line-strong hover:bg-white/[0.04]"
+                    className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl border border-line bg-white/[0.02] px-3 py-2.5 text-left text-sm transition-colors hover:border-line-strong hover:bg-white/[0.04]"
                   >
                     <span>
                       <span className="block font-medium">Semana {i + 1}</span>
@@ -116,11 +130,24 @@ export default function RentalDetailPage() {
                     </span>
                     <Badge tone={r.paid ? "success" : late ? "danger" : "neutral"}>{r.paid ? "Pago" : late ? "Atrasado" : "A receber"}</Badge>
                   </button>
+                  {r.paid && (
+                    <Button variant="ghost" size="icon" className="h-auto" aria-label={`Enviar comprovante da semana ${i + 1}`} title="Enviar comprovante" onClick={() => sendReceipt(r.id)}>
+                      <Mail />
+                    </Button>
+                  )}
                 </li>
               );
             })}
           </ul>
         </Card>
+      </div>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-2">
+        <ContractPanel rental={rental} />
+        <InspectionPanel rental={rental} />
+      </div>
+      <div className="mt-4">
+        <EmailHistory filter={(e) => e.rentalId === rental.id} />
       </div>
 
       <RentalForm crud={crud} />

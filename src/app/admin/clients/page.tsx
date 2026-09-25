@@ -17,11 +17,12 @@ import { RENTAL_STATUS } from "@/lib/constants";
 import { addDays, formatCurrency, formatDate, hideCPF, isValidCPF, maskCPF, maskPhone, newId, todayISO } from "@/lib/utils";
 import type { Client } from "@/types";
 
-type Draft = Record<"name" | "phone" | "cpf" | "address" | "firstLicenseDate" | "cnhExpiry" | "notes" | "registeredAt", string>;
+type Draft = Record<"name" | "phone" | "email" | "cpf" | "address" | "firstLicenseDate" | "cnhExpiry" | "notes" | "registeredAt", string>;
 
 const empty = (): Draft => ({
   name: "",
   phone: "",
+  email: "",
   cpf: "",
   address: "",
   firstLicenseDate: "",
@@ -33,6 +34,7 @@ const empty = (): Draft => ({
 const toDraft = (c: Client): Draft => ({
   name: c.name,
   phone: c.phone,
+  email: c.email ?? "",
   cpf: c.cpf,
   address: c.address ?? "",
   firstLicenseDate: c.firstLicenseDate ?? "",
@@ -65,6 +67,7 @@ export default function ClientsPage() {
       registeredAt: draft.registeredAt || today,
       name: draft.name.trim(),
       phone: draft.phone,
+      email: strOrUndef(draft.email.toLowerCase()),
       cpf: draft.cpf,
       address: strOrUndef(draft.address),
       firstLicenseDate: strOrUndef(draft.firstLicenseDate),
@@ -102,7 +105,7 @@ export default function ClientsPage() {
         rows={clients}
         columns={columns}
         searchPlaceholder="Buscar por nome, telefone ou CPF"
-        searchText={(c) => `${c.name} ${c.phone} ${c.phone.replace(/\D/g, "")} ${c.cpf.replace(/\D/g, "")}`}
+        searchText={(c) => `${c.name} ${c.email ?? ""} ${c.phone} ${c.phone.replace(/\D/g, "")} ${c.cpf.replace(/\D/g, "")}`}
         initialSort={{ key: "name", dir: "asc" }}
         filters={[
           {
@@ -137,6 +140,9 @@ export default function ClientsPage() {
         <Field label="Telefone" htmlFor="f-phone" required>
           <Input {...bind("phone", maskPhone)} required inputMode="tel" placeholder="(19) 90000-0000" minLength={14} />
         </Field>
+        <Field label="E-mail" htmlFor="f-email" hint="Usado para contratos, termos e comprovantes">
+          <Input {...bind("email")} type="email" inputMode="email" autoComplete="off" placeholder="cliente@exemplo.com" />
+        </Field>
         <Field label="CPF" htmlFor="f-cpf" required>
           <Input {...bind("cpf", maskCPF)} required inputMode="numeric" placeholder="000.000.000-00" autoComplete="off" />
         </Field>
@@ -169,6 +175,7 @@ export default function ClientsPage() {
             <DetailList
               items={[
                 { label: "Telefone", value: v.phone },
+                { label: "E-mail", value: v.email },
                 {
                   label: "CPF",
                   value: (

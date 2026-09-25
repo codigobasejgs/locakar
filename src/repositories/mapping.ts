@@ -5,11 +5,17 @@
 const toSnake = (key: string) => key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 const toCamel = (key: string) => key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
 
-const DB_ONLY = new Set(["created_at", "updated_at"]);
+// updated_at é só do banco. created_at volta como createdAt (histórico de e-mails usa); no envio ao banco é ignorado.
+const DB_ONLY = new Set(["updated_at"]);
+const READ_ONLY = new Set(["created_at", "updated_at"]);
 
 /** Chaves presentes com `undefined` viram `null`, para limpar o campo no update. */
 export function toRow(entity: object): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(entity).map(([k, v]) => [toSnake(k), v === undefined ? null : v]));
+  return Object.fromEntries(
+    Object.entries(entity)
+      .map(([k, v]) => [toSnake(k), v === undefined ? null : v] as const)
+      .filter(([k]) => !READ_ONLY.has(k)),
+  );
 }
 
 export function fromRow<T>(row: Record<string, unknown>): T {

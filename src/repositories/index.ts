@@ -28,6 +28,8 @@ export const repositories: Repositories = isSupabaseEnabled
       maintenance: new SupabaseRepository("maintenance"),
       fines: new SupabaseRepository("fines"),
       notes: new SupabaseRepository("notes"),
+      contracts: new SupabaseRepository("contracts"),
+      emails: new SupabaseRepository("email_log"),
     }
   : {
       vehicles: new LocalStorageRepository("vehicles", seedVehicles),
@@ -38,6 +40,8 @@ export const repositories: Repositories = isSupabaseEnabled
       maintenance: new LocalStorageRepository("maintenance", seedMaintenance),
       fines: new LocalStorageRepository("fines", seedFines),
       notes: new LocalStorageRepository("notes", seedNotes),
+      contracts: new LocalStorageRepository("contracts", () => []),
+      emails: new LocalStorageRepository("emails", () => []),
     };
 
 export const settingsRepository: SettingsRepository = isSupabaseEnabled

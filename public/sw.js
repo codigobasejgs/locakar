@@ -1,12 +1,13 @@
 /* LOCAKAR — Service Worker
  * Navegação: network-first → cache → /offline
- * /admin: nunca vai para o cache (dados autenticados); offline mostra /offline
+ * /admin e /assinar: nunca vão para o cache (dados privados); offline mostra /offline
+ * /api: sempre rede
  * /_next/static (hash imutável): cache-first
  * Imagens, ícones, fontes: stale-while-revalidate
  * Vídeo: rede (requisições Range não são cacheadas)
  * Troque VERSION a cada mudança relevante neste arquivo.
  */
-const VERSION = "v3";
+const VERSION = "v4";
 const PAGES = `locakar-pages-${VERSION}`;
 const STATIC = `locakar-static-${VERSION}`;
 const MEDIA = `locakar-media-${VERSION}`;
@@ -61,7 +62,9 @@ async function trim(cacheName, max) {
 
 async function networkFirst(event) {
   const cache = await caches.open(PAGES);
-  const isPrivate = new URL(event.request.url).pathname.startsWith("/admin");
+  const path = new URL(event.request.url).pathname;
+  // Painel e assinatura têm dados privados: nunca vão para o cache.
+  const isPrivate = path.startsWith("/admin") || path.startsWith("/assinar");
   try {
     const response = (await event.preloadResponse) || (await fetch(event.request));
     if (response.ok && response.type === "basic" && !isPrivate) cache.put(event.request, response.clone());
@@ -107,7 +110,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // WhatsApp, Instagram, Google Fonts CSS: sempre rede
   if (request.headers.has("range") || url.pathname.startsWith("/video/")) return;
-  if (url.pathname === "/sw.js") return;
+  if (url.pathname === "/sw.js" || url.pathname.startsWith("/api/")) return;
 
   if (request.mode === "navigate") {
     event.respondWith(networkFirst(event));

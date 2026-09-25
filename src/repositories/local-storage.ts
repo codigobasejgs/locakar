@@ -1,6 +1,7 @@
 import { storage } from "@/lib/storage";
 import type { CompanySettings } from "@/types";
 import type { Entity, Repository, SettingsRepository } from "./types";
+import { mergeSettings } from "./types";
 
 const SAVE_ERROR = "Não foi possível salvar os dados neste navegador.";
 
@@ -55,7 +56,7 @@ export class LocalStorageSettingsRepository implements SettingsRepository {
   constructor(private readonly defaults: CompanySettings) {}
 
   async get() {
-    return { ...this.defaults, ...storage.get<Partial<CompanySettings>>("settings") };
+    return mergeSettings(this.defaults, storage.get<Partial<CompanySettings>>("settings"));
   }
 
   async save(settings: CompanySettings) {

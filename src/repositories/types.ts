@@ -1,5 +1,7 @@
 import type {
   Client,
+  Contract,
+  EmailLog,
   CompanySettings,
   Expense,
   Fine,
@@ -34,6 +36,8 @@ export type ExpenseRepository = Repository<Expense>;
 export type MaintenanceRepository = Repository<Maintenance>;
 export type FineRepository = Repository<Fine>;
 export type NoteRepository = Repository<Note>;
+export type ContractRepository = Repository<Contract>;
+export type EmailLogRepository = Repository<EmailLog>;
 
 export interface SettingsRepository {
   get(): Promise<CompanySettings>;
@@ -49,9 +53,16 @@ export interface Repositories {
   maintenance: MaintenanceRepository;
   fines: FineRepository;
   notes: NoteRepository;
+  contracts: ContractRepository;
+  emails: EmailLogRepository;
 }
 
 export type CollectionKey = keyof Repositories;
 type EntityOf<R> = R extends Repository<infer T> ? T : never;
 export type Collections = { [K in CollectionKey]: EntityOf<Repositories[K]>[] };
 export type EntityFor<K extends CollectionKey> = Collections[K][number];
+
+/** Preferências salvas + padrões (merge profundo em `company`: contas antigas ganham campos novos). */
+export function mergeSettings(defaults: CompanySettings, saved?: Partial<CompanySettings> | null): CompanySettings {
+  return { ...defaults, ...saved, company: { ...defaults.company, ...saved?.company } };
+}
