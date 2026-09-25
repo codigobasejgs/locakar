@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { contractDocument } from "@/lib/documents";
 import { emailLayout, sendEmail } from "@/lib/server/email";
+import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 import type { Contract } from "@/types";
 
@@ -12,7 +13,7 @@ import type { Contract } from "@/types";
 const anon = () => createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
 
 export async function POST(request: Request) {
-  let body: { token?: string; name?: string; cpf?: string; signature?: string; accepted?: boolean };
+  let body: { token?: string; name?: string; cpf?: string; signature?: string; selfie?: string; accepted?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
     p_name: body.name ?? "",
     p_cpf: body.cpf ?? "",
     p_signature: body.signature ?? "",
+    p_selfie: body.selfie ?? "",
     p_ip: ip,
     p_user_agent: ua,
   });
@@ -42,8 +44,23 @@ export async function POST(request: Request) {
     return Response.json({ error: known ? error.message : "Não foi possível registrar a assinatura." }, { status: known ? 422 : 500 });
   }
 
-  // Via assinada por e-mail. Falha no envio não desfaz a assinatura (já registrada no banco).
-  const signed = data as { clientName: string; clientEmail?: string; companyEmail?: string; id: string; rentalId: string };
+  // Via assinada por e-mail + confirmação por WhatsApp. Falha no envio não desfaz a assinatura (já registrada).
+  const signed = data as { clientName: string; clientEmail?: string; clientPhone?: string; companyEmail?: string; id: string; rentalId: string };
+  const when = new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
+  await sendWhatsApp(db, {
+    kind: "contract_signed",
+    phone: signed.clientPhone,
+    contractId: signed.id,
+    rentalId: signed.rentalId,
+    text: [
+      "✅ *Contrato assinado*",
+      "",
+      `Olá, ${signed.clientName.split(" ")[0]}! Recebemos sua assinatura em ${when}.`,
+      ...(signed.clientEmail ? ["A via assinada foi enviada para o seu e-mail."] : []),
+      "",
+      "_LOCAKAR · www.locakar.com.br_",
+    ].join("\n"),
+  });
   const { data: view } = await db.rpc("contract_for_signing", { p_token: body.token });
   if (view) {
     const contract = { ...(view as Contract), status: "signed" } as Contract;

@@ -3,6 +3,7 @@
 import { CalendarClock, CheckCircle2, CircleDollarSign, Plus, Wrench } from "lucide-react";
 import { DeleteDialog, FormDialog } from "@/components/admin/crud-dialogs";
 import { DataTable, type Column } from "@/components/admin/data-table";
+import { NotifyButton } from "@/components/admin/notify-button";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,14 @@ export default function MaintenancePage() {
     { key: "km", header: "KM atual", sortValue: (m) => m.currentKm, cell: (m) => <span className="tabular-nums">{formatNumber(m.currentKm)}</span> },
     { key: "next", header: "Próxima KM", sortValue: (m) => m.nextKm, cell: (m) => <span className="tabular-nums text-muted">{formatNumber(m.nextKm)}</span> },
     { key: "status", header: "Status", sortValue: (m) => m.status, cell: (m) => <StatusBadge map={MAINTENANCE_STATUS} value={m.status} /> },
+    {
+      key: "notify",
+      header: "Cliente",
+      cell: (m) =>
+        m.status !== "done" && data!.rentals.some((r) => r.vehicleId === m.vehicleId && (r.status === "active" || r.status === "late")) ? (
+          <NotifyButton request={{ kind: "maintenance", maintenanceId: m.id }} label="Avisar cliente com o veículo" />
+        ) : null,
+    },
     { key: "amount", header: "Valor", sortValue: (m) => m.amount, cell: (m) => formatCurrency(m.amount), className: "text-right" },
   ];
 

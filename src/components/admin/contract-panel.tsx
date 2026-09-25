@@ -117,18 +117,12 @@ export function ContractPanel({ rental }: { rental: Rental }) {
         {active?.status === "pending" && (
           <>
             <p className="text-sm text-zinc-300">
-              O cliente assina pelo link, confirmando o CPF.{" "}
-              {client?.email ? (
-                <>
-                  E-mail cadastrado: <strong>{client.email}</strong>.
-                </>
-              ) : (
-                <span className="text-amber-300">Cliente sem e-mail: envie o link pelo WhatsApp.</span>
-              )}
+              O cliente assina pelo link com CPF, selfie e assinatura.{" "}
+              O link vai por e-mail{client?.email ? <> (<strong>{client.email}</strong>)</> : " (cliente sem e-mail)"} e WhatsApp ({client?.phone ?? "sem telefone"}).
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => send(active)} disabled={busy || !active.clientEmail}>
-                <Mail /> Enviar por e-mail
+              <Button onClick={() => send(active)} disabled={busy}>
+                <Mail /> Enviar ao cliente
               </Button>
               <Button variant="outline" onClick={() => copy(active)}>
                 <Copy /> Copiar link
@@ -146,9 +140,16 @@ export function ContractPanel({ rental }: { rental: Rental }) {
         )}
 
         {active?.status === "signed" && (
-          <p className="text-sm text-zinc-300">
-            Assinado por <strong>{active.signedName}</strong> em {when(active.signedAt)} · IP {active.signedIp ?? "—"}
-          </p>
+          <div className="flex items-center gap-4">
+            {active.selfie && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={active.selfie} alt={`Selfie de ${active.signedName}`} className="size-20 shrink-0 rounded-xl object-cover ring-1 ring-line" />
+            )}
+            <p className="text-sm text-zinc-300">
+              Assinado por <strong>{active.signedName}</strong> em {when(active.signedAt)} · IP {active.signedIp ?? "—"}
+              <span className="block text-xs text-muted">Confira se a selfie corresponde ao documento do cliente.</span>
+            </p>
+          </div>
         )}
 
         {contracts.length > 0 && (
@@ -163,7 +164,7 @@ export function ContractPanel({ rental }: { rental: Rental }) {
                   <Button variant="ghost" size="sm" onClick={() => setViewing(c)}>
                     <Eye /> Ver
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => openDocument(contractDocument(c))}>
+                  <Button variant="ghost" size="sm" onClick={() => openDocument(contractDocument(c, { withSelfie: true }))}>
                     <Printer /> Imprimir
                   </Button>
                 </span>

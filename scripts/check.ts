@@ -5,8 +5,11 @@ import { join } from "node:path";
 import { appleStartupImages } from "../src/lib/pwa";
 import { findConflict } from "../src/lib/reservations";
 import { fromRow, toRow } from "../src/repositories/mapping";
+import type { Collections } from "../src/repositories/types";
+import { DEFAULT_SETTINGS } from "../src/lib/constants";
+import { buildNotices, dueForClient } from "../src/lib/notifications";
 import { getWhatsAppUrl } from "../src/lib/whatsapp";
-import { addDays, cpfCheckDigits, hideCPF, isValidCPF, isValidPlate, maskCPF, maskPhone, monthKey } from "../src/lib/utils";
+import { addDays, cpfCheckDigits, hideCPF, isValidCPF, isValidPlate, maskCPF, maskPhone, monthKey, toWhatsAppNumber } from "../src/lib/utils";
 
 // WhatsApp oficial
 assert.equal(getWhatsAppUrl(), "https://wa.me/5519998615873");
@@ -49,6 +52,42 @@ assert.deepEqual(fromRow({ ...dbRow, created_at: "2026-01-01", updated_at: "2026
   createdAt: "2026-01-01",
 });
 assert.equal("created_at" in toRow({ id: "y", createdAt: "2026-01-01" }), false); // nunca enviado ao banco
+
+// Alertas automáticos: todos os grupos, dono certo e sem repetição
+{
+  const T = "2026-10-10";
+  const base = { vehicles: [], clients: [], rentals: [], reservations: [], expenses: [], maintenance: [], fines: [], notes: [], contracts: [], emails: [] } as unknown as Collections;
+  const data = {
+    ...base,
+    clients: [{ id: "c1", code: 1, registeredAt: T, name: "Ana Teste", phone: "(19) 99999-0000", cpf: "", cnhExpiry: "2026-10-12" }],
+    vehicles: [{ id: "v1", plate: "ABC1D23", status: "rented", ipvaStatus: "late", licensingStatus: "paid" }],
+    fines: [{ id: "f1", clientId: "c1", vehicleId: "v1", noticeNumber: "A1", description: "x", infractionDate: T, dueDate: "2026-10-05", amount: 100, status: "pending" }],
+    rentals: [
+      { id: "r1", clientId: "c1", vehicleId: "v1", startDate: "2026-09-01", endDate: "2026-10-08", weeklyRate: 1, status: "active", receipts: [{ id: "x", dueDate: "2026-10-01", amount: 700, paid: false }] },
+    ],
+    maintenance: [{ id: "m1", vehicleId: "v1", date: "2026-10-15", description: "óleo", status: "scheduled" }],
+    reservations: [{ id: "s1", clientId: "c1", vehicleId: "v1", startDate: "2026-10-12", endDate: "2026-10-20", status: "confirmed" }],
+    contracts: [{ id: "k1", rentalId: "r1", status: "pending", issuedAt: "2026-10-01T10:00:00Z", clientName: "Ana Teste" }],
+  } as unknown as Collections;
+  const notices = buildNotices(data, DEFAULT_SETTINGS, T);
+  const groups = new Set(notices.map((n) => n.group));
+  for (const g of ["fine", "receipt", "maintenance", "cnh", "documents", "contract", "return", "reservation"]) assert.ok(groups.has(g as never), `grupo ausente: ${g}`);
+  // Manutenção e IPVA/licenciamento: só a empresa; os demais também vão ao cliente.
+  assert.ok(notices.filter((n) => n.group === "maintenance" || n.group === "documents").every((n) => !n.clientId));
+  assert.ok(notices.filter((n) => !["maintenance", "documents"].includes(n.group)).every((n) => n.clientId === "c1" && n.clientText));
+  // Lembrete já enviado recentemente não se repete.
+  const sent = new Set([notices.find((n) => n.group === "fine")!.key]);
+  assert.equal(dueForClient(notices, sent).some((n) => n.group === "fine"), false);
+  // Devolução já feita some; reserva longe demais não avisa.
+  const done = buildNotices({ ...data, rentals: [{ ...data.rentals[0], returnInspection: {} as never, status: "finished" }], reservations: [{ ...data.reservations[0], startDate: "2026-11-30" }] }, DEFAULT_SETTINGS, T);
+  assert.equal(done.some((n) => n.group === "return" || n.group === "reservation"), false);
+}
+
+// WhatsApp: telefone brasileiro → número internacional
+assert.equal(toWhatsAppNumber("(19) 99861-5873"), "5519998615873");
+assert.equal(toWhatsAppNumber("19 3232-1000"), "551932321000");
+assert.equal(toWhatsAppNumber("+55 19 99861-5873"), "5519998615873");
+assert.equal(toWhatsAppNumber("123"), null);
 
 // PWA: cada splash declarada no <head> precisa existir em public/splash (gerador: scripts/generate-pwa-assets.py)
 const missing = appleStartupImages()

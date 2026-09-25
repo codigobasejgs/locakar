@@ -204,12 +204,14 @@ export interface Contract {
   signedName?: string;
   signedCpf?: string;
   signature?: string;
+  /** Selfie tirada no ato da assinatura (JPEG em data URL). Só a equipe acessa. */
+  selfie?: string;
   signedAt?: string;
   signedIp?: string;
   signedUserAgent?: string;
 }
 
-export type EmailKind = "contract_signature" | "contract_signed" | "delivery" | "return" | "receipt" | "fine";
+export type EmailKind = "contract_signature" | "contract_signed" | "delivery" | "return" | "receipt" | "fine" | "reservation" | "maintenance" | "alert_client" | "alert_digest";
 
 export interface EmailLog {
   id: string;
@@ -220,6 +222,8 @@ export interface EmailLog {
   fineId?: string;
   contractId?: string;
   providerId?: string;
+  /** Chaves dos alertas cobertos por este e-mail (evita lembrete repetido). */
+  alertKeys?: string[];
   status: "sent" | "failed";
   error?: string;
   createdAt?: string;

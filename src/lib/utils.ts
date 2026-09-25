@@ -85,6 +85,14 @@ export function maskPhone(value: string) {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
 
+/** Telefone brasileiro → número internacional sem símbolos (5519999999999). */
+export function toWhatsAppNumber(phone?: string) {
+  const d = onlyDigits(phone ?? "");
+  if (d.length === 10 || d.length === 11) return `55${d}`;
+  if ((d.length === 12 || d.length === 13) && d.startsWith("55")) return d;
+  return null;
+}
+
 export const maskPlate = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
 
 /** Placa antiga (ABC1234) ou Mercosul (ABC1D23). */

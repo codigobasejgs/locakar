@@ -23,8 +23,10 @@ table{width:100%;border-collapse:collapse;font-size:13px}td{padding:5px 0;border
 <p class="muted">${esc(COMPANY.name)} · ${esc(COMPANY.site)} · WhatsApp ${esc(COMPANY.whatsapp.display)}</p>${body}</body></html>`;
 }
 
-export function contractDocument(c: Contract) {
+/** `withSelfie`: só para uso interno da equipe (impressão pelo painel). E-mails nunca levam a foto. */
+export function contractDocument(c: Contract, { withSelfie = false }: { withSelfie?: boolean } = {}) {
   const signed = c.status === "signed";
+  const selfie = c.selfie?.startsWith("data:image/jpeg;base64,") ? c.selfie : undefined;
   return page(
     "Contrato de locação — LOCAKAR",
     `<pre>${esc(c.content)}</pre>
@@ -36,6 +38,8 @@ export function contractDocument(c: Contract) {
   <strong>Registro de assinatura eletrônica</strong><br>
   Situação: ${signed ? "ASSINADO" : c.status === "cancelled" ? "CANCELADO" : "AGUARDANDO ASSINATURA"}<br>
   ${signed ? `Assinado por ${esc(c.signedName ?? "")} (CPF ${esc(c.signedCpf ?? "")}) em ${when(c.signedAt)} · IP ${esc(c.signedIp ?? "—")}<br>` : ""}
+  ${signed ? `Identidade confirmada por CPF e selfie capturada ao vivo no ato da assinatura${withSelfie && selfie ? "" : " (arquivada com a LOCAKAR)"}.<br>` : ""}
+  ${withSelfie && selfie ? `<img src="${selfie}" alt="selfie do assinante" style="height:120px;border-radius:8px;margin:6px 0"><br>` : ""}
   Código de integridade do conteúdo (SHA-256): ${esc(c.contentHash ?? "—")}
 </div>`,
   );

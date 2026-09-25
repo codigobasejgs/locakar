@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input } from "@/components/ui/form";
 import { Logo } from "@/components/ui/logo";
+import { SelfieCapture } from "@/components/ui/selfie-capture";
 import { SignaturePad } from "@/components/ui/signature-pad";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { COMPANY } from "@/lib/company";
@@ -33,6 +34,7 @@ export default function SignPage() {
   const [name, setName] = useState("");
   const [cpf, setCpf] = useState("");
   const [signature, setSignature] = useState<string | null>(null);
+  const [selfie, setSelfie] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,13 +53,14 @@ export default function SignPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selfie) return setError("Tire a selfie para confirmar sua identidade.");
     if (!signature) return setError("Desenhe sua assinatura no quadro.");
     setSending(true);
     setError(null);
     const res = await fetch("/api/sign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, name, cpf, signature, accepted }),
+      body: JSON.stringify({ token, name, cpf, signature, selfie, accepted }),
     });
     const json = await res.json().catch(() => ({}));
     setSending(false);
@@ -125,6 +128,7 @@ export default function SignPage() {
                   <Input id="s-cpf" value={cpf} onChange={(e) => setCpf(maskCPF(e.target.value))} required inputMode="numeric" placeholder="000.000.000-00" />
                 </Field>
               </div>
+              <SelfieCapture onChange={setSelfie} />
               <SignaturePad onChange={setSignature} label="Sua assinatura" />
               <Checkbox
                 label="Li e concordo com todas as cláusulas deste contrato e reconheço a validade desta assinatura eletrônica."
@@ -137,10 +141,10 @@ export default function SignPage() {
                   {error}
                 </p>
               )}
-              <Button type="submit" size="lg" className="w-full" disabled={sending || !accepted}>
+              <Button type="submit" size="lg" className="w-full" disabled={sending || !accepted || !selfie || !signature}>
                 {sending ? "Registrando assinatura..." : "Assinar contrato"}
               </Button>
-              <p className="text-xs text-zinc-500">Registramos data, hora, IP e navegador para comprovar a assinatura.</p>
+              <p className="text-xs text-zinc-500">Registramos selfie, data, hora, IP e navegador para comprovar a assinatura.</p>
             </form>
           </>
         )}

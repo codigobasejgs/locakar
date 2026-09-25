@@ -186,6 +186,47 @@ interface Repository<T> {
 
 Remova as variáveis para voltar ao modo demo: dados fictícios em `src/data/mock`, salvos no `localStorage` (prefixo `locakar:v1:`). **Configurações → Restaurar dados** recria a base de exemplo.
 
+## Contratos, vistorias e notificações
+
+### Assinatura do contrato
+Na página da locação: **Gerar contrato → Enviar ao cliente** (e-mail + WhatsApp) ou **Copiar link**. O cliente abre `/assinar/<token>` e:
+1. lê o contrato (texto congelado com hash SHA-256);
+2. confirma o **CPF** (tem que ser igual ao do cadastro);
+3. tira uma **selfie ao vivo** pela câmera (sem opção de galeria);
+4. **desenha a assinatura** e aceita os termos.
+
+Ficam registrados selfie, assinatura, data/hora, IP (atrás do Cloudflare, via `cf-connecting-ip`) e navegador. Contrato assinado não pode ser alterado nem excluído (trigger no banco). A selfie só é vista pela equipe (painel e impressão interna); nunca vai por e-mail.
+
+> Validade: assinatura eletrônica simples/avançada, válida entre as partes (MP 2.200-2/2001, art. 10 §2º; Lei 14.063/2020). **Não** é certificado ICP-Brasil e a selfie **não** é comparada automaticamente com documento. Para biometria facial com prova de vida e checagem na base do governo, é preciso contratar um provedor (Unico, idwall, Serpro Datavalid) — o componente `SelfieCapture` é o ponto de integração.
+
+### Vistorias
+**Registrar entrega** (check-out) e **Registrar devolução** (check-in): checklist, km, combustível, avarias, valores adicionais e assinatura do cliente. Atualizam o status da locação e do veículo e notificam o cliente com o termo.
+
+### Canais
+| Canal | Serviço | Variáveis (Vercel, só servidor) |
+|---|---|---|
+| E-mail | Resend | `RESEND_API_KEY`, `EMAIL_FROM` |
+| WhatsApp | Evolution API | `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCE` |
+
+Cada aviso vai pelos dois canais quando o cliente tem e-mail e telefone válidos. Falha em um canal não impede o outro. Tudo fica no histórico (tabela `email_log`, WhatsApp com destino `whatsapp:<número>`).
+
+| Evento | Quando | Cliente | Empresa |
+|---|---|---|---|
+| Link de assinatura | Botão "Enviar ao cliente" | ✅ | — |
+| Contrato assinado | Automático ao assinar | ✅ | ✅ e-mail |
+| Entrega / devolução | Automático ao concluir a vistoria | ✅ | — |
+| Comprovante | Envelope na semana paga | ✅ | — |
+| Multa | "Notificar cliente" na multa | ✅ | — |
+| Reserva | "Avisar" na lista de reservas | ✅ | — |
+| Manutenção | "Avisar" (se o carro está com cliente) | ✅ | — |
+| Alertas diários | Automático, 8h (Brasília) | ✅ | ✅ resumo |
+
+### Alertas automáticos (todo dia às 8h)
+`/api/cron/alerts` (Vercel Cron, `vercel.json`). Verifica: multas (vencendo, vencidas, identificação do condutor), recebimentos em atraso, manutenções, CNH, IPVA/licenciamento, contratos sem assinatura há 2+ dias, devoluções atrasadas e reservas nos próximos 3 dias.
+- **Cliente**: um aviso por dia com o que é dele, por e-mail e WhatsApp. O mesmo lembrete só se repete após 3 dias.
+- **Empresa**: resumo completo em `ALERTS_ADMIN_EMAIL` (padrão `locakarveiculos@gmail.com`) e no WhatsApp `ALERTS_ADMIN_WHATSAPP` (padrão o número oficial).
+- Requer na Vercel: `CRON_SECRET` (texto aleatório) e `SUPABASE_SECRET_KEY` (Supabase → Settings → API Keys → secret). Sem `NEXT_PUBLIC_`.
+
 ## O que não foi inventado
 
 Nenhum depoimento, avaliação, número de clientes/veículos, tempo de mercado, prêmio, preço ou dado legal aparece no site. Diárias não são exibidas publicamente — o preço é consultado via WhatsApp. As especificações dos cards (transmissão, combustível, lugares, ar) são de fábrica das versões de entrada e estão em `src/data/fleet.ts` para revisão.

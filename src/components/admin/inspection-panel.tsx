@@ -48,8 +48,7 @@ export function InspectionPanel({ rental }: { rental: Rental }) {
     // Veículo acompanha a vistoria: entregue → alugado; devolvido → disponível.
     if (vehicle && vehicle.status !== "sold") await update("vehicles", vehicle.id, { status: kind === "delivery" ? "rented" : "available" });
     toast.success(kind === "delivery" ? "Entrega registrada." : "Devolução registrada.");
-    if (client?.email) await email(kind);
-    else toast.message("Cliente sem e-mail cadastrado: o termo não foi enviado.");
+    await email(kind); // e-mail e/ou WhatsApp; avisa na tela se nenhum canal estiver disponível
     return true;
   };
 
@@ -75,8 +74,8 @@ export function InspectionPanel({ rental }: { rental: Rental }) {
               <Button size="sm" variant="outline" onClick={() => openDocument(inspectionDocument(kind, done, meta))}>
                 <Printer /> Termo
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => email(kind)} disabled={!client?.email}>
-                <Mail /> Reenviar e-mail
+              <Button size="sm" variant="ghost" onClick={() => email(kind)}>
+                <Mail /> Reenviar ao cliente
               </Button>
             </div>
           </>

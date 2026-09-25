@@ -29,6 +29,7 @@ export interface OutgoingEmail {
   rentalId?: string;
   fineId?: string;
   contractId?: string;
+  alertKeys?: string[];
 }
 
 /** Envia pelo Resend e registra em email_log (sucesso ou falha). */
@@ -57,6 +58,7 @@ export async function sendEmail(db: SupabaseClient, mail: OutgoingEmail) {
     rental_id: mail.rentalId ?? null,
     fine_id: mail.fineId ?? null,
     contract_id: mail.contractId ?? null,
+    alert_keys: mail.alertKeys ?? null,
     provider_id: providerId ?? null,
     status: error ? "failed" : "sent",
     error: error ?? null,

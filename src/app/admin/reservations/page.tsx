@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DeleteDialog, FormDialog } from "@/components/admin/crud-dialogs";
 import { DataTable, type Column } from "@/components/admin/data-table";
+import { NotifyButton } from "@/components/admin/notify-button";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -142,6 +143,11 @@ export default function ReservationsPage() {
     { key: "start", header: "Data inicial", sortValue: (r) => r.startDate, cell: (r) => formatDate(r.startDate) },
     { key: "end", header: "Data final", sortValue: (r) => r.endDate, cell: (r) => formatDate(r.endDate) },
     { key: "status", header: "Status", sortValue: (r) => r.status, cell: (r) => <StatusBadge map={RESERVATION_STATUS} value={r.status} /> },
+    {
+      key: "notify",
+      header: "Cliente",
+      cell: (r) => (r.status === "completed" ? null : <NotifyButton request={{ kind: "reservation", reservationId: r.id }} />),
+    },
   ];
 
   return (

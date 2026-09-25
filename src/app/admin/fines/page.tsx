@@ -272,7 +272,7 @@ export default function FinesPage() {
           v && (
             <>
               <Button variant="outline" onClick={() => notify(v)} disabled={!v.clientId}>
-                <Mail /> Notificar cliente por e-mail
+                <Mail /> Notificar cliente
               </Button>
               <Button onClick={() => crud.openEdit(v)}>Editar</Button>
             </>
