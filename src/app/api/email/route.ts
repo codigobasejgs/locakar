@@ -36,6 +36,8 @@ interface Message {
   contractId?: string;
 }
 
+export const maxDuration = 60;
+
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || COMPANY.siteUrl;
 const first = (name: string) => name.split(" ")[0];
 const WA_FOOTER = `\n\n_${COMPANY.name} · ${COMPANY.site}_`;

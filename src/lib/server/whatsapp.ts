@@ -44,7 +44,8 @@ export async function sendWhatsApp(db: SupabaseClient, msg: OutgoingWhatsApp): P
           ? { number, mediatype: "document", mimetype: "application/pdf", fileName: doc.filename, caption: msg.text, media: Buffer.from(doc.content).toString("base64") }
           : { number, text: msg.text, linkPreview: true },
       ),
-      signal: AbortSignal.timeout(doc ? 30_000 : 15_000),
+      // Evolution costuma levar 10-15s para responder; PDF leva mais.
+      signal: AbortSignal.timeout(doc ? 45_000 : 30_000),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
