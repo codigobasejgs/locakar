@@ -15,6 +15,7 @@ import type { Client, Contract, EmailKind, Fine, FleetVehicle, Inspection, Maint
  * Cada canal é tentado de forma independente; a requisição só falha se nenhum canal enviar.
  */
 type Body =
+  | { kind: "test"; to: string }
   | { kind: "contract_signature"; contractId: string }
   | { kind: "delivery" | "return"; rentalId: string }
   | { kind: "receipt"; rentalId: string; receiptId: string }
@@ -70,6 +71,24 @@ export async function POST(request: Request) {
     const settings = await supabase.from("settings").select("data").eq("id", 1).maybeSingle();
     const replyTo: string | undefined = settings.data?.data?.company?.email || undefined;
     const respond = async (m: Message) => Response.json({ ok: true, ...(await deliver(supabase, m, replyTo)) });
+
+    // Teste manual do painel: só e-mail, destinatário digitado pela equipe.
+    if (body.kind === "test") {
+      const to = String(body.to ?? "").trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to) || to.length > 254) throw new HttpError(422, "Informe um e-mail válido.");
+      await sendEmail(supabase, {
+        kind: "alert_digest",
+        to,
+        replyTo,
+        subject: "Teste de e-mail — LOCAKAR",
+        html: emailLayout({
+          title: "Teste de e-mail",
+          intro: "Se você recebeu esta mensagem, o envio de e-mails da LOCAKAR está funcionando.",
+          rows: [["Enviado em", new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" })]],
+        }),
+      });
+      return Response.json({ ok: true, to });
+    }
 
     if (body.kind === "contract_signature") {
       const contract = await one<Contract>("contracts", body.contractId);

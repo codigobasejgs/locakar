@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Building2, ExternalLink, FileSignature, Mail, MessageCircle, Palette, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { Bell, Building2, ExternalLink, FileSignature, Mail, MessageCircle, Palette, RotateCcw, Send, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
@@ -13,11 +13,41 @@ import { Logo } from "@/components/ui/logo";
 import { SignaturePad } from "@/components/ui/signature-pad";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useAdminData } from "@/hooks/use-admin-data";
+import { sendEmailRequest } from "@/lib/api";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { COMPANY, WHATSAPP_MESSAGES } from "@/lib/company";
 import { getWhatsAppUrl } from "@/lib/whatsapp";
 import { DEFAULT_CONTRACT_TERMS } from "@/lib/contract";
 import type { CompanyProfile, CompanySettings } from "@/types";
+
+function EmailTest() {
+  const [to, setTo] = useState("");
+  const [busy, setBusy] = useState(false);
+  if (!isSupabaseEnabled) return <p className="text-sm text-muted sm:col-span-2">Teste disponível com o banco de dados conectado.</p>;
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await sendEmailRequest({ kind: "test", to });
+      toast.success(`E-mail de teste enviado para ${to}.`);
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+    setBusy(false);
+  };
+  return (
+    <form onSubmit={send} className="grid gap-4 sm:col-span-2 sm:grid-cols-2">
+      <Field label="Enviar e-mail de teste para" htmlFor="mail-test">
+        <Input id="mail-test" type="email" required value={to} onChange={(e) => setTo(e.target.value)} placeholder="nome@exemplo.com" autoComplete="email" />
+      </Field>
+      <div className="flex items-end">
+        <Button type="submit" variant="outline" disabled={busy || !to}>
+          <Send /> {busy ? "Enviando…" : "Enviar teste"}
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 function Section({ icon: Icon, title, description, children }: { icon: typeof Bell; title: string; description: string; children: React.ReactNode }) {
   return (
@@ -120,6 +150,7 @@ export default function SettingsPage() {
           <p className="text-sm text-zinc-300 sm:col-span-2">
             Os e-mails saem do servidor. Para enviar a qualquer destinatário, o domínio precisa estar verificado no Resend (ver README).
           </p>
+          <EmailTest />
         </Section>
 
         <Section icon={Bell} title="WhatsApp" description="Número oficial usado em todos os CTAs comerciais.">

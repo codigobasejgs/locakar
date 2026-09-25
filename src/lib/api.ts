@@ -2,6 +2,7 @@
 import { isSupabaseEnabled } from "./supabase/env";
 
 export type EmailRequest =
+  | { kind: "test"; to: string }
   | { kind: "contract_signature"; contractId: string }
   | { kind: "delivery" | "return"; rentalId: string }
   | { kind: "receipt"; rentalId: string; receiptId: string }
