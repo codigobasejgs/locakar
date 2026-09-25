@@ -6,7 +6,7 @@
  * Vídeo: rede (requisições Range não são cacheadas)
  * Troque VERSION a cada mudança relevante neste arquivo.
  */
-const VERSION = "v2";
+const VERSION = "v3";
 const PAGES = `locakar-pages-${VERSION}`;
 const STATIC = `locakar-static-${VERSION}`;
 const MEDIA = `locakar-media-${VERSION}`;
@@ -28,6 +28,7 @@ const PRECACHE = [
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting(); // Assume o controle imediatamente, limpando versões antigas do /admin
   event.waitUntil(
     caches
       .open(PAGES)
@@ -60,12 +61,13 @@ async function trim(cacheName, max) {
 
 async function networkFirst(event) {
   const cache = await caches.open(PAGES);
+  const isPrivate = new URL(event.request.url).pathname.startsWith("/admin");
   try {
     const response = (await event.preloadResponse) || (await fetch(event.request));
-    const isPrivate = new URL(event.request.url).pathname.startsWith("/admin");
     if (response.ok && response.type === "basic" && !isPrivate) cache.put(event.request, response.clone());
     return response;
   } catch {
+    if (isPrivate) return (await cache.match(OFFLINE_URL)) || new Response("Sem conexão.", { status: 503 });
     return (
       (await cache.match(event.request, { ignoreSearch: true })) ||
       (await cache.match(OFFLINE_URL)) ||

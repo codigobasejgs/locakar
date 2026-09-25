@@ -251,6 +251,23 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  // Guarda client-side: garante redirecionamento mesmo se o CDN/SW servir HTML em cache.
+  useEffect(() => {
+    if (!isSupabaseEnabled) return;
+    let alive = true;
+    authService.getSession().then((session) => {
+      if (alive && !session) {
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        // Navegação completa proposital: limpa o estado em memória e passa pelo proxy de login.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+        window.location.assign(`${ROUTES.login}?next=${next}`);
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, [pathname]);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
