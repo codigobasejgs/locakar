@@ -19,14 +19,14 @@ export function Hero() {
     <section id="inicio" aria-labelledby="hero-title" className="relative flex min-h-svh items-center">
       {/* Opacidade 100% permanente durante o scroll — elimina o problema de texto transparente/lavado */}
       <motion.div style={{ y }} className="mx-auto w-full max-w-7xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-        <div className="max-w-4xl">
+        <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, filter: "blur(8px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ duration: 0.9, ease }}
           >
             {/* Logo redondo oficial da LOCAKAR */}
-            <Logo variant="circular" priority className="w-24 drop-shadow-[0_0_24px_rgba(160,0,160,0.45)] sm:w-32 lg:w-36" />
+            <Logo variant="circular" priority className="w-28 drop-shadow-[0_6px_18px_rgba(0,0,0,0.55)] sm:w-32 lg:w-[150px]" />
           </motion.div>
 
           <motion.h1
@@ -34,17 +34,17 @@ export function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.2, ease }}
-            className="mt-6 font-display text-3xl font-semibold leading-[1.1] tracking-tight text-balance sm:text-5xl lg:text-6xl"
+            className="mt-7 font-display text-3xl font-semibold leading-[1.1] tracking-tight text-balance sm:text-5xl lg:text-6xl sm:mt-8"
           >
             Seu nome não define seu trabalho.{" "}
-            <span className="text-gradient-brand">Alugue mesmo negativado!</span>
+            <span className="text-gradient-brand sm:block">Alugue mesmo negativado!</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.35, ease }}
-            className="mt-6 max-w-2xl text-base text-pretty text-zinc-300 sm:text-lg"
+            className="mt-5 max-w-[650px] text-base text-pretty text-zinc-300 sm:mt-6 sm:text-lg"
           >
             Mobilidade, praticidade e atendimento personalizado para você seguir o seu caminho.
           </motion.p>
@@ -53,7 +53,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.5, ease }}
-            className="mt-10 flex flex-col gap-3 sm:flex-row"
+            className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:mt-10 sm:w-auto sm:flex-row"
           >
             <Button asChild size="lg" className="group">
               <a href="#frota">
