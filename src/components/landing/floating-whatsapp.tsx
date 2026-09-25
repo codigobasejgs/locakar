@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { WHATSAPP_MESSAGES } from "@/lib/company";
@@ -33,16 +32,16 @@ export function FloatingWhatsApp() {
 
 /** Ctrl + Shift + A → /admin. Conveniência, não segurança. */
 export function AdminShortcut() {
-  const router = useRouter();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "a") {
         e.preventDefault();
-        router.push(ROUTES.admin);
+        // Navegação completa: /admin passa pelo proxy de login (redirect de servidor).
+        window.location.assign(ROUTES.admin);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [router]);
+  }, []);
   return null;
 }
