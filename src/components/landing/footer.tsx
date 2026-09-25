@@ -42,7 +42,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-zinc-300 hover:text-white"
               >
-                <WhatsAppIcon className="size-4 text-[#25D366]" />
+                <WhatsAppIcon className="size-4" />
                 {COMPANY.whatsapp.display}
               </a>
             </li>
@@ -53,7 +53,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-zinc-300 hover:text-white"
               >
-                <InstagramIcon className="size-4 text-brand-soft" />
+                <InstagramIcon className="size-4" />
                 {COMPANY.instagram.handle}
               </a>
             </li>

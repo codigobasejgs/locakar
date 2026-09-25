@@ -151,7 +151,7 @@ export default function SignPage() {
 
         <p className="mt-8 text-center text-sm">
           <a href={getWhatsAppUrl("Olá, LOCAKAR! Tenho uma dúvida sobre o meu contrato.")} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white">
-            <WhatsAppIcon className="size-4 text-[#25D366]" /> Dúvidas? {COMPANY.whatsapp.display}
+            <WhatsAppIcon className="size-4" /> Dúvidas? {COMPANY.whatsapp.display}
           </a>
         </p>
       </div>

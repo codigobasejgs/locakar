@@ -4,7 +4,7 @@ Frontend oficial da LOCAKAR: Landing Page cinematográfica + painel administrati
 Dados no **Supabase** (Postgres + Auth + RLS); sem configuração, roda em modo demonstração com `localStorage`.
 
 - Site: **www.locakar.com.br**
-- WhatsApp: **(19) 99861-5873** — `https://wa.me/5519998615873`
+- WhatsApp: **(19) 98961-5873** — `https://wa.me/5519989615873`
 - Instagram: **@locakar** — `https://www.instagram.com/locakar`
 
 ## Stack

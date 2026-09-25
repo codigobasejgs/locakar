@@ -33,7 +33,7 @@ export const LANDING_NAV = [
   { href: "#inicio", label: "Início" },
   { href: "#frota", label: "Frota" },
   { href: "#como-funciona", label: "Como Funciona" },
-  { href: "#sobre", label: "Sobre" },
+  { href: "#sobre", label: "Quem Somos" },
   { href: "#contato", label: "Contato" },
 ] as const;
 

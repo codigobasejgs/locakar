@@ -12,8 +12,8 @@ import { getWhatsAppUrl } from "../src/lib/whatsapp";
 import { addDays, cpfCheckDigits, hideCPF, isValidCPF, isValidPlate, maskCPF, maskPhone, monthKey, toWhatsAppNumber } from "../src/lib/utils";
 
 // WhatsApp oficial
-assert.equal(getWhatsAppUrl(), "https://wa.me/5519998615873");
-assert.equal(getWhatsAppUrl("Olá, LOCAKAR!"), "https://wa.me/5519998615873?text=Ol%C3%A1%2C%20LOCAKAR!");
+assert.equal(getWhatsAppUrl(), "https://wa.me/5519989615873");
+assert.equal(getWhatsAppUrl("Olá, LOCAKAR!"), "https://wa.me/5519989615873?text=Ol%C3%A1%2C%20LOCAKAR!");
 
 // CPF
 assert.equal(cpfCheckDigits("529982247"), "25");
@@ -24,7 +24,7 @@ assert.equal(maskCPF("52998224725"), "529.982.247-25");
 assert.equal(hideCPF("529.982.247-25"), "***.982.247-**");
 
 // Telefone e placa
-assert.equal(maskPhone("19998615873"), "(19) 99861-5873");
+assert.equal(maskPhone("19989615873"), "(19) 98961-5873");
 assert.ok(isValidPlate("ABC1234") && isValidPlate("ABC1D23"));
 assert.ok(!isValidPlate("AB12345"));
 
@@ -84,9 +84,9 @@ assert.equal("created_at" in toRow({ id: "y", createdAt: "2026-01-01" }), false)
 }
 
 // WhatsApp: telefone brasileiro → número internacional
-assert.equal(toWhatsAppNumber("(19) 99861-5873"), "5519998615873");
+assert.equal(toWhatsAppNumber("(19) 98961-5873"), "5519989615873");
 assert.equal(toWhatsAppNumber("19 3232-1000"), "551932321000");
-assert.equal(toWhatsAppNumber("+55 19 99861-5873"), "5519998615873");
+assert.equal(toWhatsAppNumber("+55 19 98961-5873"), "5519989615873");
 assert.equal(toWhatsAppNumber("123"), null);
 
 // PWA: cada splash declarada no <head> precisa existir em public/splash (gerador: scripts/generate-pwa-assets.py)

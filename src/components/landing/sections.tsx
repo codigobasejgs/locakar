@@ -7,7 +7,6 @@ import {
   ListChecks,
   MessageCircle,
   ScanEye,
-  ShieldCheck,
   Sparkles,
   Zap,
 } from "lucide-react";
@@ -75,7 +74,7 @@ export function Benefits() {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-ink/70 to-transparent" aria-hidden />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div id="beneficios">
-          <SectionHeading eyebrow="Benefícios" title="Por que escolher a LOCAKAR." />
+          <SectionHeading eyebrow="Benefícios" title="Menos custo no aluguel, mais dinheiro no seu bolso." />
         </div>
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {BENEFITS.map(({ icon: Icon, title, text }, i) => (
@@ -107,30 +106,23 @@ export function About() {
         </Reveal>
 
         <Reveal delay={0.1}>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-soft">Sobre a LOCAKAR</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-soft">Quem Somos</p>
           <h2 id="sobre-title" className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
             Mobilidade com confiança.
           </h2>
-          <div className="mt-6 space-y-4 text-base leading-relaxed text-zinc-300 sm:text-lg">
+          <div className="mt-6 space-y-5 text-base leading-relaxed text-zinc-300 sm:text-lg">
+            <p>A Locakar nasceu com o propósito de simplificar a mobilidade e impulsionar o trabalho dos motoristas de aplicativo.</p>
+            <p>Sabemos que cada quilômetro rodado representa dedicação e busca por resultados.</p>
+            <p>Por isso, entregamos mais do que o aluguel de um veículo: oferecemos uma parceria completa.</p>
             <p>
-              A LOCAKAR é uma locadora de veículos dedicada a tornar o aluguel de carros uma experiência simples, clara e
-              próxima de quem precisa se locomover.
+              Com uma frota revisada, suporte ágil e processos simplificados, garantimos que você tenha em mãos um carro
+              seguro, econômico e pronto para rodar.
             </p>
             <p>
-              Trabalhamos com uma frota selecionada e um atendimento direto, para que cada cliente encontre a opção certa
-              para a sua rotina — com praticidade do primeiro contato até a devolução.
+              Na Locakar, descomplicamos a burocracia para que você ganhe tempo, economize e atinja seu potencial máximo
+              na rodovia.
             </p>
           </div>
-          <ul className="mt-8 grid gap-3 sm:grid-cols-2">
-            {["Atendimento direto pelo WhatsApp", "Condições combinadas com clareza", "Veículos revisados", "Acompanhamento durante a locação"].map(
-              (item) => (
-                <li key={item} className="flex items-center gap-2.5 text-sm text-zinc-200">
-                  <ShieldCheck className="size-4 shrink-0 text-brand-soft" aria-hidden />
-                  {item}
-                </li>
-              ),
-            )}
-          </ul>
         </Reveal>
       </div>
     </section>
@@ -168,7 +160,7 @@ export function FinalCta() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-medium text-zinc-300 transition-colors hover:text-white"
             >
-              <InstagramIcon className="size-4 text-brand-soft" />
+              <InstagramIcon className="size-4" />
               Acompanhe no Instagram {COMPANY.instagram.handle}
             </a>
           </div>

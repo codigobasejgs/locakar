@@ -41,7 +41,7 @@ export function Header() {
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-40 border-b pt-[env(safe-area-inset-top)] transition-[background-color,border-color,backdrop-filter] duration-500",
-        solid ? "border-white/8 bg-[rgb(5_5_5/0.82)] backdrop-blur-[20px]" : "border-transparent bg-transparent",
+        solid ? "border-white/10 bg-[rgb(5_5_5/0.95)] backdrop-blur-[24px]" : "border-transparent bg-transparent",
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:h-20 lg:px-8">
@@ -64,7 +64,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="icon" className="hidden text-zinc-300 hover:text-white md:inline-flex">
             <a href={COMPANY.instagram.url} target="_blank" rel="noopener noreferrer" aria-label={`Instagram da LOCAKAR (${COMPANY.instagram.handle})`}>
-              <InstagramIcon className="!size-5" />
+              <InstagramIcon className="!size-6" />
             </a>
           </Button>
           <Button asChild variant="whatsapp" size="md" className="hidden md:inline-flex">

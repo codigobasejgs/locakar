@@ -3,9 +3,9 @@ export const COMPANY = {
   name: "LOCAKAR",
   tagline: "LOCADORA DE VEÍCULOS",
   whatsapp: {
-    e164: "5519998615873",
-    international: "+55 19 99861-5873",
-    display: "(19) 99861-5873",
+    e164: "5519989615873",
+    international: "+55 19 98961-5873",
+    display: "(19) 98961-5873",
   },
   site: "www.locakar.com.br",
   siteUrl: "https://www.locakar.com.br",

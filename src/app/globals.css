@@ -71,11 +71,12 @@ body {
   height: 100lvh;
   z-index: 1;
   pointer-events: none;
+  /* Contraste reforçado: o conteúdo permanece legível durante toda a rolagem, sem perder o clima cinematográfico. */
   background:
     radial-gradient(ellipse 60% 45% at 50% 108%, rgb(160 0 160 / 0.22), transparent 70%),
-    radial-gradient(ellipse at center, transparent 45%, rgb(0 0 0 / 0.7) 100%),
-    linear-gradient(90deg, rgb(0 0 0 / 0.55), transparent 30%, transparent 70%, rgb(0 0 0 / 0.55)),
-    linear-gradient(180deg, rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.65), rgb(0 0 0 / 0.92));
+    radial-gradient(ellipse at center, transparent 35%, rgb(0 0 0 / 0.78) 100%),
+    linear-gradient(90deg, rgb(0 0 0 / 0.6), transparent 30%, transparent 70%, rgb(0 0 0 / 0.6)),
+    linear-gradient(180deg, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.8), rgb(0 0 0 / 0.96));
 }
 
 /* Leitura reforçada no mobile */
@@ -83,7 +84,7 @@ body {
   .video-overlay {
     background:
       radial-gradient(ellipse 80% 40% at 50% 105%, rgb(160 0 160 / 0.2), transparent 70%),
-      linear-gradient(180deg, rgb(0 0 0 / 0.5), rgb(0 0 0 / 0.75), rgb(0 0 0 / 0.95));
+      linear-gradient(180deg, rgb(0 0 0 / 0.62), rgb(0 0 0 / 0.85), rgb(0 0 0 / 0.97));
   }
 }
 
@@ -98,10 +99,10 @@ body {
 }
 
 @utility glass {
-  background: rgb(5 5 5 / 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgb(255 255 255 / 0.1);
+  background: rgb(5 5 5 / 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgb(255 255 255 / 0.12);
 }
 
 @utility text-gradient-brand {
