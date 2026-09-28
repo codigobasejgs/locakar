@@ -1,4 +1,3 @@
-import * as Notifications from "expo-notifications";
 import { Stack, useRouter, useSegments, type Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -8,6 +7,7 @@ import { ErrorBanner } from "../components/domain/ScreenState";
 import { Colors } from "../constants/theme";
 import { LocatarioProvider } from "../context/LocatarioProvider";
 import { useLocatario } from "../hooks/useLocatario";
+import { clearNotificationResponse, useNotificationResponse } from "../hooks/useNotificationResponse";
 
 /**
  * Destino ao tocar numa notificação (data.screen, definido pelo servidor em lib/server/push.ts).
@@ -41,13 +41,13 @@ function Gate() {
     else if (state === "ready" && !needsConsent && (inAuth || !group)) router.replace("/(tabs)/inicio");
   }, [state, needsConsent, segments, router]);
 
-  // Toque na notificação (app aberto, em segundo plano ou fechado).
-  const response = Notifications.useLastNotificationResponse();
+  // Toque na notificação (app aberto, em segundo plano ou fechado). No web é noop.
+  const response = useNotificationResponse();
   useEffect(() => {
     if (Platform.OS === "web" || state !== "ready" || needsConsent || !response) return;
     const screen = response.notification.request.content.data?.screen;
     router.push(SCREENS[typeof screen === "string" ? screen : ""] ?? SCREENS.inicio);
-    Notifications.clearLastNotificationResponseAsync().catch(() => {});
+    clearNotificationResponse();
   }, [response, state, needsConsent, router]);
 
   if (state === "loading") {

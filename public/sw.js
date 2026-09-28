@@ -111,7 +111,14 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // WhatsApp, Instagram, Google Fonts CSS: sempre rede
   if (request.headers.has("range") || url.pathname.startsWith("/video/")) return;
-  if (url.pathname === "/sw.js" || url.pathname.startsWith("/api/") || url.pathname.startsWith("/locatario")) return;
+  if (url.pathname === "/sw.js" || url.pathname.startsWith("/api/")) return;
+  // App do Locatário: consome preloadResponse no navigate para evitar cancelamento e passa direto para a rede.
+  if (url.pathname.startsWith("/locatario")) {
+    if (request.mode === "navigate") {
+      event.respondWith((async () => (await event.preloadResponse) || fetch(event.request))());
+    }
+    return;
+  }
 
   if (request.mode === "navigate") {
     event.respondWith(networkFirst(event));

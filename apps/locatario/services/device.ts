@@ -18,9 +18,11 @@ const EAS_PROJECT_ID: string | undefined = Constants.expoConfig?.extra?.eas?.pro
 // Número do projeto Google Cloud da Play Integrity (público, não é segredo). Vazio = verificação desligada.
 const PLAY_CLOUD_PROJECT: string | undefined = Constants.expoConfig?.extra?.playIntegrityCloudProject;
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
-});
+if (Platform.OS !== "web") {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+  });
+}
 
 async function pushToken(ask: boolean): Promise<string | null> {
   if (Platform.OS === "web" || !Device.isDevice || !EAS_PROJECT_ID) return null;
