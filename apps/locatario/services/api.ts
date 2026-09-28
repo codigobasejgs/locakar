@@ -59,9 +59,14 @@ export interface TenantVehicle {
   brand: string;
   model: string;
   year: number;
+  yearModel?: string;
   plate: string;
+  image?: string;
   fuel: string;
   transmission: string;
+  seats?: number;
+  airConditioning?: boolean;
+  category?: string;
 }
 
 export interface TenantRental {
@@ -71,6 +76,11 @@ export interface TenantRental {
   endDate: string;
   contractType: string;
   deposit: number | null;
+  kmStart: number | null;
+  kmEnd: number | null;
+  /** Vistorias oficiais registradas pela equipe (retirada e devolução). */
+  delivery: { at: string; km: number; fuel: string } | null;
+  returned: { at: string; km: number; fuel: string } | null;
   vehicle: TenantVehicle | null;
   billing: {
     period: string;
@@ -91,4 +101,93 @@ export interface TenantSummary {
   pix: { name: string } | null;
   support: { whatsapp: string; display: string };
   today: string;
+  privacyVersion: string;
+  /** Aceite da política atual; null = o app mostra a tela de privacidade antes de tudo. */
+  consent: { scopes: string[]; at: string } | null;
+}
+
+/* ---------- Demais telas ---------- */
+
+export interface Photo {
+  slot: string;
+  url: string | null;
+}
+
+export interface AppInspection {
+  id: string;
+  rentalId: string;
+  kind: string;
+  km: number;
+  fuel: string;
+  items: { key: string; label: string; ok: boolean; note?: string }[];
+  damages: string | null;
+  notes: string | null;
+  status: string;
+  adminNotes: string | null;
+  createdAt: string;
+  photos: Photo[];
+}
+
+export interface Incident {
+  id: string;
+  rentalId: string;
+  category: string;
+  description: string;
+  status: string;
+  adminNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  photos: string[];
+}
+
+export interface TenantDocument {
+  id: string;
+  kind: string;
+  status: string;
+  rejectionReason: string | null;
+  createdAt: string;
+  url: string | null;
+}
+
+export interface Maintenance {
+  id: string;
+  date: string;
+  description: string;
+  currentKm: number | null;
+  nextKm: number | null;
+  status: string;
+}
+
+export interface Fine {
+  id: string;
+  noticeNumber: string;
+  infractionDate: string;
+  driverIdDeadline: string | null;
+  discountDeadline: string | null;
+  description: string;
+  dueDate: string;
+  amount: number;
+  paymentDate: string | null;
+  status: string;
+}
+
+export interface Reservation {
+  id: string;
+  vehicleId: string;
+  vehicleName: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
+
+export interface FleetVehicle {
+  id: string;
+  name: string;
+  category: string;
+  transmission: string;
+  fuel: string;
+  seats: number;
+  image: string;
+  dailyRate: number | null;
+  weeklyRate: number | null;
 }

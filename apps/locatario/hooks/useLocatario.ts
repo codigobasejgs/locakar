@@ -6,16 +6,21 @@ export type TenantState =
   | "loading" // verificando sessão
   | "signed-out" // sem login
   | "unlinked" // logado, mas a conta não está ligada a um cadastro da LOCAKAR
-  | "ready"; // dados carregados
+  | "error" // sem internet no primeiro acesso (nada salvo no aparelho)
+  | "ready"; // dados carregados (do servidor ou da última cópia salva)
 
 interface LocatarioContextValue {
   session: Session | null;
   state: TenantState;
   summary: TenantSummary | null;
-  /** Locação em andamento (ativa ou atrasada), senão a mais recente. */
+  /** Locação em andamento (ativa ou atrasada), senão a próxima, senão a mais recente. */
   activeRental: TenantRental | null;
   error: string | null;
+  /** Mostrando a cópia salva no aparelho porque está sem internet. */
+  offline: boolean;
   refreshing: boolean;
+  /** Muda quando algo é atualizado (tempo real ou puxar para atualizar). */
+  version: number;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 }

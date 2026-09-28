@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
     "/api/email": ["./public/logos/locakar-logo-light.png"],
     "/api/sign": ["./public/logos/locakar-logo-light.png"],
   },
+  async rewrites() {
+    return [
+      // SPA do App do Locatário (Expo web export): rotas internas /locatario/* servem o index.html.
+      { source: "/locatario/:path*", destination: "/locatario/index.html" },
+    ];
+  },
   async headers() {
     return [
       {

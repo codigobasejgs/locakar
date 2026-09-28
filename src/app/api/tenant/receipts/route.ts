@@ -2,7 +2,8 @@ import { chargeFor } from "@/lib/billing";
 import { formatCurrency, formatDate, todaySP } from "@/lib/utils";
 import { loadSettings, notifyStaff, serviceDb } from "@/lib/server/push";
 import { HttpError, errorResponse } from "@/lib/server/supabase";
-import { corsHeaders, requireTenant } from "@/lib/server/tenant";
+import { createHash } from "node:crypto";
+import { audit, corsHeaders, requireTenant, tenantOptions } from "@/lib/server/tenant";
 import { fromRow } from "@/repositories/mapping";
 import type { Rental } from "@/types";
 
@@ -17,14 +18,12 @@ import type { Rental } from "@/types";
  */
 export const dynamic = "force-dynamic";
 
-export function OPTIONS(request: Request) {
-  return new Response(null, { status: 204, headers: corsHeaders(request) });
-}
+export const OPTIONS = tenantOptions;
 
 export async function POST(request: Request) {
   const headers = corsHeaders(request);
   try {
-    const { db, clientId } = await requireTenant(request);
+    const { db, clientId, ip } = await requireTenant(request);
     const body = (await request.json().catch(() => ({}))) as { rentalId?: unknown; receiptId?: unknown; proofPath?: unknown };
     const rentalId = typeof body.rentalId === "string" ? body.rentalId : "";
     const receiptId = typeof body.receiptId === "string" ? body.receiptId : "";
@@ -36,7 +35,7 @@ export async function POST(request: Request) {
       throw new HttpError(422, "Arquivo do comprovante inválido.");
     }
 
-    const { data: row } = await db.from("rentals").select("*").eq("id", rentalId).eq("client_id", clientId).maybeSingle();
+    const { data: row } = await db.from("tenant_rentals").select("*").eq("id", rentalId).maybeSingle();
     if (!row) throw new HttpError(404, "Locação não encontrada.");
     const rental = fromRow<Rental>(row);
     const installment = rental.receipts.find((r) => r.id === receiptId);
@@ -49,6 +48,9 @@ export async function POST(request: Request) {
     const name = proofPath.slice(proofPath.lastIndexOf("/") + 1);
     const { data: files } = await admin.storage.from("comprovantes").list(folder, { search: name, limit: 1 });
     if (!files?.some((f) => f.name === name)) throw new HttpError(422, "O arquivo do comprovante não foi encontrado. Envie novamente.");
+    // Impressão digital da imagem: a mesma usada em outro pagamento vira sinal na Central de Segurança.
+    const { data: blob } = await admin.storage.from("comprovantes").download(proofPath);
+    const sha = blob ? createHash("sha256").update(Buffer.from(await blob.arrayBuffer())).digest("hex") : null;
 
     const today = todaySP();
     const settings = await loadSettings(admin);
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
 
     const { data: created, error } = await admin
       .from("payment_receipts")
-      .insert({ client_id: clientId, rental_id: rentalId, receipt_id: receiptId, amount, proof_url: proofPath, status: "pending_review", payment_date: today })
+      .insert({ client_id: clientId, rental_id: rentalId, receipt_id: receiptId, amount, proof_url: proofPath, proof_sha256: sha, status: "pending_review", payment_date: today })
       .select("id")
       .single();
     if (error) {
@@ -66,7 +68,8 @@ export async function POST(request: Request) {
       throw new HttpError(500, "Não foi possível registrar o comprovante.");
     }
 
-    const { data: client } = await db.from("clients").select("name").eq("id", clientId).single();
+    await audit({ actorType: "client", actorId: clientId, action: "payment_receipt.submitted", entity: "payment_receipts", entityId: created.id, details: { rentalId, receiptId, amount }, ip });
+    const { data: client } = await db.from("tenant_profile").select("name").single();
     await notifyStaff([
       {
         type: "payment.receipt_submitted",

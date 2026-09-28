@@ -102,7 +102,7 @@ export async function POST(request: Request) {
         url: `/assinar/${body.token}`,
         severity: "success",
         tag: `contract-${signed.id}`,
-      });
+      }, "locacao");
     }
     if (pdf) {
       const html = emailLayout({

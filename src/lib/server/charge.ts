@@ -101,7 +101,7 @@ export async function sendCharge(
     url: args.clientUrl ?? "/",
     severity: late ? "warning" : "info",
     tag: `charge-${receipt.id}`,
-  });
+  }, "pagamentos");
   if (push.sent) sent.push("notificação no celular");
 
   if (!sent.length) throw new Error(errors[0] ?? `O cliente ${client.name} não tem e-mail nem WhatsApp válido.`);

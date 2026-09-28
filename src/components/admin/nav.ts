@@ -7,6 +7,8 @@ import {
   NotebookPen,
   Receipt,
   Settings,
+  ShieldCheck,
+  Smartphone,
   TriangleAlert,
   Users,
   Wallet,
@@ -33,6 +35,8 @@ export const ADMIN_NAV: NavItem[] = [
   { href: ROUTES.maintenance, label: "Manutenção", icon: Wrench, description: "Manutenções da frota" },
   { href: ROUTES.fines, label: "Multas", icon: TriangleAlert, description: "Autuações, prazos e pagamentos" },
   { href: ROUTES.notes, label: "Anotações", icon: NotebookPen, description: "Registro de ocorrências" },
+  { href: ROUTES.incidents, label: "App do locatário", icon: Smartphone, description: "Ocorrências e documentos enviados pelo app" },
+  { href: ROUTES.security, label: "Segurança", icon: ShieldCheck, description: "Antifraude, aparelhos e auditoria do app" },
   { href: ROUTES.reports, label: "Relatórios", icon: ChartColumn, description: "Relatórios por período, veículo e status" },
   { href: ROUTES.settings, label: "Configurações", icon: Settings, description: "Empresa e preferências do painel" },
 ];

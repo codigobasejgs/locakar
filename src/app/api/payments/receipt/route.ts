@@ -101,7 +101,7 @@ export async function POST(request: Request) {
           url: "/",
           severity: "success",
           tag: `receipt-${proof.id}`,
-        });
+        }, "pagamentos");
         if (client.email) {
           await sendEmail(db, {
             kind: "receipt",
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
         url: "/",
         severity: "warning",
         tag: `receipt-${proof.id}`,
-      });
+      }, "pagamentos");
     }
     return Response.json({ ok: true, status: "rejected" });
   } catch (e) {

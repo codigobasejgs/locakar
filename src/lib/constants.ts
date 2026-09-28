@@ -27,6 +27,8 @@ export const ROUTES = {
   finance: "/admin/finance",
   reports: "/admin/reports",
   settings: "/admin/settings",
+  incidents: "/admin/incidents",
+  security: "/admin/security",
 } as const;
 
 export const LANDING_NAV = [

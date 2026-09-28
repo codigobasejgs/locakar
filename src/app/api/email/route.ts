@@ -73,7 +73,7 @@ async function deliver(db: SupabaseClient, m: Message, replyTo?: string) {
     url: m.clientUrl ?? "/",
     severity: m.kind === "fine" ? "warning" : "info",
     tag: `${m.kind}-${m.rentalId ?? m.fineId ?? m.client.id}`,
-  });
+  }, m.kind === "fine" ? "multas" : m.kind === "charge" || m.kind === "receipt" ? "pagamentos" : "locacao");
   if (push.sent) sent.push("notificação no celular");
 
   if (!sent.length) throw new HttpError(422, errors[0] ?? `O cliente ${m.client.name} não tem e-mail nem WhatsApp válido.`);

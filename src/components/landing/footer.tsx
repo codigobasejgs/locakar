@@ -1,4 +1,4 @@
-import { Globe, Settings } from "lucide-react";
+import { Globe, Settings, Smartphone } from "lucide-react";
 import { InstallButton } from "@/components/pwa/install-button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { Logo } from "@/components/ui/logo";
@@ -70,15 +70,27 @@ export function Footer() {
       <div className="border-t border-white/6">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pr-20 text-xs text-zinc-500 sm:px-6 sm:pr-24 lg:px-8">
           <p>© 2026 {COMPANY.name}. Todos os direitos reservados.</p>
-          {/* Acesso discreto à área interna. <a> e não <Link>: /admin passa pelo proxy de login. Atalho: Ctrl + Shift + A */}
-          <a
-            href={ROUTES.admin}
-            aria-label="Área interna"
-            title="Área interna"
-            className="rounded-md p-1 text-zinc-700 transition-colors hover:text-zinc-400"
-          >
-            <Settings className="size-3.5" aria-hidden />
-          </a>
+          <div className="flex items-center gap-2">
+            {/* Ícone temporário de redirecionamento para o app do locatário (web / PWA). */}
+            <a
+              href="/locatario"
+              aria-label="App do locatário"
+              title="App do locatário"
+              className="inline-flex items-center gap-1.5 rounded-full border border-magenta/30 bg-magenta/10 px-2.5 py-1 text-[11px] font-medium text-brand-soft transition-colors hover:border-magenta/60 hover:bg-magenta/20 hover:text-white"
+            >
+              <Smartphone className="size-3.5" aria-hidden />
+              <span>App do locatário</span>
+            </a>
+            {/* Acesso discreto à área interna. <a> e não <Link>: /admin passa pelo proxy de login. Atalho: Ctrl + Shift + A */}
+            <a
+              href={ROUTES.admin}
+              aria-label="Área interna"
+              title="Área interna"
+              className="rounded-md p-1 text-zinc-700 transition-colors hover:text-zinc-400"
+            >
+              <Settings className="size-3.5" aria-hidden />
+            </a>
+          </div>
         </div>
       </div>
     </footer>

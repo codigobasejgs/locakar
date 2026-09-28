@@ -1,4 +1,5 @@
-import { Car, FileText, MessageCircle } from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { AlertTriangle, Car, ClipboardCheck, FileText, MessageCircle } from "lucide-react-native";
 import { Linking, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ErrorBanner } from "../../components/domain/ScreenState";
@@ -22,6 +23,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export default function LocacaoScreen() {
+  const router = useRouter();
   const { summary, activeRental: r, error, refreshing, refresh } = useLocatario();
   const others = (summary?.rentals ?? []).filter((x) => x.id !== r?.id);
   const b = r?.billing;
@@ -67,6 +69,8 @@ export default function LocacaoScreen() {
                 <Field label="Caução" value={money(r.deposit)} />
                 {b && <Field label={`Parcela ${PERIOD[b.period]?.toLowerCase() ?? ""}`} value={money(b.amount)} />}
                 <Field label="Parcelas pagas" value={`${paid} de ${r.installments.length}`} />
+                {r.kmStart != null && <Field label="Km na retirada" value={`${r.kmStart.toLocaleString("pt-BR")} km`} />}
+                {r.kmEnd != null && <Field label="Km na devolução" value={`${r.kmEnd.toLocaleString("pt-BR")} km`} />}
               </View>
               {b && (b.lateFeePercent > 0 || b.interestPercent > 0) && (
                 <Text style={styles.muted}>
@@ -76,11 +80,13 @@ export default function LocacaoScreen() {
               )}
             </Card>
 
+            <Button label="Meu veículo e vistorias" icon={<ClipboardCheck color={Colors.text} size={18} />} onPress={() => router.push("/veiculo")} />
+            <Button label="Relatar um problema com o veículo" variant="outline" icon={<AlertTriangle color={Colors.text} size={18} />} onPress={() => router.push("/ocorrencias")} />
             <Button
-              label="Relatar um problema com o veículo"
-              variant="outline"
+              label="Falar com a LOCAKAR"
+              variant="ghost"
               icon={<MessageCircle color={Colors.text} size={18} />}
-              onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, `Olá, LOCAKAR! Preciso relatar um problema com o veículo ${r.vehicle?.plate ?? ""}.`))}
+              onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, `Olá, LOCAKAR! Sobre a locação do veículo ${r.vehicle?.plate ?? ""}.`))}
             />
           </>
         )}

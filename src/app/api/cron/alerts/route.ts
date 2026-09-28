@@ -126,7 +126,7 @@ export async function GET(request: Request) {
       url: "/",
       severity: list.some((n) => n.urgent) ? "warning" : "info",
       tag: `lembrete-${client.id}`,
-    });
+    }, "inicio");
     if (push.sent) reached = true;
     if (reached) report.clientsNotified++;
     else report.clientsWithoutContact++;
@@ -203,6 +203,8 @@ export async function GET(request: Request) {
   // ---------- Equipe: central de notificações + Web Push ----------
   const push = await notifyStaff(notices.map(noticeToEvent), { db });
   await db.rpc("prune_notifications");
+  // Retenção LGPD do App do Locatário (telemetria 180 dias, aparelhos inativos, auditoria).
+  const { data: purged } = await db.rpc("purge_tenant_data");
 
-  return Response.json({ ...report, charges, push }, { status: report.failures.length || charges.failed.length ? 207 : 200 });
+  return Response.json({ ...report, charges, push, purged }, { status: report.failures.length || charges.failed.length ? 207 : 200 });
 }

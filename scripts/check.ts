@@ -240,4 +240,29 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
   assert.equal(receiptsToCharge(rent(true, "finished"), "2026-10-10").length, 0);
 }
 
+// App do Locatário: score antifraude (nunca bloqueia; só orienta a equipe) e assinatura montada no servidor.
+{
+  const { riskScore, riskLevel } = await import("../src/lib/antifraud");
+  const { signatureSvg, isIsoDate, PHOTO_SLOTS } = await import("../src/lib/tenant");
+  const clean = { newDevice: false, otherClientsOnDevice: 0, activeDevices: 1, emulator: false, integrity: "verified" as const, distinctIps24h: 1, duplicateProofs: 0, rejectedProofs30d: 0 };
+  assert.deepEqual(riskScore(clean), { score: 0, factors: [] });
+  assert.equal(riskLevel(riskScore({ ...clean, newDevice: true, integrity: "unavailable" }).score), "baixo");
+  assert.equal(riskLevel(riskScore({ ...clean, otherClientsOnDevice: 1 }).score), "atencao");
+  assert.equal(riskLevel(riskScore({ ...clean, duplicateProofs: 1, emulator: true }).score), "elevado");
+  const worst = riskScore({ newDevice: true, otherClientsOnDevice: 2, activeDevices: 9, emulator: true, integrity: "failed", distinctIps24h: 9, duplicateProofs: 3, rejectedProofs30d: 5 });
+  assert.equal(worst.score, 100);
+  assert.equal(riskLevel(worst.score), "critico");
+  assert.equal(riskLevel(29), "baixo");
+  assert.equal(riskLevel(30), "atencao");
+  assert.equal(riskLevel(60), "elevado");
+  assert.equal(riskLevel(80), "critico");
+  // Traço válido vira SVG; qualquer marcação, script ou texto é recusado.
+  assert.ok(signatureSvg("M10 10 L20 20 L30 15")?.startsWith("<svg"));
+  assert.equal(signatureSvg('M10 10"/><script>alert(1)</script>'), null);
+  assert.equal(signatureSvg("L10 10 L20 20 L30"), null);
+  assert.equal(signatureSvg(42), null);
+  assert.ok(isIsoDate("2026-10-01") && !isIsoDate("2026-13-01") && !isIsoDate("01/10/2026"));
+  assert.equal(new Set(PHOTO_SLOTS.map((s) => s.key)).size, PHOTO_SLOTS.length);
+}
+
 console.log("✓ check ok");

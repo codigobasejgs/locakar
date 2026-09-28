@@ -103,18 +103,68 @@ export async function sendPushToRole(db: SupabaseClient, role: "staff", payload:
 /** Todos os dispositivos da equipe. Restrito ao servidor (inscrever exige ser da equipe). */
 export const sendPushToAll = (db: SupabaseClient, payload: PushPayload) => deliver(db, payload);
 
+/** Tela do App do Locatário aberta ao tocar na notificação (rotas do Expo Router). */
+export type TenantScreen = "inicio" | "pagamentos" | "locacao" | "veiculo" | "ocorrencias" | "documentos" | "multas" | "reservas" | "notificacoes";
+
+const EXPO_PUSH = "https://exp.host/--/api/v2/push/send";
+
 /**
- * Push para os dispositivos do cliente (ativados na página do contrato). Nunca lança.
- * O clique abre a página do contrato dele (ou o site), nunca o painel.
+ * Push nativo do App do Locatário pelo serviço da Expo (entrega via FCM/APNs configurados no EAS).
+ * Tokens em tenant_devices, gravados pelo servidor. Token inválido (DeviceNotRegistered) é desativado.
+ * EXPO_ACCESS_TOKEN (opcional, só no servidor) ativa o "push security" da Expo.
  */
-export async function sendPushToClient(clientId: string | undefined, payload: PushPayload) {
-  if (!clientId || !isPushConfigured()) return { sent: 0, failed: 0, expired: 0 };
-  try {
-    return await deliver(serviceDb(), payload, [clientId], "client_push_subscriptions");
-  } catch (e) {
-    console.error("[push] cliente:", (e as Error).message);
-    return { sent: 0, failed: 0, expired: 0 };
-  }
+async function deliverNative(db: SupabaseClient, clientId: string, payload: PushPayload, screen: TenantScreen) {
+  const { data: devices } = await db.from("tenant_devices").select("id,push_token").eq("client_id", clientId).eq("active", true);
+  if (!devices?.length) return { sent: 0, failed: 0 };
+  const messages = devices.map((d) => ({
+    to: d.push_token as string,
+    title: payload.title,
+    body: payload.body,
+    sound: "default",
+    priority: payload.severity === "critical" || payload.severity === "warning" ? "high" : "normal",
+    channelId: "default",
+    data: { screen, tag: payload.tag ?? null },
+  }));
+  const res = await fetch(EXPO_PUSH, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(process.env.EXPO_ACCESS_TOKEN ? { Authorization: `Bearer ${process.env.EXPO_ACCESS_TOKEN}` } : {}),
+    },
+    body: JSON.stringify(messages),
+    signal: AbortSignal.timeout(10_000),
+  });
+  const json = (await res.json().catch(() => ({}))) as { data?: { status: string; details?: { error?: string } }[] };
+  const tickets = json.data ?? [];
+  const dead = tickets.map((t, i) => (t.details?.error === "DeviceNotRegistered" ? (devices[i].id as string) : null)).filter(Boolean) as string[];
+  if (dead.length) await db.from("tenant_devices").update({ active: false, updated_at: new Date().toISOString() }).in("id", dead);
+  const sent = tickets.filter((t) => t.status === "ok").length;
+  if (sent < devices.length) log("push nativo com falhas", { clientId, sent, total: devices.length });
+  return { sent, failed: devices.length - sent };
+}
+
+/**
+ * Push para o cliente: navegador (ativado na página do contrato) + App do Locatário. Nunca lança.
+ * No navegador o clique abre o contrato ou o site (nunca o painel); no app abre `screen`.
+ */
+export async function sendPushToClient(clientId: string | undefined, payload: PushPayload, screen: TenantScreen = "inicio") {
+  const out = { sent: 0, failed: 0, expired: 0 };
+  if (!clientId || !process.env.SUPABASE_SECRET_KEY) return out;
+  const db = serviceDb();
+  const [web, native] = await Promise.all([
+    isPushConfigured()
+      ? deliver(db, payload, [clientId], "client_push_subscriptions").catch((e) => {
+          console.error("[push] cliente:", (e as Error).message);
+          return out;
+        })
+      : out,
+    deliverNative(db, clientId, payload, screen).catch((e) => {
+      console.error("[push] app do locatário:", (e as Error).message);
+      return { sent: 0, failed: 0 };
+    }),
+  ]);
+  return { sent: web.sent + native.sent, failed: web.failed + native.failed, expired: web.expired };
 }
 
 export async function loadSettings(db: SupabaseClient): Promise<CompanySettings> {

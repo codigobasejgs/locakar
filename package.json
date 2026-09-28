@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "build:locatario": "npm --prefix apps/locatario run build:web && rm -rf public/locatario && cp -r apps/locatario/dist public/locatario",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

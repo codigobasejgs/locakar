@@ -1,6 +1,8 @@
-import { HelpCircle, LogOut } from "lucide-react-native";
+import type React from "react";
+import { useRouter, type Href } from "expo-router";
+import { CalendarDays, ChevronRight, FileText, HelpCircle, LogOut, ShieldCheck, TriangleAlert } from "lucide-react-native";
 import { useState } from "react";
-import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -25,6 +27,7 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 export default function PerfilScreen() {
+  const router = useRouter();
   const { summary, signOut } = useLocatario();
   const [confirmExit, setConfirmExit] = useState(false);
   const c = summary?.client;
@@ -40,7 +43,24 @@ export default function PerfilScreen() {
           <Row label="Telefone" value={c?.phone ?? "—"} />
           <Row label="E-mail" value={c?.email ?? "—"} />
           <Row label="Validade da CNH" value={date(c?.cnhExpiry)} />
-          <Text style={styles.muted}>Para alterar seus dados, fale com a LOCAKAR.</Text>
+          <Text style={styles.muted}>Para alterar seus dados, fale com a LOCAKAR. A CNH nova você envia em Meus documentos.</Text>
+        </Card>
+
+        <Card style={{ padding: 0 }}>
+          {(
+            [
+              ["Meus documentos", "/documentos", <FileText key="d" color={Colors.brandSoft} size={20} />],
+              ["Multas", "/multas", <TriangleAlert key="m" color={Colors.warning} size={20} />],
+              ["Reservas", "/reservas", <CalendarDays key="r" color={Colors.info} size={20} />],
+              ["Privacidade e segurança", "/privacidade", <ShieldCheck key="p" color={Colors.success} size={20} />],
+            ] as [string, Href, React.ReactNode][]
+          ).map(([label, href, icon], i) => (
+            <TouchableOpacity key={label} onPress={() => router.push(href)} style={[styles.menu, i > 0 && styles.menuBorder]} accessibilityRole="button">
+              {icon}
+              <Text style={styles.menuText}>{label}</Text>
+              <ChevronRight color={Colors.textSubtle} size={18} />
+            </TouchableOpacity>
+          ))}
         </Card>
 
         <Button
@@ -78,5 +98,8 @@ const styles = StyleSheet.create({
   rowValue: { color: Colors.text, fontSize: 14, fontWeight: "600", flexShrink: 1, textAlign: "right" },
   muted: { color: Colors.textMuted, fontSize: 13 },
   body: { color: Colors.text, fontSize: 15 },
+  menu: { flexDirection: "row", alignItems: "center", gap: Spacing.md, padding: Spacing.md, minHeight: 52 },
+  menuBorder: { borderTopWidth: 1, borderTopColor: Colors.border },
+  menuText: { flex: 1, color: Colors.text, fontSize: 15, fontWeight: "600" },
   version: { textAlign: "center", color: Colors.textSubtle, fontSize: 12, marginTop: Spacing.md },
 });

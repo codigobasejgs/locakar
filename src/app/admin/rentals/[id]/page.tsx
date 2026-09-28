@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ContractPanel } from "@/components/admin/contract-panel";
 import { EmailHistory } from "@/components/admin/email-history";
 import { InspectionPanel } from "@/components/admin/inspection-panel";
+import { TenantInspectionsPanel } from "@/components/admin/tenant-inspections-panel";
 import { DetailList, PageHeader } from "@/components/admin/page-header";
 import { RentalForm, emptyRentalDraft, rentalToDraft } from "@/components/admin/rental-form";
 import { Badge, StatusBadge } from "@/components/ui/badge";
@@ -180,6 +181,7 @@ export default function RentalDetailPage() {
         <ContractPanel rental={rental} />
         <InspectionPanel rental={rental} />
       </div>
+      <TenantInspectionsPanel rental={rental} />
       <div className="mt-4">
         <EmailHistory filter={(e) => e.rentalId === rental.id} />
       </div>

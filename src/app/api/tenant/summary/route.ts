@@ -1,8 +1,9 @@
+import { PRIVACY_VERSION } from "@/lib/antifraud";
 import { chargeFor } from "@/lib/billing";
 import { COMPANY } from "@/lib/company";
 import { loadSettings, serviceDb } from "@/lib/server/push";
 import { errorResponse } from "@/lib/server/supabase";
-import { corsHeaders, requireTenant } from "@/lib/server/tenant";
+import { corsHeaders, requireTenant, tenantOptions } from "@/lib/server/tenant";
 import { todaySP } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
 import type { Rental } from "@/types";
@@ -14,21 +15,21 @@ import type { Rental } from "@/types";
  */
 export const dynamic = "force-dynamic";
 
-export function OPTIONS(request: Request) {
-  return new Response(null, { status: 204, headers: corsHeaders(request) });
-}
+export const OPTIONS = tenantOptions;
 
 export async function GET(request: Request) {
   const headers = corsHeaders(request);
   try {
-    const { db, clientId } = await requireTenant(request);
+    const { db } = await requireTenant(request);
     const today = todaySP();
 
-    const [client, rentals, vehicles, proofs] = await Promise.all([
-      db.from("clients").select("id,name,cpf,email,phone,cnh_expiry,cnh_number,cnh_category").eq("id", clientId).single(),
-      db.from("rentals").select("*").eq("client_id", clientId).order("start_date", { ascending: false }),
+    // Views do locatário: só os dados dele e sem campos internos (observações da equipe, custos...).
+    const [client, rentals, vehicles, proofs, consent] = await Promise.all([
+      db.from("tenant_profile").select("*").single(),
+      db.from("tenant_rentals").select("*").order("start_date", { ascending: false }),
       db.from("tenant_vehicles").select("*"),
       db.from("payment_receipts").select("id,rental_id,receipt_id,status,rejection_reason,created_at").order("created_at", { ascending: false }),
+      db.from("tenant_consents").select("policy_version,scopes,consented_at").order("consented_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
     if (client.error) throw client.error;
 
@@ -51,6 +52,10 @@ export async function GET(request: Request) {
         endDate: r.endDate,
         contractType: r.contractType,
         deposit: r.deposit ?? null,
+        kmStart: r.kmStart ?? null,
+        kmEnd: r.kmEnd ?? null,
+        delivery: r.deliveryInspection ? { at: r.deliveryInspection.at, km: r.deliveryInspection.km, fuel: r.deliveryInspection.fuel } : null,
+        returned: r.returnInspection ? { at: r.returnInspection.at, km: r.returnInspection.km, fuel: r.returnInspection.fuel } : null,
         vehicle: vehicleById.get(r.vehicleId) ?? null,
         billing: r.billing ?? null,
         installments: r.receipts.map((x) => {
@@ -85,6 +90,9 @@ export async function GET(request: Request) {
         // WhatsApp comercial oficial (lib/company.ts), o mesmo do site.
         support: { whatsapp: COMPANY.whatsapp.e164, display: COMPANY.whatsapp.display },
         today,
+        privacyVersion: PRIVACY_VERSION,
+        // Aceite vale só para a versão atual da política; mudou o texto, o app pede de novo.
+        consent: consent.data?.policy_version === PRIVACY_VERSION ? { scopes: consent.data.scopes as string[], at: consent.data.consented_at } : null,
       },
       { headers },
     );

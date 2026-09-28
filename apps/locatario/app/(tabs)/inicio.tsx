@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { AlertTriangle, Car, CreditCard, Key, MessageCircle, User } from "lucide-react-native";
+import { AlertTriangle, CalendarDays, Car, ClipboardCheck, CreditCard, FileText, MessageCircle, TriangleAlert } from "lucide-react-native";
 import { Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { InstallmentBadge, nextToPay } from "../../components/domain/InstallmentStatus";
@@ -14,7 +14,7 @@ import { useLocatario } from "../../hooks/useLocatario";
 
 export default function InicioScreen() {
   const router = useRouter();
-  const { summary, activeRental, error, refreshing, refresh } = useLocatario();
+  const { summary, activeRental, error, offline, refreshing, refresh } = useLocatario();
   if (!summary) return <SafeAreaView style={styles.safe}>{error ? <View style={styles.scroll}><ErrorBanner message={error} onRetry={refresh} /></View> : null}</SafeAreaView>;
 
   const first = summary.client.name.split(" ")[0];
@@ -31,7 +31,7 @@ export default function InicioScreen() {
     ...(overdue.length ? [{ tone: "danger" as const, text: `${overdue.length} pagamento(s) vencido(s): ${money(overdue.reduce((a, i) => a + i.total, 0))} com multa e juros.`, action: () => router.push("/(tabs)/pagamentos") }] : []),
     ...rejected.map((i) => ({ tone: "danger" as const, text: `Comprovante da parcela ${i.label || ""} recusado${i.rejectionReason ? `: ${i.rejectionReason}` : ""}. Envie de novo.`, action: () => router.push("/(tabs)/pagamentos") })),
     ...(inReview ? [{ tone: "info" as const, text: `${inReview} comprovante(s) em análise pela LOCAKAR.` }] : []),
-    ...(cnhDays != null && cnhDays <= 30 ? [{ tone: cnhDays < 0 ? ("danger" as const) : ("warning" as const), text: cnhDays < 0 ? `Sua CNH venceu em ${date(summary.client.cnhExpiry)}. Envie a nova para a LOCAKAR.` : `Sua CNH vence em ${date(summary.client.cnhExpiry)}.` }] : []),
+    ...(cnhDays != null && cnhDays <= 30 ? [{ tone: cnhDays < 0 ? ("danger" as const) : ("warning" as const), text: cnhDays < 0 ? `Sua CNH venceu em ${date(summary.client.cnhExpiry)}. Toque para enviar a nova.` : `Sua CNH vence em ${date(summary.client.cnhExpiry)}. Toque para enviar a nova.`, action: () => router.push("/documentos") }] : []),
   ];
 
   return (
@@ -42,7 +42,7 @@ export default function InicioScreen() {
           <Text style={styles.muted}>Sua locação na LOCAKAR</Text>
         </View>
 
-        {error && <ErrorBanner message={error} onRetry={refresh} />}
+        {error && <ErrorBanner message={offline ? "Sem internet: mostrando os dados salvos no celular." : error} onRetry={refresh} />}
 
         {alerts.map((a, i) => (
           <TouchableOpacity key={i} disabled={!a.action} onPress={a.action} style={[styles.alert, styles[`alert_${a.tone}`]]} accessibilityRole={a.action ? "button" : "text"}>
@@ -93,9 +93,11 @@ export default function InicioScreen() {
 
         <View style={styles.grid}>
           {[
-            { label: "Locação", icon: <Key color={Colors.brandSoft} size={22} />, onPress: () => router.push("/(tabs)/locacao") },
-            { label: "Pagamentos", icon: <CreditCard color={Colors.success} size={22} />, onPress: () => router.push("/(tabs)/pagamentos") },
-            { label: "Perfil", icon: <User color={Colors.info} size={22} />, onPress: () => router.push("/(tabs)/perfil") },
+            { label: "Meu veículo", icon: <ClipboardCheck color={Colors.brandSoft} size={22} />, onPress: () => router.push("/veiculo") },
+            { label: "Relatar problema", icon: <AlertTriangle color={Colors.danger} size={22} />, onPress: () => router.push("/ocorrencias") },
+            { label: "Documentos", icon: <FileText color={Colors.info} size={22} />, onPress: () => router.push("/documentos") },
+            { label: "Multas", icon: <TriangleAlert color={Colors.warning} size={22} />, onPress: () => router.push("/multas") },
+            { label: "Reservas", icon: <CalendarDays color={Colors.success} size={22} />, onPress: () => router.push("/reservas") },
             { label: "Suporte", icon: <MessageCircle color={Colors.warning} size={22} />, onPress: () => Linking.openURL(whatsappUrl(support.whatsapp, "Olá, LOCAKAR! Preciso de ajuda com minha locação.")) },
           ].map((g) => (
             <TouchableOpacity key={g.label} style={styles.gridItem} onPress={g.onPress} accessibilityRole="button" accessibilityLabel={g.label}>
