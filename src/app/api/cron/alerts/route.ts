@@ -3,11 +3,13 @@ import { COMPANY } from "@/lib/company";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 import { GROUP_LABEL, REMIND_DAYS, buildNotices, dueForClient, type AlertGroup, type Notice } from "@/lib/notifications";
 import { emailLayout, sendEmail } from "@/lib/server/email";
+import { isPixReady, receiptsToCharge } from "@/lib/billing";
 import { noticeToEvent } from "@/lib/push-events";
+import { sendCharge } from "@/lib/server/charge";
 import { companyContacts, notifyStaff, sendPushToClient } from "@/lib/server/push";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { SUPABASE_URL } from "@/lib/supabase/env";
-import { toISODate } from "@/lib/utils";
+import { todaySP } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
 import { mergeSettings, type Collections } from "@/repositories/types";
 import type { Client, CompanySettings } from "@/types";
@@ -35,8 +37,6 @@ const TABLES: Record<keyof Collections, string> = {
   emails: "email_log",
 };
 
-/** Data de hoje no fuso de São Paulo (o servidor da Vercel roda em UTC). */
-const todaySP = () => toISODate(new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })));
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -183,9 +183,26 @@ export async function GET(request: Request) {
     if (!wa.ok && wa.error !== "WhatsApp não configurado.") report.failures.push(`resumo WhatsApp: ${wa.error}`);
   }
 
+  // ---------- Cobranças com PIX (parcelas com envio automático) ----------
+  const charges = { sent: 0, failed: [] as string[] };
+  if (isPixReady(settings.pix)) {
+    for (const rental of data.rentals) {
+      const client = data.clients.find((c) => c.id === rental.clientId) as Client | undefined;
+      if (!client) continue;
+      for (const receipt of receiptsToCharge(rental, today)) {
+        try {
+          await sendCharge(db, { rental, receipt, client, vehicle: data.vehicles.find((v) => v.id === rental.vehicleId), settings, today, replyTo });
+          charges.sent++;
+        } catch (e) {
+          charges.failed.push(`${client.name}: ${(e as Error).message}`);
+        }
+      }
+    }
+  }
+
   // ---------- Equipe: central de notificações + Web Push ----------
   const push = await notifyStaff(notices.map(noticeToEvent), { db });
   await db.rpc("prune_notifications");
 
-  return Response.json({ ...report, push }, { status: report.failures.length ? 207 : 200 });
+  return Response.json({ ...report, charges, push }, { status: report.failures.length || charges.failed.length ? 207 : 200 });
 }

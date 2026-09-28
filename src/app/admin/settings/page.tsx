@@ -1,10 +1,11 @@
 "use client";
 
-import { Bell, BellRing, Building2, ExternalLink, FileSignature, Mail, MessageCircle, Palette, RotateCcw, Send, SlidersHorizontal } from "lucide-react";
+import { Bell, BellRing, Building2, QrCode, ExternalLink, FileSignature, Mail, MessageCircle, Palette, RotateCcw, Send, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
 import { PushSettings } from "@/components/admin/push-settings";
+import { PixSettingsFields } from "@/components/admin/pix-settings";
 import { WhatsAppConnection } from "@/components/admin/whatsapp-connection";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -143,6 +144,10 @@ export default function SettingsPage() {
               <RotateCcw /> Restaurar cláusulas padrão
             </Button>
           </div>
+        </Section>
+
+        <Section icon={QrCode} title="PIX para cobranças" description="Chave usada no QR Code e no copia e cola de todas as cobranças enviadas aos clientes.">
+          <PixSettingsFields value={draft.pix} onChange={(pix) => set("pix", pix)} />
         </Section>
 
         <Section icon={BellRing} title="Alertas para a empresa" description="E-mail e WhatsApp que recebem os avisos importantes da operação, além do Web Push da equipe.">

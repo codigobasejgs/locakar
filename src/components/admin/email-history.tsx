@@ -17,6 +17,7 @@ export const EMAIL_KIND_LABEL: Record<EmailKind, string> = {
   alert_client: "Lembrete automático",
   alert_digest: "Resumo diário",
   alert_admin: "Alerta para a empresa",
+  charge: "Cobrança com PIX",
 };
 
 /** Histórico de notificações (e-mail e WhatsApp, tabela email_log), filtrável por locação/multa. */

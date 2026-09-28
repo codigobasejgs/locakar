@@ -4,6 +4,7 @@
  * As cláusulas gerais são um MODELO: devem ser revisadas por um advogado e ajustadas em Configurações.
  */
 import type { Client, CompanyProfile, FleetVehicle, Inspection, Rental } from "@/types";
+import { INTEREST_LABEL, PERIOD_LABEL, billingOf } from "./billing";
 import { daysBetween, formatCurrency, formatDate, formatNumber } from "./utils";
 
 export const DEFAULT_CONTRACT_TERMS = `1. OBJETO. A LOCADORA cede ao LOCATÁRIO, a título de locação, o veículo descrito neste contrato, pelo período e valores aqui indicados.
@@ -84,7 +85,11 @@ export function buildContractText(args: { rental: Rental; client: Client; vehicl
     line("Início", `${formatDate(rental.startDate)} ${rental.startTime ?? ""}`.trim()),
     line("Término", `${formatDate(rental.endDate)} ${rental.endTime ?? ""}`.trim()),
     line("Quantidade de diárias", Math.max(1, daysBetween(rental.startDate, rental.endDate) + 1)),
-    line("Valor semanal", formatCurrency(rental.weeklyRate)),
+    line(`Valor da parcela (${PERIOD_LABEL[billingOf(rental).period].toLowerCase()})`, formatCurrency(billingOf(rental).amount)),
+    line("Cobranças", `${formatDate(billingOf(rental).firstDue)} a ${formatDate(billingOf(rental).until)} (${rental.receipts.length} parcela(s))`),
+    line("Multa por atraso", billingOf(rental).lateFeePercent ? `${billingOf(rental).lateFeePercent}% sobre a parcela` : undefined),
+    line("Juros por atraso", billingOf(rental).interestPercent ? `${billingOf(rental).interestPercent}% ${INTEREST_LABEL[billingOf(rental).interestPeriod]} (juros simples)` : undefined),
+    line("Carência", billingOf(rental).graceDays ? `${billingOf(rental).graceDays} dia(s) após o vencimento` : undefined),
     line("Dia de pagamento", rental.paymentWeekday),
     line("Caução", formatCurrency(rental.deposit)),
     line("KM inicial", rental.kmStart != null ? formatNumber(rental.kmStart) : undefined),

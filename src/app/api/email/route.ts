@@ -5,9 +5,10 @@ import { contractPdf, inspectionPdf } from "@/lib/pdf";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { plainText } from "@/lib/push-events";
-import { sendPushToClient } from "@/lib/server/push";
+import { sendCharge } from "@/lib/server/charge";
+import { loadSettings, sendPushToClient } from "@/lib/server/push";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
-import { formatCurrency, formatDate, formatNumber } from "@/lib/utils";
+import { formatCurrency, formatDate, formatNumber, todaySP } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
 import type { Client, Contract, EmailKind, Fine, FleetVehicle, Inspection, Maintenance, Rental, Reservation } from "@/types";
 
@@ -21,6 +22,7 @@ type Body =
   | { kind: "contract_signature"; contractId: string }
   | { kind: "delivery" | "return"; rentalId: string }
   | { kind: "receipt"; rentalId: string; receiptId: string }
+  | { kind: "charge"; rentalId: string; receiptId: string }
   | { kind: "fine"; fineId: string }
   | { kind: "reservation"; reservationId: string }
   | { kind: "maintenance"; maintenanceId: string };
@@ -198,6 +200,23 @@ export async function POST(request: Request) {
           .join("\n")
           .trim(),
       });
+    }
+
+    // Cobrança de uma parcela com PIX (QR Code + copia e cola), já com multa/juros se estiver atrasada.
+    if (body.kind === "charge") {
+      const rental = await one<Rental>("rentals", body.rentalId);
+      const receipt = rental.receipts.find((r) => r.id === body.receiptId);
+      if (!receipt) throw new HttpError(404, "Parcela não encontrada.");
+      if (receipt.paid) throw new HttpError(409, "Esta parcela já está paga.");
+      const client = await one<Client>("clients", rental.clientId);
+      const vehicle = await one<FleetVehicle>("vehicles", rental.vehicleId).catch(() => undefined);
+      const today = todaySP();
+      try {
+        const r = await sendCharge(supabase, { rental, receipt, client, vehicle, settings: await loadSettings(supabase), today, replyTo, clientUrl: await contractUrl(rental.id) });
+        return Response.json({ ok: true, ...r });
+      } catch (e) {
+        throw new HttpError(422, (e as Error).message);
+      }
     }
 
     if (body.kind === "receipt") {

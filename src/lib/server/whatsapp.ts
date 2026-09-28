@@ -19,6 +19,8 @@ export interface OutgoingWhatsApp {
   alertKeys?: string[];
   /** PDF enviado como documento; `text` vira a legenda. */
   document?: { filename: string; content: Uint8Array };
+  /** Imagem PNG (ex.: QR Code PIX); `text` vira a legenda. */
+  image?: { filename: string; content: Uint8Array };
 }
 
 /**
@@ -35,14 +37,17 @@ export async function sendWhatsApp(db: SupabaseClient, msg: OutgoingWhatsApp): P
   let error: string | undefined;
   let providerId: string | undefined;
   try {
-    const doc = msg.document;
+    const doc = msg.document ?? msg.image;
+    const media = msg.document
+      ? { mediatype: "document", mimetype: "application/pdf" }
+      : { mediatype: "image", mimetype: "image/png" };
     const res = await fetch(`${base}/message/${doc ? "sendMedia" : "sendText"}/${encodeURIComponent(instance)}`, {
       method: "POST",
       headers: { apikey: process.env.EVOLUTION_API_KEY!, "Content-Type": "application/json" },
       body: JSON.stringify(
         doc
-          ? { number, mediatype: "document", mimetype: "application/pdf", fileName: doc.filename, caption: msg.text, media: Buffer.from(doc.content).toString("base64") }
-          : { number, text: msg.text, linkPreview: true },
+          ? { number, ...media, fileName: doc.filename, caption: msg.text, media: Buffer.from(doc.content).toString("base64") }
+          : { number, text: msg.text, linkPreview: false },
       ),
       // Evolution costuma levar 10-15s para responder; PDF leva mais.
       signal: AbortSignal.timeout(doc ? 45_000 : 30_000),

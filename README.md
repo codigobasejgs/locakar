@@ -318,6 +318,31 @@ Edições triviais (corrigir telefone, observação) **não** notificam. Veícul
 - `npm run check`: detecção de eventos, dedupe, preferências, resumo e remoção de inscrição 404/410 com vários dispositivos.
 - No navegador: ativar em Configurações → **Enviar teste**; criar uma locação e ver o push e o sino.
 
+## Cobranças com PIX
+
+### Configurar (uma vez)
+**Configurações → PIX para cobranças**: tipo da chave (CPF, CNPJ, celular, e-mail ou aleatória), chave, nome e cidade do recebedor. Aparece um **QR Code de teste de R$ 1,00**: leia no app do banco para conferir (não precisa pagar).
+
+### Na locação
+Em **Nova/Editar locação → Cobrança**:
+- **Periodicidade**: diária, semanal, quinzenal, mensal, trimestral, semestral ou anual.
+- **Valor da parcela**, **primeira cobrança** e **última cobrança até**: as parcelas são geradas entre essas datas. Mensal/trimestral/anual mantêm o dia do mês; em mês curto usa o último dia (31/01 → 28/02).
+- **Multa por atraso (%)**: cobrada uma vez. **Juros (%)** ao dia, por semana ou ao mês (juros simples, períodos completos). **Carência** em dias.
+- **Envio automático**: o cron das 8h manda a cobrança N dias antes, no dia do vencimento e, se atrasar, a cada 3 dias até ser paga.
+- Multa, juros e carência entram no texto do contrato.
+- Mudar periodicidade, datas ou valor regenera as parcelas **mantendo as já pagas**.
+
+Na página da locação, o ícone de **QR Code** em cada parcela envia a cobrança na hora. Ao marcar como paga, fica registrado o valor efetivo (com multa/juros, se estava atrasada).
+
+### O que o cliente recebe
+- **E-mail**: tabela com parcela, multa, juros e total, **QR Code embutido** e o código copia e cola.
+- **WhatsApp**: o **QR Code como imagem** com o resumo e, em seguida, **só o código** (para tocar e copiar inteiro).
+- **Celular** (se ativou o push): aviso com o valor e o vencimento.
+
+### Compatibilidade com os bancos
+O código segue o padrão **BR Code (EMV-MPM) do Banco Central** para PIX estático com valor (`src/lib/billing.ts` → `pixPayload`): GUI `br.gov.bcb.pix`, chave no formato oficial por tipo (celular `+55…`, CPF/CNPJ só dígitos, e-mail minúsculo), moeda 986, valor com 2 casas, nome (até 25) e cidade (até 15) sem acento, `txid` por parcela e **CRC16-CCITT** — validado contra o exemplo do manual do BCB em `npm run check`. Sem o campo de descrição, que alguns bancos recusam.
+> Sem integração bancária: o sistema não sabe sozinho quando o PIX cai. A baixa é manual (marcar a parcela como paga). O `txid` identifica a parcela no extrato.
+
 ## O que não foi inventado
 
 Nenhum depoimento, avaliação, número de clientes/veículos, tempo de mercado, prêmio, preço ou dado legal aparece no site. Diárias não são exibidas publicamente — o preço é consultado via WhatsApp. As especificações dos cards (transmissão, combustível, lugares, ar) são de fábrica das versões de entrada e estão em `src/data/fleet.ts` para revisão.

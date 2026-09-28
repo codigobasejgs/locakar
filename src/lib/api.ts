@@ -6,6 +6,7 @@ export type EmailRequest =
   | { kind: "contract_signature"; contractId: string }
   | { kind: "delivery" | "return"; rentalId: string }
   | { kind: "receipt"; rentalId: string; receiptId: string }
+  | { kind: "charge"; rentalId: string; receiptId: string }
   | { kind: "fine"; fineId: string }
   | { kind: "reservation"; reservationId: string }
   | { kind: "maintenance"; maintenanceId: string };

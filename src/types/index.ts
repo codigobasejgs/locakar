@@ -64,6 +64,36 @@ export interface Receipt {
   dueDate: string;
   amount: number;
   paid: boolean;
+  /** Data do pagamento e valor efetivamente recebido (com multa/juros, se houver). */
+  paidAt?: string;
+  amountPaid?: number;
+}
+
+export type BillingPeriod = "daily" | "weekly" | "biweekly" | "monthly" | "quarterly" | "semiannual" | "annual";
+export type InterestPeriod = "daily" | "weekly" | "monthly";
+
+/**
+ * Regras de cobrança da locação. Ausente em locações antigas = semanal, sem juros
+ * (comportamento anterior, com `weeklyRate` como valor da parcela).
+ */
+export interface BillingConfig {
+  period: BillingPeriod;
+  /** Valor de cada parcela no período escolhido. */
+  amount: number;
+  /** Primeira cobrança e última data de cobrança (ex.: do dia 05/10 até 05/03). */
+  firstDue: string;
+  until: string;
+  /** Multa única (%) após a carência. */
+  lateFeePercent: number;
+  /** Juros simples (%) por período de atraso. */
+  interestPercent: number;
+  interestPeriod: InterestPeriod;
+  /** Dias após o vencimento sem multa nem juros. */
+  graceDays: number;
+  /** Enviar a cobrança com PIX por e-mail/WhatsApp automaticamente (cron diário). */
+  autoSend: boolean;
+  /** Quantos dias antes do vencimento enviar o lembrete (0 = só no dia). */
+  remindDaysBefore: number;
 }
 
 export interface Rental {
@@ -81,6 +111,7 @@ export interface Rental {
   kmEnd?: number;
   weeklyRate: number;
   receipts: Receipt[];
+  billing?: BillingConfig;
   status: RentalStatus;
   notes?: string;
   /** Vistoria na entrega do veículo ao cliente (check-out). */
@@ -211,7 +242,7 @@ export interface Contract {
   signedUserAgent?: string;
 }
 
-export type EmailKind = "contract_signature" | "contract_signed" | "delivery" | "return" | "receipt" | "fine" | "reservation" | "maintenance" | "alert_client" | "alert_digest" | "alert_admin";
+export type EmailKind = "contract_signature" | "contract_signed" | "delivery" | "return" | "receipt" | "fine" | "reservation" | "maintenance" | "alert_client" | "alert_digest" | "alert_admin" | "charge";
 
 export interface EmailLog {
   id: string;
@@ -273,6 +304,17 @@ export interface AppNotification {
   readAt?: string;
 }
 
+/** Chave PIX da empresa, usada em todas as cobranças (QR Code e copia e cola). */
+export type PixKeyType = "cpf" | "cnpj" | "phone" | "email" | "random";
+
+export interface PixSettings {
+  key: string;
+  keyType: PixKeyType;
+  /** Nome do recebedor (como no banco) e cidade: exigidos pelo padrão do Banco Central. */
+  name: string;
+  city: string;
+}
+
 /** Para onde vão os alertas da empresa por e-mail e WhatsApp (vazio = padrão do servidor). */
 export interface AdminAlerts {
   email: string;
@@ -286,6 +328,7 @@ export interface AdminAlerts {
 export interface CompanySettings {
   company: CompanyProfile;
   alerts: AdminAlerts;
+  pix: PixSettings;
   /** Web Push para a equipe: liga/desliga geral e por categoria (ausente = ligada). */
   push: { enabled: boolean; categories: Partial<Record<NotificationCategory, boolean>> };
   pageSize: number;

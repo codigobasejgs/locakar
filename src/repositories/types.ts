@@ -69,6 +69,7 @@ export function mergeSettings(defaults: CompanySettings, saved?: Partial<Company
     ...saved,
     company: { ...defaults.company, ...saved?.company },
     alerts: { ...defaults.alerts, ...saved?.alerts },
+    pix: { ...defaults.pix, ...saved?.pix },
     push: { ...defaults.push, ...saved?.push, categories: { ...defaults.push.categories, ...saved?.push?.categories } },
   };
 }

@@ -25,7 +25,8 @@ export interface OutgoingEmail {
   subject: string;
   html: string;
   replyTo?: string;
-  attachments?: { filename: string; content: Uint8Array }[];
+  /** `contentId`: imagem embutida no corpo (referenciada como cid:<id>). */
+  attachments?: { filename: string; content: Uint8Array; contentId?: string }[];
   rentalId?: string;
   fineId?: string;
   contractId?: string;
@@ -43,7 +44,7 @@ export async function sendEmail(db: SupabaseClient, mail: OutgoingEmail) {
       subject: mail.subject,
       html: mail.html,
       replyTo: mail.replyTo,
-      attachments: mail.attachments?.map((a) => ({ filename: a.filename, content: Buffer.from(a.content) })),
+      attachments: mail.attachments?.map((a) => ({ filename: a.filename, content: Buffer.from(a.content), contentId: a.contentId })),
     });
     if (err) error = err.message;
     providerId = data?.id;
@@ -71,7 +72,8 @@ export async function sendEmail(db: SupabaseClient, mail: OutgoingEmail) {
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-export function emailLayout(opts: { title: string; intro: string; rows?: [string, string][]; cta?: { label: string; url: string }; footerNote?: string }) {
+/** `extraHtml`: HTML já escapado por quem chama (ex.: QR Code PIX), inserido após a tabela. */
+export function emailLayout(opts: { title: string; intro: string; rows?: [string, string][]; extraHtml?: string; cta?: { label: string; url: string }; footerNote?: string }) {
   const rows = (opts.rows ?? [])
     .map(
       ([k, v]) =>
@@ -86,6 +88,7 @@ export function emailLayout(opts: { title: string; intro: string; rows?: [string
 <h1 style="margin:0 0 12px;font-size:20px;color:#18181b">${esc(opts.title)}</h1>
 <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:#3f3f46">${esc(opts.intro)}</p>
 ${rows ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;margin:0 0 20px">${rows}</table>` : ""}
+${opts.extraHtml ?? ""}
 ${opts.cta ? `<a href="${esc(opts.cta.url)}" style="display:inline-block;background:#8B008B;color:#ffffff;text-decoration:none;padding:13px 22px;border-radius:10px;font-weight:bold;font-size:15px">${esc(opts.cta.label)}</a>` : ""}
 ${opts.footerNote ? `<p style="margin:20px 0 0;font-size:12px;line-height:1.5;color:#71717a">${esc(opts.footerNote)}</p>` : ""}
 </td></tr>

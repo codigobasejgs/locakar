@@ -174,4 +174,70 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
   assert.equal(merged.alerts.instant, true, "configuração antiga ganha os padrões novos");
 }
 
+// Cobranças: periodicidades, fim de mês, multa/juros e PIX (BR Code lido por qualquer banco)
+{
+  const { buildReceipts, crc16, lateCharges, normalizePixKey, pixPayload, billingOf } = await import("../src/lib/billing");
+  const dates = (period: Parameters<typeof buildReceipts>[0]["period"], first: string, until: string) =>
+    buildReceipts({ id: "r", firstDue: first, until, amount: 1, period }).map((x) => x.dueDate);
+  assert.deepEqual(dates("monthly", "2026-01-31", "2026-04-30"), ["2026-01-31", "2026-02-28", "2026-03-31", "2026-04-30"], "fim de mês");
+  assert.deepEqual(dates("quarterly", "2026-10-05", "2027-04-05"), ["2026-10-05", "2027-01-05", "2027-04-05"]);
+  assert.deepEqual(dates("annual", "2024-02-29", "2026-03-01"), ["2024-02-29", "2025-02-28", "2026-02-28"]);
+  assert.equal(dates("daily", "2026-10-01", "2026-10-07").length, 7);
+  assert.equal(dates("weekly", "2026-10-01", "2026-10-29").length, 5);
+  assert.equal(dates("biweekly", "2026-10-01", "2026-10-31").length, 3);
+  assert.deepEqual(dates("semiannual", "2026-03-10", "2027-03-10"), ["2026-03-10", "2026-09-10", "2027-03-10"]);
+  // Multa única + juros simples; carência zera; juros semanal/mensal contam períodos completos.
+  const cfg = { graceDays: 0, lateFeePercent: 2, interestPercent: 1, interestPeriod: "daily" as const };
+  assert.deepEqual(lateCharges(700, "2026-10-01", "2026-10-11", cfg), { days: 10, fee: 14, interest: 70, total: 784 });
+  assert.equal(lateCharges(700, "2026-10-01", "2026-10-03", { ...cfg, graceDays: 3 }).total, 700);
+  assert.equal(lateCharges(1000, "2026-10-01", "2026-10-15", { ...cfg, interestPeriod: "weekly" }).interest, 20);
+  assert.equal(lateCharges(1000, "2026-10-01", "2026-10-29", { ...cfg, interestPeriod: "monthly" }).interest, 0);
+  // Locação antiga (sem billing) continua semanal, sem juros e sem envio automático.
+  assert.equal(billingOf({ weeklyRate: 650, receipts: [], startDate: "2026-01-01", endDate: "2026-02-01" }).period, "weekly");
+  // PIX: CRC do exemplo oficial do Banco Central.
+  assert.equal(crc16("00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***6304"), "1D3D");
+  // Chave no formato do Banco Central por tipo; inválidas recusadas.
+  assert.equal(normalizePixKey("(19) 98961-5873", "phone"), "+5519989615873");
+  assert.equal(normalizePixKey("529.982.247-25", "cpf"), "52998224725");
+  assert.equal(normalizePixKey("111.111.111-11", "cpf"), null);
+  assert.equal(normalizePixKey("12.345.678/0001-95", "cnpj"), "12345678000195");
+  assert.equal(normalizePixKey("Contato@LOCAKAR.com.br", "email"), "contato@locakar.com.br");
+  // Payload: campos obrigatórios, valor, nome/cidade sem acento e CRC válido.
+  const code = pixPayload({ key: "(19) 98961-5873", keyType: "phone", name: "Locação Ágil Veículos de São Paulo Ltda", city: "São José dos Campos" }, 784, "LKR-001");
+  const fields: Record<string, string> = {};
+  for (let i = 0; i < code.length; ) {
+    const tag = code.slice(i, i + 2), len = Number(code.slice(i + 2, i + 4));
+    fields[tag] = code.slice(i + 4, i + 4 + len);
+    i += 4 + len;
+  }
+  assert.equal(fields["00"], "01");
+  assert.ok(fields["26"].includes("br.gov.bcb.pix") && fields["26"].includes("+5519989615873"));
+  assert.equal(fields["53"], "986");
+  assert.equal(fields["54"], "784.00");
+  assert.equal(fields["59"], "LOCACAO AGIL VEICULOS DE ");
+  assert.equal(fields["60"], "SAO JOSE DOS CA");
+  assert.ok(fields["62"].endsWith("LKR001"));
+  assert.equal(crc16(code.slice(0, -4)), fields["63"]);
+  assert.throws(() => pixPayload({ key: "123", keyType: "cpf", name: "X", city: "Y" }, 1));
+  // Cron: cobra N dias antes, no dia e atrasadas a cada 3 dias; ignora pagas e locação encerrada.
+  const { receiptsToCharge } = await import("../src/lib/billing");
+  const rent = (autoSend: boolean, status = "active") => ({
+    status, weeklyRate: 1, startDate: "2026-10-01", endDate: "2026-12-31",
+    billing: { period: "weekly", amount: 1, firstDue: "2026-10-01", until: "2026-12-31", lateFeePercent: 0, interestPercent: 0, interestPeriod: "daily", graceDays: 0, autoSend, remindDaysBefore: 2 },
+    receipts: [
+      { id: "a", dueDate: "2026-10-10", amount: 1, paid: false },
+      { id: "b", dueDate: "2026-10-12", amount: 1, paid: false },
+      { id: "c", dueDate: "2026-10-04", amount: 1, paid: false },
+      { id: "d", dueDate: "2026-10-05", amount: 1, paid: false },
+      { id: "e", dueDate: "2026-10-10", amount: 1, paid: true },
+    ],
+  }) as never;
+  // 10/10: "a" vence hoje, "b" em 2 dias (lembrete), "c" atrasada 6 dias (múltiplo de 3), "d" 5 dias (não).
+  assert.deepEqual(receiptsToCharge(rent(true), "2026-10-10").map((r: { id: string }) => r.id), ["a", "b", "c"]);
+  // 07/10: "c" atrasada 3 dias; "d" atrasada 2 dias (não); nenhuma vence em 2 dias.
+  assert.deepEqual(receiptsToCharge(rent(true), "2026-10-07").map((r: { id: string }) => r.id), ["c"]);
+  assert.equal(receiptsToCharge(rent(false), "2026-10-10").length, 0);
+  assert.equal(receiptsToCharge(rent(true, "finished"), "2026-10-10").length, 0);
+}
+
 console.log("✓ check ok");

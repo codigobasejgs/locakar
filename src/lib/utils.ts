@@ -34,6 +34,9 @@ export const toISODate = (date: Date) =>
 
 export const todayISO = () => toISODate(new Date());
 
+/** Data de hoje no fuso de São Paulo (o servidor da Vercel roda em UTC). */
+export const todaySP = () => toISODate(new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })));
+
 export function parseISODate(iso: string) {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d);
