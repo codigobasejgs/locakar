@@ -1,7 +1,8 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { FileUp, Image as ImageIcon, Plus } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 import { toast } from "sonner";
 import { DeleteDialog, FormDialog } from "@/components/admin/crud-dialogs";
 import { DataTable, type Column } from "@/components/admin/data-table";
@@ -14,12 +15,16 @@ import { PUBLIC_FLEET } from "@/data/fleet";
 import { useAdminData } from "@/hooks/use-admin-data";
 import { numOrUndef, numToStr, strOrUndef, useCrud } from "@/hooks/use-crud";
 import { MONTHS, PAYMENT_STATE, VEHICLE_STATUS, VEHICLE_TYPES, statusOptions, toOptions } from "@/lib/constants";
+import { parseCrlvPdf } from "@/lib/crlv";
+import { getSupabase } from "@/lib/supabase/client";
 import { formatCurrency, formatDate, isValidPlate, maskPlate, newId } from "@/lib/utils";
 import type { FleetVehicle, PaymentState, VehicleStatus } from "@/types";
 
 type Draft = {
   modelId: string;
   name: string;
+  image: string;
+  crlvPdfUrl: string;
   plate: string;
   vehicleType: string;
   status: VehicleStatus;
@@ -44,6 +49,8 @@ type Draft = {
 const empty = (): Draft => ({
   modelId: PUBLIC_FLEET[0].id,
   name: PUBLIC_FLEET[0].name,
+  image: "",
+  crlvPdfUrl: "",
   plate: "",
   vehicleType: "Carro",
   status: "available",
@@ -68,6 +75,8 @@ const empty = (): Draft => ({
 const toDraft = (v: FleetVehicle): Draft => ({
   modelId: PUBLIC_FLEET.find((m) => m.model === v.model)?.id ?? "",
   name: v.name,
+  image: v.image ?? "",
+  crlvPdfUrl: "",
   plate: v.plate,
   vehicleType: v.vehicleType,
   status: v.status,
@@ -97,6 +106,56 @@ export default function VehiclesPage() {
   const { draft, bind, set } = crud;
   const vehicles = data!.vehicles;
 
+  const [readingPdf, setReadingPdf] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleCrlvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setReadingPdf(true);
+    try {
+      const parsed = await parseCrlvPdf(file);
+      if (parsed.plate) set("plate", parsed.plate);
+      if (parsed.renavam) set("renavam", parsed.renavam);
+      if (parsed.year) set("year", String(parsed.year));
+      if (parsed.yearModel) set("yearModel", String(parsed.yearModel));
+      if (parsed.name) set("name", parsed.name);
+      if (parsed.fuel) set("fuel", parsed.fuel);
+      if (parsed.vehicleType) set("vehicleType", parsed.vehicleType);
+
+      // Salva o PDF do documento no storage
+      const path = `crlv/${parsed.plate || "doc"}_${Date.now()}.pdf`;
+      await getSupabase().storage.from("documentos").upload(path, file, { contentType: "application/pdf", upsert: true });
+      set("crlvPdfUrl", path);
+
+      toast.success("CRLV-e importado! Placa, Renavam, Modelo, Ano e Combustível preenchidos automaticamente.");
+    } catch {
+      toast.error("Não foi possível ler o PDF do CRLV. Preencha os campos manualmente.");
+    }
+    setReadingPdf(false);
+    e.target.value = "";
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const path = `${draft.plate || "car"}_${Date.now()}.${file.name.split(".").pop() || "jpg"}`;
+      const { error } = await getSupabase().storage.from("veiculos").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: pub } = getSupabase().storage.from("veiculos").getPublicUrl(path);
+      if (pub?.publicUrl) {
+        set("image", pub.publicUrl);
+        toast.success("Foto do veículo atualizada!");
+      }
+    } catch {
+      toast.error("Não foi possível enviar a foto. Tente novamente.");
+    }
+    setUploadingImage(false);
+    e.target.value = "";
+  };
+
   const pickModel = (id: string) => {
     const model = PUBLIC_FLEET.find((m) => m.id === id);
     set("modelId", id);
@@ -120,7 +179,7 @@ export default function VehiclesPage() {
       name: draft.name.trim(),
       brand: model?.brand ?? brand,
       model: model?.model ?? (rest.join(" ") || brand),
-      image: model?.image ?? crud.editing?.image ?? "/logos/locakar-circular.png",
+      image: draft.image.trim() || model?.image || crud.editing?.image || "/logos/locakar-circular.png",
       category: model?.category ?? crud.editing?.category ?? draft.vehicleType,
       year: Number(draft.year),
       plate: draft.plate,
@@ -174,6 +233,13 @@ export default function VehiclesPage() {
         </div>
       ),
     },
+    {
+      key: "purchaseValue",
+      header: "Valor Pago",
+      sortValue: (v) => v.purchaseValue,
+      cell: (v) => (v.purchaseValue ? formatCurrency(v.purchaseValue) : <span className="text-muted">—</span>),
+      className: "text-right",
+    },
     { key: "weekly", header: "Semanal", sortValue: (v) => v.weeklyRate, cell: (v) => formatCurrency(v.weeklyRate), className: "text-right" },
   ];
 
@@ -223,6 +289,57 @@ export default function VehiclesPage() {
         onSubmit={submit}
         size="lg"
       >
+        {/* Card 1: Importar CRLV-e Digital (PDF) */}
+        <div className="rounded-xl border border-magenta/30 bg-magenta/5 p-4 sm:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-white">Importar CRLV-e Digital (PDF)</p>
+              <p className="text-xs text-muted">Carregue o PDF oficial do CRLV para preencher placa, Renavam, modelo, ano e combustível automaticamente.</p>
+            </div>
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-magenta/40 bg-magenta/20 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-magenta/30">
+              <FileUp className="size-3.5" />
+              <span>{readingPdf ? "Lendo documento..." : "Selecionar PDF do CRLV"}</span>
+              <input
+                type="file"
+                accept=".pdf,application/pdf"
+                className="sr-only"
+                disabled={readingPdf}
+                onChange={handleCrlvUpload}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Card 2: Foto do Veículo */}
+        <div className="rounded-xl border border-line bg-surface p-4 sm:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-white">Foto do Veículo</p>
+              <p className="text-xs text-muted">Envie uma foto real do carro ou use a imagem padrão do modelo.</p>
+            </div>
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-line-strong bg-white/5 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/10">
+              <ImageIcon className="size-3.5" />
+              <span>{uploadingImage ? "Enviando..." : "Upload de foto"}</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                disabled={uploadingImage}
+                onChange={handleImageUpload}
+              />
+            </label>
+          </div>
+          {draft.image && (
+            <div className="mt-3 flex items-center gap-3">
+              <div className="relative size-14 shrink-0 overflow-hidden rounded-lg border border-line bg-surface">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={draft.image} alt="Prévia" className="size-full object-contain p-1" />
+              </div>
+              <p className="text-xs text-muted">Foto personalizada ativa. <button type="button" onClick={() => set("image", "")} className="text-brand-soft hover:underline">Restaurar padrão</button></p>
+            </div>
+          )}
+        </div>
+
         <Field label="Modelo" htmlFor="f-modelId">
           <Select id="f-modelId" value={draft.modelId} onChange={(e) => pickModel(e.target.value)} options={MODEL_OPTIONS} />
         </Field>

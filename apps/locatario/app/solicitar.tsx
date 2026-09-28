@@ -1,5 +1,5 @@
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { Check, ShieldCheck, Car } from "lucide-react-native";
+import { Check, ShieldCheck } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { PhotoPicker } from "../components/domain/PhotoPicker";
@@ -12,6 +12,7 @@ import { Colors, Radius, Spacing } from "../constants/theme";
 import { useLocatario } from "../hooks/useLocatario";
 import { API_URL, api, type FleetVehicle } from "../services/api";
 import { readCache, removeCache, writeCache } from "../services/cache";
+import { fetchAddressByCep } from "../services/cep";
 import { newId, uploadImage } from "../services/upload";
 
 function toIso(v: string) {
@@ -22,12 +23,24 @@ function toIso(v: string) {
   return Number.isNaN(d.getTime()) || d.getDate() !== Number(m[1]) ? null : iso;
 }
 const maskDate = (v: string) => v.replace(/\D/g, "").slice(0, 8).replace(/(\d{2})(\d)/, "$1/$2").replace(/(\d{2})\/(\d{2})(\d)/, "$1/$2/$3");
+const maskCep = (v: string) => v.replace(/\D/g, "").slice(0, 8).replace(/^(\d{5})(\d)/, "$1-$2");
+const maskPhone = (v: string) => v.replace(/\D/g, "").slice(0, 11).replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d{4})$/, "$1-$2");
 
 interface Draft {
   vehicleId: string;
   startDate: string;
   endDate: string;
   planType: "weekly" | "daily";
+  kmDaily: string;
+  kmMonthly: string;
+  backupPhone: string;
+  cep: string;
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+  city: string;
+  state: string;
   cnhNumber: string;
   cnhCategory: string;
   cnhExpiry: string;
@@ -39,7 +52,7 @@ interface Draft {
 }
 
 const DRAFT_KEY = "solicitar:draft";
-const STEPS = ["Veículo e período", "Habilitação (CNH)", "Documentos", "Revisão e envio"];
+const STEPS = ["Veículo e período", "Uso e endereço", "Habilitação (CNH)", "Documentos", "Revisão e envio"];
 const CATEGORIES = ["B", "AB", "A", "C", "D", "E"] as const;
 
 export default function SolicitarLocacaoScreen() {
@@ -53,6 +66,16 @@ export default function SolicitarLocacaoScreen() {
     startDate: "",
     endDate: "",
     planType: "weekly",
+    kmDaily: "80",
+    kmMonthly: "2400",
+    backupPhone: "",
+    cep: "",
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
     cnhNumber: summary?.client.cnhNumber ?? "",
     cnhCategory: summary?.client.cnhCategory ?? "B",
     cnhExpiry: summary?.client.cnhExpiry ? maskDate(summary.client.cnhExpiry.split("-").reverse().join("")) : "",
@@ -63,6 +86,7 @@ export default function SolicitarLocacaoScreen() {
     uploaded: {},
   });
   const [fleet, setFleet] = useState<FleetVehicle[]>(summary?.fleet ?? []);
+  const [lookingUpCep, setLookingUpCep] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -76,7 +100,6 @@ export default function SolicitarLocacaoScreen() {
         setDraft((d) => ({ ...d, ...saved, vehicleId: params.vehicleId || saved.vehicleId || d.vehicleId }));
       }
     });
-    // Se a frota não veio no summary, carrega de reservations
     if (!fleet.length) {
       api<{ fleet: FleetVehicle[] }>("/api/tenant/reservations").then((r) => r.fleet && setFleet(r.fleet)).catch(() => {});
     }
@@ -88,6 +111,30 @@ export default function SolicitarLocacaoScreen() {
       writeCache(DRAFT_KEY, next);
       return next;
     });
+
+  const handleCep = async (val: string) => {
+    const masked = maskCep(val);
+    update({ cep: masked });
+    const clean = val.replace(/\D/g, "");
+    if (clean.length === 8) {
+      setLookingUpCep(true);
+      try {
+        const addr = await fetchAddressByCep(clean);
+        if (addr) {
+          update({
+            cep: masked,
+            street: addr.street,
+            neighborhood: addr.neighborhood,
+            city: addr.city,
+            state: addr.state,
+          });
+        }
+      } catch {
+        /* silencioso */
+      }
+      setLookingUpCep(false);
+    }
+  };
 
   const selectedVehicle = fleet.find((v) => v.id === draft.vehicleId);
 
@@ -124,13 +171,20 @@ export default function SolicitarLocacaoScreen() {
       if (e <= s) return "A data de devolução precisa ser posterior à retirada.";
     }
     if (step === 1) {
+      if (!draft.cep.replace(/\D/g, "") || draft.cep.replace(/\D/g, "").length < 8) return "Informe seu CEP.";
+      if (!draft.street.trim()) return "Informe o logradouro / rua.";
+      if (!draft.number.trim()) return "Informe o número da residência.";
+      if (!draft.city.trim()) return "Informe a cidade.";
+      if (!draft.state.trim()) return "Informe o estado (UF).";
+    }
+    if (step === 2) {
       if (!draft.cnhNumber.trim() || draft.cnhNumber.trim().length < 8) return "Informe o número da CNH.";
       if (!draft.cnhCategory) return "Escolha a categoria da CNH.";
       const exp = toIso(draft.cnhExpiry);
       if (!exp) return "Informe a validade da CNH no formato DD/MM/AAAA.";
       if (exp < (summary?.today ?? "")) return "Sua CNH está vencida. Atualize para alugar.";
     }
-    if (step === 2) {
+    if (step === 3) {
       if (!draft.cnhFrontUri) return "Envie a foto da CNH (frente).";
       if (!draft.cnhBackUri) return "Envie a foto da CNH (verso).";
       if (!draft.addressProofUri) return "Envie o comprovante de residência recente.";
@@ -174,6 +228,16 @@ export default function SolicitarLocacaoScreen() {
           startDate: toIso(draft.startDate),
           endDate: toIso(draft.endDate),
           planType: draft.planType,
+          kmDaily: Number(draft.kmDaily) || undefined,
+          kmMonthly: Number(draft.kmMonthly) || undefined,
+          backupPhone: draft.backupPhone || undefined,
+          cep: draft.cep,
+          street: draft.street,
+          number: draft.number,
+          complement: draft.complement,
+          neighborhood: draft.neighborhood,
+          city: draft.city,
+          state: draft.state,
           cnhNumber: draft.cnhNumber.trim(),
           cnhCategory: draft.cnhCategory,
           cnhExpiry: toIso(draft.cnhExpiry),
@@ -203,6 +267,7 @@ export default function SolicitarLocacaoScreen() {
         </View>
       </View>
 
+      {/* Passo 0: Veículo e Período */}
       {step === 0 && (
         <>
           <Text style={styles.label}>1. Escolha o veículo desejado</Text>
@@ -248,7 +313,53 @@ export default function SolicitarLocacaoScreen() {
         </>
       )}
 
+      {/* Passo 1: Uso e Endereço */}
       {step === 1 && (
+        <Card style={{ gap: Spacing.md }}>
+          <View>
+            <Text style={styles.label}>Previsão de uso do veículo</Text>
+            <View style={{ flexDirection: "row", gap: Spacing.sm, marginTop: 4 }}>
+              <View style={{ flex: 1 }}>
+                <Input label="KM Médio / dia" placeholder="80" keyboardType="number-pad" value={draft.kmDaily} onChangeText={(t) => update({ kmDaily: t.replace(/\D/g, "") })} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Input label="KM Médio / mês" placeholder="2400" keyboardType="number-pad" value={draft.kmMonthly} onChangeText={(t) => update({ kmMonthly: t.replace(/\D/g, "") })} />
+              </View>
+            </View>
+          </View>
+
+          <Input label="Telefone de recado / reserva (opcional)" placeholder="(00) 00000-0000" keyboardType="phone-pad" value={draft.backupPhone} onChangeText={(t) => update({ backupPhone: maskPhone(t) })} />
+
+          <View style={styles.divider} />
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={styles.label}>Endereço de residência</Text>
+            {lookingUpCep && <Text style={{ fontSize: 11, color: Colors.brandSoft }}>Buscando CEP...</Text>}
+          </View>
+
+          <Input label="CEP" placeholder="00000-000" keyboardType="number-pad" value={draft.cep} onChangeText={handleCep} maxLength={9} />
+          <Input label="Logradouro / Rua" placeholder="Rua, Avenida..." value={draft.street} onChangeText={(t) => update({ street: t })} />
+          <View style={{ flexDirection: "row", gap: Spacing.sm }}>
+            <View style={{ width: 100 }}>
+              <Input label="Número" placeholder="123" value={draft.number} onChangeText={(t) => update({ number: t })} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Input label="Complemento" placeholder="Apto, Bloco..." value={draft.complement} onChangeText={(t) => update({ complement: t })} />
+            </View>
+          </View>
+          <Input label="Bairro" placeholder="Bairro" value={draft.neighborhood} onChangeText={(t) => update({ neighborhood: t })} />
+          <View style={{ flexDirection: "row", gap: Spacing.sm }}>
+            <View style={{ flex: 2 }}>
+              <Input label="Cidade" placeholder="Cidade" value={draft.city} onChangeText={(t) => update({ city: t })} />
+            </View>
+            <View style={{ width: 80 }}>
+              <Input label="UF" placeholder="SP" autoCapitalize="characters" maxLength={2} value={draft.state} onChangeText={(t) => update({ state: t.toUpperCase() })} />
+            </View>
+          </View>
+        </Card>
+      )}
+
+      {/* Passo 2: Habilitação */}
+      {step === 2 && (
         <Card style={{ gap: Spacing.md }}>
           <Input label="Número da CNH" placeholder="00000000000" keyboardType="number-pad" value={draft.cnhNumber} onChangeText={(t) => update({ cnhNumber: t.replace(/\D/g, "").slice(0, 15) })} />
           <View>
@@ -265,7 +376,8 @@ export default function SolicitarLocacaoScreen() {
         </Card>
       )}
 
-      {step === 2 && (
+      {/* Passo 3: Documentos */}
+      {step === 3 && (
         <View style={{ gap: Spacing.md }}>
           <PhotoPicker label="1. CNH (frente)" hint="Foto nítida com boa iluminação." uri={draft.cnhFrontUri} onError={setMessage} onChange={(uri) => update({ cnhFrontUri: uri })} />
           <PhotoPicker label="2. CNH (verso)" hint="Mostre o verso completo da CNH." uri={draft.cnhBackUri} onError={setMessage} onChange={(uri) => update({ cnhBackUri: uri })} />
@@ -274,7 +386,8 @@ export default function SolicitarLocacaoScreen() {
         </View>
       )}
 
-      {step === 3 && (
+      {/* Passo 4: Revisão */}
+      {step === 4 && (
         <Card style={{ gap: Spacing.sm }}>
           <View style={styles.rowBetween}>
             <Text style={styles.cardTitle}>Resumo da solicitação</Text>
@@ -285,6 +398,8 @@ export default function SolicitarLocacaoScreen() {
           <Row label="Período" value={`${draft.startDate} até ${draft.endDate}`} />
           <Row label="Plano" value={draft.planType === "weekly" ? "Semanal" : "Diário"} />
           <Row label="Valor previsto" value={selectedVehicle ? (draft.planType === "weekly" ? `${money(selectedVehicle.weeklyRate)}/semana` : `${money(selectedVehicle.dailyRate)}/dia`) : "—"} />
+          <Row label="Endereço" value={`${draft.street}, ${draft.number} - ${draft.city}/${draft.state}`} />
+          <Row label="KM previsto" value={`${draft.kmDaily} km/dia (~${draft.kmMonthly} km/mês)`} />
           <Row label="Caução (a pagar na retirada)" value="R$ 1.000,00" />
           <Row label="CNH" value={`Nº ${draft.cnhNumber} (${draft.cnhCategory}) · Vence ${draft.cnhExpiry}`} />
           <Row label="Documentos anexados" value="4 de 4 anexados ✓" />

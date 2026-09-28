@@ -25,6 +25,7 @@ export const ROUTES = {
   fines: "/admin/fines",
   notes: "/admin/notes",
   finance: "/admin/finance",
+  payments: "/admin/pagamentos",
   reports: "/admin/reports",
   settings: "/admin/settings",
   requests: "/admin/requests",

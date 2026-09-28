@@ -121,14 +121,37 @@ export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
   const { data: created, error } = await admin.from("rental_requests").insert(row).select("id").single();
   if (error) throw new HttpError(500, "Não foi possível registrar sua solicitação.");
 
-  // Atualiza CNH no cadastro do cliente
+  const kmDaily = Number(body.kmDaily) || undefined;
+  const kmMonthly = Number(body.kmMonthly) || undefined;
+  const cep = text(body.cep, 10);
+  const street = text(body.street, 100);
+  const number = text(body.number, 20);
+  const complement = text(body.complement, 50);
+  const neighborhood = text(body.neighborhood, 50);
+  const city = text(body.city, 50);
+  const state = text(body.state, 2);
+  const backupPhone = text(body.backupPhone, 20);
+  const cnhPdfPath = typeof body.cnhPdfPath === "string" && body.cnhPdfPath ? safePath(body.cnhPdfPath, `${clientId}/`) : null;
+
+  // Atualiza cadastro completo do cliente
   await admin.from("clients").update({
     cnh_number: cnhNumber,
     cnh_category: cnhCategory,
     cnh_expiry: cnhExpiry,
     cnh_front_url: `documentos/${cnhFrontPath}`,
     cnh_back_url: `documentos/${cnhBackPath}`,
+    cnh_pdf_url: cnhPdfPath ? `documentos/${cnhPdfPath}` : undefined,
     address_proof_url: `documentos/${addressProofPath}`,
+    km_daily: kmDaily,
+    km_monthly: kmMonthly,
+    cep: cep ?? undefined,
+    street: street ?? undefined,
+    number: number ?? undefined,
+    complement: complement ?? undefined,
+    neighborhood: neighborhood ?? undefined,
+    city: city ?? undefined,
+    state: state ?? undefined,
+    backup_phone: backupPhone ?? undefined,
     updated_at: new Date().toISOString(),
   }).eq("id", clientId);
 

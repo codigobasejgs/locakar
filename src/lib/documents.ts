@@ -2,10 +2,10 @@
  * Documentos imprimíveis (HTML autocontido): contrato assinado e termos de vistoria.
  * Uso interno do painel (impressão). Para o cliente (e-mail/WhatsApp) os documentos saem em PDF: ver lib/pdf.ts.
  */
-import type { Contract, Inspection } from "@/types";
+import type { CompanyProfile, Contract, Inspection } from "@/types";
 import { COMPANY } from "./company";
 import { FUEL_LABEL } from "./contract";
-import { formatCurrency, formatNumber } from "./utils";
+import { formatCurrency, formatDate, formatNumber } from "./utils";
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 const when = (iso?: string) => (iso ? new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—");
@@ -66,6 +66,53 @@ ${i.notes ? `<div class="box"><strong>Observações</strong><br>${esc(i.notes)}<
 <div class="sig">
   <div><br><strong>${esc(i.staffName)}</strong><br><span class="muted">Responsável LOCAKAR</span></div>
   <div>${img(i.clientSignature)}<br><strong>${esc(i.clientName)}</strong><br><span class="muted">Locatário · assinado em ${when(i.at)}</span></div>
+</div>`,
+  );
+}
+
+export function paymentReceiptDocument(params: {
+  company: CompanyProfile;
+  receiptNumber: string;
+  clientName: string;
+  clientDoc: string;
+  vehicleName: string;
+  vehiclePlate: string;
+  rentalId: string;
+  description: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod: string;
+  notes?: string;
+  issuedAt?: string;
+}) {
+  const { company, receiptNumber, clientName, clientDoc, vehicleName, vehiclePlate, rentalId, description, amount, paymentDate, paymentMethod, notes, issuedAt } = params;
+  return page(
+    `Recibo de Pagamento — LOCAKAR #${receiptNumber}`,
+    `<h1>RECIBO DE PAGAMENTO</h1>
+<p class="muted">Nº ${esc(receiptNumber)} · Emitido em ${when(issuedAt || new Date().toISOString())}</p>
+<div class="box">
+  <strong style="font-size:18px;color:#18181b">${formatCurrency(amount)}</strong>
+  <p style="margin:4px 0 0;font-size:13px">Recebemos de <strong>${esc(clientName)}</strong> (Doc: ${esc(clientDoc)}) a importância supra referente a:</p>
+  <p style="margin:6px 0;font-weight:600">${esc(description)}</p>
+</div>
+<table>
+  <tr><td>Veículo</td><td style="text-align:right"><strong>${esc(vehicleName)}</strong> · Placa ${esc(vehiclePlate)}</td></tr>
+  <tr><td>Contrato / Locação</td><td style="text-align:right">#${esc(rentalId.slice(0, 8).toUpperCase())}</td></tr>
+  <tr><td>Data do pagamento</td><td style="text-align:right">${formatDate(paymentDate)}</td></tr>
+  <tr><td>Forma de pagamento</td><td style="text-align:right">${esc(paymentMethod)}</td></tr>
+  ${notes ? `<tr><td>Observações</td><td style="text-align:right">${esc(notes)}</td></tr>` : ""}
+</table>
+<div class="sig">
+  <div>
+    ${company.signerSignature ? img(company.signerSignature) : ""}<br>
+    <strong>${esc(company.signerName || company.legalName || "LOCAKAR LOCADORA")}</strong><br>
+    <span class="muted">${esc(company.legalName || "LOCAKAR")} · CNPJ ${esc(company.cnpj || "—")}<br>${esc(company.address || "")}</span>
+  </div>
+  <div>
+    <br>
+    <strong>${esc(clientName)}</strong><br>
+    <span class="muted">Locatário / Pagador</span>
+  </div>
 </div>`,
   );
 }

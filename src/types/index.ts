@@ -42,21 +42,45 @@ export interface FleetVehicle extends Vehicle {
   notes?: string;
 }
 
+export type DocType = "cpf" | "cnpj";
+
 export interface Client {
   id: string;
   code: number;
   registeredAt: string;
   name: string;
   phone: string;
+  backupPhone?: string;
   email?: string;
+  docType?: DocType;
   cpf: string;
+  rg?: string;
+  kmDaily?: number;
+  kmMonthly?: number;
+  cep?: string;
+  state?: string;
+  city?: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
   address?: string;
   firstLicenseDate?: string;
+  cnhNumber?: string;
+  cnhCategory?: string;
   cnhExpiry?: string;
+  cnhFrontUrl?: string;
+  cnhBackUrl?: string;
+  cnhPdfUrl?: string;
+  addressProofUrl?: string;
+  avatarUrl?: string;
+  userId?: string;
   notes?: string;
 }
 
 export type RentalStatus = "active" | "finished" | "late" | "cancelled" | "pending";
+
+export type PaymentMethod = "pix" | "dinheiro" | "transferencia" | "cartao_debito" | "cartao_credito" | "outro";
 
 /** Recebimento semanal (colunas "RECEBIMENTOS / RECEBER" da aba LOCAÇÃO). */
 export interface Receipt {
@@ -67,6 +91,14 @@ export interface Receipt {
   /** Data do pagamento e valor efetivamente recebido (com multa/juros, se houver). */
   paidAt?: string;
   amountPaid?: number;
+  paymentMethod?: PaymentMethod | string;
+  description?: string;
+  notes?: string;
+  proofUrl?: string;
+  cancelled?: boolean;
+  cancelledAt?: string;
+  cancelReason?: string;
+  settledBy?: string;
 }
 
 export type BillingPeriod = "daily" | "weekly" | "biweekly" | "monthly" | "quarterly" | "semiannual" | "annual";

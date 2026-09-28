@@ -124,6 +124,44 @@ export function isValidCPF(value: string) {
   return cpfCheckDigits(d.slice(0, 9)) === d.slice(9);
 }
 
+export function maskCNPJ(value: string) {
+  return onlyDigits(value)
+    .slice(0, 14)
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+}
+
+export function isValidCNPJ(value: string) {
+  const d = onlyDigits(value);
+  if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false;
+  const calc = (slice: string, weights: number[]) => {
+    const sum = [...slice].reduce((acc, digit, idx) => acc + Number(digit) * weights[idx], 0);
+    const mod = sum % 11;
+    return mod < 2 ? 0 : 11 - mod;
+  };
+  const d1 = calc(d.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const d2 = calc(d.slice(0, 13), [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  return `${d1}${d2}` === d.slice(12);
+}
+
+export const maskDoc = (v: string, type: "cpf" | "cnpj" = "cpf") => (type === "cnpj" ? maskCNPJ(v) : maskCPF(v));
+export const isValidDoc = (v: string, type: "cpf" | "cnpj" = "cpf") => (type === "cnpj" ? isValidCNPJ(v) : isValidCPF(v));
+
+export function hideDoc(doc: string, type: "cpf" | "cnpj" = "cpf") {
+  const d = onlyDigits(doc);
+  if (type === "cnpj") {
+    return d.length === 14 ? `**.***.${d.slice(5, 8)}/${d.slice(8, 12)}-**` : "—";
+  }
+  return hideCPF(doc);
+}
+
+export function maskCEP(value: string) {
+  const d = onlyDigits(value).slice(0, 8);
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+}
+
 export const newId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()

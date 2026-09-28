@@ -9,19 +9,27 @@ import type { Collections } from "../src/repositories/types";
 import { DEFAULT_SETTINGS } from "../src/lib/constants";
 import { buildNotices, dueForClient } from "../src/lib/notifications";
 import { getWhatsAppUrl } from "../src/lib/whatsapp";
-import { addDays, cpfCheckDigits, hideCPF, isValidCPF, isValidPlate, maskCPF, maskPhone, monthKey, toWhatsAppNumber } from "../src/lib/utils";
+import { addDays, cpfCheckDigits, hideCPF, hideDoc, isValidCNPJ, isValidCPF, isValidPlate, maskCEP, maskCNPJ, maskCPF, maskPhone, monthKey, toWhatsAppNumber } from "../src/lib/utils";
 
 // WhatsApp oficial
 assert.equal(getWhatsAppUrl(), "https://wa.me/5519989615873");
 assert.equal(getWhatsAppUrl("Olá, LOCAKAR!"), "https://wa.me/5519989615873?text=Ol%C3%A1%2C%20LOCAKAR!");
 
-// CPF
+// CPF e CNPJ
 assert.equal(cpfCheckDigits("529982247"), "25");
 assert.ok(isValidCPF("529.982.247-25"));
 assert.ok(!isValidCPF("529.982.247-26"));
 assert.ok(!isValidCPF("111.111.111-11"));
 assert.equal(maskCPF("52998224725"), "529.982.247-25");
 assert.equal(hideCPF("529.982.247-25"), "***.982.247-**");
+
+// CNPJ
+assert.ok(isValidCNPJ("11.222.333/0001-81"));
+assert.ok(!isValidCNPJ("11.222.333/0001-82"));
+assert.ok(!isValidCNPJ("00.000.000/0000-00"));
+assert.equal(maskCNPJ("11222333000181"), "11.222.333/0001-81");
+assert.equal(hideDoc("11222333000181", "cnpj"), "**.***.333/0001-**");
+assert.equal(maskCEP("13330000"), "13330-000");
 
 // Telefone e placa
 assert.equal(maskPhone("19989615873"), "(19) 98961-5873");
@@ -263,6 +271,26 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
   assert.equal(signatureSvg(42), null);
   assert.ok(isIsoDate("2026-10-01") && !isIsoDate("2026-13-01") && !isIsoDate("01/10/2026"));
   assert.equal(new Set(PHOTO_SLOTS.map((s) => s.key)).size, PHOTO_SLOTS.length);
+}
+
+// CRLV e Filtros de Período do Dashboard
+{
+  const { parseCrlvText } = await import("../src/lib/crlv");
+  const { presetDateRange, dashboardExecutiveTotals, vehicle360 } = await import("../src/lib/analytics");
+  const crlv = parseCrlvText("CERTIFICADO CRLV-e PLACA: RMN7I15 CÓDIGO RENAVAM: 01284729184 ANO FABRICAÇÃO: 2021 ANO MODELO: 2022 MARCA/MODELO: FIAT/MOBI COMBUSTÍVEL: FLEX");
+  assert.equal(crlv.plate, "RMN7I15");
+  assert.equal(crlv.renavam, "01284729184");
+  assert.equal(crlv.year, 2021);
+  assert.equal(crlv.yearModel, "2022");
+  assert.equal(crlv.name, "FIAT/MOBI");
+
+  const today = "2026-10-15";
+  const rMonth = presetDateRange("this_month", today);
+  assert.equal(rMonth.from, "2026-10-01");
+  assert.equal(rMonth.to, "2026-10-31");
+  const rAll = presetDateRange("all", today);
+  assert.equal(rAll.from, undefined);
+  assert.equal(rAll.to, undefined);
 }
 
 console.log("✓ check ok");

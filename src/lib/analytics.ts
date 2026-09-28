@@ -1,6 +1,7 @@
 /** Cálculos de indicadores a partir das coleções (puro, sem React). */
 import type { Collections } from "@/repositories/types";
-import type { CompanySettings, Rental } from "@/types";
+import type { CompanySettings, FleetVehicle, Rental } from "@/types";
+import { billingOf, lateCharges } from "./billing";
 import type { Tone } from "./constants";
 import { ROUTES } from "./constants";
 import { addDays, daysBetween, formatCurrency, formatDate, lastMonths, monthKey, monthLabel } from "./utils";
@@ -86,6 +87,292 @@ export function expensesByCategory(data: Collections, from?: string, to?: string
 }
 
 export const defaultMonths = () => lastMonths(6);
+
+/* ---------- Filtros de Período do Dashboard ---------- */
+
+export type DatePresetKey =
+  | "today"
+  | "this_week"
+  | "this_month"
+  | "last_month"
+  | "last_3_months"
+  | "last_6_months"
+  | "this_year"
+  | "all"
+  | "custom";
+
+export interface DateRange {
+  key: DatePresetKey;
+  from?: string; // YYYY-MM-DD
+  to?: string;   // YYYY-MM-DD
+  label: string;
+}
+
+export function presetDateRange(key: DatePresetKey, today: string, customFrom?: string, customTo?: string): DateRange {
+  const [y, m, d] = today.split("-").map(Number);
+  const now = new Date(y, m - 1, d);
+
+  if (key === "today") {
+    return { key, from: today, to: today, label: "Hoje" };
+  }
+
+  if (key === "this_week") {
+    const day = now.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    const monday = addDays(today, diffToMonday);
+    const sunday = addDays(monday, 6);
+    return { key, from: monday, to: sunday, label: "Esta semana" };
+  }
+
+  if (key === "this_month") {
+    const from = `${today.slice(0, 7)}-01`;
+    const lastDay = new Date(y, m, 0).getDate();
+    const to = `${today.slice(0, 7)}-${String(lastDay).padStart(2, "0")}`;
+    return { key, from, to, label: "Este mês" };
+  }
+
+  if (key === "last_month") {
+    const prev = new Date(y, m - 2, 1);
+    const py = prev.getFullYear();
+    const pm = prev.getMonth() + 1;
+    const from = `${py}-${String(pm).padStart(2, "0")}-01`;
+    const lastDay = new Date(py, pm, 0).getDate();
+    const to = `${py}-${String(pm).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    return { key, from, to, label: "Mês passado" };
+  }
+
+  if (key === "last_3_months") {
+    const months = lastMonths(3, today);
+    return { key, from: `${months[0]}-01`, to: today, label: "Últimos 3 meses" };
+  }
+
+  if (key === "last_6_months") {
+    const months = lastMonths(6, today);
+    return { key, from: `${months[0]}-01`, to: today, label: "Últimos 6 meses" };
+  }
+
+  if (key === "this_year") {
+    return { key, from: `${y}-01-01`, to: `${y}-12-31`, label: "Este ano" };
+  }
+
+  if (key === "all") {
+    return { key, from: undefined, to: undefined, label: "Todo o histórico" };
+  }
+
+  return { key: "custom", from: customFrom || today, to: customTo || today, label: "Personalizado" };
+}
+
+/* ---------- Indicadores Executivos do Dashboard ---------- */
+
+export interface ExecutiveTotals {
+  fleetInvested: number;
+  fleetTotal: number;
+  available: number;
+  rented: number;
+  reserved: number;
+  maintenanceVehicles: number;
+  occupancyRate: number;
+  activeRentals: number;
+  openReservations: number;
+  openMaintenance: number;
+  openFines: number;
+  faturamentoRecebido: number;
+  locacoesAVencer: number;
+  valoresEmAtraso: number;
+  multasValor: number;
+  despesasTotal: number;
+  lucroLiquido: number;
+}
+
+export function dashboardExecutiveTotals(data: Collections, today: string, from?: string, to?: string): ExecutiveTotals {
+  const activeVehicles = data.vehicles.filter((v) => v.status !== "sold");
+  const fleetInvested = sum(activeVehicles.map((v) => v.purchaseValue));
+  const count = (s: string) => data.vehicles.filter((v) => v.status === s).length;
+  const available = count("available");
+  const rented = count("rented");
+  const reserved = count("reserved");
+  const maintenanceVehicles = count("maintenance");
+  const fleetTotal = activeVehicles.length;
+  const occupancyRate = fleetTotal ? Math.round(((rented + reserved) / fleetTotal) * 100) : 0;
+  const activeRentals = data.rentals.filter((r) => r.status === "active" || r.status === "late").length;
+  const openReservations = data.reservations.filter((r) => r.status === "pending" || r.status === "confirmed").length;
+  const openMaintenance = data.maintenance.filter((m) => m.status !== "done").length;
+  const openFines = data.fines.filter((f) => f.status !== "paid").length;
+
+  let faturamentoRecebido = 0;
+  let locacoesAVencer = 0;
+  let valoresEmAtraso = 0;
+
+  for (const r of data.rentals) {
+    if (r.status === "cancelled") continue;
+    const billing = billingOf(r);
+    for (const x of r.receipts) {
+      const receiptDate = x.paidAt || x.dueDate;
+      if (x.paid) {
+        if (inPeriod(receiptDate, from, to)) {
+          faturamentoRecebido += x.amountPaid ?? x.amount;
+        }
+      } else {
+        if (x.dueDate < today) {
+          if (inPeriod(x.dueDate, from, to)) {
+            const ch = lateCharges(x.amount, x.dueDate, today, billing);
+            valoresEmAtraso += ch.total;
+          }
+        } else {
+          if (inPeriod(x.dueDate, from, to)) {
+            locacoesAVencer += x.amount;
+          }
+        }
+      }
+    }
+  }
+
+  const multasValor = sum(
+    data.fines.filter((f) => inPeriod(f.infractionDate, from, to) || inPeriod(f.dueDate, from, to)).map((f) => f.amount)
+  );
+
+  const despesasPagas = sum(data.expenses.filter((e) => e.paid && inPeriod(e.date, from, to)).map((e) => e.amount));
+  const manutencaoPaga = sum(data.maintenance.filter((m) => m.status === "done" && inPeriod(m.date, from, to)).map((m) => m.amount));
+  const despesasTotal = despesasPagas + manutencaoPaga;
+  const lucroLiquido = faturamentoRecebido - despesasTotal;
+
+  return {
+    fleetInvested,
+    fleetTotal,
+    available,
+    rented,
+    reserved,
+    maintenanceVehicles,
+    occupancyRate,
+    activeRentals,
+    openReservations,
+    openMaintenance,
+    openFines,
+    faturamentoRecebido,
+    locacoesAVencer,
+    valoresEmAtraso,
+    multasValor,
+    despesasTotal,
+    lucroLiquido,
+  };
+}
+
+/* ---------- Visão 360° do Veículo ---------- */
+
+export interface Vehicle360Data {
+  vehicle: FleetVehicle;
+  purchaseValue: number;
+  faturamento: number;
+  custos: number;
+  lucro: number;
+  roi: number | null;
+  activeRental: Rental | null;
+  rentals: { rental: Rental; clientName: string; totalReceived: number; totalPending: number }[];
+  maintenances: Collections["maintenance"];
+  oilChange: {
+    lastDate?: string;
+    lastKm?: number;
+    currentKm?: number;
+    nextKm?: number;
+    kmUntilNext?: number;
+    status: "ok" | "near" | "overdue" | "unknown";
+  };
+  fines: Collections["fines"];
+  inspections: {
+    delivery?: Rental["deliveryInspection"];
+    return?: Rental["returnInspection"];
+  }[];
+}
+
+export function vehicle360(
+  vehicle: FleetVehicle,
+  data: Collections,
+  today: string,
+  from?: string,
+  to?: string
+): Vehicle360Data {
+  const purchaseValue = vehicle.purchaseValue ?? 0;
+  const vehicleRentals = data.rentals.filter((r) => r.vehicleId === vehicle.id && r.status !== "cancelled");
+  const clientName = (id: string) => data.clients.find((c) => c.id === id)?.name ?? "Cliente";
+
+  let faturamento = 0;
+  const rentalsSummary = vehicleRentals.map((r) => {
+    let rec = 0;
+    let pend = 0;
+    for (const x of r.receipts) {
+      if (x.paid) {
+        if (inPeriod(x.paidAt || x.dueDate, from, to)) {
+          rec += x.amountPaid ?? x.amount;
+        }
+      } else {
+        if (inPeriod(x.dueDate, from, to)) {
+          pend += x.amount;
+        }
+      }
+    }
+    faturamento += rec;
+    return { rental: r, clientName: clientName(r.clientId), totalReceived: rec, totalPending: pend };
+  });
+
+  const vehicleExpenses = data.expenses.filter((e) => e.vehicleId === vehicle.id && e.paid && inPeriod(e.date, from, to));
+  const vehicleMaintenances = data.maintenance.filter((m) => m.vehicleId === vehicle.id);
+  const doneMaintenancesPeriod = vehicleMaintenances.filter((m) => m.status === "done" && inPeriod(m.date, from, to));
+
+  const custos = sum(vehicleExpenses.map((e) => e.amount)) + sum(doneMaintenancesPeriod.map((m) => m.amount));
+  const lucro = faturamento - custos;
+  const roi = purchaseValue > 0 ? Math.round((lucro / purchaseValue) * 1000) / 10 : null;
+
+  const activeRental = vehicleRentals.find((r) => r.status === "active" || r.status === "late") ?? null;
+
+  const oilMaintenances = vehicleMaintenances
+    .filter((m) => /óleo|oleo|revis/i.test(m.description) && m.status === "done")
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const lastOil = oilMaintenances[0];
+
+  const latestKm = Math.max(
+    0,
+    ...vehicleRentals.map((r) => r.kmEnd ?? r.kmStart ?? 0),
+    ...vehicleMaintenances.map((m) => m.currentKm ?? 0)
+  );
+
+  let oilStatus: "ok" | "near" | "overdue" | "unknown" = "unknown";
+  let kmUntilNext: number | undefined;
+
+  if (lastOil?.nextKm && latestKm > 0) {
+    kmUntilNext = lastOil.nextKm - latestKm;
+    if (kmUntilNext <= 0) oilStatus = "overdue";
+    else if (kmUntilNext <= 1000) oilStatus = "near";
+    else oilStatus = "ok";
+  }
+
+  const fines = data.fines.filter((f) => f.vehicleId === vehicle.id && (inPeriod(f.infractionDate, from, to) || inPeriod(f.dueDate, from, to)));
+
+  const inspections = vehicleRentals
+    .filter((r) => r.deliveryInspection || r.returnInspection)
+    .map((r) => ({ delivery: r.deliveryInspection, return: r.returnInspection }));
+
+  return {
+    vehicle,
+    purchaseValue,
+    faturamento,
+    custos,
+    lucro,
+    roi,
+    activeRental,
+    rentals: rentalsSummary,
+    maintenances: vehicleMaintenances.sort((a, b) => b.date.localeCompare(a.date)),
+    oilChange: {
+      lastDate: lastOil?.date,
+      lastKm: lastOil?.currentKm,
+      currentKm: latestKm > 0 ? latestKm : undefined,
+      nextKm: lastOil?.nextKm,
+      kmUntilNext,
+      status: oilStatus,
+    },
+    fines,
+    inspections,
+  };
+}
 
 /* ---------- Alertas ---------- */
 
