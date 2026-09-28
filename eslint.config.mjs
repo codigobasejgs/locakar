@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // App do Locatário (Expo): tem tsconfig, dependências e regras próprias em apps/locatario.
+    "apps/**",
   ]),
 ]);
 

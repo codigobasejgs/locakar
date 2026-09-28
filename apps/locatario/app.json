@@ -4,41 +4,33 @@
     "slug": "locakar-locatario",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "../../public/icons/icon-512.png",
+    "icon": "./assets/icon.png",
     "scheme": "locakar",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "../../public/icons/icon-512.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#050505"
-    },
+    "backgroundColor": "#050505",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.locakar.locatario",
+      "bundleIdentifier": "br.com.locakar.locatario",
       "infoPlist": {
-        "NSCameraUsageDescription": "A LOCAKAR precisa de acesso à câmera para fotografar vistorias, comprovantes e assinar contratos.",
-        "NSPhotoLibraryUsageDescription": "A LOCAKAR precisa de acesso à galeria para enviar comprovantes de pagamento e fotos da vistoria."
+        "NSCameraUsageDescription": "A LOCAKAR usa a câmera quando você fotografa um comprovante de pagamento.",
+        "NSPhotoLibraryUsageDescription": "A LOCAKAR acessa a galeria quando você escolhe um comprovante de pagamento para enviar."
       }
     },
     "android": {
+      "package": "br.com.locakar.locatario",
       "adaptiveIcon": {
-        "foregroundImage": "../../public/icons/icon-512.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#050505"
-      },
-      "package": "com.locakar.locatario",
-      "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ]
+      }
     },
     "plugins": [
       "expo-router",
+      "expo-secure-store",
       [
         "expo-image-picker",
         {
-          "photosPermission": "Permita o acesso às suas fotos para anexar comprovantes de pagamento."
+          "photosPermission": "A LOCAKAR acessa a galeria quando você escolhe um comprovante de pagamento para enviar.",
+          "cameraPermission": "A LOCAKAR usa a câmera quando você fotografa um comprovante de pagamento."
         }
       ]
     ],

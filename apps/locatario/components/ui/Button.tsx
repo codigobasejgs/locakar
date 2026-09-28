@@ -13,7 +13,7 @@ import { Colors, Radius, Spacing } from "../../constants/theme";
 
 interface ButtonProps {
   label: string;
-  variant?: "primary" | "secondary" | "outline" | "danger";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   disabled?: boolean;
@@ -53,6 +53,8 @@ export function Button({
         activeOpacity={0.8}
         disabled={loading}
         onPress={onPress}
+        accessibilityRole="button"
+        accessibilityState={{ busy: loading }}
         style={[styles.base, style]}
       >
         <LinearGradient
@@ -72,6 +74,8 @@ export function Button({
       activeOpacity={0.7}
       disabled={disabled || loading}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
       style={[
         styles.base,
         styles.solid,
@@ -124,6 +128,13 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     borderColor: Colors.borderStrong,
     borderWidth: 1,
+  },
+  // Primário desabilitado cai no visual sólido (sem gradiente).
+  variant_primary: {
+    backgroundColor: Colors.brandDeep,
+  },
+  variant_ghost: {
+    backgroundColor: "transparent",
   },
   variant_danger: {
     backgroundColor: Colors.dangerSoft,

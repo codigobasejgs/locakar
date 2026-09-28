@@ -19,6 +19,8 @@ interface AdminDataContextValue {
   create<K extends CollectionKey>(key: K, item: EntityFor<K>): Promise<boolean>;
   update<K extends CollectionKey>(key: K, id: string, patch: Partial<EntityFor<K>>): Promise<boolean>;
   remove<K extends CollectionKey>(key: K, id: string): Promise<boolean>;
+  /** Relê um registro do banco (ex.: alterado por uma rota do servidor) e atualiza a tela. */
+  reload<K extends CollectionKey>(key: K, id: string): Promise<void>;
   saveSettings(settings: CompanySettings): Promise<boolean>;
   resetDemo(): void;
 }
@@ -116,6 +118,10 @@ export function AdminDataProvider({ children }: { children: React.ReactNode }) {
         } catch (e) {
           return fail(e);
         }
+      },
+      async reload(key, id) {
+        const fresh = await repo(key).getById(id).catch(() => null);
+        if (fresh) patchCollection(key, (items) => items.map((it) => (it.id === id ? fresh : it)));
       },
       async saveSettings(next) {
         try {

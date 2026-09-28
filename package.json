@@ -10,10 +10,6 @@
     "check": "node node_modules/jiti/lib/jiti-cli.mjs scripts/check.ts",
     "locatario": "npm --prefix apps/locatario start"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",

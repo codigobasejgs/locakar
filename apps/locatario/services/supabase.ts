@@ -2,37 +2,42 @@ import { createClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
-// Storage seguro para JWT do Supabase no mobile
-const ExpoSecureStoreAdapter = {
-  getItem: (key: string) => {
-    if (Platform.OS === "web") {
-      return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
-    }
-    return SecureStore.getItemAsync(key);
+/**
+ * Sessão guardada no Keychain (iOS) / Keystore (Android). No navegador (expo web), localStorage.
+ * SecureStore aceita até ~2 KB por chave: o token do Supabase é dividido em partes.
+ */
+const CHUNK = 1800;
+const nativeStore = {
+  async getItem(key: string) {
+    const count = Number(await SecureStore.getItemAsync(`${key}.n`));
+    if (!count) return SecureStore.getItemAsync(key);
+    const parts = await Promise.all(Array.from({ length: count }, (_, i) => SecureStore.getItemAsync(`${key}.${i}`)));
+    return parts.every((p) => p != null) ? parts.join("") : null;
   },
-  setItem: (key: string, value: string) => {
-    if (Platform.OS === "web") {
-      if (typeof localStorage !== "undefined") localStorage.setItem(key, value);
-      return;
-    }
-    return SecureStore.setItemAsync(key, value);
+  async setItem(key: string, value: string) {
+    const parts = value.match(new RegExp(`.{1,${CHUNK}}`, "gs")) ?? [""];
+    await Promise.all(parts.map((p, i) => SecureStore.setItemAsync(`${key}.${i}`, p)));
+    await SecureStore.setItemAsync(`${key}.n`, String(parts.length));
   },
-  removeItem: (key: string) => {
-    if (Platform.OS === "web") {
-      if (typeof localStorage !== "undefined") localStorage.removeItem(key);
-      return;
-    }
-    return SecureStore.deleteItemAsync(key);
+  async removeItem(key: string) {
+    const count = Number(await SecureStore.getItemAsync(`${key}.n`)) || 0;
+    await Promise.all([key, `${key}.n`, ...Array.from({ length: count }, (_, i) => `${key}.${i}`)].map((k) => SecureStore.deleteItemAsync(k)));
   },
 };
 
-// URL e chave anônima da LOCAKAR
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://uazjnjfquijyavsclqll.supabase.co";
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhempuamZxdWlqeWF2c2NscWxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMzI3NDIsImV4cCI6MjA1ODYwODc0Mn0.N53p0R6E105x6G_517v9n10c6W9N4k6H7y6X7w8Z9y0";
+const webStore = {
+  getItem: (key: string) => (typeof localStorage === "undefined" ? null : localStorage.getItem(key)),
+  setItem: (key: string, value: string) => void (typeof localStorage !== "undefined" && localStorage.setItem(key, value)),
+  removeItem: (key: string) => void (typeof localStorage !== "undefined" && localStorage.removeItem(key)),
+};
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+// Valores públicos do projeto LOCAKAR (os mesmos do site). Nunca coloque chaves secretas no app.
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://hhqtpsqcurjwnubfoeuv.supabase.co";
+const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_6lqpcj-s2Gjz7Jm2juxpFg_3bIGwzNK";
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
-    storage: ExpoSecureStoreAdapter,
+    storage: Platform.OS === "web" ? webStore : nativeStore,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,

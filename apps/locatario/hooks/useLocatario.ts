@@ -1,60 +1,21 @@
-import { useEffect, useState, useCallback, createContext, useContext } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "../services/supabase";
+import { createContext, useContext } from "react";
+import type { Session } from "@supabase/supabase-js";
+import type { TenantRental, TenantSummary } from "../services/api";
 
-export interface LocatarioProfile {
-  id: string;
-  name: string;
-  cpf: string;
-  email?: string;
-  phone: string;
-  cnhNumber?: string;
-  cnhCategory?: string;
-  cnhExpiry?: string;
-}
-
-export interface LocatarioRental {
-  id: string;
-  vehicleId: string;
-  startDate: string;
-  endDate: string;
-  status: "active" | "finished" | "late" | "cancelled" | "pending";
-  weeklyRate: number;
-  receipts: Array<{
-    id: string;
-    dueDate: string;
-    amount: number;
-    paid: boolean;
-    amountPaid?: number;
-  }>;
-  billing?: {
-    period: string;
-    amount: number;
-    firstDue: string;
-    until: string;
-    lateFeePercent: number;
-    interestPercent: number;
-    interestPeriod: string;
-    graceDays: number;
-  };
-  vehicle?: {
-    id: string;
-    name: string;
-    brand: string;
-    model: string;
-    plate: string;
-    image: string;
-    fuel: string;
-  };
-}
+export type TenantState =
+  | "loading" // verificando sessão
+  | "signed-out" // sem login
+  | "unlinked" // logado, mas a conta não está ligada a um cadastro da LOCAKAR
+  | "ready"; // dados carregados
 
 interface LocatarioContextValue {
-  user: User | null;
   session: Session | null;
-  client: LocatarioProfile | null;
-  rentals: LocatarioRental[];
-  activeRental: LocatarioRental | null;
-  loading: boolean;
+  state: TenantState;
+  summary: TenantSummary | null;
+  /** Locação em andamento (ativa ou atrasada), senão a mais recente. */
+  activeRental: TenantRental | null;
+  error: string | null;
+  refreshing: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -63,6 +24,6 @@ export const LocatarioContext = createContext<LocatarioContextValue | null>(null
 
 export function useLocatario() {
   const ctx = useContext(LocatarioContext);
-  if (!ctx) throw new Error("useLocatario deve ser usado dentro de LocatarioProvider");
+  if (!ctx) throw new Error("useLocatario deve ser usado dentro de <LocatarioProvider>.");
   return ctx;
 }

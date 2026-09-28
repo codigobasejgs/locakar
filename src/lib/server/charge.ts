@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import QRCode from "qrcode";
-import { PERIOD_UNIT, billingOf, isPixReady, lateCharges, pixPayload } from "@/lib/billing";
+import { chargeFor, isPixReady } from "@/lib/billing";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { sendPushToClient } from "@/lib/server/push";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
@@ -19,14 +19,10 @@ export async function sendCharge(
 ) {
   const { rental, receipt, client, vehicle, settings, today } = args;
   if (!isPixReady(settings.pix)) throw new Error("Cadastre a chave PIX em Configurações → PIX para cobranças.");
-  const billing = billingOf(rental);
-  const index = rental.receipts.findIndex((r) => r.id === receipt.id) + 1;
-  const label = `${PERIOD_UNIT[billing.period]} ${index}`;
-  const late = receipt.dueDate < today;
-  const charges = late ? lateCharges(receipt.amount, receipt.dueDate, today, billing) : { days: 0, fee: 0, interest: 0, total: receipt.amount };
-  // txid: identifica a parcela no extrato do banco (até 25 caracteres alfanuméricos).
-  const txid = `LKR${rental.id.replace(/-/g, "").slice(0, 10)}${String(index).padStart(3, "0")}`.toUpperCase();
-  const code = pixPayload(settings.pix, charges.total, txid);
+  const charge = chargeFor(rental, receipt.id, settings.pix, today);
+  if (!charge?.code) throw new Error("Parcela não encontrada.");
+  const { label, late, code } = charge;
+  const charges = { days: charge.days, fee: charge.fee, interest: charge.interest, total: charge.total };
   const png = await QRCode.toBuffer(code, { type: "png", width: 360, margin: 2, errorCorrectionLevel: "M" });
   const first = client.name.split(" ")[0];
   const vehicleText = vehicle ? `${vehicle.name} · ${vehicle.plate}` : undefined;

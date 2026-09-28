@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Car, CreditCard, Bell, User, Key } from "lucide-react-native";
+import { Car, CreditCard, Key, User } from "lucide-react-native";
 import { Colors } from "../../constants/theme";
 
 export default function TabLayout() {
@@ -11,9 +11,7 @@ export default function TabLayout() {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.border,
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          paddingTop: 6,
         },
         tabBarActiveTintColor: Colors.brandSoft,
         tabBarInactiveTintColor: Colors.textSubtle,
@@ -42,13 +40,6 @@ export default function TabLayout() {
         options={{
           title: "Pagamentos",
           tabBarIcon: ({ color, size }) => <CreditCard color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="notificacoes"
-        options={{
-          title: "Avisos",
-          tabBarIcon: ({ color, size }) => <Bell color={color} size={size} />,
         }}
       />
       <Tabs.Screen

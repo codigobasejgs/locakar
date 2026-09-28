@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckCircle2, Clock, Eye, XCircle, AlertCircle, ExternalLink } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { CheckCircle2, ExternalLink, Eye, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,241 +9,172 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/form";
 import { useAdminData } from "@/hooks/use-admin-data";
-import { getSupabase } from "@/lib/supabase/client";
+import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
-interface PaymentReceiptItem {
+interface PendingProof {
   id: string;
-  rental_id: string;
-  receipt_id: string;
-  client_id: string;
+  rentalId: string;
+  clientName: string;
   amount: number;
-  payment_date: string;
-  proof_url: string;
-  status: "pending_review" | "approved" | "rejected";
-  created_at: string;
+  installment: { number: number; dueDate: string; amount: number } | null;
+  createdAt: string;
+  imageUrl: string | null;
 }
 
+/** Comprovantes enviados pelo App do Locatário, aguardando conferência da equipe. */
 export function ReceiptApprovalSection() {
-  const { data: adminData } = useAdminData();
-  const [receipts, setReceipts] = useState<PaymentReceiptItem[]>([]);
-  const [selectedProof, setSelectedProof] = useState<PaymentReceiptItem | null>(null);
-  const [proofSignedUrl, setProofSignedUrl] = useState<string | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
-  const [showRejectForm, setShowRejectForm] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
+  const { reload } = useAdminData();
+  const [items, setItems] = useState<PendingProof[]>([]);
+  const [open, setOpen] = useState<PendingProof | null>(null);
+  const [reason, setReason] = useState("");
+  const [rejecting, setRejecting] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  const loadPending = useCallback(async () => {
-    try {
-      const res = await fetch("/api/payments/receipt");
-      const json = await res.json();
-      if (res.ok && json.receipts) {
-        setReceipts(json.receipts.filter((r: any) => r.status === "pending_review"));
-      }
-    } catch {
-      // Falha silenciosa se offline
-    }
+  const fetchPending = useCallback(async (): Promise<PendingProof[] | null> => {
+    if (!isSupabaseEnabled) return null;
+    const res = await fetch("/api/payments/receipt", { cache: "no-store" }).catch(() => null);
+    const json = await res?.json().catch(() => ({}));
+    return res?.ok ? (json.receipts ?? []) : null;
   }, []);
+  const load = async () => {
+    const list = await fetchPending();
+    if (list) setItems(list);
+  };
 
   useEffect(() => {
-    loadPending();
-  }, [loadPending]);
+    let alive = true;
+    fetchPending().then((list) => alive && list && setItems(list));
+    return () => {
+      alive = false;
+    };
+  }, [fetchPending]);
 
-  // Gera URL assinada temporária para visualização segura da imagem
-  useEffect(() => {
-    if (!selectedProof) {
-      setProofSignedUrl(null);
-      return;
-    }
+  const close = () => {
+    setOpen(null);
+    setRejecting(false);
+    setReason("");
+  };
 
-    getSupabase()
-      .storage.from("comprovantes")
-      .createSignedUrl(selectedProof.proof_url, 3600)
-      .then(({ data }) => {
-        setProofSignedUrl(data?.signedUrl ?? null);
-      });
-  }, [selectedProof]);
-
-  const handleAction = async (action: "approve" | "reject") => {
-    if (!selectedProof) return;
-    setActionLoading(true);
-
+  const act = async (action: "approve" | "reject") => {
+    if (!open) return;
+    setBusy(true);
     try {
       const res = await fetch("/api/payments/receipt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action,
-          receiptId: selectedProof.id,
-          rejectionReason: action === "reject" ? rejectionReason : undefined,
-        }),
+        body: JSON.stringify({ action, receiptId: open.id, rejectionReason: action === "reject" ? reason : undefined }),
       });
-
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Erro ao processar");
-
-      toast.success(action === "approve" ? "Pagamento aprovado com sucesso!" : "Comprovante rejeitado.");
-      setSelectedProof(null);
-      setShowRejectForm(false);
-      setRejectionReason("");
-      await loadPending();
-      window.location.reload(); // Atualiza financeiro
-    } catch (e: any) {
-      toast.error(e.message || "Erro na operação");
-    } finally {
-      setActionLoading(false);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? "Não foi possível concluir.");
+      toast.success(action === "approve" ? "Pagamento aprovado. O cliente foi avisado." : "Comprovante rejeitado. O cliente foi avisado.");
+      // A parcela aprovada aparece como paga no painel sem recarregar a página.
+      if (action === "approve") await reload("rentals", open.rentalId);
+      close();
+      await load();
+    } catch (e) {
+      toast.error((e as Error).message);
     }
+    setBusy(false);
   };
 
-  const getClientName = (clientId: string) => {
-    return adminData?.clients.find((c) => c.id === clientId)?.name || "Locatário";
-  };
-
-  if (!receipts.length) return null;
+  if (!items.length) return null;
 
   return (
     <>
-      <Card className="mb-6 border-amber-500/30 bg-amber-500/[0.04]">
+      <Card className="mb-6 border-amber-400/30">
         <CardHeader
-          title={`Comprovantes de Pagamento Pendentes (${receipts.length})`}
-          description="Locatários enviaram comprovantes pelo app aguardando sua conferência e aprovação."
-          action={<Badge tone="warning">Ação Necessária</Badge>}
+          title={`Comprovantes para conferir (${items.length})`}
+          description="Enviados pelos clientes no aplicativo. A parcela só fica paga depois da sua aprovação."
+          action={<Badge tone="warning">Ação necessária</Badge>}
         />
-        <div className="divide-y divide-line p-5 pt-0">
-          {receipts.map((r) => (
-            <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <div>
-                <p className="font-semibold text-white">{getClientName(r.client_id)}</p>
+        <ul className="divide-y divide-line px-5 pb-3">
+          {items.map((r) => (
+            <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <div className="min-w-0">
+                <p className="font-medium text-white">{r.clientName}</p>
                 <p className="text-xs text-muted">
-                  Enviado em {formatDate(r.created_at.slice(0, 10))} · Valor informado:{" "}
-                  <strong className="text-emerald-400">{formatCurrency(Number(r.amount))}</strong>
+                  {r.installment ? `Parcela ${r.installment.number} · vence ${formatDate(r.installment.dueDate)} · ` : ""}
+                  {formatCurrency(r.amount)} · enviado {new Date(r.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
                 </p>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setSelectedProof(r);
-                  setShowRejectForm(false);
-                }}
-              >
-                <Eye className="size-4" /> Conferir Comprovante
+              <Button size="sm" variant="outline" onClick={() => setOpen(r)}>
+                <Eye /> Conferir
               </Button>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </Card>
 
-      {/* Modal de Análise e Aprovação */}
       <Dialog
-        open={!!selectedProof}
-        onOpenChange={(open) => !open && setSelectedProof(null)}
-        title="Análise de Comprovante de Pagamento"
+        open={!!open}
+        onOpenChange={(o) => !o && !busy && close()}
+        title="Conferir comprovante"
+        description="Confira valor, data e recebedor antes de aprovar."
         size="lg"
         footer={
-          <div className="flex w-full items-center justify-between">
-            <Button variant="ghost" onClick={() => setSelectedProof(null)} disabled={actionLoading}>
-              Fechar
-            </Button>
-            <div className="flex gap-2">
-              {!showRejectForm ? (
-                <>
-                  <Button
-                    variant="danger"
-                    onClick={() => setShowRejectForm(true)}
-                    disabled={actionLoading}
-                  >
-                    <XCircle className="size-4" /> Rejeitar
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => handleAction("approve")}
-                    disabled={actionLoading}
-                    className="bg-emerald-600 hover:bg-emerald-500"
-                  >
-                    <CheckCircle2 className="size-4" /> Aprovar Pagamento
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="ghost" onClick={() => setShowRejectForm(false)} disabled={actionLoading}>
-                    Voltar
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => handleAction("reject")}
-                    disabled={actionLoading || !rejectionReason.trim()}
-                  >
-                    Confirmar Rejeição
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
+          rejecting ? (
+            <>
+              <Button variant="ghost" onClick={() => setRejecting(false)} disabled={busy}>
+                Voltar
+              </Button>
+              <Button variant="danger" onClick={() => act("reject")} disabled={busy || !reason.trim()}>
+                Confirmar rejeição
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setRejecting(true)} disabled={busy}>
+                <XCircle /> Rejeitar
+              </Button>
+              <Button onClick={() => act("approve")} disabled={busy}>
+                <CheckCircle2 /> {busy ? "Aprovando..." : "Aprovar pagamento"}
+              </Button>
+            </>
+          )
         }
       >
-        {selectedProof && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 rounded-xl border border-line bg-panel p-4 text-sm">
+        {open && (
+          <div className="grid gap-4">
+            <dl className="grid grid-cols-2 gap-3 rounded-xl border border-line p-4 text-sm">
               <div>
-                <p className="text-xs text-muted uppercase">Locatário</p>
-                <p className="font-semibold text-white">{getClientName(selectedProof.client_id)}</p>
+                <dt className="text-xs uppercase text-muted">Cliente</dt>
+                <dd className="font-medium">{open.clientName}</dd>
               </div>
               <div>
-                <p className="text-xs text-muted uppercase">Valor Informado</p>
-                <p className="font-semibold text-emerald-400">{formatCurrency(Number(selectedProof.amount))}</p>
+                <dt className="text-xs uppercase text-muted">Valor esperado</dt>
+                <dd className="font-medium text-emerald-300">{formatCurrency(open.amount)}</dd>
               </div>
               <div>
-                <p className="text-xs text-muted uppercase">Data da Transação</p>
-                <p className="text-zinc-200">{formatDate(selectedProof.payment_date)}</p>
+                <dt className="text-xs uppercase text-muted">Parcela</dt>
+                <dd>{open.installment ? `${open.installment.number} · vence ${formatDate(open.installment.dueDate)}` : "—"}</dd>
               </div>
               <div>
-                <p className="text-xs text-muted uppercase">Locação Vinculada</p>
-                <p className="text-zinc-200">{selectedProof.rental_id.slice(0, 8).toUpperCase()}</p>
+                <dt className="text-xs uppercase text-muted">Locação</dt>
+                <dd>{open.rentalId.slice(0, 8).toUpperCase()}</dd>
               </div>
-            </div>
+            </dl>
 
-            {/* Imagem do Comprovante */}
-            <div className="rounded-xl border border-line bg-ink p-3 text-center">
-              {proofSignedUrl ? (
+            <div className="rounded-xl border border-line bg-white/[0.02] p-3 text-center">
+              {open.imageUrl ? (
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={proofSignedUrl}
-                    alt="Comprovante de pagamento"
-                    className="mx-auto max-h-[380px] rounded-lg object-contain"
-                  />
-                  <div className="mt-2 text-right">
-                    <a
-                      href={proofSignedUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-brand-soft hover:underline"
-                    >
-                      <ExternalLink className="size-3" /> Abrir imagem original
-                    </a>
-                  </div>
+                  <img src={open.imageUrl} alt={`Comprovante enviado por ${open.clientName}`} className="mx-auto max-h-[420px] rounded-lg object-contain" />
+                  <a href={open.imageUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-brand-soft hover:underline">
+                    <ExternalLink className="size-3" /> Abrir em tamanho original
+                  </a>
                 </>
               ) : (
-                <div className="flex h-48 items-center justify-center text-sm text-muted">
-                  Carregando imagem do comprovante...
-                </div>
+                <p className="py-12 text-sm text-muted">Não foi possível carregar a imagem. Recarregue a página.</p>
               )}
             </div>
 
-            {/* Formulário de Rejeição */}
-            {showRejectForm && (
-              <div className="rounded-xl border border-red-500/30 bg-red-500/[0.05] p-4">
-                <p className="mb-2 text-sm font-semibold text-red-200">Motivo da Rejeição</p>
-                <Textarea
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Ex.: Valor diverge do valor da parcela, comprovante ilegível ou data incorreta."
-                  rows={3}
-                />
-                <p className="mt-1 text-xs text-muted">
-                  Este motivo será enviado por notificação diretamente ao locatário para que ele possa corrigir e reenviar.
-                </p>
+            {rejecting && (
+              <div className="grid gap-2">
+                <label htmlFor="reject-reason" className="text-sm font-medium">
+                  Motivo (vai para o cliente)
+                </label>
+                <Textarea id="reject-reason" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ex.: valor diferente da parcela, comprovante ilegível, data errada." />
               </div>
             )}
           </div>

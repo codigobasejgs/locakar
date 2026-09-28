@@ -178,3 +178,32 @@ export function receiptsToCharge(rental: Pick<Rental, "billing" | "weeklyRate" |
     return d === billing.remindDaysBefore || d === 0 || (d < 0 && -d % 3 === 0);
   });
 }
+
+/**
+ * Cobrança de uma parcela no dia: valor atualizado (multa/juros) e PIX copia e cola.
+ * Fonte única para e-mail/WhatsApp (lib/server/charge.ts) e para o App do Locatário (/api/tenant).
+ */
+export function chargeFor(
+  rental: Pick<Rental, "id" | "billing" | "weeklyRate" | "receipts" | "startDate" | "endDate">,
+  receiptId: string,
+  pix: PixSettings,
+  today: string,
+) {
+  const billing = billingOf(rental);
+  const index = rental.receipts.findIndex((r) => r.id === receiptId) + 1;
+  const receipt = rental.receipts[index - 1];
+  if (!receipt) return null;
+  const late = !receipt.paid && receipt.dueDate < today;
+  const charges = late ? lateCharges(receipt.amount, receipt.dueDate, today, billing) : { days: 0, fee: 0, interest: 0, total: receipt.amount };
+  // txid: identifica a parcela no extrato do banco (até 25 caracteres alfanuméricos).
+  const txid = `LKR${rental.id.replace(/-/g, "").slice(0, 10)}${String(index).padStart(3, "0")}`.toUpperCase();
+  return {
+    index,
+    label: `${PERIOD_UNIT[billing.period]} ${index}`,
+    receipt,
+    late,
+    ...charges,
+    txid,
+    code: isPixReady(pix) ? pixPayload(pix, charges.total, txid) : null,
+  };
+}

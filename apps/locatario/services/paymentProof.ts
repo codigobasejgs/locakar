@@ -1,92 +1,40 @@
+import { SaveFormat, manipulateAsync } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
+import { api } from "./api";
 import { supabase } from "./supabase";
 
-export interface UploadProofResult {
-  success: boolean;
-  proofUrl?: string;
-  error?: string;
+export class PermissionDenied extends Error {}
+
+/** Abre a câmera ou a galeria. Retorna null se a pessoa cancelar. */
+export async function pickProofImage(source: "camera" | "gallery"): Promise<string | null> {
+  const perm = source === "camera" ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!perm.granted) {
+    throw new PermissionDenied(
+      source === "camera"
+        ? "Sem acesso à câmera. Libere nas configurações do celular ou escolha uma imagem da galeria."
+        : "Sem acesso à galeria. Libere nas configurações do celular ou tire uma foto.",
+    );
+  }
+  const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], quality: 1 };
+  const result = source === "camera" ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
+  return result.canceled ? null : (result.assets[0]?.uri ?? null);
 }
 
 /**
- * Permite ao locatário tirar foto do comprovante ou escolher da galeria,
- * enviando para o bucket privado 'comprovantes' no Supabase Storage.
+ * Envia o comprovante: comprime (JPEG até 1600px, legível e leve), sobe para a pasta do cliente no bucket
+ * privado e pede ao servidor para registrar. O valor é calculado pelo servidor.
  */
-export async function pickProofImage(source: "camera" | "gallery"): Promise<string | null> {
-  if (source === "camera") {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      throw new Error("Permissão para usar a câmera é necessária para fotografar o comprovante.");
-    }
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ["images"],
-      quality: 0.8,
-      allowsEditing: true,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      return result.assets[0].uri;
-    }
-  } else {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      throw new Error("Permissão para acessar a galeria é necessária para anexar o comprovante.");
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.8,
-      allowsEditing: true,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      return result.assets[0].uri;
-    }
-  }
-  return null;
-}
+export async function sendPaymentProof(args: { clientId: string; rentalId: string; installmentId: string; imageUri: string }) {
+  const image = await manipulateAsync(args.imageUri, [{ resize: { width: 1600 } }], { compress: 0.7, format: SaveFormat.JPEG });
+  const body = await (await fetch(image.uri)).arrayBuffer();
+  if (body.byteLength > 5 * 1024 * 1024) throw new Error("A imagem ficou grande demais. Tente uma foto mais próxima do comprovante.");
 
-export async function uploadPaymentProof(
-  clientId: string,
-  rentalId: string,
-  receiptId: string,
-  imageUri: string,
-  amount: number
-): Promise<UploadProofResult> {
-  try {
-    const fileExt = imageUri.split(".").pop() || "jpg";
-    const fileName = `${clientId}/${rentalId}_${receiptId}_${Date.now()}.${fileExt}`;
+  const path = `${args.clientId}/${args.rentalId}_${args.installmentId}_${Date.now()}.jpg`;
+  const { error } = await supabase.storage.from("comprovantes").upload(path, body, { contentType: "image/jpeg", upsert: false });
+  if (error) throw new Error("Não foi possível enviar a imagem. Verifique a internet e tente de novo.");
 
-    // Leitura do arquivo como blob/arrayBuffer
-    const response = await fetch(imageUri);
-    const blob = await response.blob();
-    const arrayBuffer = await new Response(blob).arrayBuffer();
-
-    // Upload no bucket privado comprovantes
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("comprovantes")
-      .upload(fileName, arrayBuffer, {
-        contentType: `image/${fileExt === "png" ? "png" : "jpeg"}`,
-        upsert: true,
-      });
-
-    if (uploadError) {
-      throw new Error(`Falha no upload do comprovante: ${uploadError.message}`);
-    }
-
-    // Registra na tabela payment_receipts
-    const { error: dbError } = await supabase.from("payment_receipts").insert({
-      client_id: clientId,
-      rental_id: rentalId,
-      receipt_id: receiptId,
-      amount,
-      proof_url: uploadData.path,
-      status: "pending_review",
-      payment_date: new Date().toISOString().slice(0, 10),
-    });
-
-    if (dbError) {
-      throw new Error(`Erro ao registrar comprovante: ${dbError.message}`);
-    }
-
-    return { success: true, proofUrl: uploadData.path };
-  } catch (e: any) {
-    return { success: false, error: e.message || "Erro desconhecido" };
-  }
+  return api<{ ok: true; amount: number }>("/api/tenant/receipts", {
+    method: "POST",
+    body: { rentalId: args.rentalId, receiptId: args.installmentId, proofPath: path },
+  });
 }

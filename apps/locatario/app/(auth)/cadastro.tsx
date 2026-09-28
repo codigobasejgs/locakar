@@ -1,155 +1,99 @@
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from "react-native";
-import { Link, useRouter } from "expo-router";
+import { Link } from "expo-router";
+import { useState } from "react";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Colors, Spacing } from "../../constants/theme";
 import { supabase } from "../../services/supabase";
 
-// Máscara e validação puras de CPF
-function maskCPF(value: string) {
-  const d = value.replace(/\D/g, "").slice(0, 11);
-  return d
+// Mesma regra de src/lib/utils.ts (dígitos verificadores do CPF).
+const maskCPF = (v: string) =>
+  v
+    .replace(/\D/g, "")
+    .slice(0, 11)
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-}
 
-function isValidCPF(cpf: string) {
-  const d = cpf.replace(/\D/g, "");
+function isValidCPF(value: string) {
+  const d = value.replace(/\D/g, "");
   if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
-  let sum = 0;
-  for (let i = 0; i < 9; i++) sum += parseInt(d[i]) * (10 - i);
-  let rev = 11 - (sum % 11);
-  if (rev === 10 || rev === 11) rev = 0;
-  if (rev !== parseInt(d[9])) return false;
-  sum = 0;
-  for (let i = 0; i < 10; i++) sum += parseInt(d[i]) * (11 - i);
-  rev = 11 - (sum % 11);
-  if (rev === 10 || rev === 11) rev = 0;
-  return rev === parseInt(d[10]);
+  const digit = (n: string) => {
+    const sum = [...n].reduce((a, x, i) => a + Number(x) * (n.length + 1 - i), 0);
+    const r = (sum * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  const first = digit(d.slice(0, 9));
+  return `${first}${digit(d.slice(0, 9) + first)}` === d.slice(9);
 }
 
+/**
+ * Cria a conta. O vínculo com o cadastro da LOCAKAR só acontece depois que o e-mail é confirmado
+ * e se e-mail e CPF forem iguais aos do cadastro na locadora (ver link_current_user_to_client).
+ */
 export default function CadastroScreen() {
-  const router = useRouter();
   const [cpf, setCpf] = useState("");
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<string | null>(null);
 
-  const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password || !cpf) {
-      return Alert.alert("Atenção", "Preencha todos os campos.");
-    }
-
-    if (!isValidCPF(cpf)) {
-      return Alert.alert("CPF inválido", "Informe um CPF válido para localizar seu cadastro.");
-    }
-
-    if (password.length < 6) {
-      return Alert.alert("Senha curta", "A senha deve ter no mínimo 6 caracteres.");
-    }
-
+  const register = async () => {
+    setError(null);
+    if (!isValidCPF(cpf)) return setError("CPF inválido.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError("E-mail inválido.");
+    if (password.length < 8) return setError("A senha precisa ter pelo menos 8 caracteres.");
     setLoading(true);
-    // Cadastra o usuário com o CPF nos metadados para que o trigger vincule ao cliente
-    const { error } = await supabase.auth.signUp({
+    const { error: err } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
-      options: {
-        data: {
-          cpf: cpf.replace(/\D/g, ""),
-          name: name.trim(),
-        },
-      },
+      options: { data: { cpf: cpf.replace(/\D/g, "") } },
     });
     setLoading(false);
-
-    if (error) {
-      return Alert.alert("Erro no cadastro", error.message);
-    }
-
-    Alert.alert(
-      "Conta criada!",
-      "Seu cadastro foi vinculado à sua ficha na LOCAKAR.",
-      [{ text: "Continuar", onPress: () => router.replace("/(tabs)/inicio") }]
-    );
+    if (err) return setError(/registered|exists/i.test(err.message) ? "Já existe uma conta com este e-mail. Entre ou use \"Esqueci minha senha\"." : "Não foi possível criar a conta. Tente de novo.");
+    setSentTo(email.trim().toLowerCase());
   };
+
+  if (sentTo) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.scroll}>
+          <Text style={styles.title}>Confirme seu e-mail</Text>
+          <Text style={[styles.subtitle, { marginBottom: Spacing.lg }]}>
+            Enviamos um link para {sentTo}. Toque nele e depois entre no app com seu e-mail e senha.
+          </Text>
+          <Link href="/(auth)/login" style={styles.link}>
+            Ir para o login
+          </Link>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboard}
-      >
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <View style={styles.header}>
-            <Text style={styles.brandTitle}>
-              LOCA<Text style={styles.brandAccent}>KAR</Text>
-            </Text>
-            <Text style={styles.title}>Criar sua conta</Text>
-            <Text style={styles.subtitle}>
-              Informe seu CPF para vincularmos ao seu contrato de locação ativo.
-            </Text>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>Criar conta</Text>
+          <Text style={[styles.subtitle, { marginBottom: Spacing.xl }]}>Use o mesmo e-mail e CPF informados na LOCAKAR. Assim encontramos sua locação.</Text>
+
+          <View style={{ gap: Spacing.md }}>
+            <Input label="CPF" placeholder="000.000.000-00" keyboardType="number-pad" value={cpf} onChangeText={(t) => setCpf(maskCPF(t))} />
+            <Input label="E-mail cadastrado na LOCAKAR" placeholder="seu@email.com" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" value={email} onChangeText={setEmail} />
+            <Input label="Crie uma senha" placeholder="Pelo menos 8 caracteres" secureTextEntry autoComplete="new-password" textContentType="newPassword" value={password} onChangeText={setPassword} />
+            {error && (
+              <Text style={{ color: Colors.danger, fontSize: 14 }} accessibilityRole="alert">
+                {error}
+              </Text>
+            )}
+            <Button label="Criar conta" size="lg" loading={loading} onPress={register} />
           </View>
 
-          <View style={styles.form}>
-            <Input
-              label="Seu CPF"
-              placeholder="000.000.000-00"
-              keyboardType="numeric"
-              value={cpf}
-              onChangeText={(text) => setCpf(maskCPF(text))}
-            />
-
-            <Input
-              label="Nome completo"
-              placeholder="Como no seu documento"
-              autoCapitalize="words"
-              value={name}
-              onChangeText={setName}
-            />
-
-            <Input
-              label="E-mail"
-              placeholder="seu@email.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={email}
-              onChangeText={setEmail}
-            />
-
-            <Input
-              label="Crie uma senha"
-              placeholder="Mínimo 6 dígitos"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-
-            <Button
-              label="Criar conta e acessar"
-              size="lg"
-              loading={loading}
-              onPress={handleRegister}
-              style={styles.btnSubmit}
-            />
-          </View>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Já tem uma conta?</Text>
-            <Link href="/(auth)/login" asChild>
-              <Text style={styles.footerLink}>Fazer login</Text>
+          <View style={{ marginTop: Spacing.xl, alignItems: "center" }}>
+            <Link href="/(auth)/login" style={styles.link}>
+              Já tenho conta
             </Link>
           </View>
         </ScrollView>
@@ -159,60 +103,9 @@ export default function CadastroScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  keyboard: {
-    flex: 1,
-  },
-  scroll: {
-    flexGrow: 1,
-    padding: Spacing.xl,
-    justifyContent: "center",
-  },
-  header: {
-    marginBottom: Spacing.xl,
-  },
-  brandTitle: {
-    fontSize: 28,
-    fontWeight: "900",
-    color: Colors.text,
-    letterSpacing: 2,
-    marginBottom: Spacing.sm,
-  },
-  brandAccent: {
-    color: Colors.brandSoft,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: Colors.text,
-    marginBottom: Spacing.xs,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: Colors.textMuted,
-    lineHeight: 20,
-  },
-  form: {
-    gap: Spacing.md,
-  },
-  btnSubmit: {
-    marginTop: Spacing.sm,
-  },
-  footer: {
-    marginTop: Spacing.xxl,
-    alignItems: "center",
-    gap: Spacing.xs,
-  },
-  footerText: {
-    color: Colors.textMuted,
-    fontSize: 14,
-  },
-  footerLink: {
-    color: Colors.brandSoft,
-    fontWeight: "700",
-    fontSize: 14,
-  },
+  safe: { flex: 1, backgroundColor: Colors.background },
+  scroll: { flexGrow: 1, padding: Spacing.xl, justifyContent: "center", maxWidth: 480, width: "100%", alignSelf: "center" },
+  title: { fontSize: 26, fontWeight: "700", color: Colors.text },
+  subtitle: { fontSize: 14, color: Colors.textMuted, lineHeight: 20, marginTop: 4 },
+  link: { color: Colors.brandSoft, fontWeight: "700", fontSize: 14 },
 });
