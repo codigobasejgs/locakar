@@ -338,3 +338,84 @@ export interface CompanySettings {
   notifyMaintenance: boolean;
   notifyReceipts: boolean;
 }
+
+/* ---------- Entidades do App do Locatário ---------- */
+
+export type PaymentReceiptStatus = "pending_review" | "approved" | "rejected";
+
+export interface PaymentReceipt {
+  id: string;
+  rentalId: string;
+  receiptId: string;
+  clientId: string;
+  amount: number;
+  paymentDate: string;
+  proofUrl: string;
+  status: PaymentReceiptStatus;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type IncidentCategory =
+  | "mecanica"
+  | "pneu"
+  | "eletrica"
+  | "ar_condicionado"
+  | "acidente"
+  | "painel"
+  | "vidro"
+  | "lataria"
+  | "outro";
+
+export type IncidentStatus = "open" | "in_review" | "in_service" | "waiting_client" | "resolved" | "cancelled";
+
+export interface VehicleIncident {
+  id: string;
+  rentalId: string;
+  clientId: string;
+  vehicleId: string;
+  category: IncidentCategory;
+  description: string;
+  mediaUrls: string[];
+  locationLat?: number;
+  locationLng?: number;
+  status: IncidentStatus;
+  adminNotes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface TenantDevice {
+  id: string;
+  clientId: string;
+  installationId: string;
+  pushToken: string;
+  platform: "ios" | "android";
+  deviceModel?: string;
+  osVersion?: string;
+  appVersion?: string;
+  active: boolean;
+  lastSeenAt: string;
+  createdAt: string;
+}
+
+export interface AntifraudTelemetry {
+  id: string;
+  clientId: string;
+  deviceId: string;
+  ipAddress?: string;
+  appVersion?: string;
+  integrityStatus?: string;
+  isEmulator: boolean;
+  batteryLevel?: number;
+  networkType?: string;
+  locationLat?: number;
+  locationLng?: number;
+  riskScore?: number;
+  riskFactors?: string[];
+  createdAt: string;
+}
