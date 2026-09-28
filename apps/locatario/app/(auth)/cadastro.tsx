@@ -60,7 +60,16 @@ export default function CadastroScreen() {
       },
     });
     setLoading(false);
-    if (err) return setError(/registered|exists/i.test(err.message) ? "Já existe uma conta com este e-mail. Entre ou use \"Esqueci minha senha\"." : "Não foi possível criar a conta. Tente de novo.");
+    if (err) {
+      if (err.status === 429 || /rate limit/i.test(err.message)) {
+        return setError("Limite de envio de e-mails atingido no Supabase. Desative 'Confirm email' em Authentication > Providers > Email no painel do Supabase para criar a conta na hora.");
+      }
+      return setError(
+        /registered|exists/i.test(err.message)
+          ? "Já existe uma conta com este e-mail. Entre ou use \"Esqueci minha senha\"."
+          : err.message || "Não foi possível criar a conta. Tente de novo."
+      );
+    }
     // Se "Confirm email" estiver desativado no Supabase, a conta já nasce confirmada e logada.
     if (signUpData.session) return;
     setSentTo(email.trim().toLowerCase());
