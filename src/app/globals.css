@@ -3,17 +3,17 @@
 
 /* Identidade LOCAKAR — preto domina, roxo assina, branco contrasta. */
 @theme {
-  --color-ink: #050505;
-  --color-ink-2: #0b0b0d;
-  --color-panel: #0d0d0f;
-  --color-panel-2: #141417;
-  --color-brand-deep: #600060;
-  --color-brand: #8b008b;
-  --color-magenta: #a000a0;
-  --color-brand-soft: #d06fd0;
-  --color-muted: #a1a1aa;
-  --color-line: rgb(255 255 255 / 0.08);
-  --color-line-strong: rgb(255 255 255 / 0.14);
+  --color-ink: var(--theme-ink);
+  --color-ink-2: var(--theme-ink-2);
+  --color-panel: var(--theme-panel);
+  --color-panel-2: var(--theme-panel-2);
+  --color-brand-deep: var(--theme-brand-deep);
+  --color-brand: var(--theme-brand);
+  --color-magenta: var(--theme-magenta);
+  --color-brand-soft: var(--theme-brand-soft);
+  --color-muted: var(--theme-muted);
+  --color-line: var(--theme-line);
+  --color-line-strong: var(--theme-line-strong);
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-heading), var(--font-body), ui-sans-serif, sans-serif;
@@ -23,7 +23,118 @@
 }
 
 :root {
+  --theme-ink: #050505;
+  --theme-ink-2: #0b0b0d;
+  --theme-panel: #0d0d0f;
+  --theme-panel-2: #141417;
+  --theme-brand-deep: #600060;
+  --theme-brand: #8b008b;
+  --theme-magenta: #a000a0;
+  --theme-brand-soft: #d06fd0;
+  --theme-muted: #a1a1aa;
+  --theme-line: rgb(255 255 255 / 0.08);
+  --theme-line-strong: rgb(255 255 255 / 0.14);
+  --color-text: #ffffff;
   color-scheme: dark;
+}
+
+:root[data-theme="light"], .light {
+  --theme-ink: #f8fafc;
+  --theme-ink-2: #f1f5f9;
+  --theme-panel: #ffffff;
+  --theme-panel-2: #f8fafc;
+  --theme-brand-deep: #600060;
+  --theme-brand: #8b008b;
+  --theme-magenta: #a000a0;
+  --theme-brand-soft: #8b008b;
+  --theme-muted: #64748b;
+  --theme-line: rgb(0 0 0 / 0.09);
+  --theme-line-strong: rgb(0 0 0 / 0.16);
+  --color-text: #0f172a;
+  color-scheme: light;
+}
+
+/* Modo claro (Light theme): adaptação visual completa e de alto contraste */
+:root[data-theme="light"] * {
+  scrollbar-color: rgb(0 0 0 / 0.15) transparent;
+}
+
+:root[data-theme="light"] .text-white {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .text-zinc-100,
+:root[data-theme="light"] .text-zinc-200 {
+  color: #1e293b !important;
+}
+
+:root[data-theme="light"] .text-zinc-300,
+:root[data-theme="light"] .text-zinc-400 {
+  color: #475569 !important;
+}
+
+:root[data-theme="light"] .text-zinc-500 {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .bg-\[\#070708\],
+:root[data-theme="light"] .bg-\[\#050505\],
+:root[data-theme="light"] .bg-ink {
+  background-color: #f8fafc !important;
+}
+
+:root[data-theme="light"] aside {
+  background-color: #ffffff !important;
+  border-right-color: rgb(0 0 0 / 0.08) !important;
+}
+
+:root[data-theme="light"] header {
+  background-color: rgb(255 255 255 / 0.88) !important;
+  border-bottom-color: rgb(0 0 0 / 0.08) !important;
+}
+
+:root[data-theme="light"] .bg-white\/\[0\.02\],
+:root[data-theme="light"] .bg-white\/\[0\.03\],
+:root[data-theme="light"] .bg-white\/\[0\.04\],
+:root[data-theme="light"] .bg-white\/5 {
+  background-color: rgb(0 0 0 / 0.03) !important;
+}
+
+:root[data-theme="light"] .hover\:bg-white\/\[0\.03\]:hover,
+:root[data-theme="light"] .hover\:bg-white\/\[0\.04\]:hover,
+:root[data-theme="light"] .hover\:bg-white\/5:hover,
+:root[data-theme="light"] .hover\:bg-white\/10:hover {
+  background-color: rgb(0 0 0 / 0.05) !important;
+}
+
+:root[data-theme="light"] .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: rgb(0 0 0 / 0.15) !important;
+  color-scheme: light !important;
+}
+
+:root[data-theme="light"] select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .border-line {
+  border-color: rgb(0 0 0 / 0.08) !important;
+}
+
+:root[data-theme="light"] .border-line-strong {
+  border-color: rgb(0 0 0 / 0.16) !important;
+}
+
+:root[data-theme="light"] .shadow-2xl {
+  box-shadow: 0 20px 40px -15px rgb(0 0 0 / 0.12) !important;
 }
 
 html {

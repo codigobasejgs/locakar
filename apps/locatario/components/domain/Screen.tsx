@@ -50,7 +50,7 @@ export function SectionTitle({ children }: { children: string }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: Spacing.md, gap: Spacing.md, paddingBottom: Spacing.xxl, maxWidth: 640, width: "100%", alignSelf: "center" },
+  scroll: { padding: Spacing.md, gap: Spacing.md, paddingBottom: 110, maxWidth: 640, width: "100%", alignSelf: "center" },
   empty: { alignItems: "center", padding: Spacing.xl, gap: Spacing.sm },
   emptyTitle: { color: Colors.text, fontSize: 16, fontWeight: "600" },
   emptyText: { color: Colors.textMuted, fontSize: 14, textAlign: "center", lineHeight: 20 },

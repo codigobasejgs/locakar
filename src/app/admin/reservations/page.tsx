@@ -18,7 +18,15 @@ import { findConflict } from "@/lib/reservations";
 import { addDays, cn, formatDate, newId, toISODate, todayISO } from "@/lib/utils";
 import type { Reservation, ReservationStatus } from "@/types";
 
-type Draft = { clientId: string; vehicleId: string; startDate: string; endDate: string; status: ReservationStatus; notes: string };
+type Draft = {
+  clientId: string;
+  vehicleId: string;
+  startDate: string;
+  endDate: string;
+  status: ReservationStatus;
+  contractTemplateId: string;
+  notes: string;
+};
 
 const empty = (): Draft => ({
   clientId: "",
@@ -26,9 +34,14 @@ const empty = (): Draft => ({
   startDate: todayISO(),
   endDate: addDays(todayISO(), 7),
   status: "pending",
+  contractTemplateId: "",
   notes: "",
 });
-const toDraft = (r: Reservation): Draft => ({ ...r, notes: r.notes ?? "" });
+const toDraft = (r: Reservation): Draft => ({
+  ...r,
+  contractTemplateId: r.contractTemplateId ?? "",
+  notes: r.notes ?? "",
+});
 
 const WEEK_HEADERS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
@@ -115,7 +128,7 @@ function Calendar({ reservations, onSelect }: { reservations: Reservation[]; onS
 }
 
 export default function ReservationsPage() {
-  const { data } = useAdminData();
+  const { data, settings } = useAdminData();
   const { clientName, vehicleLabel, clientOptions, vehicleOptions, vehicleById } = useLookups();
   const crud = useCrud("reservations", { empty, toDraft, noun: "Reserva" });
   const { draft, bind } = crud;
@@ -134,7 +147,16 @@ export default function ReservationsPage() {
     const rentalConflict = findConflict(data!.rentals, candidate);
     if (rentalConflict)
       return void toast.error(`Conflito: veículo locado de ${formatDate(rentalConflict.startDate)} a ${formatDate(rentalConflict.endDate)}.`);
-    crud.save({ id, clientId: draft.clientId, vehicleId: draft.vehicleId, startDate: draft.startDate, endDate: draft.endDate, status: draft.status, notes: strOrUndef(draft.notes) });
+    crud.save({
+      id,
+      clientId: draft.clientId,
+      vehicleId: draft.vehicleId,
+      startDate: draft.startDate,
+      endDate: draft.endDate,
+      status: draft.status,
+      contractTemplateId: strOrUndef(draft.contractTemplateId),
+      notes: strOrUndef(draft.notes),
+    });
   };
 
   const columns: Column<Reservation>[] = [
@@ -219,6 +241,15 @@ export default function ReservationsPage() {
         </Field>
         <Field label="Status" htmlFor="f-status">
           <Select {...bind("status")} options={statusOptions(RESERVATION_STATUS)} />
+        </Field>
+        <Field label="Modelo de contrato" htmlFor="f-contractTemplate" hint="Selecione o modelo em PDF/DOC ou o padrão do sistema">
+          <Select
+            {...bind("contractTemplateId")}
+            options={[
+              { value: "", label: "Contrato Padrão Gerado pelo Sistema (Digital)" },
+              ...(settings.contractTemplates ?? []).map((t) => ({ value: t.id, label: `${t.name} (${t.fileName})` })),
+            ]}
+          />
         </Field>
         <Field label="Observação" htmlFor="f-notes" className="sm:col-span-2">
           <Textarea {...bind("notes")} />

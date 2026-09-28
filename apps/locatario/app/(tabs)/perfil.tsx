@@ -90,7 +90,7 @@ export default function PerfilScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: Spacing.md, gap: Spacing.md },
+  scroll: { padding: Spacing.md, gap: Spacing.md, paddingBottom: 110 },
   title: { fontSize: 24, fontWeight: "700", color: Colors.text },
   name: { fontSize: 18, fontWeight: "700", color: Colors.text },
   row: { flexDirection: "row", justifyContent: "space-between", gap: Spacing.md },

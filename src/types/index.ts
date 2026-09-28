@@ -133,6 +133,7 @@ export interface Rental {
   clientId: string;
   vehicleId: string;
   contractType: string;
+  contractTemplateId?: string;
   startDate: string;
   startTime?: string;
   endDate: string;
@@ -185,6 +186,7 @@ export interface Reservation {
   startDate: string;
   endDate: string;
   status: ReservationStatus;
+  contractTemplateId?: string;
   notes?: string;
 }
 
@@ -357,10 +359,20 @@ export interface AdminAlerts {
   instant: boolean;
 }
 
+export interface ContractTemplate {
+  id: string;
+  name: string;
+  fileName: string;
+  filePath: string;
+  fileType: "pdf" | "doc" | "docx";
+  uploadedAt: string;
+}
+
 export interface CompanySettings {
   company: CompanyProfile;
   alerts: AdminAlerts;
   pix: PixSettings;
+  contractTemplates?: ContractTemplate[];
   /** Web Push para a equipe: liga/desliga geral e por categoria (ausente = ligada). */
   push: { enabled: boolean; categories: Partial<Record<NotificationCategory, boolean>> };
   pageSize: number;

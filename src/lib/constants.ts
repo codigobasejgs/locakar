@@ -159,4 +159,5 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   push: { enabled: true, categories: {} },
   alerts: { email: "", phone: "", daily: true, instant: true },
   pix: { key: "", keyType: "cnpj", name: "", city: "" },
+  contractTemplates: [],
 };

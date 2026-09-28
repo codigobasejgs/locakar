@@ -114,7 +114,7 @@ export default function LocacaoScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: Spacing.md, gap: Spacing.md },
+  scroll: { padding: Spacing.md, gap: Spacing.md, paddingBottom: 110 },
   title: { fontSize: 24, fontWeight: "700", color: Colors.text },
   header: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   cardTitle: { color: Colors.text, fontSize: 15, fontWeight: "700" },

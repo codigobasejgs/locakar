@@ -252,14 +252,16 @@ export async function POST(request: Request) {
       if (!client || !vehicle) throw new HttpError(404, "Cliente ou veículo não encontrado.");
 
       const rentalId = newId();
-      const plan = (typeof body.planType === "string" ? body.planType : requestRow.plan_type) as "daily" | "weekly" | "biweekly" | "monthly";
+      const plan = (typeof body.planType === "string" ? body.planType : requestRow.plan_type) as "daily" | "weekly" | "biweekly" | "monthly" | "annual";
       const rate = typeof body.rateAmount === "number" ? body.rateAmount : Number(requestRow.rate_amount);
       const deposit = typeof body.depositAmount === "number" ? body.depositAmount : Number(requestRow.deposit_amount ?? 1000);
       const startDate = typeof body.startDate === "string" ? body.startDate : requestRow.start_date;
       const endDate = typeof body.endDate === "string" ? body.endDate : requestRow.end_date;
+      const tplId = typeof body.contractTemplateId === "string" ? body.contractTemplateId : undefined;
+      const chosenTemplate = settings.contractTemplates?.find((t) => t.id === tplId);
 
       const billingConfig = {
-        period: plan,
+        period: plan === "annual" ? "annual" : plan,
         amount: rate,
         firstDue: startDate,
         until: endDate,
@@ -276,14 +278,14 @@ export async function POST(request: Request) {
         firstDue: billingConfig.firstDue,
         until: billingConfig.until,
         amount: rate,
-        period: plan,
+        period: plan === "annual" ? "annual" : plan,
       });
 
       const rental = {
         id: rentalId,
         client_id: client.id,
         vehicle_id: vehicle.id,
-        contract_type: plan === "weekly" ? "Semanal" : plan === "daily" ? "Diária" : "Mensal",
+        contract_type: chosenTemplate ? chosenTemplate.name : plan === "weekly" ? "Semanal" : plan === "daily" ? "Diária" : plan === "annual" ? "Anual" : "Mensal",
         start_date: startDate,
         end_date: endDate,
         weekly_rate: rate,
@@ -292,7 +294,7 @@ export async function POST(request: Request) {
         receipts,
         billing: billingConfig,
         status: "pending",
-        notes: `Aprovado da solicitação #${id.slice(0, 8)}`,
+        notes: `Aprovado da solicitação #${id.slice(0, 8)}${chosenTemplate ? ` · Modelo: ${chosenTemplate.name}` : ""}`,
       };
 
       const { error: rentalErr } = await admin.from("rentals").insert(rental);

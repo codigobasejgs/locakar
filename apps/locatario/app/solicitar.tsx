@@ -30,7 +30,7 @@ interface Draft {
   vehicleId: string;
   startDate: string;
   endDate: string;
-  planType: "weekly" | "daily";
+  planType: "daily" | "weekly" | "monthly" | "annual";
   kmDaily: string;
   kmMonthly: string;
   backupPhone: string;
@@ -302,13 +302,25 @@ export default function SolicitarLocacaoScreen() {
           </View>
 
           <Text style={[styles.label, { marginTop: Spacing.sm }]}>3. Periodicidade do pagamento</Text>
-          <View style={{ flexDirection: "row", gap: Spacing.sm }}>
-            <TouchableOpacity onPress={() => update({ planType: "weekly" })} style={[styles.planBtn, draft.planType === "weekly" && styles.planBtnOn]} accessibilityRole="radio" accessibilityState={{ checked: draft.planType === "weekly" }}>
-              <Text style={[styles.planText, draft.planType === "weekly" && styles.planTextOn]}>Semanal (recomendado)</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => update({ planType: "daily" })} style={[styles.planBtn, draft.planType === "daily" && styles.planBtnOn]} accessibilityRole="radio" accessibilityState={{ checked: draft.planType === "daily" }}>
-              <Text style={[styles.planText, draft.planType === "daily" && styles.planTextOn]}>Diária</Text>
-            </TouchableOpacity>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm }}>
+            {(
+              [
+                ["daily", "Diária"],
+                ["weekly", "Semanal"],
+                ["monthly", "Mensal"],
+                ["annual", "Anual"],
+              ] as const
+            ).map(([key, label]) => (
+              <TouchableOpacity
+                key={key}
+                onPress={() => update({ planType: key })}
+                style={[styles.planBtn, draft.planType === key && styles.planBtnOn, { flexBasis: "48%" }]}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: draft.planType === key }}
+              >
+                <Text style={[styles.planText, draft.planType === key && styles.planTextOn]}>{label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </>
       )}
@@ -396,8 +408,32 @@ export default function SolicitarLocacaoScreen() {
           <View style={styles.divider} />
           <Row label="Veículo" value={selectedVehicle?.name ?? "Veículo"} />
           <Row label="Período" value={`${draft.startDate} até ${draft.endDate}`} />
-          <Row label="Plano" value={draft.planType === "weekly" ? "Semanal" : "Diário"} />
-          <Row label="Valor previsto" value={selectedVehicle ? (draft.planType === "weekly" ? `${money(selectedVehicle.weeklyRate)}/semana` : `${money(selectedVehicle.dailyRate)}/dia`) : "—"} />
+          <Row
+            label="Plano"
+            value={
+              draft.planType === "daily"
+                ? "Diário"
+                : draft.planType === "weekly"
+                ? "Semanal"
+                : draft.planType === "monthly"
+                ? "Mensal"
+                : "Anual"
+            }
+          />
+          <Row
+            label="Valor previsto"
+            value={
+              selectedVehicle
+                ? draft.planType === "daily"
+                  ? `${money(selectedVehicle.dailyRate ?? 120)}/dia`
+                  : draft.planType === "weekly"
+                  ? `${money(selectedVehicle.weeklyRate ?? 650)}/semana`
+                  : draft.planType === "monthly"
+                  ? `${money((selectedVehicle.weeklyRate ?? 650) * 4)}/mês`
+                  : `${money((selectedVehicle.weeklyRate ?? 650) * 52)}/ano`
+                : "—"
+            }
+          />
           <Row label="Endereço" value={`${draft.street}, ${draft.number} - ${draft.city}/${draft.state}`} />
           <Row label="KM previsto" value={`${draft.kmDaily} km/dia (~${draft.kmMonthly} km/mês)`} />
           <Row label="Caução (a pagar na retirada)" value="R$ 1.000,00" />

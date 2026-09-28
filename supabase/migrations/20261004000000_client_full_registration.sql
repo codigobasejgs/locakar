@@ -25,6 +25,10 @@ update storage.buckets
    set allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
  where id = 'documentos';
 
+-- Suporte a plano anual em solicitações
+alter table public.rental_requests drop constraint if exists rental_requests_plan_type_check;
+alter table public.rental_requests add constraint rental_requests_plan_type_check check (plan_type in ('daily','weekly','biweekly','monthly','annual'));
+
 -- ============================================================================
 -- 2. ATUALIZAR VIEW TENANT_PROFILE
 -- ============================================================================

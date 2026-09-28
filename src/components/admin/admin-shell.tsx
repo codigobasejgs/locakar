@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Check, ExternalLink, LogOut, Menu, X } from "lucide-react";
+import { Bell, Check, ExternalLink, LogOut, Menu, Moon, Sun, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { AdminDataProvider, useAdminData } from "@/hooks/use-admin-data";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useTheme } from "@/hooks/use-theme";
 import { buildAlerts } from "@/lib/analytics";
 import { authService } from "@/lib/auth";
 import { CATEGORY_LABEL, unreadCount } from "@/lib/push-events";
@@ -230,6 +231,8 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
     };
   }, []);
 
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header className="no-print sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-line bg-ink/85 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl sm:px-6">
       <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Abrir menu" onClick={onMenu}>
@@ -246,6 +249,15 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
           Modo demonstração · dados locais
         </span>
       )}
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="grid size-9 place-items-center rounded-xl border border-line text-muted transition-colors hover:border-line-strong hover:text-white"
+        title={theme === "light" ? "Alternar para tema escuro" : "Alternar para tema claro"}
+        aria-label={theme === "light" ? "Alternar para tema escuro" : "Alternar para tema claro"}
+      >
+        {theme === "light" ? <Moon className="size-4 text-brand-soft" /> : <Sun className="size-4 text-amber-300" />}
+      </button>
       <AlertsBell />
       <div
         className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-magenta to-brand-deep text-xs font-bold uppercase"
@@ -343,13 +355,15 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  const { theme } = useTheme();
+
   return (
     <AdminDataProvider>
       <div className="min-h-dvh bg-ink text-white">
         {/* Sidebar desktop */}
         <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-[#070708] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] lg:flex">
           <Link href={ROUTES.admin} className="flex h-16 items-center border-b border-line px-6" aria-label="Dashboard LOCAKAR">
-            <Logo className="w-24" />
+            <Logo className="w-24" variant={theme === "light" ? "original" : "light"} />
           </Link>
           <SidebarNav />
           <SidebarFooter />
@@ -377,7 +391,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 transition={{ type: "spring", stiffness: 380, damping: 38 }}
               >
                 <div className="flex h-16 items-center justify-between border-b border-line px-5">
-                  <Logo className="w-24" />
+                  <Logo className="w-24" variant={theme === "light" ? "original" : "light"} />
                   <Button variant="ghost" size="icon" aria-label="Fechar menu" onClick={() => setOpen(false)}>
                     <X />
                   </Button>
@@ -395,7 +409,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       <Toaster
-        theme="dark"
+        theme={theme}
         position="bottom-right"
         richColors
         toastOptions={{ className: "!bg-panel !border-line-strong !rounded-xl" }}

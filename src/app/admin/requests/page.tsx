@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState, StatCard } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
-import { Field, Input, Textarea } from "@/components/ui/form";
+import { Field, Input, Select, Textarea } from "@/components/ui/form";
+import { useAdminData } from "@/hooks/use-admin-data";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 interface AdminRentalRequest {
@@ -53,6 +54,7 @@ const STATUS_CONFIG = {
 };
 
 function RequestsContent() {
+  const { settings } = useAdminData();
   const [requests, setRequests] = useState<AdminRentalRequest[] | null>(null);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
   const [selected, setSelected] = useState<AdminRentalRequest | null>(null);
@@ -61,6 +63,7 @@ function RequestsContent() {
   const [correcting, setCorrecting] = useState(false);
   const [deposit, setDeposit] = useState("1000");
   const [rate, setRate] = useState("");
+  const [contractTemplateId, setContractTemplateId] = useState("");
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
@@ -84,6 +87,7 @@ function RequestsContent() {
     setSelected(r);
     setDeposit(String(r.depositAmount || 1000));
     setRate(String(r.rateAmount || 650));
+    setContractTemplateId("");
     setApproving(false);
     setRejecting(false);
     setCorrecting(false);
@@ -101,6 +105,7 @@ function RequestsContent() {
         depositAmount: Number(deposit) || 1000,
         rateAmount: Number(rate) || selected.rateAmount,
         planType: selected.planType,
+        contractTemplateId: contractTemplateId || undefined,
         startDate: selected.startDate,
         endDate: selected.endDate,
       });
@@ -375,6 +380,17 @@ function RequestsContent() {
                   </Field>
                   <Field label="Valor da caução" htmlFor="appr-dep">
                     <Input id="appr-dep" value={deposit} onChange={(e) => setDeposit(e.target.value)} placeholder="1000.00" />
+                  </Field>
+                  <Field label="Modelo de contrato a emitir" htmlFor="appr-tpl" className="sm:col-span-2">
+                    <Select
+                      id="appr-tpl"
+                      value={contractTemplateId}
+                      onChange={(e) => setContractTemplateId(e.target.value)}
+                      options={[
+                        { value: "", label: "Contrato Padrão Gerado pelo Sistema (Digital)" },
+                        ...(settings.contractTemplates ?? []).map((t) => ({ value: t.id, label: `${t.name} (${t.fileName})` })),
+                      ]}
+                    />
                   </Field>
                 </div>
               </div>

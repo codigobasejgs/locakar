@@ -60,7 +60,7 @@ export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
   const vehicleId = typeof body.vehicleId === "string" ? body.vehicleId : "";
   const startDate = typeof body.startDate === "string" ? body.startDate : "";
   const endDate = typeof body.endDate === "string" ? body.endDate : "";
-  const planType = typeof body.planType === "string" && ["daily", "weekly", "biweekly", "monthly"].includes(body.planType) ? body.planType : "weekly";
+  const planType = typeof body.planType === "string" && ["daily", "weekly", "biweekly", "monthly", "annual"].includes(body.planType) ? body.planType : "weekly";
 
   const today = todaySP();
   if (!vehicleId) throw new HttpError(422, "Escolha o veículo desejado.");
@@ -97,7 +97,10 @@ export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
   const { count } = await admin.from("rental_requests").select("id", { count: "exact", head: true }).eq("client_id", clientId).eq("status", "pending");
   if ((count ?? 0) >= 2) throw new HttpError(429, "Você já possui uma solicitação em análise. Aguarde a aprovação da LOCAKAR.");
 
-  const rateAmount = planType === "daily" ? (vehicle.daily_rate ?? 120) : (vehicle.weekly_rate ?? 650);
+  let rateAmount = vehicle.weekly_rate ?? 650;
+  if (planType === "daily") rateAmount = vehicle.daily_rate ?? 120;
+  else if (planType === "monthly") rateAmount = (vehicle.weekly_rate ?? 650) * 4;
+  else if (planType === "annual") rateAmount = (vehicle.weekly_rate ?? 650) * 52;
   const depositAmount = 1000.0; // Caução padrão LOCAKAR
 
   const row = {

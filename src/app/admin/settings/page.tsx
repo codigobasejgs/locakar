@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, BellRing, Building2, QrCode, ExternalLink, FileSignature, Mail, MessageCircle, Palette, RotateCcw, Send, SlidersHorizontal } from "lucide-react";
+import { Bell, BellRing, Building2, QrCode, ExternalLink, FileSignature, FileText, FileUp, Mail, MessageCircle, Moon, Palette, RotateCcw, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
@@ -15,14 +15,16 @@ import { Logo } from "@/components/ui/logo";
 import { SignaturePad } from "@/components/ui/signature-pad";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useAdminData } from "@/hooks/use-admin-data";
+import { useTheme } from "@/hooks/use-theme";
 import { sendEmailRequest } from "@/lib/api";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
+import { getSupabase } from "@/lib/supabase/client";
 import { COMPANY, WHATSAPP_MESSAGES } from "@/lib/company";
 import { getWhatsAppUrl } from "@/lib/whatsapp";
-import { maskPhone } from "@/lib/utils";
+import { formatDate, maskPhone, newId } from "@/lib/utils";
 import { DEFAULT_CONTRACT_TERMS } from "@/lib/contract";
 import { CATEGORY_LABEL } from "@/lib/push-events";
-import type { CompanyProfile, CompanySettings, NotificationCategory } from "@/types";
+import type { CompanyProfile, CompanySettings, ContractTemplate, NotificationCategory } from "@/types";
 
 function EmailTest() {
   const [to, setTo] = useState("");
@@ -76,6 +78,50 @@ export default function SettingsPage() {
   const setCompany = <K extends keyof CompanyProfile>(key: K, value: CompanyProfile[K]) =>
     setDraft((d) => ({ ...d, company: { ...d.company, [key]: value } }));
   const [newSignature, setNewSignature] = useState<string | null>(null);
+
+  const { theme, setTheme } = useTheme();
+  const [templateName, setTemplateName] = useState("");
+  const [uploadingTemplate, setUploadingTemplate] = useState(false);
+
+  const handleTemplateUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const current = draft.contractTemplates ?? [];
+    if (current.length >= 5) {
+      return toast.error("Você já possui o limite de 5 modelos de contratos. Exclua um para adicionar outro.");
+    }
+    const name = templateName.trim() || file.name.replace(/\.[^/.]+$/, "");
+    setUploadingTemplate(true);
+    try {
+      const ext = (file.name.split(".").pop()?.toLowerCase() || "pdf") as "pdf" | "doc" | "docx";
+      const id = newId();
+      const path = `templates/${id}_${file.name}`;
+      const { error } = await getSupabase().storage.from("documentos").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const newTemplate: ContractTemplate = {
+        id,
+        name,
+        fileName: file.name,
+        filePath: path,
+        fileType: ext === "doc" || ext === "docx" ? ext : "pdf",
+        uploadedAt: new Date().toISOString(),
+      };
+      const updated = [...current, newTemplate];
+      set("contractTemplates", updated);
+      setTemplateName("");
+      toast.success(`Modelo "${name}" anexado com sucesso! Salve as alterações para gravar.`);
+    } catch {
+      toast.error("Não foi possível enviar o arquivo de contrato. Tente novamente.");
+    }
+    setUploadingTemplate(false);
+    e.target.value = "";
+  };
+
+  const handleRemoveTemplate = (id: string) => {
+    const updated = (draft.contractTemplates ?? []).filter((t) => t.id !== id);
+    set("contractTemplates", updated);
+    toast.success("Modelo removido. Salve as alterações para gravar.");
+  };
 
   const save = async () => {
     const next = newSignature ? { ...draft, company: { ...draft.company, signerSignature: newSignature } } : draft;
@@ -226,8 +272,115 @@ export default function SettingsPage() {
           </Field>
         </Section>
 
-        <Section icon={Palette} title="Aparência" description="O painel usa o tema escuro da identidade LOCAKAR.">
+        <Section icon={Palette} title="Aparência" description="Escolha como o painel administrativo será exibido.">
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <label className="text-xs font-semibold uppercase tracking-wide text-muted">Tema do Painel</label>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setTheme("light")}
+                className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold transition-all ${theme === "light" ? "border-magenta bg-magenta/15 text-magenta font-bold shadow-sm" : "border-line bg-surface text-muted hover:text-white"}`}
+              >
+                <Sun className="size-4 text-amber-500" />
+                <span>☀️ Claro</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme("dark")}
+                className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold transition-all ${theme === "dark" ? "border-magenta bg-magenta/25 text-white font-bold shadow-sm" : "border-line bg-surface text-muted hover:text-white"}`}
+              >
+                <Moon className="size-4 text-brand-soft" />
+                <span>🌙 Escuro</span>
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-muted">A troca é instantânea e afeta todo o sistema Admin sem recarregar a página.</p>
+          </div>
           <Checkbox label="Tabelas compactas" checked={draft.compactTables} onChange={(e) => set("compactTables", e.target.checked)} />
+        </Section>
+
+        <Section
+          icon={FileSignature}
+          title="Modelos de Contrato (PDF / DOC)"
+          description="Anexe até 5 tipos de contratos existentes que você já possui (em PDF ou Word) para selecionar na hora de confirmar locações e reservas."
+        >
+          <div className="flex flex-col gap-3 sm:col-span-2">
+            {/* Lista dos contratos anexados */}
+            <div className="flex flex-col gap-2">
+              {!(draft.contractTemplates?.length) ? (
+                <p className="rounded-xl border border-line bg-surface p-4 text-center text-xs text-muted">
+                  Nenhum modelo de contrato anexado ainda. Você pode adicionar até 5 contratos em PDF ou DOC/DOCX.
+                </p>
+              ) : (
+                draft.contractTemplates.map((tmpl) => (
+                  <div key={tmpl.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-3 text-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="grid size-9 place-items-center rounded-lg bg-magenta/15 text-brand-soft">
+                        <FileText className="size-4" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white">{tmpl.name}</p>
+                        <p className="text-muted">
+                          {tmpl.fileName} · anexado em {formatDate(tmpl.uploadedAt.slice(0, 10))}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={async () => {
+                          const { data: signed } = await getSupabase().storage.from("documentos").createSignedUrl(tmpl.filePath, 600);
+                          if (signed?.signedUrl) window.open(signed.signedUrl, "_blank");
+                        }}
+                      >
+                        <ExternalLink className="size-3" /> Baixar
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs text-red-400 hover:text-red-300"
+                        onClick={() => handleRemoveTemplate(tmpl.id)}
+                      >
+                        <Trash2 className="size-3" /> Excluir
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Upload de novo modelo (se menor que 5) */}
+            {(draft.contractTemplates?.length ?? 0) < 5 && (
+              <div className="rounded-xl border border-line bg-white/[0.02] p-4">
+                <p className="mb-2 text-xs font-semibold text-white">Adicionar novo modelo de contrato ({draft.contractTemplates?.length ?? 0} de 5)</p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <div className="flex-1">
+                    <label htmlFor="tpl-name" className="mb-1 block text-xs text-muted">Nome de identificação do contrato</label>
+                    <Input
+                      id="tpl-name"
+                      placeholder="Ex.: Contrato Motorista de App, Contrato Mensal..."
+                      value={templateName}
+                      onChange={(e) => setTemplateName(e.target.value)}
+                    />
+                  </div>
+                  <label className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-magenta/40 bg-magenta/20 px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-magenta/30">
+                    <FileUp className="size-3.5" />
+                    <span>{uploadingTemplate ? "Enviando arquivo..." : "Selecionar PDF ou DOC"}</span>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      className="sr-only"
+                      disabled={uploadingTemplate}
+                      onChange={handleTemplateUpload}
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
         </Section>
 
         <Section icon={Bell} title="Notificações" description="Alertas do sino, e-mails diários e notificações no celular/computador (Web Push) para a equipe.">

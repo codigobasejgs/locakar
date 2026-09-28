@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminFrame } from "@/components/admin/admin-shell";
+import { ThemeProvider } from "@/hooks/use-theme";
 import { APP_NAMES, PWA } from "@/lib/pwa";
 
 export const metadata: Metadata = {
@@ -17,9 +18,19 @@ export const metadata: Metadata = {
 };
 
 /**
- * Área administrativa. ATENÇÃO: ainda sem autenticação real — ver `src/lib/auth.ts`
- * (futuro: Supabase Auth + `src/proxy.ts` protegendo /admin + RLS).
+ * Área administrativa com sistema global de temas Dark / Light (sem FOUC).
  */
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
-  return <AdminFrame>{children}</AdminFrame>;
+  return (
+    <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(){try{var t=localStorage.getItem("locakar-admin-theme")||"dark";document.documentElement.setAttribute("data-theme",t);if(t==="light"){document.documentElement.classList.add("light");document.documentElement.classList.remove("dark");}else{document.documentElement.classList.add("dark");document.documentElement.classList.remove("light");}}catch(e){}})();`,
+        }}
+      />
+      <ThemeProvider>
+        <AdminFrame>{children}</AdminFrame>
+      </ThemeProvider>
+    </>
+  );
 }

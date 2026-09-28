@@ -1,8 +1,13 @@
 import { Tabs } from "expo-router";
 import { Car, CreditCard, Key, User } from "lucide-react-native";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "../../constants/theme";
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const bottomPad = insets.bottom > 0 ? insets.bottom : (Platform.OS === "android" ? 10 : 8);
+
   return (
     <Tabs
       screenOptions={{
@@ -11,13 +16,19 @@ export default function TabLayout() {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.border,
           borderTopWidth: 1,
-          paddingTop: 6,
+          paddingTop: 8,
+          paddingBottom: bottomPad,
+          height: 60 + bottomPad,
         },
         tabBarActiveTintColor: Colors.brandSoft,
         tabBarInactiveTintColor: Colors.textSubtle,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "600",
+          marginTop: 2,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 2,
         },
       }}
     >
