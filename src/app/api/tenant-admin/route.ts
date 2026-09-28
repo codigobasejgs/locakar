@@ -1,16 +1,24 @@
+import { COMPANY } from "@/lib/company";
 import { RISK_FACTOR_LABEL, riskLevel } from "@/lib/antifraud";
-import { sendPushToClient, serviceDb } from "@/lib/server/push";
+import { buildReceipts } from "@/lib/billing";
+import { buildContractText } from "@/lib/contract";
+import { emailLayout, sendEmail } from "@/lib/server/email";
+import { loadSettings, sendPushToClient, serviceDb } from "@/lib/server/push";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { audit, clientIp } from "@/lib/server/tenant";
+import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { DOCUMENT_KIND, INCIDENT_CATEGORY, INCIDENT_STATUS } from "@/lib/tenant";
+import { formatCurrency, formatDate, newId } from "@/lib/utils";
 
 /**
  * Painel ↔ App do Locatário. Somente equipe.
- * GET ?view=incidents|documents|inspections&rentalId=|security → listas com links temporários (10 min)
- * POST { action: "incident.status", id, status, adminNotes? }
+ * GET ?view=requests|incidents|documents|inspections&rentalId=|security → listas com links temporários (10 min)
+ * POST { action: "request.approve", id, planType?, rateAmount?, depositAmount?, startDate?, endDate? }
+ *      { action: "request.reject", id, reason }
+ *      { action: "request.request_correction", id, notes }
+ *      { action: "incident.status", id, status, adminNotes? }
  *      { action: "document.review", id, approve, reason? }
  *      { action: "inspection.review", id, approve, adminNotes? }
- * Cada ação avisa o cliente (push no app/navegador) e fica na auditoria.
  */
 export const dynamic = "force-dynamic";
 
@@ -33,6 +41,57 @@ export async function GET(request: Request) {
     const { supabase: db } = await requireStaff();
     const url = new URL(request.url);
     const view = url.searchParams.get("view");
+
+    if (view === "requests") {
+      const { data, error } = await db.from("rental_requests").select("*").order("created_at", { ascending: false }).limit(100);
+      if (error) throw new HttpError(500, error.message);
+      const rows = data ?? [];
+      const [urls, clientRows, vehicles] = await Promise.all([
+        signed(db, "documentos", rows.flatMap((r) => [r.cnh_front_path, r.cnh_back_path, r.address_proof_path, r.selfie_path].filter(Boolean))),
+        db.from("clients").select("id,name,phone,email,cpf,code").in("id", [...new Set(rows.map((r) => r.client_id))]),
+        db.from("vehicles").select("id,name,plate,image,daily_rate,weekly_rate,status").in("id", [...new Set(rows.map((r) => r.vehicle_id))]),
+      ]);
+      const clientById = new Map((clientRows.data ?? []).map((c) => [c.id, c]));
+      const vehicleById = new Map((vehicles.data ?? []).map((v) => [v.id, v]));
+
+      return Response.json({
+        requests: rows.map((r) => {
+          const c = clientById.get(r.client_id);
+          const v = vehicleById.get(r.vehicle_id);
+          return {
+            id: r.id,
+            clientId: r.client_id,
+            clientName: c?.name ?? "Cliente",
+            clientPhone: c?.phone ?? "—",
+            clientEmail: c?.email ?? null,
+            clientCpf: c?.cpf ?? "—",
+            clientCode: c?.code ?? null,
+            vehicleId: r.vehicle_id,
+            vehicleName: v?.name ?? "Veículo",
+            vehiclePlate: v?.plate ?? "—",
+            vehicleImage: v?.image ?? null,
+            vehicleStatus: v?.status ?? "available",
+            startDate: r.start_date,
+            endDate: r.end_date,
+            planType: r.plan_type,
+            rateAmount: Number(r.rate_amount),
+            depositAmount: Number(r.deposit_amount ?? 0),
+            cnhNumber: r.cnh_number,
+            cnhCategory: r.cnh_category,
+            cnhExpiry: r.cnh_expiry,
+            status: r.status,
+            rejectionReason: r.rejection_reason,
+            correctionNotes: r.correction_notes,
+            createdRentalId: r.created_rental_id,
+            createdAt: r.created_at,
+            cnhFrontUrl: urls.get(r.cnh_front_path) ?? null,
+            cnhBackUrl: urls.get(r.cnh_back_path) ?? null,
+            addressProofUrl: urls.get(r.address_proof_path) ?? null,
+            selfieUrl: r.selfie_path ? (urls.get(r.selfie_path) ?? null) : null,
+          };
+        }),
+      });
+    }
 
     if (view === "incidents") {
       const { data, error } = await db.from("vehicle_incidents").select("*").order("created_at", { ascending: false }).limit(100);
@@ -114,7 +173,6 @@ export async function GET(request: Request) {
       ]);
       const rows = telemetry.data ?? [];
       const clientName = await names(db, [...rows.map((r) => r.client_id), ...(devices.data ?? []).map((d) => d.client_id), ...(auditLog.data ?? []).filter((a) => a.actor_type === "client").map((a) => a.actor_id)]);
-      // Por cliente: a leitura mais recente define o nível atual; o histórico fica como evidência.
       const byClient = new Map<string, typeof rows>();
       for (const r of rows) byClient.set(r.client_id, [...(byClient.get(r.client_id) ?? []), r]);
       const clients = [...byClient.entries()]
@@ -169,21 +227,219 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { supabase } = await requireStaff();
-    const { data: claims } = await supabase.auth.getClaims();
+    const { supabase: db } = await requireStaff();
+    const { data: claims } = await db.auth.getClaims();
     const reviewer = claims!.claims.sub as string;
     const ip = clientIp(request);
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const id = typeof body.id === "string" ? body.id : "";
     const note = typeof body.adminNotes === "string" ? body.adminNotes.trim().slice(0, 1000) || null : null;
     const now = new Date().toISOString();
-    const db = serviceDb();
+    const admin = serviceDb();
     if (!id) throw new HttpError(400, "Registro não informado.");
+
+    // APROVAÇÃO EM 1 CLIQUE DA SOLICITAÇÃO DE LOCAÇÃO
+    if (body.action === "request.approve") {
+      const { data: requestRow } = await admin.from("rental_requests").select("*").eq("id", id).maybeSingle();
+      if (!requestRow) throw new HttpError(404, "Solicitação não encontrada.");
+      if (requestRow.status === "approved") throw new HttpError(409, "Esta solicitação já foi aprovada.");
+
+      const [{ data: client }, { data: vehicle }, settings] = await Promise.all([
+        admin.from("clients").select("*").eq("id", requestRow.client_id).single(),
+        admin.from("vehicles").select("*").eq("id", requestRow.vehicle_id).single(),
+        loadSettings(admin),
+      ]);
+      if (!client || !vehicle) throw new HttpError(404, "Cliente ou veículo não encontrado.");
+
+      const rentalId = newId();
+      const plan = (typeof body.planType === "string" ? body.planType : requestRow.plan_type) as "daily" | "weekly" | "biweekly" | "monthly";
+      const rate = typeof body.rateAmount === "number" ? body.rateAmount : Number(requestRow.rate_amount);
+      const deposit = typeof body.depositAmount === "number" ? body.depositAmount : Number(requestRow.deposit_amount ?? 1000);
+      const startDate = typeof body.startDate === "string" ? body.startDate : requestRow.start_date;
+      const endDate = typeof body.endDate === "string" ? body.endDate : requestRow.end_date;
+
+      const billingConfig = {
+        period: plan,
+        amount: rate,
+        firstDue: startDate,
+        until: endDate,
+        lateFeePercent: 2,
+        interestPercent: 1,
+        interestPeriod: "daily" as const,
+        graceDays: 0,
+        autoSend: true,
+        remindDaysBefore: 1,
+      };
+
+      const receipts = buildReceipts({
+        id: rentalId,
+        firstDue: billingConfig.firstDue,
+        until: billingConfig.until,
+        amount: rate,
+        period: plan,
+      });
+
+      const rental = {
+        id: rentalId,
+        client_id: client.id,
+        vehicle_id: vehicle.id,
+        contract_type: plan === "weekly" ? "Semanal" : plan === "daily" ? "Diária" : "Mensal",
+        start_date: startDate,
+        end_date: endDate,
+        weekly_rate: rate,
+        deposit,
+        km_start: null,
+        receipts,
+        billing: billingConfig,
+        status: "pending",
+        notes: `Aprovado da solicitação #${id.slice(0, 8)}`,
+      };
+
+      const { error: rentalErr } = await admin.from("rentals").insert(rental);
+      if (rentalErr) throw new HttpError(500, `Erro ao criar locação: ${rentalErr.message}`);
+
+      await admin.from("vehicles").update({ status: "reserved", updated_at: now }).eq("id", vehicle.id);
+
+      const contractId = newId();
+      const token = Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join("");
+      const contractContent = buildContractText({
+        rental: {
+          id: rentalId,
+          clientId: client.id,
+          vehicleId: vehicle.id,
+          contractType: rental.contract_type,
+          startDate,
+          endDate,
+          weeklyRate: rate,
+          deposit,
+          receipts,
+          status: "pending",
+        },
+        client,
+        vehicle,
+        company: settings.company,
+        issuedAt: new Date(),
+      });
+
+      await admin.from("contracts").insert({
+        id: contractId,
+        rental_id: rentalId,
+        status: "pending",
+        token,
+        content: contractContent,
+        client_name: client.name,
+        client_cpf: client.cpf,
+        client_email: client.email,
+        company_signer: settings.company.signerName,
+        company_signature: settings.company.signerSignature,
+        company_email: settings.company.email,
+      });
+
+      await admin.from("rental_requests").update({
+        status: "approved",
+        created_rental_id: rentalId,
+        reviewed_by: reviewer,
+        reviewed_at: now,
+        updated_at: now,
+      }).eq("id", id);
+
+      await audit({ actorType: "staff", actorId: reviewer, action: "rental_request.approved", entity: "rental_requests", entityId: id, details: { rentalId, contractId }, ip });
+
+      const signUrl = `${COMPANY.siteUrl}/assinar/${token}`;
+      await sendPushToClient(client.id, {
+        title: "Locação aprovada!",
+        body: `Parabéns, ${client.name}! Sua solicitação do ${vehicle.name} foi aprovada. Assine o contrato para retirar o carro.`,
+        url: `/assinar/${token}`,
+        severity: "success",
+        tag: `request-approved-${id}`,
+      }, "locacao");
+
+      if (client.phone) {
+        await sendWhatsApp(admin, {
+          kind: "contract_signature",
+          phone: client.phone,
+          rentalId,
+          contractId,
+          text: `🎉 *Parabéns, ${client.name}!* Sua solicitação de locação do *${vehicle.name}* foi *APROVADA* pela LOCAKAR!\n\n📄 Para concluir, acesse o link seguro e assine seu contrato pelo celular:\n${signUrl}\n\nDúvidas? Estamos à disposição.`,
+        }).catch((e) => console.error("[solicitação] whatsapp:", (e as Error).message));
+      }
+
+      if (client.email) {
+        await sendEmail(admin, {
+          kind: "contract_signature",
+          to: client.email,
+          rentalId,
+          contractId,
+          subject: `Locação aprovada — Assine seu contrato — LOCAKAR`,
+          html: emailLayout({
+            title: "Sua locação foi aprovada!",
+            intro: `Olá, ${client.name}! Sua solicitação para o veículo <strong>${vehicle.name}</strong> foi aprovada pela equipe da LOCAKAR.`,
+            rows: [
+              ["Veículo", vehicle.name],
+              ["Período", `${formatDate(startDate)} a ${formatDate(endDate)}`],
+              ["Valor", `${formatCurrency(rate)}/${plan === "daily" ? "dia" : "semana"}`],
+              ["Caução", formatCurrency(deposit)],
+            ],
+            cta: { label: "Assinar contrato online", url: signUrl },
+          }),
+        }).catch((e) => console.error("[solicitação] email:", (e as Error).message));
+      }
+
+      return Response.json({ ok: true, rentalId, contractId, signUrl });
+    }
+
+    if (body.action === "request.reject") {
+      const reason = typeof body.reason === "string" ? body.reason.trim().slice(0, 500) : "";
+      if (!reason) throw new HttpError(422, "Informe o motivo da recusa.");
+      const { data: row } = await admin.from("rental_requests").update({
+        status: "rejected",
+        rejection_reason: reason,
+        reviewed_by: reviewer,
+        reviewed_at: now,
+        updated_at: now,
+      }).eq("id", id).select("client_id,vehicle_id").maybeSingle();
+      if (!row) throw new HttpError(404, "Solicitação não encontrada.");
+
+      await audit({ actorType: "staff", actorId: reviewer, action: "rental_request.rejected", entity: "rental_requests", entityId: id, details: { reason }, ip });
+      await sendPushToClient(row.client_id, {
+        title: "Solicitação não aprovada",
+        body: `Sua solicitação de locação não foi aprovada: ${reason}`,
+        url: "/",
+        severity: "warning",
+        tag: `request-rejected-${id}`,
+      }, "inicio");
+
+      return Response.json({ ok: true });
+    }
+
+    if (body.action === "request.request_correction") {
+      const notes = typeof body.notes === "string" ? body.notes.trim().slice(0, 500) : "";
+      if (!notes) throw new HttpError(422, "Informe a orientação para correção.");
+      const { data: row } = await admin.from("rental_requests").update({
+        status: "correction_requested",
+        correction_notes: notes,
+        reviewed_by: reviewer,
+        reviewed_at: now,
+        updated_at: now,
+      }).eq("id", id).select("client_id").maybeSingle();
+      if (!row) throw new HttpError(404, "Solicitação não encontrada.");
+
+      await audit({ actorType: "staff", actorId: reviewer, action: "rental_request.correction", entity: "rental_requests", entityId: id, details: { notes }, ip });
+      await sendPushToClient(row.client_id, {
+        title: "Correção de documento necessária",
+        body: `A LOCAKAR solicitou um ajuste na sua documentação: ${notes}`,
+        url: "/",
+        severity: "warning",
+        tag: `request-correction-${id}`,
+      }, "inicio");
+
+      return Response.json({ ok: true });
+    }
 
     if (body.action === "incident.status") {
       const status = typeof body.status === "string" && body.status in INCIDENT_STATUS ? body.status : null;
       if (!status) throw new HttpError(422, "Status inválido.");
-      const { data: row } = await db.from("vehicle_incidents").update({ status, admin_notes: note, updated_at: now }).eq("id", id).select("client_id,category").maybeSingle();
+      const { data: row } = await admin.from("vehicle_incidents").update({ status, admin_notes: note, updated_at: now }).eq("id", id).select("client_id,category").maybeSingle();
       if (!row) throw new HttpError(404, "Ocorrência não encontrada.");
       await audit({ actorType: "staff", actorId: reviewer, action: "incident.status", entity: "vehicle_incidents", entityId: id, details: { status }, ip });
       await sendPushToClient(row.client_id, {
@@ -205,7 +461,7 @@ export async function POST(request: Request) {
         ? { status: approve ? "approved" : "rejected", rejection_reason: approve ? null : reason, reviewed_by: reviewer, reviewed_at: now, updated_at: now }
         : { status: approve ? "reviewed" : "rejected", admin_notes: note ?? (reason || null), reviewed_by: reviewer, reviewed_at: now, updated_at: now };
       const from = isDoc ? "pending_review" : "submitted";
-      const { data: row } = await db
+      const { data: row } = await admin
         .from(isDoc ? "tenant_documents" : "tenant_inspections")
         .update(patch)
         .eq("id", id)
@@ -235,10 +491,9 @@ export async function POST(request: Request) {
         isDoc ? "documentos" : "veiculo",
       );
       if (isDoc && approve && (r.kind === "cnh_front" || r.kind === "cnh_back" || r.kind === "address_proof")) {
-        // Documento aprovado vira o oficial do cadastro (caminho privado no bucket, não URL pública).
-        const { data: doc } = await db.from("tenant_documents").select("path").eq("id", id).single();
+        const { data: doc } = await admin.from("tenant_documents").select("path").eq("id", id).single();
         const column = r.kind === "cnh_front" ? "cnh_front_url" : r.kind === "cnh_back" ? "cnh_back_url" : "address_proof_url";
-        if (doc) await db.from("clients").update({ [column]: `documentos/${doc.path}` }).eq("id", r.client_id);
+        if (doc) await admin.from("clients").update({ [column]: `documentos/${doc.path}` }).eq("id", r.client_id);
       }
       return Response.json({ ok: true });
     }

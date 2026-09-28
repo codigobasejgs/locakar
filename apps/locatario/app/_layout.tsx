@@ -22,6 +22,7 @@ const SCREENS: Record<string, Href> = {
   documentos: "/documentos",
   multas: "/multas",
   reservas: "/reservas",
+  solicitar: "/solicitar",
 };
 
 /** Leva cada estado para a tela certa: login, conta não vinculada, privacidade ou o app. */
@@ -85,6 +86,7 @@ function Gate() {
       <Stack.Screen name="documentos" options={{ headerShown: true, title: "Documentos", animation: "slide_from_right" }} />
       <Stack.Screen name="multas" options={{ headerShown: true, title: "Multas", animation: "slide_from_right" }} />
       <Stack.Screen name="reservas" options={{ headerShown: true, title: "Reservas", animation: "slide_from_right" }} />
+      <Stack.Screen name="solicitar" options={{ headerShown: true, title: "Solicitar locação", animation: "slide_from_right" }} />
     </Stack>
   );
 }

@@ -24,14 +24,15 @@ export async function GET(request: Request) {
     const today = todaySP();
 
     // Views do locatário: só os dados dele e sem campos internos (observações da equipe, custos...).
-    const [client, rentals, vehicles, proofs, consent] = await Promise.all([
-      db.from("tenant_profile").select("*").single(),
+    const [client, rentals, vehicles, proofs, consent, lastRequest, fleet] = await Promise.all([
+      db.from("tenant_profile").select("*").maybeSingle(),
       db.from("tenant_rentals").select("*").order("start_date", { ascending: false }),
       db.from("tenant_vehicles").select("*"),
       db.from("payment_receipts").select("id,rental_id,receipt_id,status,rejection_reason,created_at").order("created_at", { ascending: false }),
       db.from("tenant_consents").select("policy_version,scopes,consented_at").order("consented_at", { ascending: false }).limit(1).maybeSingle(),
+      db.from("rental_requests").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      db.from("tenant_fleet").select("*").order("name"),
     ]);
-    if (client.error) throw client.error;
 
     // Configurações só pelo servidor (settings é restrito à equipe): usa a chave de serviço.
     const settings = process.env.SUPABASE_SECRET_KEY ? await loadSettings(serviceDb()) : null;
@@ -81,17 +82,48 @@ export async function GET(request: Request) {
       };
     });
 
-    const c = client.data;
+    const c = client.data ?? { id: "", name: "Locatário", cpf: "", email: null, phone: "", cnhExpiry: null, cnhNumber: null, cnhCategory: null };
+    const req = lastRequest.data;
+    const reqVehicle = req ? (fleet.data ?? []).find((v) => v.id === req.vehicle_id) : null;
+    const pendingRequest = req
+      ? {
+          id: req.id,
+          vehicleId: req.vehicle_id,
+          vehicleName: reqVehicle?.name ?? "Veículo",
+          vehicleCategory: reqVehicle?.category ?? "—",
+          vehicleImage: reqVehicle?.image ?? null,
+          startDate: req.start_date,
+          endDate: req.end_date,
+          planType: req.plan_type,
+          rateAmount: Number(req.rate_amount),
+          depositAmount: Number(req.deposit_amount ?? 0),
+          status: req.status,
+          rejectionReason: req.rejection_reason,
+          correctionNotes: req.correction_notes,
+          createdAt: req.created_at,
+        }
+      : null;
+
     return Response.json(
       {
         client: { id: c.id, name: c.name, cpf: c.cpf, email: c.email, phone: c.phone, cnhExpiry: c.cnh_expiry, cnhNumber: c.cnh_number, cnhCategory: c.cnh_category },
         rentals: list,
+        fleet: (fleet.data ?? []).map((v) => ({
+          id: v.id,
+          name: v.name,
+          category: v.category,
+          transmission: v.transmission,
+          fuel: v.fuel,
+          seats: v.seats,
+          image: v.image,
+          dailyRate: v.daily_rate,
+          weeklyRate: v.weekly_rate,
+        })),
+        pendingRequest,
         pix: settings?.pix.name ? { name: settings.pix.name } : null,
-        // WhatsApp comercial oficial (lib/company.ts), o mesmo do site.
         support: { whatsapp: COMPANY.whatsapp.e164, display: COMPANY.whatsapp.display },
         today,
         privacyVersion: PRIVACY_VERSION,
-        // Aceite vale só para a versão atual da política; mudou o texto, o app pede de novo.
         consent: consent.data?.policy_version === PRIVACY_VERSION ? { scopes: consent.data.scopes as string[], at: consent.data.consented_at } : null,
       },
       { headers },

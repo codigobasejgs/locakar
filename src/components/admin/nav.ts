@@ -2,6 +2,7 @@ import {
   CalendarDays,
   CarFront,
   ChartColumn,
+  FileCheck,
   KeyRound,
   LayoutDashboard,
   NotebookPen,
@@ -26,6 +27,7 @@ export interface NavItem {
 
 export const ADMIN_NAV: NavItem[] = [
   { href: ROUTES.admin, label: "Dashboard", icon: LayoutDashboard, description: "Visão geral da operação" },
+  { href: ROUTES.requests, label: "Solicitações", icon: FileCheck, description: "Novos pedidos de locação pelo app" },
   { href: ROUTES.rentals, label: "Locações", icon: KeyRound, description: "Contratos, recebimentos e quilometragem" },
   { href: ROUTES.reservations, label: "Reservas", icon: CalendarDays, description: "Agenda de reservas da frota" },
   { href: ROUTES.vehicles, label: "Veículos", icon: CarFront, description: "Cadastro e documentação da frota" },

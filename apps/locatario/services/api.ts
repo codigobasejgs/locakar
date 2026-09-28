@@ -95,9 +95,28 @@ export interface TenantRental {
   installments: Installment[];
 }
 
+export interface PendingRentalRequest {
+  id: string;
+  vehicleId: string;
+  vehicleName: string;
+  vehicleCategory: string;
+  vehicleImage: string | null;
+  startDate: string;
+  endDate: string;
+  planType: string;
+  rateAmount: number;
+  depositAmount: number;
+  status: "pending" | "approved" | "rejected" | "correction_requested";
+  rejectionReason: string | null;
+  correctionNotes: string | null;
+  createdAt: string;
+}
+
 export interface TenantSummary {
   client: { id: string; name: string; cpf: string; email: string | null; phone: string; cnhExpiry: string | null; cnhNumber: string | null; cnhCategory: string | null };
   rentals: TenantRental[];
+  fleet?: FleetVehicle[];
+  pendingRequest?: PendingRentalRequest | null;
   pix: { name: string } | null;
   support: { whatsapp: string; display: string };
   today: string;

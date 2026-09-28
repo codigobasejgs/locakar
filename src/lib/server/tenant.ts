@@ -25,8 +25,12 @@ export async function requireTenant(request: Request): Promise<Tenant> {
   });
   const { data, error } = await db.auth.getUser(token);
   if (error || !data.user) throw new HttpError(401, "Sessão expirada. Entre novamente.");
-  // Vincula a conta ao cadastro da LOCAKAR se ainda não estiver (exige e-mail confirmado e igual ao cadastro).
-  const { data: clientId } = await db.rpc("link_current_user_to_client");
+  // Garante que o usuário autenticado tenha um cliente vinculado (ou auto-cadastrado no primeiro acesso).
+  let { data: clientId } = await db.rpc("ensure_client_for_current_user");
+  if (!clientId) {
+    const fallback = await db.rpc("link_current_user_to_client");
+    clientId = fallback.data;
+  }
   if (!clientId) throw new HttpError(403, "Sua conta ainda não está vinculada a um cadastro da LOCAKAR.");
   return { db, userId: data.user.id, clientId: clientId as string, ip: clientIp(request) };
 }

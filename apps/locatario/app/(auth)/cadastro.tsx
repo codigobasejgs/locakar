@@ -16,6 +16,13 @@ const maskCPF = (v: string) =>
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 
+const maskPhone = (v: string) =>
+  v
+    .replace(/\D/g, "")
+    .slice(0, 11)
+    .replace(/^(\d{2})(\d)/g, "($1) $2")
+    .replace(/(\d{5})(\d{4})$/, "$1-$2");
+
 function isValidCPF(value: string) {
   const d = value.replace(/\D/g, "");
   if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
@@ -28,12 +35,10 @@ function isValidCPF(value: string) {
   return `${first}${digit(d.slice(0, 9) + first)}` === d.slice(9);
 }
 
-/**
- * Cria a conta. O vínculo com o cadastro da LOCAKAR só acontece depois que o e-mail é confirmado
- * e se e-mail e CPF forem iguais aos do cadastro na locadora (ver link_current_user_to_client).
- */
 export default function CadastroScreen() {
+  const [name, setName] = useState("");
   const [cpf, setCpf] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,7 +47,9 @@ export default function CadastroScreen() {
 
   const register = async () => {
     setError(null);
+    if (name.trim().length < 3) return setError("Informe seu nome completo.");
     if (!isValidCPF(cpf)) return setError("CPF inválido.");
+    if (phone.replace(/\D/g, "").length < 10) return setError("Informe um WhatsApp válido.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError("E-mail inválido.");
     if (password.length < 8) return setError("A senha precisa ter pelo menos 8 caracteres.");
     setLoading(true);
@@ -55,7 +62,11 @@ export default function CadastroScreen() {
       email: email.trim().toLowerCase(),
       password,
       options: {
-        data: { cpf: cpf.replace(/\D/g, "") },
+        data: {
+          name: name.trim(),
+          phone: maskPhone(phone),
+          cpf: cpf.replace(/\D/g, ""),
+        },
         emailRedirectTo: redirectUrl,
       },
     });
@@ -96,11 +107,13 @@ export default function CadastroScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Criar conta</Text>
-          <Text style={[styles.subtitle, { marginBottom: Spacing.xl }]}>Use o mesmo e-mail e CPF informados na LOCAKAR. Assim encontramos sua locação.</Text>
+          <Text style={[styles.subtitle, { marginBottom: Spacing.xl }]}>Preencha seus dados para acessar o app e solicitar sua locação.</Text>
 
           <View style={{ gap: Spacing.md }}>
+            <Input label="Nome completo" placeholder="Seu nome completo" autoCapitalize="words" value={name} onChangeText={setName} />
             <Input label="CPF" placeholder="000.000.000-00" keyboardType="number-pad" value={cpf} onChangeText={(t) => setCpf(maskCPF(t))} />
-            <Input label="E-mail cadastrado na LOCAKAR" placeholder="seu@email.com" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" value={email} onChangeText={setEmail} />
+            <Input label="WhatsApp / Telefone" placeholder="(00) 00000-0000" keyboardType="phone-pad" value={phone} onChangeText={(t) => setPhone(maskPhone(t))} />
+            <Input label="E-mail" placeholder="seu@email.com" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" value={email} onChangeText={setEmail} />
             <Input label="Crie uma senha" placeholder="Pelo menos 8 caracteres" secureTextEntry autoComplete="new-password" textContentType="newPassword" value={password} onChangeText={setPassword} />
             {error && (
               <Text style={{ color: Colors.danger, fontSize: 14 }} accessibilityRole="alert">

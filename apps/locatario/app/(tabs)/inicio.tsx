@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
-import { AlertTriangle, CalendarDays, Car, ClipboardCheck, CreditCard, FileText, MessageCircle, TriangleAlert } from "lucide-react-native";
-import { Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { AlertTriangle, CalendarDays, Car, ClipboardCheck, Clock, CreditCard, FileText, MessageCircle, Sparkles, TriangleAlert } from "lucide-react-native";
+import { Image, Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { InstallmentBadge, nextToPay } from "../../components/domain/InstallmentStatus";
 import { ErrorBanner } from "../../components/domain/ScreenState";
@@ -11,6 +11,7 @@ import { whatsappUrl } from "../../constants/company";
 import { RENTAL_STATUS, date, money } from "../../constants/format";
 import { Colors, Radius, Spacing } from "../../constants/theme";
 import { useLocatario } from "../../hooks/useLocatario";
+import { API_URL } from "../../services/api";
 
 export default function InicioScreen() {
   const router = useRouter();
@@ -83,11 +84,83 @@ export default function InicioScreen() {
               <Text style={styles.muted}>{inReview ? "Pagamentos em análise. Avisamos quando forem confirmados." : "Nenhum pagamento em aberto."}</Text>
             )}
           </Card>
+        ) : summary.pendingRequest && summary.pendingRequest.status !== "approved" ? (
+          <Card accent style={{ padding: Spacing.lg, gap: Spacing.md }}>
+            <View style={styles.rowBetween}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.carName}>{summary.pendingRequest.vehicleName}</Text>
+                <Text style={styles.muted}>{summary.pendingRequest.vehicleCategory}</Text>
+              </View>
+              <Badge
+                label={
+                  summary.pendingRequest.status === "correction_requested"
+                    ? "Ajuste solicitado"
+                    : summary.pendingRequest.status === "rejected"
+                    ? "Não aprovada"
+                    : "Em análise"
+                }
+                tone={
+                  summary.pendingRequest.status === "correction_requested"
+                    ? "warning"
+                    : summary.pendingRequest.status === "rejected"
+                    ? "danger"
+                    : "info"
+                }
+              />
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.rowBetween}>
+              <View>
+                <Text style={styles.label}>Período solicitado</Text>
+                <Text style={styles.value}>
+                  {date(summary.pendingRequest.startDate)} a {date(summary.pendingRequest.endDate)}
+                </Text>
+              </View>
+              <View style={{ alignItems: "flex-end" }}>
+                <Text style={styles.label}>Plano previsto</Text>
+                <Text style={styles.amount}>
+                  {money(summary.pendingRequest.rateAmount)}
+                  {summary.pendingRequest.planType === "daily" ? "/dia" : "/sem"}
+                </Text>
+              </View>
+            </View>
+
+            {summary.pendingRequest.status === "correction_requested" ? (
+              <>
+                <Text style={{ color: Colors.warning, fontSize: 13, lineHeight: 18 }}>
+                  A LOCAKAR solicitou um ajuste na sua documentação: {summary.pendingRequest.correctionNotes}
+                </Text>
+                <Button label="Corrigir solicitação" onPress={() => router.push("/solicitar")} />
+              </>
+            ) : summary.pendingRequest.status === "rejected" ? (
+              <>
+                <Text style={{ color: Colors.danger, fontSize: 13, lineHeight: 18 }}>
+                  Sua solicitação não foi aprovada: {summary.pendingRequest.rejectionReason}
+                </Text>
+                <Button label="Nova solicitação" variant="outline" onPress={() => router.push("/solicitar")} />
+              </>
+            ) : (
+              <View style={{ gap: Spacing.xs }}>
+                <Text style={styles.muted}>
+                  Seus documentos foram recebidos e estão em análise pela nossa equipe. Assim que a locação for aprovada, você receberá uma notificação para assinar o contrato digital.
+                </Text>
+              </View>
+            )}
+          </Card>
         ) : (
-          <Card style={{ alignItems: "center", padding: Spacing.xl, gap: Spacing.sm }}>
-            <Car color={Colors.textMuted} size={40} />
-            <Text style={styles.value}>Nenhuma locação</Text>
-            <Text style={[styles.muted, { textAlign: "center" }]}>Quando a LOCAKAR registrar sua locação, ela aparece aqui.</Text>
+          <Card style={{ padding: Spacing.lg, gap: Spacing.md }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
+              <Sparkles color={Colors.brandSoft} size={22} />
+              <Text style={styles.carName}>Solicite sua locação</Text>
+            </View>
+            <Text style={styles.muted}>
+              Alugue seu carro 100% digital, sem burocracia e com aprovação rápida. Escolha o veículo da frota e envie seus documentos em poucos passos.
+            </Text>
+            <Button
+              label="Escolher veículo e solicitar"
+              icon={<Car color={Colors.text} size={18} />}
+              onPress={() => router.push("/solicitar")}
+            />
           </Card>
         )}
 
