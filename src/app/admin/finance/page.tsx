@@ -4,6 +4,7 @@ import { CircleDollarSign, Clock, Scale, TrendingDown, TrendingUp } from "lucide
 import { useMemo, useState } from "react";
 import { MoneyAreaChart, SimpleBarChart } from "@/components/admin/charts";
 import { PageHeader } from "@/components/admin/page-header";
+import { ReceiptApprovalSection } from "@/components/admin/receipt-approval-dialog";
 import { Card, CardHeader, StatCard } from "@/components/ui/card";
 import { Select } from "@/components/ui/form";
 import { useAdminData, useLookups } from "@/hooks/use-admin-data";
@@ -43,6 +44,8 @@ export default function FinancePage() {
         description="Receitas de locações, despesas operacionais e saldo."
         actions={<Select aria-label="Período" value={range} onChange={(e) => setRange(e.target.value)} options={RANGES} className="w-48" />}
       />
+
+      <ReceiptApprovalSection />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
         <StatCard label="Receitas" value={formatCurrency(view.totals.receitas)} icon={TrendingUp} accent />

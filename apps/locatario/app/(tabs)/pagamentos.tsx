@@ -8,19 +8,26 @@ import {
   TouchableOpacity,
   Modal,
   Alert,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CreditCard, QrCode, Copy, Check, X, AlertTriangle } from "lucide-react-native";
+import { CreditCard, QrCode, Copy, Check, X, Camera, Image as ImageIcon, Clock } from "lucide-react-native";
 import { useLocatario } from "../../hooks/useLocatario";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Colors, Spacing, Radius } from "../../constants/theme";
+import { pickProofImage, uploadPaymentProof } from "../../services/paymentProof";
 
 export default function PagamentosScreen() {
-  const { activeRental, loading, refresh } = useLocatario();
+  const { activeRental, client, loading, refresh } = useLocatario();
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+
+  // Estado do envio de comprovante
+  const [proofImageUri, setProofImageUri] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -28,6 +35,50 @@ export default function PagamentosScreen() {
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
     Alert.alert("Código copiado!", "Cole no app do seu banco na opção 'PIX Copia e Cola'.");
+  };
+
+  const handlePickProof = async (source: "camera" | "gallery") => {
+    try {
+      const uri = await pickProofImage(source);
+      if (uri) {
+        setProofImageUri(uri);
+      }
+    } catch (e: any) {
+      Alert.alert("Erro", e.message || "Não foi possível selecionar a imagem.");
+    }
+  };
+
+  const handleSendProof = async () => {
+    if (!proofImageUri || !client || !activeRental || !selectedReceipt) return;
+
+    setUploading(true);
+    const result = await uploadPaymentProof(
+      client.id,
+      activeRental.id,
+      selectedReceipt.id,
+      proofImageUri,
+      selectedReceipt.amount
+    );
+    setUploading(false);
+
+    if (result.success) {
+      Alert.alert(
+        "Comprovante enviado!",
+        "O pagamento entrará em análise e será aprovado pela equipe da LOCAKAR. Você receberá um aviso assim que for confirmado.",
+        [
+          {
+            text: "Entendido",
+            onPress: () => {
+              setProofImageUri(null);
+              setSelectedReceipt(null);
+              refresh();
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert("Erro no envio", result.error || "Não foi possível enviar o comprovante. Tente novamente.");
+    }
   };
 
   return (
@@ -76,7 +127,10 @@ export default function PagamentosScreen() {
                       label="Pagar com PIX"
                       icon={<QrCode color={Colors.text} size={16} />}
                       size="sm"
-                      onPress={() => setSelectedReceipt(r)}
+                      onPress={() => {
+                        setProofImageUri(null);
+                        setSelectedReceipt(r);
+                      }}
                       style={{ marginTop: Spacing.sm }}
                     />
                   )}
@@ -95,23 +149,36 @@ export default function PagamentosScreen() {
         )}
       </ScrollView>
 
-      {/* Modal PIX Copia e Cola */}
+      {/* Modal de Pagamento PIX e Upload de Comprovante */}
       <Modal
         visible={!!selectedReceipt}
         animationType="slide"
         transparent
-        onRequestClose={() => setSelectedReceipt(null)}
+        onRequestClose={() => {
+          if (!uploading) {
+            setSelectedReceipt(null);
+            setProofImageUri(null);
+          }
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Pagamento via PIX</Text>
-              <TouchableOpacity onPress={() => setSelectedReceipt(null)}>
+              <Text style={styles.modalTitle}>
+                {proofImageUri ? "Enviar Comprovante" : "Pagamento via PIX"}
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedReceipt(null);
+                  setProofImageUri(null);
+                }}
+                disabled={uploading}
+              >
                 <X color={Colors.textMuted} size={24} />
               </TouchableOpacity>
             </View>
 
-            {selectedReceipt && (
+            {selectedReceipt && !proofImageUri && (
               <View style={styles.modalBody}>
                 <Text style={styles.modalValueLabel}>Total a pagar</Text>
                 <Text style={styles.modalValue}>
@@ -121,7 +188,7 @@ export default function PagamentosScreen() {
                   Vencimento em {new Date(selectedReceipt.dueDate).toLocaleDateString("pt-BR")}
                 </Text>
 
-                {/* Caixa Copia e Cola */}
+                {/* Código Copia e Cola */}
                 <View style={styles.copyBox}>
                   <Text style={styles.copyText} numberOfLines={2}>
                     00020126360014br.gov.bcb.pix0114+5519989615873520400005303986540...
@@ -134,16 +201,54 @@ export default function PagamentosScreen() {
                   onPress={handleCopyPix}
                 />
 
+                {/* Seção Já paguei */}
+                <View style={styles.proofSection}>
+                  <Text style={styles.proofSectionTitle}>Já fez o pagamento?</Text>
+                  <Text style={styles.proofSectionSubtitle}>
+                    Anexe o comprovante para que o Admin aprove sua parcela.
+                  </Text>
+                  <View style={styles.pickButtonsRow}>
+                    <Button
+                      label="Tirar Foto"
+                      variant="outline"
+                      size="sm"
+                      icon={<Camera color={Colors.text} size={16} />}
+                      onPress={() => handlePickProof("camera")}
+                      style={{ flex: 1 }}
+                    />
+                    <Button
+                      label="Galeria"
+                      variant="outline"
+                      size="sm"
+                      icon={<ImageIcon color={Colors.text} size={16} />}
+                      onPress={() => handlePickProof("gallery")}
+                      style={{ flex: 1 }}
+                    />
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* Prévia da imagem selecionada e botão de envio */}
+            {selectedReceipt && proofImageUri && (
+              <View style={styles.previewContainer}>
+                <Image source={{ uri: proofImageUri }} style={styles.proofPreview} />
+                <Text style={styles.previewHint}>
+                  Confirme se os dados da transferência (valor, data e destinatário) estão legíveis.
+                </Text>
+
                 <Button
-                  label="Já paguei (Enviar Comprovante)"
-                  variant="outline"
-                  onPress={() => {
-                    setSelectedReceipt(null);
-                    Alert.alert(
-                      "Enviar Comprovante",
-                      "O envio de comprovante via Câmera/Galeria com aprovação do Admin está disponível na aba de Vistorias e Comprovantes."
-                    );
-                  }}
+                  label="Confirmar e Enviar Comprovante"
+                  loading={uploading}
+                  onPress={handleSendProof}
+                  style={{ width: "100%", marginTop: Spacing.sm }}
+                />
+
+                <Button
+                  label="Escolher Outra Foto"
+                  variant="ghost"
+                  disabled={uploading}
+                  onPress={() => setProofImageUri(null)}
                   style={{ marginTop: Spacing.xs }}
                 />
               </View>
@@ -175,10 +280,17 @@ const styles = StyleSheet.create({
   modalContent: { backgroundColor: Colors.surface, borderTopLeftRadius: Radius.xl, borderTopRightRadius: Radius.xl, padding: Spacing.xl, borderColor: Colors.border, borderTopWidth: 1 },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.lg },
   modalTitle: { color: Colors.text, fontSize: 18, fontWeight: "700" },
-  modalBody: { alignItems: "center", gap: Spacing.sm },
+  modalBody: { alignItems: "center", gap: Spacing.sm, width: "100%" },
   modalValueLabel: { color: Colors.textMuted, fontSize: 12, textTransform: "uppercase" },
   modalValue: { color: Colors.success, fontSize: 28, fontWeight: "900" },
   modalHint: { color: Colors.textMuted, fontSize: 13, marginBottom: Spacing.md },
   copyBox: { backgroundColor: Colors.card, borderColor: Colors.border, borderWidth: 1, borderRadius: Radius.md, padding: Spacing.md, width: "100%", marginBottom: Spacing.sm },
   copyText: { color: Colors.textMuted, fontFamily: "monospace", fontSize: 12 },
+  proofSection: { width: "100%", marginTop: Spacing.lg, paddingTop: Spacing.md, borderTopColor: Colors.border, borderTopWidth: 1, alignItems: "center" },
+  proofSectionTitle: { color: Colors.text, fontSize: 14, fontWeight: "700", marginBottom: 2 },
+  proofSectionSubtitle: { color: Colors.textMuted, fontSize: 12, textAlign: "center", marginBottom: Spacing.md },
+  pickButtonsRow: { flexDirection: "row", gap: Spacing.sm, width: "100%" },
+  previewContainer: { alignItems: "center", width: "100%" },
+  proofPreview: { width: "100%", height: 260, borderRadius: Radius.md, resizeMode: "contain", backgroundColor: Colors.card },
+  previewHint: { color: Colors.textMuted, fontSize: 12, textAlign: "center", marginTop: Spacing.sm },
 });
