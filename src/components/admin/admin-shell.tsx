@@ -136,9 +136,9 @@ function AlertsBell() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
               transition={{ duration: 0.16 }}
-              className="absolute right-0 z-40 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line-strong bg-panel shadow-2xl shadow-black/60"
+              className="absolute right-0 z-40 mt-2 w-[min(26rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line-strong bg-panel shadow-2xl shadow-black/60"
             >
-              <div className="flex items-center gap-1 border-b border-line px-2 py-2" role="tablist">
+              <div className="flex flex-wrap items-center gap-1 border-b border-line px-2 py-2" role="tablist">
                 {tabs.map((t) => (
                   <button
                     key={t.key}
@@ -146,13 +146,13 @@ function AlertsBell() {
                     role="tab"
                     aria-selected={tab === t.key}
                     onClick={() => setTab(t.key)}
-                    className={cn("rounded-lg px-3 py-1.5 text-sm font-medium", tab === t.key ? "bg-white/[0.06] text-white" : "text-muted hover:text-white")}
+                    className={cn("whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium", tab === t.key ? "bg-white/[0.06] text-white" : "text-muted hover:text-white")}
                   >
                     {t.label} {t.n > 0 && <span className="ml-1 text-xs text-brand-soft">{t.n}</span>}
                   </button>
                 ))}
                 {tab === "notifications" && unread > 0 && (
-                  <button type="button" onClick={markAllRead} className="ml-auto rounded-lg px-2 py-1.5 text-xs text-brand-soft hover:text-white">
+                  <button type="button" onClick={markAllRead} className="ml-auto whitespace-nowrap rounded-lg px-2 py-1.5 text-xs text-brand-soft hover:text-white">
                     Marcar todas como lidas
                   </button>
                 )}
