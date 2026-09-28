@@ -4,6 +4,7 @@ import { Bell, Building2, ExternalLink, FileSignature, Mail, MessageCircle, Pale
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
+import { PushSettings } from "@/components/admin/push-settings";
 import { WhatsAppConnection } from "@/components/admin/whatsapp-connection";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,7 +19,8 @@ import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { COMPANY, WHATSAPP_MESSAGES } from "@/lib/company";
 import { getWhatsAppUrl } from "@/lib/whatsapp";
 import { DEFAULT_CONTRACT_TERMS } from "@/lib/contract";
-import type { CompanyProfile, CompanySettings } from "@/types";
+import { CATEGORY_LABEL } from "@/lib/push-events";
+import type { CompanyProfile, CompanySettings, NotificationCategory } from "@/types";
 
 function EmailTest() {
   const [to, setTo] = useState("");
@@ -198,10 +200,29 @@ export default function SettingsPage() {
           <Checkbox label="Tabelas compactas" checked={draft.compactTables} onChange={(e) => set("compactTables", e.target.checked)} />
         </Section>
 
-        <Section icon={Bell} title="Notificações" description="Quais alertas aparecem no sino e no dashboard.">
+        <Section icon={Bell} title="Notificações" description="Alertas do sino, e-mails diários e notificações no celular/computador (Web Push) para a equipe.">
+          <PushSettings />
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted sm:col-span-2">Alertas de vencimento</p>
           <Checkbox label="Vencimentos de multas" checked={draft.notifyFines} onChange={(e) => set("notifyFines", e.target.checked)} />
           <Checkbox label="Manutenções programadas" checked={draft.notifyMaintenance} onChange={(e) => set("notifyMaintenance", e.target.checked)} />
           <Checkbox label="Recebimentos em atraso" checked={draft.notifyReceipts} onChange={(e) => set("notifyReceipts", e.target.checked)} />
+          <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted sm:col-span-2">Web Push para a equipe</p>
+          <Checkbox
+            label="Enviar Web Push"
+            checked={draft.push.enabled}
+            onChange={(e) => set("push", { ...draft.push, enabled: e.target.checked })}
+            className="sm:col-span-2"
+          />
+          {(Object.keys(CATEGORY_LABEL) as NotificationCategory[]).map((c) => (
+            <Checkbox
+              key={c}
+              label={CATEGORY_LABEL[c]}
+              disabled={!draft.push.enabled}
+              checked={draft.push.enabled && draft.push.categories[c] !== false}
+              onChange={(e) => set("push", { ...draft.push, categories: { ...draft.push.categories, [c]: e.target.checked } })}
+            />
+          ))}
+          <p className="text-xs text-muted sm:col-span-2">Vale para toda a equipe. Tudo continua registrado no sino, mesmo com o Web Push desligado. Salve para aplicar.</p>
         </Section>
 
         {!isSupabaseEnabled && (

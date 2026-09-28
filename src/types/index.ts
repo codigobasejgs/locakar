@@ -243,8 +243,40 @@ export interface CompanyProfile {
   contractTerms: string;
 }
 
+/** Categorias das notificações do painel (preferências de Web Push). */
+export type NotificationCategory =
+  | "rentals"
+  | "reservations"
+  | "payments"
+  | "clients"
+  | "expenses"
+  | "maintenance"
+  | "fines"
+  | "vehicles"
+  | "documents"
+  | "contracts"
+  | "notes"
+  | "system";
+
+export type NotificationSeverity = "info" | "success" | "warning" | "critical";
+
+/** Item da central de notificações do painel (tabela `notifications`). */
+export interface AppNotification {
+  id: string;
+  type: string;
+  category: NotificationCategory;
+  severity: NotificationSeverity;
+  title: string;
+  body: string;
+  url: string;
+  createdAt: string;
+  readAt?: string;
+}
+
 export interface CompanySettings {
   company: CompanyProfile;
+  /** Web Push para a equipe: liga/desliga geral e por categoria (ausente = ligada). */
+  push: { enabled: boolean; categories: Partial<Record<NotificationCategory, boolean>> };
   pageSize: number;
   alertWindowDays: number;
   compactTables: boolean;

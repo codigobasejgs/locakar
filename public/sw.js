@@ -5,9 +5,10 @@
  * /_next/static (hash imutável): cache-first
  * Imagens, ícones, fontes: stale-while-revalidate
  * Vídeo: rede (requisições Range não são cacheadas)
+ * Web Push (VAPID): evento "push" mostra a notificação; clique abre a tela certa do painel.
  * Troque VERSION a cada mudança relevante neste arquivo.
  */
-const VERSION = "v4";
+const VERSION = "v5";
 const PAGES = `locakar-pages-${VERSION}`;
 const STATIC = `locakar-static-${VERSION}`;
 const MEDIA = `locakar-media-${VERSION}`;
@@ -124,4 +125,75 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(staleWhileRevalidate(event));
   }
   // Demais (RSC/prefetch do Next): rede padrão; offline, a navegação cai no fallback acima.
+});
+
+/* ---------- Web Push (VAPID) ----------
+ * Payload JSON enviado por src/lib/server/push.ts: { id?, title, body, url, severity, category?, tag? }.
+ */
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+  const url = typeof data.url === "string" && data.url.startsWith("/admin") ? data.url : "/admin";
+  const critical = data.severity === "critical";
+  event.waitUntil(
+    (async () => {
+      await self.registration.showNotification(data.title || "LOCAKAR", {
+        body: data.body || "",
+        icon: "/icons/admin-192.png",
+        badge: "/icons/badge-96.png",
+        tag: data.tag || data.id || undefined,
+        renotify: Boolean(data.tag || data.id),
+        requireInteraction: critical, // urgente fica na tela até ser visto; sem som extra
+        timestamp: Date.now(),
+        lang: "pt-BR",
+        data: { url, id: data.id },
+      });
+      // Número no ícone do app instalado (quando suportado); o painel recalcula ao abrir.
+      if (self.navigator && "setAppBadge" in self.navigator) {
+        const open = await self.registration.getNotifications();
+        self.navigator.setAppBadge(open.length).catch(() => {});
+      }
+    })(),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || "/admin", self.location.origin);
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      // Prefere uma janela do painel já aberta: foca e navega até o registro.
+      const admin = windows.find((w) => new URL(w.url).pathname.startsWith("/admin")) || windows[0];
+      if (admin) {
+        await admin.focus();
+        if ("navigate" in admin) return admin.navigate(target.href).catch(() => self.clients.openWindow(target.href));
+        return undefined;
+      }
+      return self.clients.openWindow(target.href);
+    })(),
+  );
+});
+
+// O navegador trocou as chaves da inscrição: re-inscreve com a mesma chave pública e atualiza o servidor.
+self.addEventListener("pushsubscriptionchange", (event) => {
+  const options = event.oldSubscription && event.oldSubscription.options;
+  if (!options || !options.applicationServerKey) return;
+  event.waitUntil(
+    self.registration.pushManager
+      .subscribe({ userVisibleOnly: true, applicationServerKey: options.applicationServerKey })
+      .then((subscription) =>
+        fetch("/api/push", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "register", subscription: subscription.toJSON() }),
+        }),
+      )
+      .catch(() => {}),
+  );
 });

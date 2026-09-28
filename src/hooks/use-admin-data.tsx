@@ -4,6 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { toast } from "sonner";
 import { authService } from "@/lib/auth";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
+import { detectEvents } from "@/lib/push-events";
+import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { storage } from "@/lib/storage";
 import { repositories, settingsRepository } from "@/repositories";
 import type { CollectionKey, Collections, EntityFor, Repository } from "@/repositories/types";
@@ -30,6 +32,22 @@ async function loadAll(): Promise<Collections> {
   await authService.assertAccess();
   const lists = await Promise.all(KEYS.map((key) => repositories[key].getAll()));
   return Object.fromEntries(KEYS.map((key, i) => [key, lists[i]])) as Collections;
+}
+
+/**
+ * Avisa o servidor de um evento de negócio (nova locação, pagamento, multa...) para a central e o Web Push.
+ * Em segundo plano: nunca bloqueia nem desfaz a gravação.
+ */
+function reportEvent(key: CollectionKey, before: object | undefined, after: object) {
+  if (!isSupabaseEnabled) return;
+  const events = detectEvents(key, before as Record<string, unknown> | undefined, after as Record<string, unknown>);
+  if (!events.length) return;
+  fetch("/api/push", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "event", collection: key, id: (after as { id: string }).id, events }),
+    keepalive: true,
+  }).catch(() => {});
 }
 
 function fail(error: unknown) {
@@ -73,6 +91,7 @@ export function AdminDataProvider({ children }: { children: React.ReactNode }) {
         try {
           const created = await repo(key).create(item);
           patchCollection(key, (items) => [...items, created]);
+          reportEvent(key, undefined, created);
           return true;
         } catch (e) {
           return fail(e);
@@ -80,8 +99,10 @@ export function AdminDataProvider({ children }: { children: React.ReactNode }) {
       },
       async update(key, id, patch) {
         try {
+          const before = data?.[key].find((it) => it.id === id);
           const updated = await repo(key).update(id, patch);
           patchCollection(key, (items) => items.map((it) => (it.id === id ? updated : it)));
+          reportEvent(key, before, updated);
           return true;
         } catch (e) {
           return fail(e);

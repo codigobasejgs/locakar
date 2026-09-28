@@ -227,6 +227,85 @@ Cada aviso vai pelos dois canais quando o cliente tem e-mail e telefone válidos
 - **Empresa**: resumo completo em `ALERTS_ADMIN_EMAIL` (padrão `locakarveiculos@gmail.com`) e no WhatsApp `ALERTS_ADMIN_WHATSAPP` (padrão o número oficial).
 - Requer na Vercel: `CRON_SECRET` (texto aleatório) e `SUPABASE_SECRET_KEY` (Supabase → Settings → API Keys → secret). Sem `NEXT_PUBLIC_`.
 
+## Notificações da equipe (Web Push + central)
+
+O admin é avisado no celular e no computador (notificação nativa, mesmo com o painel fechado) e tudo fica no sino 🔔 do painel com lido/não lido.
+
+### Como funciona
+```
+Evento de negócio ─► notifyStaff (src/lib/server/push.ts) ─► tabela notifications (histórico, sem duplicar)
+                                                          └► web-push (VAPID) ─► public/sw.js ─► notificação ─► clique abre a tela
+```
+- **Painel**: toda gravação passa por `AdminDataProvider` (`src/hooks/use-admin-data.tsx`). `detectEvents` (`src/lib/push-events.ts`) identifica o evento e chama `POST /api/push { action: "event" }`. O servidor **relê o registro no banco** e monta o texto com `describeEvent` — o navegador nunca define título, texto nem destinatário.
+- **Por data**: o cron diário (`/api/cron/alerts`, 8h) transforma cada alerta de `buildNotices` em notificação (`noticeToEvent`).
+- **Assinatura**: `/api/sign` avisa quando o cliente assina o contrato.
+- **Só `src/lib/server/push.ts` conhece a biblioteca `web-push`.** Funções: `sendPushToUser`, `sendPushToRole(db, "staff")` (o papel real do sistema é a tabela `staff`), `sendPushToAll`, `notifyStaff` (equivale ao `notifyAdmins`).
+
+### Eventos
+| Evento | Categoria | Severidade | Abre |
+|---|---|---|---|
+| Nova locação | Locações | info | `/admin/rentals/:id` |
+| Veículo entregue / locação finalizada | Locações | success | `/admin/rentals/:id` |
+| Locação cancelada | Locações | warning | `/admin/rentals/:id` |
+| Locação em atraso / devolução atrasada | Locações | critical | `/admin/rentals/:id` |
+| Pagamento recebido (semana marcada como paga) | Pagamentos | success | `/admin/rentals/:id` |
+| Recebimento vence hoje | Pagamentos | info | `/admin/rentals/:id` |
+| Recebimento em atraso | Pagamentos | critical | `/admin/rentals/:id` |
+| Nova reserva / alterada / confirmada | Reservas | info · success | `/admin/reservations` |
+| Reserva cancelada | Reservas | warning | `/admin/reservations` |
+| Reserva nos próximos 3 dias | Reservas | info | `/admin/reservations` |
+| Novo cliente (só o nome, sem CPF/telefone) | Clientes | info | `/admin/clients` |
+| CNH vencendo / vencida | Documentos | warning · critical | `/admin/clients` |
+| IPVA / licenciamento pendente / atrasado | Documentos | warning · critical | `/admin/vehicles` |
+| Novo veículo / manutenção / indisponível / vendido | Veículos | info · warning | `/admin/vehicles` |
+| Nova despesa / despesa paga | Despesas | info · success | `/admin/expenses` |
+| Despesa em aberto (vencida; 7+ dias = urgente) | Despesas | warning · critical | `/admin/expenses` |
+| Manutenção registrada / concluída | Manutenção | info · success | `/admin/maintenance` |
+| Manutenção próxima / atrasada | Manutenção | warning · critical | `/admin/maintenance` |
+| Nova multa | Multas | warning | `/admin/fines` |
+| Multa paga / contestada / vencida | Multas | success · info · critical | `/admin/fines` |
+| Prazo de identificação do condutor | Multas | warning · critical | `/admin/fines` |
+| Contrato assinado | Contratos | success | `/admin/rentals/:id` |
+| Contrato sem assinatura há 2+ dias | Contratos | warning · critical | `/admin/rentals/:id` |
+| Nova anotação | Anotações | info | `/admin/notes` |
+
+Edições triviais (corrigir telefone, observação) **não** notificam. Veículo alugado/reservado/devolvido não repete o aviso da locação/reserva.
+
+### Anti-spam
+- `notifications.dedupe_key` é único: o mesmo evento nunca notifica duas vezes (ex.: `rentals:<id>:created`, `alert:receipt-due:<id>:<dia>:soon`).
+- Alertas por data notificam **duas vezes no máximo**: quando entram na janela ("vence em breve") e quando ficam urgentes (vencido).
+- Mais de 3 notificações novas de uma vez (ex.: cron) viram **um push de resumo**; todas aparecem no sino.
+
+### Dispositivos e falhas
+- Cada pessoa pode ter vários dispositivos (`push_subscriptions`, um por navegador; `endpoint` único = upsert, sem duplicar).
+- Resposta **404/410** do serviço de push = inscrição morta: só aquele dispositivo é removido. Outros erros contam em `failures`; após 5 seguidos, remove.
+- Falha no push nunca desfaz a operação (a locação é salva mesmo se o push falhar).
+- Logs no servidor com prefixo `[push]` (sem chaves nem dados pessoais).
+
+### Configurar (uma vez)
+1. **Supabase → SQL Editor**: rodar `supabase/migrations/20260928000000_web_push.sql`.
+2. **Gerar as chaves VAPID** (uma vez; trocar invalida as inscrições): `npx web-push generate-vapid-keys`.
+3. **Vercel → Environment Variables** (Production), sem `NEXT_PUBLIC_`:
+   - `VAPID_PUBLIC_KEY` = chave pública
+   - `VAPID_PRIVATE_KEY` = chave privada (marcar **Sensitive**; nunca no código nem no chat)
+   - `VAPID_SUBJECT` = `mailto:locakarveiculos@gmail.com`
+   - `SUPABASE_SECRET_KEY` (já usada pelo cron)
+4. Redeploy. Em cada dispositivo: **Configurações → Notificações → Ativar notificações** → permitir → **Enviar teste**.
+
+> iPhone/iPad: Web Push só funciona no app instalado (Compartilhar → Adicionar à Tela de Início, iOS 16.4+), aberto pelo ícone.
+
+### Preferências
+**Configurações → Notificações → Web Push para a equipe**: liga/desliga geral e por categoria (vale para toda a equipe). O sino continua registrando tudo.
+
+### Novo evento
+1. Em `detectEvents`, devolva um nome para a mudança (ex.: `"status:xyz"`).
+2. Em `describeEvent`, monte `{ type, category, severity, title, body, url, dedupeKey }` com dados do registro.
+3. Adicione um caso em `scripts/check.ts`.
+
+### Testar
+- `npm run check`: detecção de eventos, dedupe, preferências, resumo e remoção de inscrição 404/410 com vários dispositivos.
+- No navegador: ativar em Configurações → **Enviar teste**; criar uma locação e ver o push e o sino.
+
 ## O que não foi inventado
 
 Nenhum depoimento, avaliação, número de clientes/veículos, tempo de mercado, prêmio, preço ou dado legal aparece no site. Diárias não são exibidas publicamente — o preço é consultado via WhatsApp. As especificações dos cards (transmissão, combustível, lugares, ar) são de fábrica das versões de entrada e estão em `src/data/fleet.ts` para revisão.

@@ -3,6 +3,8 @@ import { COMPANY } from "@/lib/company";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 import { GROUP_LABEL, REMIND_DAYS, buildNotices, dueForClient, type AlertGroup, type Notice } from "@/lib/notifications";
 import { emailLayout, sendEmail } from "@/lib/server/email";
+import { noticeToEvent } from "@/lib/push-events";
+import { notifyStaff } from "@/lib/server/push";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { SUPABASE_URL } from "@/lib/supabase/env";
 import { toISODate } from "@/lib/utils";
@@ -14,6 +16,7 @@ import type { Client, CompanySettings } from "@/types";
  * Alertas diários por e-mail (Vercel Cron, ver vercel.json).
  * - Cliente: e-mail + WhatsApp com os avisos dele (multa, atraso, CNH, contrato, devolução, reserva).
  * - Empresa: resumo com todos os alertas (e-mail + WhatsApp), incluindo manutenção e IPVA/licenciamento.
+ * - Equipe: central de notificações + Web Push (cada alerta só notifica ao entrar na janela e ao ficar urgente).
  * Protegido por CRON_SECRET. Lê o banco com a secret key (somente no servidor, nunca no navegador).
  */
 export const dynamic = "force-dynamic";
@@ -173,5 +176,9 @@ export async function GET(request: Request) {
     if (!wa.ok && wa.error !== "WhatsApp não configurado.") report.failures.push(`resumo WhatsApp: ${wa.error}`);
   }
 
-  return Response.json(report, { status: report.failures.length ? 207 : 200 });
+  // ---------- Equipe: central de notificações + Web Push ----------
+  const push = await notifyStaff(notices.map(noticeToEvent), { db });
+  await db.rpc("prune_notifications");
+
+  return Response.json({ ...report, push }, { status: report.failures.length ? 207 : 200 });
 }

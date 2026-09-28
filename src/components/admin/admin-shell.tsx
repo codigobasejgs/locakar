@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ExternalLink, LogOut, Menu, X } from "lucide-react";
+import { Bell, Check, ExternalLink, LogOut, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,8 +10,10 @@ import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { AdminDataProvider, useAdminData } from "@/hooks/use-admin-data";
+import { useNotifications } from "@/hooks/use-notifications";
 import { buildAlerts } from "@/lib/analytics";
 import { authService } from "@/lib/auth";
+import { CATEGORY_LABEL, unreadCount } from "@/lib/push-events";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { ROUTES } from "@/lib/constants";
 import { cn, todayISO } from "@/lib/utils";
@@ -74,74 +76,140 @@ function SidebarFooter() {
   );
 }
 
+const SEVERITY_DOT: Record<string, string> = {
+  critical: "bg-red-400",
+  danger: "bg-red-400",
+  warning: "bg-amber-400",
+  success: "bg-emerald-400",
+  info: "bg-sky-400",
+};
+
+const ago = (iso: string) => {
+  const min = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (min < 1) return "agora";
+  if (min < 60) return `há ${min} min`;
+  if (min < 24 * 60) return `há ${Math.round(min / 60)} h`;
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+};
+
+/**
+ * Sino do painel: "Notificações" (central com histórico, lido/não lido, também entregue por Web Push)
+ * e "Pendências" (alertas calculados na hora a partir dos dados: vencimentos, atrasos, documentos).
+ */
 function AlertsBell() {
   const { data, settings } = useAdminData();
+  const { items, markRead, markAllRead } = useNotifications();
   const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState<"notifications" | "alerts">(isSupabaseEnabled ? "notifications" : "alerts");
   const alerts = useMemo(() => (data ? buildAlerts(data, settings, todayISO()) : []), [data, settings]);
-  const urgent = alerts.filter((a) => a.tone === "danger").length;
+  const unread = unreadCount(items);
+  const count = isSupabaseEnabled ? unread : alerts.length;
+  const urgent = isSupabaseEnabled ? items.some((n) => !n.readAt && n.severity === "critical") : alerts.some((a) => a.tone === "danger");
 
-  // Número de alertas no ícone do app instalado (Chrome/Edge desktop e Android, Safari iOS 16.4+).
+  // Número no ícone do app instalado (Chrome/Edge desktop e Android, Safari iOS 16.4+).
   useEffect(() => {
     if (!("setAppBadge" in navigator)) return;
-    (alerts.length ? navigator.setAppBadge(alerts.length) : navigator.clearAppBadge()).catch(() => {});
-  }, [alerts.length]);
+    (count ? navigator.setAppBadge(count) : navigator.clearAppBadge()).catch(() => {});
+  }, [count]);
+
+  const tabs = [
+    { key: "notifications" as const, label: "Notificações", n: unread, show: isSupabaseEnabled },
+    { key: "alerts" as const, label: "Pendências", n: alerts.length, show: true },
+  ].filter((t) => t.show);
 
   return (
     <div className="relative">
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={`Alertas (${alerts.length})`}
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-      >
+      <Button variant="ghost" size="icon" aria-label={`Notificações (${count} não lidas)`} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         <Bell />
-        {alerts.length > 0 && (
-          <span
-            className={cn(
-              "absolute right-1 top-1 grid min-w-4 place-items-center rounded-full px-1 text-[10px] font-bold text-white",
-              urgent ? "bg-red-500" : "bg-magenta",
-            )}
-          >
-            {alerts.length}
+        {count > 0 && (
+          <span className={cn("absolute right-1 top-1 grid min-w-4 place-items-center rounded-full px-1 text-[10px] font-bold text-white", urgent ? "bg-red-500" : "bg-magenta")}>
+            {count > 99 ? "99+" : count}
           </span>
         )}
       </Button>
       <AnimatePresence>
         {open && (
           <>
-            <button type="button" aria-label="Fechar alertas" className="fixed inset-0 z-30 cursor-default" onClick={() => setOpen(false)} />
+            <button type="button" aria-label="Fechar notificações" className="fixed inset-0 z-30 cursor-default" onClick={() => setOpen(false)} />
             <motion.div
               initial={{ opacity: 0, y: -6, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
               transition={{ duration: 0.16 }}
-              className="absolute right-0 z-40 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line-strong bg-panel shadow-2xl shadow-black/60"
+              className="absolute right-0 z-40 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line-strong bg-panel shadow-2xl shadow-black/60"
             >
-              <p className="border-b border-line px-4 py-3 text-sm font-semibold">Alertas ({alerts.length})</p>
-              <ul className="max-h-96 overflow-y-auto">
-                {alerts.length === 0 && <li className="px-4 py-8 text-center text-sm text-muted">Nenhum alerta no momento.</li>}
-                {alerts.map((a) => (
-                  <li key={a.id}>
-                    <Link
-                      href={a.href}
-                      onClick={() => setOpen(false)}
-                      className="flex gap-3 border-b border-line px-4 py-3 last:border-0 hover:bg-white/[0.03]"
-                    >
-                      <span
-                        className={cn(
-                          "mt-1.5 size-2 shrink-0 rounded-full",
-                          { danger: "bg-red-400", warning: "bg-amber-400", info: "bg-sky-400" }[a.tone as string] ?? "bg-zinc-500",
-                        )}
-                      />
-                      <span>
-                        <span className="block text-sm font-medium text-zinc-100">{a.title}</span>
-                        <span className="block text-xs text-muted">{a.detail}</span>
-                      </span>
-                    </Link>
-                  </li>
+              <div className="flex items-center gap-1 border-b border-line px-2 py-2" role="tablist">
+                {tabs.map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === t.key}
+                    onClick={() => setTab(t.key)}
+                    className={cn("rounded-lg px-3 py-1.5 text-sm font-medium", tab === t.key ? "bg-white/[0.06] text-white" : "text-muted hover:text-white")}
+                  >
+                    {t.label} {t.n > 0 && <span className="ml-1 text-xs text-brand-soft">{t.n}</span>}
+                  </button>
                 ))}
-              </ul>
+                {tab === "notifications" && unread > 0 && (
+                  <button type="button" onClick={markAllRead} className="ml-auto rounded-lg px-2 py-1.5 text-xs text-brand-soft hover:text-white">
+                    Marcar todas como lidas
+                  </button>
+                )}
+              </div>
+
+              {tab === "notifications" ? (
+                <ul className="max-h-[26rem] overflow-y-auto" role="tabpanel">
+                  {items.length === 0 && <li className="px-4 py-8 text-center text-sm text-muted">Nenhuma notificação ainda.</li>}
+                  {items.map((n) => (
+                    <li key={n.id} className={cn("group relative border-b border-line last:border-0", !n.readAt && "bg-magenta/[0.05]")}>
+                      <Link
+                        href={n.url}
+                        onClick={() => {
+                          markRead([n.id]);
+                          setOpen(false);
+                        }}
+                        className="flex gap-3 px-4 py-3 pr-10 hover:bg-white/[0.03]"
+                      >
+                        <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", SEVERITY_DOT[n.severity] ?? "bg-zinc-500", n.readAt && "opacity-40")} />
+                        <span className="min-w-0">
+                          <span className={cn("block text-sm", n.readAt ? "text-zinc-300" : "font-semibold text-white")}>{n.title}</span>
+                          {n.body && <span className="block text-xs text-muted">{n.body}</span>}
+                          <span className="mt-0.5 block text-[11px] text-zinc-500">
+                            {CATEGORY_LABEL[n.category]?.split(" (")[0] ?? n.category} · {ago(n.createdAt)}
+                          </span>
+                        </span>
+                      </Link>
+                      {!n.readAt && (
+                        <button
+                          type="button"
+                          onClick={() => markRead([n.id])}
+                          aria-label="Marcar como lida"
+                          title="Marcar como lida"
+                          className="absolute right-3 top-3 grid size-6 place-items-center rounded-md text-zinc-500 opacity-70 hover:bg-white/[0.06] hover:text-white group-hover:opacity-100"
+                        >
+                          <Check className="size-3.5" />
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="max-h-[26rem] overflow-y-auto" role="tabpanel">
+                  {alerts.length === 0 && <li className="px-4 py-8 text-center text-sm text-muted">Nenhuma pendência no momento.</li>}
+                  {alerts.map((a) => (
+                    <li key={a.id}>
+                      <Link href={a.href} onClick={() => setOpen(false)} className="flex gap-3 border-b border-line px-4 py-3 last:border-0 hover:bg-white/[0.03]">
+                        <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", SEVERITY_DOT[a.tone as string] ?? "bg-zinc-500")} />
+                        <span>
+                          <span className="block text-sm font-medium text-zinc-100">{a.title}</span>
+                          <span className="block text-xs text-muted">{a.detail}</span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </motion.div>
           </>
         )}

@@ -5,13 +5,16 @@
  */
 import type { Collections } from "@/repositories/types";
 import type { CompanySettings } from "@/types";
+import { ROUTES } from "./constants";
 import { addDays, daysBetween, formatCurrency, formatDate } from "./utils";
 
-export type AlertGroup = "fine" | "receipt" | "maintenance" | "cnh" | "documents" | "contract" | "return" | "reservation";
+export type AlertGroup = "fine" | "receipt" | "receipt_due" | "expense" | "maintenance" | "cnh" | "documents" | "contract" | "return" | "reservation";
 
 export const GROUP_LABEL: Record<AlertGroup, string> = {
   fine: "Multas",
   receipt: "Recebimentos em atraso",
+  receipt_due: "Recebimentos que vencem hoje",
+  expense: "Despesas em aberto",
   maintenance: "Manutenções",
   cnh: "CNH de clientes",
   documents: "IPVA e licenciamento",
@@ -24,8 +27,10 @@ export interface Notice {
   key: string;
   group: AlertGroup;
   urgent: boolean;
-  /** Linha no resumo diário da empresa. */
+  /** Linha no resumo diário da empresa ("Título · detalhe · detalhe"). */
   adminText: string;
+  /** Tela do painel onde o alerta é resolvido (notificação push abre aqui). */
+  href: string;
   /** Cliente que recebe o aviso (ausente = só a empresa, ex.: manutenção, IPVA). */
   clientId?: string;
   clientText?: string;
@@ -51,6 +56,7 @@ export function buildNotices(data: Collections, settings: CompanySettings, today
         out.push({
           key: `fine-id:${f.id}`,
           group: "fine",
+          href: ROUTES.fines,
           urgent: past,
           adminText: `Identificar condutor · ${plate(f.vehicleId)} · auto ${f.noticeNumber} · prazo ${formatDate(f.driverIdDeadline)}${past ? " (encerrado)" : ""}`,
           clientId: f.clientId,
@@ -62,6 +68,7 @@ export function buildNotices(data: Collections, settings: CompanySettings, today
         out.push({
           key: `fine-due:${f.id}`,
           group: "fine",
+          href: ROUTES.fines,
           urgent: past,
           adminText: `${past ? "Multa vencida" : "Multa a vencer"} · ${plate(f.vehicleId)} · ${formatCurrency(f.amount)} · vencimento ${formatDate(f.dueDate)}`,
           clientId: f.clientId,
@@ -82,6 +89,7 @@ export function buildNotices(data: Collections, settings: CompanySettings, today
       out.push({
         key: `receipt:${r.id}:${late.length}`,
         group: "receipt",
+        href: `${ROUTES.rentals}/${r.id}`,
         urgent: true,
         adminText: `Recebimento em atraso · ${clientName(r.clientId)} · ${late.length} semana(s) · ${formatCurrency(total)}`,
         clientId: r.clientId,
@@ -90,12 +98,39 @@ export function buildNotices(data: Collections, settings: CompanySettings, today
     }
   }
 
+  if (settings.notifyReceipts) {
+    for (const r of data.rentals) {
+      if (r.status === "cancelled") continue;
+      const dueToday = r.receipts.filter((x) => !x.paid && x.dueDate === today);
+      if (!dueToday.length) continue;
+      out.push({
+        key: `receipt-due:${r.id}:${today}`,
+        group: "receipt_due",
+        href: `${ROUTES.rentals}/${r.id}`,
+        urgent: false,
+        adminText: `Recebimento vence hoje · ${clientName(r.clientId)} · ${formatCurrency(dueToday.reduce((a, x) => a + x.amount, 0))}`,
+      });
+    }
+  }
+
+  for (const e of data.expenses) {
+    if (e.paid || e.date > today) continue;
+    out.push({
+      key: `expense:${e.id}`,
+      group: "expense",
+      href: ROUTES.expenses,
+      urgent: daysBetween(e.date, today) >= 7,
+      adminText: `Despesa em aberto · ${e.description} · ${formatCurrency(e.amount)} · desde ${formatDate(e.date)}`,
+    });
+  }
+
   if (settings.notifyMaintenance) {
     for (const m of data.maintenance) {
       if (m.status === "done" || !within(m.date)) continue;
       out.push({
         key: `maintenance:${m.id}`,
         group: "maintenance",
+        href: ROUTES.maintenance,
         urgent: m.date < today,
         adminText: `Manutenção · ${plate(m.vehicleId)} · ${m.description} · ${formatDate(m.date)}${m.date < today ? " (atrasada)" : ""}`,
       });
@@ -108,6 +143,7 @@ export function buildNotices(data: Collections, settings: CompanySettings, today
     out.push({
       key: `cnh:${c.id}:${c.cnhExpiry}`,
       group: "cnh",
+      href: ROUTES.clients,
       urgent: past,
       adminText: `${past ? "CNH vencida" : "CNH a vencer"} · ${c.name} · ${formatDate(c.cnhExpiry)}`,
       clientId: c.id,
@@ -123,6 +159,7 @@ export function buildNotices(data: Collections, settings: CompanySettings, today
     out.push({
       key: `documents:${v.id}:${v.ipvaStatus}:${v.licensingStatus}`,
       group: "documents",
+      href: ROUTES.vehicles,
       urgent: v.ipvaStatus === "late" || v.licensingStatus === "late",
       adminText: `Documentação pendente · ${v.plate} · ${parts.join(" e ")}`,
     });
@@ -136,6 +173,7 @@ export function buildNotices(data: Collections, settings: CompanySettings, today
     out.push({
       key: `contract:${c.id}`,
       group: "contract",
+      href: `${ROUTES.rentals}/${c.rentalId}`,
       urgent: days >= 7,
       adminText: `Contrato sem assinatura há ${days} dia(s) · ${c.clientName}`,
       clientId: rental?.clientId,
@@ -148,6 +186,7 @@ export function buildNotices(data: Collections, settings: CompanySettings, today
     out.push({
       key: `return:${r.id}`,
       group: "return",
+      href: `${ROUTES.rentals}/${r.id}`,
       urgent: true,
       adminText: `Devolução atrasada · ${clientName(r.clientId)} · ${plate(r.vehicleId)} · previsto ${formatDate(r.endDate)}`,
       clientId: r.clientId,
@@ -162,6 +201,7 @@ export function buildNotices(data: Collections, settings: CompanySettings, today
     out.push({
       key: `reservation:${r.id}:${r.startDate}`,
       group: "reservation",
+      href: ROUTES.reservations,
       urgent: false,
       adminText: `Reserva ${days === 0 ? "hoje" : `em ${days} dia(s)`} · ${clientName(r.clientId)} · ${plate(r.vehicleId)} · ${formatDate(r.startDate)}${r.status === "pending" ? " (pendente)" : ""}`,
       clientId: r.clientId,

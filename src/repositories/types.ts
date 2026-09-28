@@ -64,5 +64,10 @@ export type EntityFor<K extends CollectionKey> = Collections[K][number];
 
 /** Preferências salvas + padrões (merge profundo em `company`: contas antigas ganham campos novos). */
 export function mergeSettings(defaults: CompanySettings, saved?: Partial<CompanySettings> | null): CompanySettings {
-  return { ...defaults, ...saved, company: { ...defaults.company, ...saved?.company } };
+  return {
+    ...defaults,
+    ...saved,
+    company: { ...defaults.company, ...saved?.company },
+    push: { ...defaults.push, ...saved?.push, categories: { ...defaults.push.categories, ...saved?.push?.categories } },
+  };
 }

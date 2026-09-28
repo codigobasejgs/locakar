@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { after } from "next/server";
 import { contractPdf } from "@/lib/pdf";
 import { emailLayout, sendEmail } from "@/lib/server/email";
+import { notifyStaff } from "@/lib/server/push";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 import type { Contract } from "@/types";
@@ -53,6 +54,17 @@ export async function POST(request: Request) {
 
   // Resposta imediata ao cliente; PDF + e-mail + WhatsApp seguem após a resposta (after).
   after(async () => {
+    await notifyStaff([
+      {
+        type: "contract.signed",
+        category: "contracts",
+        severity: "success",
+        title: "Contrato assinado",
+        body: `${signed.clientName} assinou o contrato em ${when}.`,
+        url: `/admin/rentals/${signed.rentalId}`,
+        dedupeKey: `contract:${signed.id}:signed`,
+      },
+    ]);
     // Via assinada em PDF (sem a selfie: ela fica só com a LOCAKAR). CPF, IP e navegador já foram validados/gravados acima.
     const { data: view } = await db.rpc("contract_for_signing", { p_token: body.token });
     let pdf: { filename: string; content: Uint8Array } | undefined;

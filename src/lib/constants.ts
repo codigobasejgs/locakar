@@ -152,4 +152,5 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   notifyFines: true,
   notifyMaintenance: true,
   notifyReceipts: true,
+  push: { enabled: true, categories: {} },
 };

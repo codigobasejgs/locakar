@@ -71,6 +71,7 @@ assert.equal("created_at" in toRow({ id: "y", createdAt: "2026-01-01" }), false)
   } as unknown as Collections;
   const notices = buildNotices(data, DEFAULT_SETTINGS, T);
   const groups = new Set(notices.map((n) => n.group));
+  assert.ok(notices.every((n) => n.href.startsWith("/admin")), "alerta sem tela de destino");
   for (const g of ["fine", "receipt", "maintenance", "cnh", "documents", "contract", "return", "reservation"]) assert.ok(groups.has(g as never), `grupo ausente: ${g}`);
   // Manutenção e IPVA/licenciamento: só a empresa; os demais também vão ao cliente.
   assert.ok(notices.filter((n) => n.group === "maintenance" || n.group === "documents").every((n) => !n.clientId));
@@ -109,6 +110,52 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
   assert.equal(new TextDecoder().decode(bytes.slice(0, 5)), "%PDF-");
   const { PDFDocument } = await import("pdf-lib");
   assert.equal((await PDFDocument.load(bytes)).getPageCount(), 2, "contrato + certificado");
+}
+
+// Web Push: eventos de negócio, dedupe, preferências, resumo e dispositivos expirados
+{
+  const { describeEvent, detectEvents, fanOut, isExpiredSubscription, noticeToEvent, summaryPayload, wantsPush, MAX_INDIVIDUAL_PUSHES } = await import("../src/lib/push-events");
+  // Uma operação = uma notificação; edição trivial não notifica.
+  assert.deepEqual(detectEvents("clients", undefined, { id: "c1" }), ["created"]);
+  assert.deepEqual(detectEvents("clients", { id: "c1", phone: "1" }, { id: "c1", phone: "2" }), []);
+  assert.deepEqual(detectEvents("emails", undefined, { id: "e" }), []);
+  const rBefore = { id: "r1", status: "active", receipts: [{ id: "a", paid: false, amount: 700 }, { id: "b", paid: false, amount: 700 }] };
+  const rAfter = { ...rBefore, receipts: [{ id: "a", paid: true, amount: 700 }, { id: "b", paid: false, amount: 700 }] };
+  assert.deepEqual(detectEvents("rentals", rBefore, rAfter), ["receipt:a"]);
+  assert.deepEqual(detectEvents("rentals", rBefore, { ...rBefore, status: "finished" }), ["status:finished"]);
+  assert.deepEqual(detectEvents("vehicles", { id: "v", status: "rented" }, { id: "v", status: "available" }), [], "devolução não duplica");
+  assert.deepEqual(detectEvents("expenses", { id: "x", paid: false }, { id: "x", paid: true }), ["paid"]);
+  // Texto vem do registro real; CPF/telefone nunca vão na notificação.
+  const paid = describeEvent("receipt:a", { collection: "rentals", record: rAfter, clientName: "Ana", plate: "ABC1D23" })!;
+  assert.equal(paid.title, "Pagamento recebido");
+  assert.ok(paid.body.includes("Ana") && paid.body.includes("semana 1") && paid.url === "/admin/rentals/r1");
+  const client = describeEvent("created", { collection: "clients", record: { id: "c1", name: "Ana", cpf: "529.982.247-25", phone: "19999" } })!;
+  assert.ok(!client.body.includes("529") && !client.body.includes("19999"));
+  assert.equal(describeEvent("status:rented", { collection: "vehicles", record: { id: "v", status: "rented" } }), null);
+  assert.equal(describeEvent("created", { collection: "clients", record: { id: "c1", name: "Ana" } })!.dedupeKey, describeEvent("created", { collection: "clients", record: { id: "c1", name: "Ana" } })!.dedupeKey);
+  // Alerta diário: notifica ao entrar na janela e ao ficar urgente, não todo dia.
+  const soon = noticeToEvent({ key: "fine-due:f1", group: "fine", href: "/admin/fines", urgent: false, adminText: "Multa a vencer · ABC1D23 · R$ 100,00" });
+  const late = noticeToEvent({ key: "fine-due:f1", group: "fine", href: "/admin/fines", urgent: true, adminText: "Multa vencida · ABC1D23 · R$ 100,00" });
+  assert.notEqual(soon.dedupeKey, late.dedupeKey);
+  assert.equal(soon.title, "Multa a vencer");
+  assert.equal(late.severity, "critical");
+  // Preferências: categoria desligada ou Web Push desligado não envia.
+  assert.ok(wantsPush({ enabled: true, categories: {} }, "fines"));
+  assert.ok(!wantsPush({ enabled: true, categories: { fines: false } }, "fines"));
+  assert.ok(!wantsPush({ enabled: false, categories: {} }, "fines"));
+  // Rajada vira um resumo só.
+  const many = Array.from({ length: MAX_INDIVIDUAL_PUSHES + 2 }, () => soon);
+  assert.equal(summaryPayload([...many, late]).severity, "critical");
+  // Vários dispositivos: 410/404 removem só aquele; erro passageiro não derruba os outros.
+  assert.ok(isExpiredSubscription(404) && isExpiredSubscription(410) && !isExpiredSubscription(500));
+  const subs = [{ id: "ok1" }, { id: "gone" }, { id: "down" }, { id: "ok2" }, { id: "missing" }];
+  const codes: Record<string, number> = { gone: 410, down: 500, missing: 404 };
+  const res = await fanOut(subs, async (s) => {
+    if (codes[s.id]) throw { statusCode: codes[s.id], body: "x" };
+  }, 2);
+  assert.deepEqual(res.sent.sort(), ["ok1", "ok2"]);
+  assert.deepEqual(res.expired.sort(), ["gone", "missing"]);
+  assert.deepEqual(res.failed.map((f) => f.id), ["down"]);
 }
 
 console.log("✓ check ok");
