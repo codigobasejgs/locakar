@@ -46,13 +46,23 @@ export default function CadastroScreen() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError("E-mail inválido.");
     if (password.length < 8) return setError("A senha precisa ter pelo menos 8 caracteres.");
     setLoading(true);
-    const { error: err } = await supabase.auth.signUp({
+    const redirectUrl =
+      Platform.OS === "web" && typeof window !== "undefined"
+        ? `${window.location.origin}/locatario`
+        : "https://www.locakar.com.br/locatario";
+
+    const { data: signUpData, error: err } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
-      options: { data: { cpf: cpf.replace(/\D/g, "") } },
+      options: {
+        data: { cpf: cpf.replace(/\D/g, "") },
+        emailRedirectTo: redirectUrl,
+      },
     });
     setLoading(false);
     if (err) return setError(/registered|exists/i.test(err.message) ? "Já existe uma conta com este e-mail. Entre ou use \"Esqueci minha senha\"." : "Não foi possível criar a conta. Tente de novo.");
+    // Se "Confirm email" estiver desativado no Supabase, a conta já nasce confirmada e logada.
+    if (signUpData.session) return;
     setSentTo(email.trim().toLowerCase());
   };
 

@@ -29,7 +29,13 @@ export default function LoginScreen() {
   const forgot = async () => {
     setMessage(null);
     if (!email.trim()) return setMessage({ tone: "error", text: "Digite seu e-mail acima e toque em \"Esqueci minha senha\" de novo." });
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase());
+    const redirectUrl =
+      Platform.OS === "web" && typeof window !== "undefined"
+        ? `${window.location.origin}/locatario`
+        : "https://www.locakar.com.br/locatario";
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: redirectUrl,
+    });
     setMessage(error ? { tone: "error", text: "Não foi possível enviar o e-mail. Tente de novo em alguns minutos." } : { tone: "info", text: `Se houver uma conta com ${email.trim()}, enviamos um link para criar uma nova senha.` });
   };
 

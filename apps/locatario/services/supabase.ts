@@ -40,6 +40,6 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
     storage: Platform.OS === "web" ? webStore : nativeStore,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: Platform.OS === "web",
   },
 });
