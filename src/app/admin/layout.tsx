@@ -9,7 +9,11 @@ export const metadata: Metadata = {
   manifest: PWA.adminManifest,
   applicationName: APP_NAMES.admin.short,
   appleWebApp: { title: APP_NAMES.admin.short },
-  icons: { apple: "/icons/admin-180.png" },
+  // Declarar `icons` aqui substitui os herdados do layout raiz: o favicon precisa vir junto.
+  icons: {
+    icon: [{ url: "/icon.png", sizes: "96x96", type: "image/png" }],
+    apple: [{ url: "/icons/admin-180.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 /**

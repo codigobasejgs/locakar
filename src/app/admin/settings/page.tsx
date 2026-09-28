@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Building2, ExternalLink, FileSignature, Mail, MessageCircle, Palette, RotateCcw, Send, SlidersHorizontal } from "lucide-react";
+import { Bell, BellRing, Building2, ExternalLink, FileSignature, Mail, MessageCircle, Palette, RotateCcw, Send, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
@@ -18,6 +18,7 @@ import { sendEmailRequest } from "@/lib/api";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { COMPANY, WHATSAPP_MESSAGES } from "@/lib/company";
 import { getWhatsAppUrl } from "@/lib/whatsapp";
+import { maskPhone } from "@/lib/utils";
 import { DEFAULT_CONTRACT_TERMS } from "@/lib/contract";
 import { CATEGORY_LABEL } from "@/lib/push-events";
 import type { CompanyProfile, CompanySettings, NotificationCategory } from "@/types";
@@ -142,6 +143,30 @@ export default function SettingsPage() {
               <RotateCcw /> Restaurar cláusulas padrão
             </Button>
           </div>
+        </Section>
+
+        <Section icon={BellRing} title="Alertas para a empresa" description="E-mail e WhatsApp que recebem os avisos importantes da operação, além do Web Push da equipe.">
+          <Field label="E-mail que recebe os alertas" htmlFor="a-email" hint="Vazio: locakarveiculos@gmail.com">
+            <Input id="a-email" type="email" value={draft.alerts.email} onChange={(e) => set("alerts", { ...draft.alerts, email: e.target.value })} placeholder="locakarveiculos@gmail.com" autoComplete="email" />
+          </Field>
+          <Field label="WhatsApp que recebe os alertas" htmlFor="a-phone" hint={`Vazio: ${COMPANY.whatsapp.display}`}>
+            <Input id="a-phone" inputMode="tel" value={draft.alerts.phone} onChange={(e) => set("alerts", { ...draft.alerts, phone: maskPhone(e.target.value) })} placeholder="(19) 99999-9999" />
+          </Field>
+          <Checkbox
+            label="Na hora: contrato assinado, nova locação ou reserva, pagamento recebido, nova multa, cancelamentos e tudo que for urgente"
+            checked={draft.alerts.instant}
+            onChange={(e) => set("alerts", { ...draft.alerts, instant: e.target.checked })}
+            className="sm:col-span-2"
+          />
+          <Checkbox
+            label="Resumo diário às 8h com vencimentos e atrasos"
+            checked={draft.alerts.daily}
+            onChange={(e) => set("alerts", { ...draft.alerts, daily: e.target.checked })}
+            className="sm:col-span-2"
+          />
+          <p className="text-xs text-muted sm:col-span-2">
+            O cliente também é avisado pelos três canais: e-mail, WhatsApp e notificação no celular (ele ativa pelo link do contrato). Salve para aplicar.
+          </p>
         </Section>
 
         <Section icon={MessageCircle} title="WhatsApp das notificações" description="Número que envia contratos, termos, comprovantes, multas e alertas automáticos aos clientes.">

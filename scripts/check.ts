@@ -158,4 +158,20 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
   assert.deepEqual(res.failed.map((f) => f.id), ["down"]);
 }
 
+// Alertas importantes: vão também ao e-mail/WhatsApp da empresa; texto do WhatsApp vira texto de push
+{
+  const { isAdminAlert, plainText } = await import("../src/lib/push-events");
+  assert.ok(isAdminAlert({ type: "contract.signed", severity: "success" }));
+  assert.ok(isAdminAlert({ type: "payment.received", severity: "success" }));
+  assert.ok(isAdminAlert({ type: "alert.return", severity: "critical" }), "todo critical é importante");
+  assert.ok(!isAdminAlert({ type: "note.created", severity: "info" }));
+  assert.ok(!isAdminAlert({ type: "client.created", severity: "info" }));
+  const wa = "Olá, Ana! 👋\n\n💰 *Pagamento confirmado*\nRecebemos a _semana 2_.\nhttps://www.locakar.com.br/x";
+  assert.equal(plainText(wa), "💰 Pagamento confirmado Recebemos a semana 2.");
+  const { mergeSettings } = await import("../src/repositories/types");
+  const merged = mergeSettings(DEFAULT_SETTINGS, { alerts: { email: "a@b.com" } } as never);
+  assert.equal(merged.alerts.email, "a@b.com");
+  assert.equal(merged.alerts.instant, true, "configuração antiga ganha os padrões novos");
+}
+
 console.log("✓ check ok");

@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { after } from "next/server";
 import { contractPdf } from "@/lib/pdf";
 import { emailLayout, sendEmail } from "@/lib/server/email";
-import { notifyStaff } from "@/lib/server/push";
+import { notifyStaff, sendPushToClient, serviceDb } from "@/lib/server/push";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 import type { Contract } from "@/types";
@@ -94,6 +94,16 @@ export async function POST(request: Request) {
         .filter((l, i, a) => l !== "" || a[i - 1] !== "")
         .join("\n"),
     });
+    if (process.env.SUPABASE_SECRET_KEY) {
+      const { data: clientId } = await serviceDb().rpc("client_for_token", { p_token: body.token });
+      await sendPushToClient(clientId as string | undefined, {
+        title: "Contrato assinado",
+        body: `Recebemos sua assinatura em ${when}. A via assinada foi enviada ${signed.clientEmail ? "por e-mail e WhatsApp" : "pelo WhatsApp"}.`,
+        url: `/assinar/${body.token}`,
+        severity: "success",
+        tag: `contract-${signed.id}`,
+      });
+    }
     if (pdf) {
       const html = emailLayout({
         title: "Contrato assinado",

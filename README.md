@@ -271,6 +271,18 @@ Evento de negócio ─► notifyStaff (src/lib/server/push.ts) ─► tabela not
 
 Edições triviais (corrigir telefone, observação) **não** notificam. Veículo alugado/reservado/devolvido não repete o aviso da locação/reserva.
 
+### Quem recebe o quê (3 canais)
+| | Web Push | WhatsApp | E-mail |
+|---|---|---|---|
+| **Equipe** (todos da tabela `staff`) | todos os eventos (preferências por categoria) | — | — |
+| **Empresa** (Configurações → **Alertas para a empresa**) | — | importantes, na hora + resumo 8h | importantes, na hora + resumo 8h |
+| **Cliente** | avisos dele (ativa pelo link do contrato) | avisos dele | avisos dele |
+
+- **Importantes** (`ADMIN_ALERT_TYPES` em `src/lib/push-events.ts`): contrato assinado, nova locação, locação cancelada, nova reserva, reserva cancelada, pagamento recebido, nova multa e **todo evento urgente** (atrasos, vencidos). Vários de uma vez = um e-mail/WhatsApp só.
+- **Destino da empresa**: e-mail e WhatsApp cadastrados em Configurações. Vazio = `ALERTS_ADMIN_EMAIL` / `ALERTS_ADMIN_WHATSAPP` ou os contatos oficiais.
+- **Cliente**: tudo que já ia por e-mail e WhatsApp (link de assinatura, contrato assinado, entrega, devolução, comprovante, multa, reserva, manutenção e lembretes diários) também vai por push. Ele ativa em "Ativar notificações" na página do contrato (`/assinar/<token>`, sem login). A inscrição fica em `client_push_subscriptions`, vinculada pelo token (validado no banco), e o clique abre a página do contrato dele.
+- Migration: `supabase/migrations/20260929000000_alerts_client_push.sql`.
+
 ### Anti-spam
 - `notifications.dedupe_key` é único: o mesmo evento nunca notifica duas vezes (ex.: `rentals:<id>:created`, `alert:receipt-due:<id>:<dia>:soon`).
 - Alertas por data notificam **duas vezes no máximo**: quando entram na janela ("vence em breve") e quando ficam urgentes (vencido).

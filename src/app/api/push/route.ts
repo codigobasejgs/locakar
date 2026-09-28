@@ -1,6 +1,7 @@
 import { describeEvent, isPushCollection, type PushCollection } from "@/lib/push-events";
 import { isPushConfigured, notifyStaff, sendPushToUser, serviceDb, vapidPublicKey } from "@/lib/server/push";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
+import { parseSubscription } from "@/lib/server/subscription";
 import { fromRow } from "@/repositories/mapping";
 
 /**
@@ -25,25 +26,6 @@ const TABLE: Record<PushCollection, string> = {
   fines: "fines",
   notes: "notes",
 };
-
-const b64url = /^[A-Za-z0-9_-]+={0,2}$/;
-
-function parseSubscription(input: unknown) {
-  const s = input as { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } } | null;
-  const endpoint = typeof s?.endpoint === "string" ? s.endpoint : "";
-  const p256dh = typeof s?.keys?.p256dh === "string" ? s.keys.p256dh : "";
-  const auth = typeof s?.keys?.auth === "string" ? s.keys.auth : "";
-  let url: URL | null = null;
-  try {
-    url = new URL(endpoint);
-  } catch {
-    /* inválido abaixo */
-  }
-  if (!url || url.protocol !== "https:" || endpoint.length > 1000) throw new HttpError(422, "Inscrição inválida (endpoint).");
-  if (!b64url.test(p256dh) || p256dh.length < 40 || p256dh.length > 200) throw new HttpError(422, "Inscrição inválida (p256dh).");
-  if (!b64url.test(auth) || auth.length < 10 || auth.length > 100) throw new HttpError(422, "Inscrição inválida (auth).");
-  return { endpoint, p256dh, auth };
-}
 
 export async function GET() {
   try {

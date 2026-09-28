@@ -4,6 +4,8 @@ import { FUEL_LABEL } from "@/lib/contract";
 import { contractPdf, inspectionPdf } from "@/lib/pdf";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
+import { plainText } from "@/lib/push-events";
+import { sendPushToClient } from "@/lib/server/push";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
@@ -34,6 +36,8 @@ interface Message {
   rentalId?: string;
   fineId?: string;
   contractId?: string;
+  /** Página que o push do cliente abre (a do contrato dele, quando existe). */
+  clientUrl?: string;
 }
 
 export const maxDuration = 60;
@@ -60,6 +64,16 @@ async function deliver(db: SupabaseClient, m: Message, replyTo?: string) {
   if (wa.ok) sent.push(`WhatsApp ${m.client.phone}`);
   else if (wa.error !== "WhatsApp não configurado.") errors.push(`WhatsApp: ${wa.error}`);
 
+  // Web Push no celular do cliente (se ele ativou na página do contrato). Clique abre o contrato dele.
+  const push = await sendPushToClient(m.client.id, {
+    title: m.subject.replace(/ — LOCAKAR$/, ""),
+    body: plainText(m.whatsapp),
+    url: m.clientUrl ?? "/",
+    severity: m.kind === "fine" ? "warning" : "info",
+    tag: `${m.kind}-${m.rentalId ?? m.fineId ?? m.client.id}`,
+  });
+  if (push.sent) sent.push("notificação no celular");
+
   if (!sent.length) throw new HttpError(422, errors[0] ?? `O cliente ${m.client.name} não tem e-mail nem WhatsApp válido.`);
   return { to: sent.join(" e "), warnings: errors };
 }
@@ -76,7 +90,13 @@ export async function POST(request: Request) {
     };
     const settings = await supabase.from("settings").select("data").eq("id", 1).maybeSingle();
     const replyTo: string | undefined = settings.data?.data?.company?.email || undefined;
-    const respond = async (m: Message) => Response.json({ ok: true, ...(await deliver(supabase, m, replyTo)) });
+    const contractUrl = async (rentalId?: string) => {
+      if (!rentalId) return undefined;
+      const { data } = await supabase.from("contracts").select("token").eq("rental_id", rentalId).neq("status", "cancelled").order("issued_at", { ascending: false }).limit(1);
+      return data?.[0] ? `/assinar/${data[0].token}` : undefined;
+    };
+    const respond = async (m: Message) =>
+      Response.json({ ok: true, ...(await deliver(supabase, { ...m, clientUrl: m.clientUrl ?? (await contractUrl(m.rentalId)) }, replyTo)) });
 
     // Teste manual do painel: só e-mail, destinatário digitado pela equipe.
     if (body.kind === "test") {
@@ -106,6 +126,7 @@ export async function POST(request: Request) {
       return respond({
         kind: "contract_signature",
         client: { ...client, email: contract.clientEmail ?? client.email },
+        clientUrl: `/assinar/${contract.token}`,
         contractId: contract.id,
         rentalId: contract.rentalId,
         subject: "Contrato de locação LOCAKAR — assinatura pendente",

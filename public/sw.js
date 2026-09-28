@@ -8,7 +8,7 @@
  * Web Push (VAPID): evento "push" mostra a notificação; clique abre a tela certa do painel.
  * Troque VERSION a cada mudança relevante neste arquivo.
  */
-const VERSION = "v5";
+const VERSION = "v6";
 const PAGES = `locakar-pages-${VERSION}`;
 const STATIC = `locakar-static-${VERSION}`;
 const MEDIA = `locakar-media-${VERSION}`;
@@ -137,13 +137,14 @@ self.addEventListener("push", (event) => {
   } catch {
     data = { body: event.data ? event.data.text() : "" };
   }
-  const url = typeof data.url === "string" && data.url.startsWith("/admin") ? data.url : "/admin";
+  // Só caminhos do próprio site: /admin (equipe), /assinar/<token> e / (cliente). Nunca URL externa.
+  const url = typeof data.url === "string" && data.url.startsWith("/") && !data.url.startsWith("//") ? data.url : "/";
   const critical = data.severity === "critical";
   event.waitUntil(
     (async () => {
       await self.registration.showNotification(data.title || "LOCAKAR", {
         body: data.body || "",
-        icon: "/icons/admin-192.png",
+        icon: url.startsWith("/admin") ? "/icons/admin-192.png" : "/icons/icon-192.png",
         badge: "/icons/badge-96.png",
         tag: data.tag || data.id || undefined,
         renotify: Boolean(data.tag || data.id),
@@ -167,8 +168,9 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(
     (async () => {
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      // Prefere uma janela do painel já aberta: foca e navega até o registro.
-      const admin = windows.find((w) => new URL(w.url).pathname.startsWith("/admin")) || windows[0];
+      // Prefere uma janela da mesma área (painel ou site) já aberta: foca e navega até a tela.
+      const area = target.pathname.startsWith("/admin") ? "/admin" : "/";
+      const admin = windows.find((w) => new URL(w.url).pathname.startsWith(area)) || windows[0];
       if (admin) {
         await admin.focus();
         if ("navigate" in admin) return admin.navigate(target.href).catch(() => self.clients.openWindow(target.href));

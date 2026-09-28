@@ -210,6 +210,32 @@ export function noticeToEvent(n: Notice): StaffEvent {
   };
 }
 
+/* ---------- Alertas importantes (empresa: também por e-mail e WhatsApp) ---------- */
+
+/**
+ * Eventos que, além do push e do sino, vão para o e-mail e o WhatsApp de alertas da empresa
+ * (Configurações → Alertas para a empresa). Todo evento "critical" também vai.
+ */
+export const ADMIN_ALERT_TYPES = new Set([
+  "contract.signed",
+  "rental.created",
+  "rental.cancelled",
+  "reservation.created",
+  "reservation.cancelled",
+  "payment.received",
+  "fine.created",
+]);
+export const isAdminAlert = (e: Pick<StaffEvent, "type" | "severity">) => e.severity === "critical" || ADMIN_ALERT_TYPES.has(e.type);
+
+/** Texto de WhatsApp → texto de notificação: sem negrito/itálico do WhatsApp, links e a saudação da 1ª linha. */
+export function plainText(whatsapp: string, max = 180) {
+  const lines = whatsapp
+    .split(/\r?\n/)
+    .map((l) => l.replace(/[*_]/g, "").trim())
+    .filter((l) => l && !/^https?:\/\//.test(l) && !/^Olá,/.test(l));
+  return short(lines.join(" "), max);
+}
+
 /* ---------- Preferências e envio ---------- */
 
 export function wantsPush(prefs: { enabled: boolean; categories: Partial<Record<NotificationCategory, boolean>> }, category: NotificationCategory) {

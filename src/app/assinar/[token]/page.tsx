@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input } from "@/components/ui/form";
+import { ClientPushButton } from "@/components/ui/client-push-button";
 import { Logo } from "@/components/ui/logo";
 import { SelfieCapture } from "@/components/ui/selfie-capture";
 import { SignaturePad } from "@/components/ui/signature-pad";
@@ -98,6 +99,8 @@ export default function SignPage() {
             <p className="mt-1 text-sm text-zinc-400">A via assinada foi enviada para o seu e-mail cadastrado.</p>
           </div>
         )}
+
+        {view && view.status !== "cancelled" && <ClientPushButton token={token} />}
 
         {view && view.status === "pending" && expired && (
           <Message title="Link expirado" text="O prazo para assinatura terminou. Fale com a LOCAKAR para receber um novo link." />

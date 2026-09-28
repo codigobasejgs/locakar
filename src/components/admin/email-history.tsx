@@ -16,6 +16,7 @@ export const EMAIL_KIND_LABEL: Record<EmailKind, string> = {
   maintenance: "Aviso de manutenção",
   alert_client: "Lembrete automático",
   alert_digest: "Resumo diário",
+  alert_admin: "Alerta para a empresa",
 };
 
 /** Histórico de notificações (e-mail e WhatsApp, tabela email_log), filtrável por locação/multa. */

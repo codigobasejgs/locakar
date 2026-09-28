@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS } from "@/lib/constants";
 import { GROUP_LABEL, REMIND_DAYS, buildNotices, dueForClient, type AlertGroup, type Notice } from "@/lib/notifications";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { noticeToEvent } from "@/lib/push-events";
-import { notifyStaff } from "@/lib/server/push";
+import { companyContacts, notifyStaff, sendPushToClient } from "@/lib/server/push";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { SUPABASE_URL } from "@/lib/supabase/env";
 import { toISODate } from "@/lib/utils";
@@ -22,9 +22,6 @@ import type { Client, CompanySettings } from "@/types";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const ADMIN_EMAIL = process.env.ALERTS_ADMIN_EMAIL || "locakarveiculos@gmail.com";
-/** WhatsApp que recebe o resumo diário da empresa (padrão: número oficial da LOCAKAR). */
-const ADMIN_WHATSAPP = process.env.ALERTS_ADMIN_WHATSAPP || COMPANY.whatsapp.e164;
 const TABLES: Record<keyof Collections, string> = {
   vehicles: "vehicles",
   clients: "clients",
@@ -69,6 +66,8 @@ export async function GET(request: Request) {
   const { data: row } = await db.from("settings").select("data").eq("id", 1).maybeSingle();
   const settings: CompanySettings = mergeSettings(DEFAULT_SETTINGS, row?.data as Partial<CompanySettings> | undefined);
   const notices = buildNotices(data, settings, today);
+  // Destino da empresa: Configurações → Alertas para a empresa (padrão: ALERTS_ADMIN_* ou contatos oficiais).
+  const { email: ADMIN_EMAIL, phone: ADMIN_WHATSAPP } = companyContacts(settings);
 
   const sentRecently = new Set(
     data.emails.filter((e) => e.status === "sent" && e.kind === "alert_client").flatMap((e) => e.alertKeys ?? []),
@@ -121,12 +120,20 @@ export async function GET(request: Request) {
     });
     if (wa.ok) reached = true;
     else if (wa.error !== "WhatsApp não configurado.") report.failures.push(`WhatsApp ${client.phone}: ${wa.error}`);
+    const push = await sendPushToClient(client.id, {
+      title: list.some((n) => n.urgent) ? "Aviso importante da LOCAKAR" : "Lembrete da LOCAKAR",
+      body: list.map((n) => n.clientText).join(" ").slice(0, 180),
+      url: "/",
+      severity: list.some((n) => n.urgent) ? "warning" : "info",
+      tag: `lembrete-${client.id}`,
+    });
+    if (push.sent) reached = true;
     if (reached) report.clientsNotified++;
     else report.clientsWithoutContact++;
   }
 
   // ---------- Empresa: resumo diário completo ----------
-  if (notices.length) {
+  if (notices.length && settings.alerts.daily) {
     const groups = [...new Set(notices.map((n) => n.group))] as AlertGroup[];
     const rows: [string, string][] = groups.flatMap((g) =>
       notices.filter((n) => n.group === g).map((n, i) => [i === 0 ? `${GROUP_LABEL[g]} (${notices.filter((x) => x.group === g).length})` : "", `${n.urgent ? "⚠ " : ""}${n.adminText}`] as [string, string]),

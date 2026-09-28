@@ -1,15 +1,19 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import webpush from "web-push";
+import { COMPANY } from "@/lib/company";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 import {
   MAX_INDIVIDUAL_PUSHES,
   fanOut,
+  isAdminAlert,
   summaryPayload,
   wantsPush,
   type PushPayload,
   type StaffEvent,
 } from "@/lib/push-events";
+import { emailLayout, sendEmail } from "@/lib/server/email";
+import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { SUPABASE_URL } from "@/lib/supabase/env";
 import { mergeSettings } from "@/repositories/types";
 import type { CompanySettings } from "@/types";
@@ -37,21 +41,23 @@ export function serviceDb(): SupabaseClient {
 
 interface SubRow {
   id: string;
-  user_id: string;
   endpoint: string;
   p256dh: string;
   auth: string;
   failures: number;
 }
 
+/** Equipe: push_subscriptions (por user_id). Cliente: client_push_subscriptions (por client_id). */
+type SubTable = "push_subscriptions" | "client_push_subscriptions";
+
 const log = (msg: string, extra?: Record<string, unknown>) => console.info(`[push] ${msg}`, extra ?? "");
 
-/** Envia a todos os dispositivos das pessoas indicadas (ou de toda a equipe, se omitido). */
-async function deliver(db: SupabaseClient, payload: PushPayload, userIds?: string[]) {
-  let q = db.from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth,failures");
-  if (userIds) q = q.in("user_id", userIds);
+/** Envia a todos os dispositivos dos donos indicados (sem filtro = todos da tabela). */
+async function deliver(db: SupabaseClient, payload: PushPayload, owners?: string[], table: SubTable = "push_subscriptions") {
+  let q = db.from(table).select("id,endpoint,p256dh,auth,failures");
+  if (owners) q = q.in(table === "push_subscriptions" ? "user_id" : "client_id", owners);
   const { data: subs, error } = await q;
-  if (error) throw new Error(`push_subscriptions: ${error.message}`);
+  if (error) throw new Error(`${table}: ${error.message}`);
   if (!subs?.length) return { sent: 0, failed: 0, expired: 0 };
 
   const body = JSON.stringify(payload);
@@ -67,21 +73,21 @@ async function deliver(db: SupabaseClient, payload: PushPayload, userIds?: strin
 
   // Expirada (404/410): some só aquela inscrição. Falha passageira: conta; após 5 seguidas, remove.
   if (res.expired.length) {
-    await db.from("push_subscriptions").delete().in("id", res.expired);
-    log("inscrições expiradas removidas", { count: res.expired.length });
+    await db.from(table).delete().in("id", res.expired);
+    log("inscrições expiradas removidas", { table, count: res.expired.length });
   }
   const byId = new Map((subs as SubRow[]).map((s) => [s.id, s]));
   const dead = res.failed.filter((f) => (byId.get(f.id)?.failures ?? 0) + 1 >= 5).map((f) => f.id);
-  if (dead.length) await db.from("push_subscriptions").delete().in("id", dead);
+  if (dead.length) await db.from(table).delete().in("id", dead);
   await Promise.all(
     res.failed
       .filter((f) => !dead.includes(f.id))
-      .map((f) => db.from("push_subscriptions").update({ failures: (byId.get(f.id)?.failures ?? 0) + 1, last_error: f.error }).eq("id", f.id)),
+      .map((f) => db.from(table).update({ failures: (byId.get(f.id)?.failures ?? 0) + 1, last_error: f.error }).eq("id", f.id)),
   );
   if (res.sent.length) {
-    await db.from("push_subscriptions").update({ failures: 0, last_error: null, last_seen_at: new Date().toISOString() }).in("id", res.sent).gt("failures", 0);
+    await db.from(table).update({ failures: 0, last_error: null, last_seen_at: new Date().toISOString() }).in("id", res.sent).gt("failures", 0);
   }
-  if (res.failed.length) log("falhas de envio", { count: res.failed.length, errors: res.failed.map((f) => f.error) });
+  if (res.failed.length) log("falhas de envio", { table, count: res.failed.length, errors: res.failed.map((f) => f.error) });
   return { sent: res.sent.length, failed: res.failed.length, expired: res.expired.length };
 }
 
@@ -94,23 +100,80 @@ export async function sendPushToRole(db: SupabaseClient, role: "staff", payload:
   return deliver(db, payload, (data ?? []).map((r) => r.user_id as string));
 }
 
-/** Todos os dispositivos inscritos. Restrito ao servidor (inscrever exige ser da equipe). */
+/** Todos os dispositivos da equipe. Restrito ao servidor (inscrever exige ser da equipe). */
 export const sendPushToAll = (db: SupabaseClient, payload: PushPayload) => deliver(db, payload);
 
-async function loadSettings(db: SupabaseClient): Promise<CompanySettings> {
+/**
+ * Push para os dispositivos do cliente (ativados na página do contrato). Nunca lança.
+ * O clique abre a página do contrato dele (ou o site), nunca o painel.
+ */
+export async function sendPushToClient(clientId: string | undefined, payload: PushPayload) {
+  if (!clientId || !isPushConfigured()) return { sent: 0, failed: 0, expired: 0 };
+  try {
+    return await deliver(serviceDb(), payload, [clientId], "client_push_subscriptions");
+  } catch (e) {
+    console.error("[push] cliente:", (e as Error).message);
+    return { sent: 0, failed: 0, expired: 0 };
+  }
+}
+
+export async function loadSettings(db: SupabaseClient): Promise<CompanySettings> {
   const { data } = await db.from("settings").select("data").eq("id", 1).maybeSingle();
   return mergeSettings(DEFAULT_SETTINGS, data?.data as Partial<CompanySettings> | undefined);
 }
 
+/** Destino dos alertas da empresa: Configurações → Alertas para a empresa; vazio = padrão do servidor. */
+export function companyContacts(settings: CompanySettings) {
+  return {
+    email: settings.alerts.email.trim() || process.env.ALERTS_ADMIN_EMAIL || "locakarveiculos@gmail.com",
+    phone: settings.alerts.phone.trim() || process.env.ALERTS_ADMIN_WHATSAPP || COMPANY.whatsapp.e164,
+  };
+}
+
 /**
- * Registra eventos na central (sem duplicar: dedupe_key único) e avisa a equipe por Web Push,
- * respeitando as preferências de Configurações. Nunca lança: notificação é efeito secundário.
+ * Eventos importantes (contrato assinado, nova locação, pagamento, multa, todo "critical")
+ * também vão ao e-mail e ao WhatsApp de alertas da empresa. Um envio por lote.
+ */
+async function alertCompany(db: SupabaseClient, settings: CompanySettings, events: StaffEvent[]) {
+  const important = events.filter(isAdminAlert);
+  if (!important.length || !settings.alerts.instant) return;
+  const { email, phone } = companyContacts(settings);
+  const one = important.length === 1;
+  const link = `${COMPANY.siteUrl}${one ? important[0].url : "/admin"}`;
+  const text = [
+    "🔔 *Alerta LOCAKAR*",
+    "",
+    ...important.map((e) => `${e.severity === "critical" ? "⚠️" : "•"} *${e.title}*${e.body ? ` — ${e.body}` : ""}`),
+    "",
+    link,
+  ].join("\n");
+  await Promise.all([
+    sendEmail(db, {
+      kind: "alert_admin",
+      to: email,
+      subject: one ? `${important[0].title} — LOCAKAR` : `${important.length} alertas — LOCAKAR`,
+      html: emailLayout({
+        title: one ? important[0].title : `${important.length} novos alertas`,
+        intro: one ? important[0].body || "Novo evento no painel da LOCAKAR." : "Eventos importantes no painel da LOCAKAR:",
+        rows: one ? undefined : important.map((e) => [e.title, e.body] as [string, string]),
+        cta: { label: "Abrir no painel", url: link },
+      }),
+    }).catch((e) => console.error("[alerta] e-mail:", (e as Error).message)),
+    sendWhatsApp(db, { kind: "alert_admin", phone, text }),
+  ]);
+}
+
+/**
+ * Registra eventos na central (sem duplicar: dedupe_key único), avisa a equipe por Web Push
+ * (respeitando as preferências) e manda os importantes ao e-mail/WhatsApp da empresa.
+ * Nunca lança: notificação é efeito secundário.
  */
 export async function notifyStaff(events: StaffEvent[], opts: { createdBy?: string; db?: SupabaseClient } = {}) {
   const report = { created: 0, pushed: 0, failed: 0, expired: 0, skipped: 0 };
   if (!events.length || !process.env.SUPABASE_SECRET_KEY) return report;
   const db = opts.db ?? serviceDb();
   try {
+    const key = (e: StaffEvent) => e.dedupeKey.slice(0, 300);
     const rows = events.map((e) => ({
       type: e.type,
       category: e.category,
@@ -118,28 +181,28 @@ export async function notifyStaff(events: StaffEvent[], opts: { createdBy?: stri
       title: e.title.slice(0, 120),
       body: e.body.slice(0, 400),
       url: e.url.startsWith("/admin") ? e.url : "/admin",
-      dedupe_key: e.dedupeKey.slice(0, 300),
+      dedupe_key: key(e),
       created_by: opts.createdBy ?? null,
     }));
     // ignoreDuplicates: evento já registrado (mesma dedupe_key) volta vazio e não notifica de novo.
-    const { data: created, error } = await db.from("notifications").upsert(rows, { onConflict: "dedupe_key", ignoreDuplicates: true }).select("id,category,dedupe_key");
+    const { data: created, error } = await db.from("notifications").upsert(rows, { onConflict: "dedupe_key", ignoreDuplicates: true }).select("id,dedupe_key");
     if (error) throw new Error(`notifications: ${error.message}`);
     report.created = created?.length ?? 0;
     report.skipped = events.length - report.created;
-    if (!created?.length || !isPushConfigured()) return report;
+    if (!created?.length) return report;
 
+    const fresh = created.map((row) => ({ id: row.id as string, event: events.find((e) => key(e) === row.dedupe_key)! })).filter((x) => x.event);
     const settings = await loadSettings(db);
-    const fresh = created
-      .map((c) => ({ row: c, event: events.find((e) => e.dedupeKey.slice(0, 300) === c.dedupe_key)! }))
-      .filter((x) => x.event && wantsPush(settings.push, x.event.category));
-    if (!fresh.length) return report;
+    await alertCompany(db, settings, fresh.map((x) => x.event));
+    if (!isPushConfigured()) return report;
 
+    const wanted = fresh.filter((x) => wantsPush(settings.push, x.event.category));
     const payloads: { id?: string; payload: PushPayload }[] =
-      fresh.length > MAX_INDIVIDUAL_PUSHES
-        ? [{ payload: summaryPayload(fresh.map((x) => x.event)) }]
-        : fresh.map(({ row, event }) => ({
-            id: row.id as string,
-            payload: { id: row.id as string, title: event.title, body: event.body, url: event.url, severity: event.severity, category: event.category, tag: row.id as string },
+      wanted.length > MAX_INDIVIDUAL_PUSHES
+        ? [{ payload: summaryPayload(wanted.map((x) => x.event)) }]
+        : wanted.map(({ id, event }) => ({
+            id,
+            payload: { id, title: event.title, body: event.body, url: event.url, severity: event.severity, category: event.category, tag: id },
           }));
 
     for (const { id, payload } of payloads) {

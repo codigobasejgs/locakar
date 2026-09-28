@@ -211,7 +211,7 @@ export interface Contract {
   signedUserAgent?: string;
 }
 
-export type EmailKind = "contract_signature" | "contract_signed" | "delivery" | "return" | "receipt" | "fine" | "reservation" | "maintenance" | "alert_client" | "alert_digest";
+export type EmailKind = "contract_signature" | "contract_signed" | "delivery" | "return" | "receipt" | "fine" | "reservation" | "maintenance" | "alert_client" | "alert_digest" | "alert_admin";
 
 export interface EmailLog {
   id: string;
@@ -273,8 +273,19 @@ export interface AppNotification {
   readAt?: string;
 }
 
+/** Para onde vão os alertas da empresa por e-mail e WhatsApp (vazio = padrão do servidor). */
+export interface AdminAlerts {
+  email: string;
+  phone: string;
+  /** Resumo diário das 8h (vencimentos e atrasos). */
+  daily: boolean;
+  /** Alertas importantes na hora (contrato assinado, nova locação, pagamento, multa, atrasos...). */
+  instant: boolean;
+}
+
 export interface CompanySettings {
   company: CompanyProfile;
+  alerts: AdminAlerts;
   /** Web Push para a equipe: liga/desliga geral e por categoria (ausente = ligada). */
   push: { enabled: boolean; categories: Partial<Record<NotificationCategory, boolean>> };
   pageSize: number;
