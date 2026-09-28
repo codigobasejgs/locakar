@@ -28,7 +28,8 @@ update storage.buckets
 -- ============================================================================
 -- 2. ATUALIZAR VIEW TENANT_PROFILE
 -- ============================================================================
-create or replace view public.tenant_profile as
+drop view if exists public.tenant_profile;
+create view public.tenant_profile as
   select c.id, c.name, c.cpf, c.doc_type, c.rg, c.email, c.phone, c.backup_phone,
          c.km_daily, c.km_monthly, c.cep, c.state, c.city, c.street, c.number,
          c.complement, c.neighborhood, c.cnh_expiry, c.cnh_number, c.cnh_category,
