@@ -16,6 +16,7 @@ import { PaymentCard } from "@/components/admin/payment-card";
 import { PaymentDetailsDialog } from "@/components/admin/payment-details-dialog";
 import { PaymentEditDialog } from "@/components/admin/payment-edit-dialog";
 import { PaymentSettleDialog } from "@/components/admin/payment-settle-dialog";
+import { InfinitePayDialog } from "@/components/admin/infinitepay-dialog";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Card, EmptyState, StatCard } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/form";
@@ -24,7 +25,7 @@ import { billingOf, chargeFor, lateCharges } from "@/lib/billing";
 import { formatCurrency, formatDate, parseISODate, toWhatsAppNumber, todaySP } from "@/lib/utils";
 
 export default function PagamentosPage() {
-  const { data, settings, update } = useAdminData();
+  const { data, settings, update, reload } = useAdminData();
   const { clientById, vehicleById } = useLookups();
   const today = todaySP();
 
@@ -43,6 +44,8 @@ export default function PagamentosPage() {
   const [cancellingTarget, setCancellingTarget] = useState<UnifiedPaymentItem | null>(null);
   const [cancelReason, setCancelReason] = useState("");
   const [deletingTarget, setDeletingTarget] = useState<UnifiedPaymentItem | null>(null);
+  const [infinitePayTarget, setInfinitePayTarget] = useState<UnifiedPaymentItem | null>(null);
+  const infinitePay = settings.infinitepay;
 
   // Mapeia todas as parcelas das locações existentes em uma lista unificada
   const allPayments = useMemo<UnifiedPaymentItem[]>(() => {
@@ -497,7 +500,19 @@ export default function PagamentosPage() {
         onCancel={(p) => setCancellingTarget(p)}
         onDelete={(p) => setDeletingTarget(p)}
         onViewDetails={(p) => setDetailsTarget(p)}
+        onInfinitePay={infinitePay?.enabled ? (p) => setInfinitePayTarget(p) : undefined}
       />
+
+      {/* 5. Receber com InfinitePay */}
+      {infinitePay?.enabled && (
+        <InfinitePayDialog
+          key={infinitePayTarget?.id ?? "none-ip"}
+          payment={infinitePayTarget}
+          config={infinitePay}
+          onClose={() => setInfinitePayTarget(null)}
+          onPaid={() => infinitePayTarget && reload("rentals", infinitePayTarget.rentalId)}
+        />
+      )}
 
       {/* Confirmação de Cancelamento */}
       <ConfirmDialog

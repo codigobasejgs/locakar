@@ -1,3 +1,4 @@
+import { DEFAULT_INFINITEPAY } from "./infinitepay";
 import type {
   CompanySettings,
   ExpenseCategory,
@@ -160,4 +161,5 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   alerts: { email: "", phone: "", daily: true, instant: true },
   pix: { key: "", keyType: "cnpj", name: "", city: "" },
   contractTemplates: [],
+  infinitepay: DEFAULT_INFINITEPAY,
 };

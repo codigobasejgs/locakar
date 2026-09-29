@@ -293,4 +293,69 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
   assert.equal(rAll.to, undefined);
 }
 
+// InfinitePay (regras da documentação oficial: centavos, mínimo R$ 1,00, até 12x com parcela >= R$ 1,00)
+{
+  const ip = await import("../src/lib/infinitepay");
+  assert.equal(ip.toCents(1), 100);
+  assert.equal(ip.toCents(10), 1000);
+  assert.equal(ip.toCents(700), 70000);
+  assert.equal(ip.toCents(0.1 + 0.2), 30);
+  assert.equal(ip.toCents(1.005), 101);
+  assert.equal(ip.toCents("1.234,56"), 123456);
+  assert.equal(ip.maxInstallments(1000), 10);
+  assert.equal(ip.maxInstallments(99999), 12);
+  assert.equal(ip.maxInstallments(99), 0);
+  assert.match(ip.validateTap(99, "credit", 1) ?? "", /mínimo/);
+  assert.ok(ip.validateTap(1000, "credit", 11));
+  assert.ok(ip.validateTap(70000, "credit", 13));
+  assert.ok(ip.validateTap(1000, "debit", 2));
+  assert.equal(ip.validateTap(1000, "credit", 10), null);
+  assert.equal(ip.normalizeHandle("$LocaKar "), "locakar");
+  assert.equal(ip.normalizeHandle("a b"), "");
+  const order = "3f2b1c9e-8a7d-4e6f-9b0a-1c2d3e4f5a6b";
+  assert.ok(ip.isValidOrderId(order));
+  assert.ok(!ip.isValidOrderId("João Silva"));
+  assert.ok(!ip.isValidOrderId("123"));
+
+  const link = new URL(ip.buildTapDeeplink({ cents: 70000, method: "credit", installments: 3, orderId: order, resultUrl: "https://www.locakar.com.br/admin/pagamentos/infinitepay", referrer: "LOCAKAR", handle: "locakar", docNumber: "27.346.981/0001-44", ios: true }));
+  assert.equal(link.protocol, "infinitepaydash:");
+  assert.equal(link.host, "infinitetap-app");
+  assert.deepEqual(Object.fromEntries(link.searchParams), {
+    amount: "70000", payment_method: "credit", installments: "3", order_id: order,
+    result_url: "https://www.locakar.com.br/admin/pagamentos/infinitepay", app_client_referrer: "LOCAKAR",
+    handle: "locakar", doc_number: "27346981000144", af_force_deeplink: "true",
+  });
+  const debit = new URL(ip.buildTapDeeplink({ cents: 5000, method: "debit", installments: 1, orderId: order, resultUrl: "x://r", referrer: "LOCAKAR" }));
+  assert.equal(debit.searchParams.get("installments"), "1");
+  assert.equal(debit.searchParams.get("handle"), null);
+  assert.throws(() => ip.buildTapDeeplink({ cents: 50, method: "credit", installments: 1, orderId: order, resultUrl: "x://r", referrer: "L" }));
+
+  const ok = ip.parseTapResult(new URLSearchParams({ order_id: order, nsu: "a1f8d73b-9b3e-4e5d-9c34-d8e917d43b1a", aut: "733876", card_brand: "mastercard", handle: "locakar", evil: "x" }));
+  assert.equal(ok.nsu, "a1f8d73b-9b3e-4e5d-9c34-d8e917d43b1a");
+  assert.equal((ok as Record<string, string>).evil, undefined);
+  assert.equal(ip.parseTapResult({ order_id: order, warning: "order_id is empty" }).warning, "order_id is empty");
+
+  const body = ip.checkoutPayload({ handle: "locakar", orderNsu: order, items: [{ quantity: 1, price: 70000, description: "Aluguel ABC1D23" }], redirectUrl: "https://r", webhookUrl: "https://w", customer: { name: "Ana", phone: "(19) 99988-7766" } });
+  assert.equal(body.order_nsu, order);
+  assert.equal(body.items[0].price, 70000);
+  assert.deepEqual(body.customer, { name: "Ana", phone_number: "+5519999887766" });
+  assert.throws(() => ip.checkoutPayload({ handle: "", orderNsu: order, items: [{ quantity: 1, price: 100, description: "x" }], redirectUrl: "", webhookUrl: "" }));
+  assert.throws(() => ip.checkoutPayload({ handle: "l", orderNsu: order, items: [{ quantity: 1, price: 99.5, description: "x" }], redirectUrl: "", webhookUrl: "" }));
+
+  const hook = { invoice_slug: "abc123", amount: 70000, paid_amount: 71000, installments: 3, capture_method: "credit_card", transaction_nsu: "UUID", order_nsu: order, receipt_url: "https://comprovante.com/123", items: [] };
+  assert.equal(ip.parseWebhook(hook)?.paid_amount, 71000);
+  assert.equal(ip.parseWebhook({ ...hook, order_nsu: "x" }), null);
+  assert.equal(ip.parseWebhook({ ...hook, amount: "70000" }), null);
+  assert.equal(ip.parseWebhook({ ...hook, receipt_url: "javascript:alert(1)" })?.receipt_url, undefined);
+  assert.equal(ip.parseWebhook(null), null);
+
+  const tx = { status: "link_created" as const, amount_cents: 70000 };
+  assert.equal(ip.decideCheckout(tx, { success: true, paid: true, amount: 70000, paid_amount: 71000 }), "paid");
+  assert.equal(ip.decideCheckout(tx, { success: true, paid: true, amount: 100 }), "mismatch");
+  assert.equal(ip.decideCheckout(tx, { success: true, paid: false }), "pending");
+  assert.equal(ip.decideCheckout({ status: "paid", amount_cents: 70000 }, { success: true, paid: true, amount: 70000 }), "already");
+  assert.equal(ip.methodLabel("checkout", "pix"), "InfinitePay · Pix");
+  assert.equal(ip.methodLabel("tap", "credit", 3), "InfinitePay · Cartão de Crédito 3x");
+}
+
 console.log("✓ check ok");

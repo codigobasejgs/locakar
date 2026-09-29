@@ -1,3 +1,4 @@
+import type { InfinitePaySettings } from "../lib/infinitepay";
 /**
  * Modelos de domínio da LOCAKAR.
  * Espelham as abas da planilha operacional (VEÍCULOS, CLIENTES, LOCAÇÃO, RESERVA DE CARROS,
@@ -373,6 +374,8 @@ export interface CompanySettings {
   alerts: AdminAlerts;
   pix: PixSettings;
   contractTemplates?: ContractTemplate[];
+  /** InfinitePay (InfiniteTap e Checkout). Ausente em bases antigas = desligado. */
+  infinitepay?: InfinitePaySettings;
   /** Web Push para a equipe: liga/desliga geral e por categoria (ausente = ligada). */
   push: { enabled: boolean; categories: Partial<Record<NotificationCategory, boolean>> };
   pageSize: number;

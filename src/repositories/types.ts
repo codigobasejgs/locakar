@@ -1,3 +1,4 @@
+import { DEFAULT_INFINITEPAY } from "../lib/infinitepay";
 import type {
   Client,
   Contract,
@@ -71,6 +72,7 @@ export function mergeSettings(defaults: CompanySettings, saved?: Partial<Company
     alerts: { ...defaults.alerts, ...saved?.alerts },
     pix: { ...defaults.pix, ...saved?.pix },
     contractTemplates: saved?.contractTemplates ?? defaults.contractTemplates ?? [],
+    infinitepay: { ...DEFAULT_INFINITEPAY, ...defaults.infinitepay, ...saved?.infinitepay },
     push: { ...defaults.push, ...saved?.push, categories: { ...defaults.push.categories, ...saved?.push?.categories } },
   };
 }

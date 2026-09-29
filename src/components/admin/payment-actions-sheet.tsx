@@ -44,6 +44,8 @@ interface PaymentActionsSheetProps {
   onCancel: (p: UnifiedPaymentItem) => void;
   onDelete: (p: UnifiedPaymentItem) => void;
   onViewDetails: (p: UnifiedPaymentItem) => void;
+  /** Ausente quando a InfinitePay está desligada em Configurações. */
+  onInfinitePay?: (p: UnifiedPaymentItem) => void;
 }
 
 export function PaymentActionsSheet({
@@ -53,6 +55,7 @@ export function PaymentActionsSheet({
   onCancel,
   onDelete,
   onViewDetails,
+  onInfinitePay,
 }: PaymentActionsSheetProps) {
   if (!payment) return null;
 
@@ -161,16 +164,26 @@ export function PaymentActionsSheet({
               </div>
             </button>
 
-            {/* 4. Obter Link da Fatura (Asaas) */}
-            <div className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm opacity-50">
-              <div className="grid size-9 place-items-center rounded-full bg-white/5 text-zinc-400">
+            {/* 4. Receber com InfinitePay (aproximação ou link Pix/cartão) */}
+            <button
+              type="button"
+              disabled={!onInfinitePay || payment.paid || payment.cancelled}
+              onClick={() => {
+                onClose();
+                onInfinitePay?.(payment);
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent"
+            >
+              <div className="grid size-9 place-items-center rounded-full bg-magenta/15 text-brand-soft">
                 <LinkIcon className="size-4" />
               </div>
-              <div className="flex-1">
-                <p className="text-zinc-300">Obter Link da Fatura (Asaas)</p>
-                <p className="text-xs text-muted">Integração Asaas não configurada nesta locadora</p>
+              <div>
+                <p className="text-white">Receber com InfinitePay</p>
+                <p className="text-xs text-muted">
+                  {!onInfinitePay ? "Ative em Configurações → InfinitePay" : payment.paid ? "Pagamento já realizado" : payment.cancelled ? "Parcela cancelada" : "Aproximação no celular ou link Pix / cartão"}
+                </p>
               </div>
-            </div>
+            </button>
 
             {/* 5. Ver detalhes */}
             <button
