@@ -10,7 +10,9 @@ import { Input } from "../components/ui/Input";
 import { whatsappUrl } from "../constants/company";
 import { date } from "../constants/format";
 import { INCIDENT_CATEGORY, INCIDENT_STATUS } from "../constants/tenant";
-import { Colors, Radius, Spacing } from "../constants/theme";
+import { Radius, Spacing, type ThemeColors } from "../constants/theme";
+import { useTheme } from "../context/ThemeProvider";
+import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useApi } from "../hooks/useApi";
 import { useLocatario } from "../hooks/useLocatario";
 import { api, type Incident } from "../services/api";
@@ -18,6 +20,8 @@ import { newId, uploadImage } from "../services/upload";
 
 /** Reportar problema no veículo (com fotos) e acompanhar a resposta da LOCAKAR. */
 export default function OcorrenciasScreen() {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const { activeRental: r, summary } = useLocatario();
   const { data, error, reload } = useApi<{ incidents: Incident[] }>("/api/tenant/incidents");
   const [form, setForm] = useState(false);
@@ -133,7 +137,8 @@ export default function OcorrenciasScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   urgent: { flexDirection: "row", gap: Spacing.sm, borderColor: Colors.warning, backgroundColor: Colors.warningSoft },
   body: { color: Colors.text, fontSize: 14, lineHeight: 20 },
   muted: { color: Colors.textMuted, fontSize: 12 },
@@ -141,7 +146,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
   chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.borderStrong },
-  chipOn: { borderColor: Colors.magenta, backgroundColor: Colors.brandGlow },
+  chipOn: { borderColor: Colors.brandSoft, backgroundColor: Colors.brandTint },
   chipText: { color: Colors.textMuted, fontSize: 13, fontWeight: "600" },
   error: { color: Colors.danger, fontSize: 14 },
   reply: { color: Colors.brandSoft, fontSize: 14, lineHeight: 20 },

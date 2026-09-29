@@ -7,13 +7,17 @@ import { Card } from "../components/ui/Card";
 import { whatsappUrl } from "../constants/company";
 import { date, money } from "../constants/format";
 import { FINE_STATUS } from "../constants/tenant";
-import { Colors, Spacing } from "../constants/theme";
+import { Spacing, type ThemeColors } from "../constants/theme";
+import { useTheme } from "../context/ThemeProvider";
+import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useApi } from "../hooks/useApi";
 import { useLocatario } from "../hooks/useLocatario";
 import type { Fine } from "../services/api";
 
 /** Multas do período em que o carro estava com o cliente, com prazos de indicação de condutor e desconto. */
 export default function MultasScreen() {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const { summary } = useLocatario();
   const { data, error, reload } = useApi<{ fines: Fine[] }>("/api/tenant/vehicle");
   const today = summary?.today ?? "";
@@ -57,7 +61,8 @@ export default function MultasScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   title: { color: Colors.text, fontSize: 18, fontWeight: "800" },
   body: { color: Colors.text, fontSize: 14, lineHeight: 20 },

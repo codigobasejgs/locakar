@@ -1,10 +1,11 @@
 import { Tabs } from "expo-router";
 import { TenantTabBar } from "../../components/layout/TenantNavigation";
-import { Colors } from "../../constants/theme";
+import { useTheme } from "../../context/ThemeProvider";
 import { useLayout } from "../../hooks/useLayout";
 
 /** Abas do app: barra inferior no celular/tablet e barra lateral no desktop (mesmo componente). */
 export default function TabLayout() {
+  const { colors: Colors } = useTheme();
   const { isDesktop } = useLayout();
   return (
     <Tabs

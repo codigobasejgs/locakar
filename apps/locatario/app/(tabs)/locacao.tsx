@@ -9,13 +9,16 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { whatsappUrl } from "../../constants/company";
 import { INTEREST_LABEL, RENTAL_STATUS, date, money } from "../../constants/format";
-import { Colors, Spacing, Type } from "../../constants/theme";
+import { Spacing, Type, type ThemeColors } from "../../constants/theme";
+import { useTheme } from "../../context/ThemeProvider";
+import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
 
 const PERIOD: Record<string, string> = { daily: "Diária", weekly: "Semanal", biweekly: "Quinzenal", monthly: "Mensal", quarterly: "Trimestral", semiannual: "Semestral", annual: "Anual" };
 
 function Field({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -25,6 +28,8 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export default function LocacaoScreen() {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { summary, activeRental: r, error, refreshing, refresh } = useLocatario();
   const others = (summary?.rentals ?? []).filter((x) => x.id !== r?.id);
@@ -115,7 +120,8 @@ export default function LocacaoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   cols: { gap: Spacing.md },
   header: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   cardTitle: { color: Colors.text, fontSize: 15, fontWeight: "700" },

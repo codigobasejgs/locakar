@@ -1,7 +1,9 @@
 import { Camera, Image as ImageIcon, X } from "lucide-react-native";
 import { useState } from "react";
 import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Colors, Radius, Spacing } from "../../constants/theme";
+import { Radius, Spacing, type ThemeColors } from "../../constants/theme";
+import { useTheme } from "../../context/ThemeProvider";
+import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { PermissionDenied, pickImage } from "../../services/upload";
 
 /**
@@ -21,6 +23,8 @@ export function PhotoPicker({
   onChange: (uri: string | null) => void;
   onError: (message: string) => void;
 }) {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const [busy, setBusy] = useState(false);
   const pick = async (source: "camera" | "gallery") => {
     setBusy(true);
@@ -66,7 +70,8 @@ export function PhotoPicker({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   box: { backgroundColor: Colors.card, borderRadius: Radius.lg, borderWidth: 1, borderColor: Colors.border, padding: Spacing.md, gap: Spacing.sm },
   header: { flexDirection: "row", gap: Spacing.sm, alignItems: "flex-start" },
   label: { color: Colors.text, fontSize: 15, fontWeight: "600" },

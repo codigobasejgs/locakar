@@ -1,24 +1,30 @@
 import { StyleSheet, Text, View } from "react-native";
-import { Colors, Radius, Spacing } from "../../constants/theme";
+import { Radius, Spacing } from "../../constants/theme";
+import { useTheme } from "../../context/ThemeProvider";
 
 export type BadgeTone = "success" | "warning" | "danger" | "info" | "brand" | "neutral";
 
-const TONE: Record<BadgeTone, { bg: string; fg: string; border: string }> = {
-  success: { bg: Colors.successSoft, fg: Colors.success, border: "rgba(52, 211, 153, 0.25)" },
-  warning: { bg: Colors.warningSoft, fg: Colors.warning, border: "rgba(251, 191, 36, 0.25)" },
-  danger: { bg: Colors.dangerSoft, fg: Colors.danger, border: "rgba(248, 113, 113, 0.25)" },
-  info: { bg: Colors.infoSoft, fg: Colors.info, border: "rgba(96, 165, 250, 0.25)" },
-  brand: { bg: Colors.brandTint, fg: Colors.brandSoft, border: Colors.brandBorder },
-  neutral: { bg: "rgba(255, 255, 255, 0.05)", fg: Colors.textMuted, border: Colors.border },
-};
-
-/** Status com ponto + texto (nunca só cor): fundo translúcido, borda suave. */
+/** Status com ponto + texto adaptado dinamicamente ao tema ativo. */
 export function Badge({ label, tone = "neutral" }: { label: string; tone?: BadgeTone }) {
-  const t = TONE[tone];
+  const { colors } = useTheme();
+
+  const config =
+    tone === "success"
+      ? { bg: colors.successSoft, fg: colors.success, border: colors.successBorder }
+      : tone === "warning"
+      ? { bg: colors.warningSoft, fg: colors.warning, border: colors.warningBorder }
+      : tone === "danger"
+      ? { bg: colors.dangerSoft, fg: colors.danger, border: colors.dangerBorder }
+      : tone === "info"
+      ? { bg: colors.infoSoft, fg: colors.info, border: colors.infoBorder }
+      : tone === "brand"
+      ? { bg: colors.brandTint, fg: colors.brandSoft, border: colors.brandBorder }
+      : { bg: colors.surfaceHover, fg: colors.textMuted, border: colors.border };
+
   return (
-    <View style={[styles.badge, { backgroundColor: t.bg, borderColor: t.border }]} accessibilityLabel={`Status: ${label}`}>
-      <View style={[styles.dot, { backgroundColor: t.fg }]} />
-      <Text style={[styles.text, { color: t.fg }]} numberOfLines={1}>
+    <View style={[styles.badge, { backgroundColor: config.bg, borderColor: config.border }]} accessibilityLabel={`Status: ${label}`}>
+      <View style={[styles.dot, { backgroundColor: config.fg }]} />
+      <Text style={[styles.text, { color: config.fg }]} numberOfLines={1}>
         {label}
       </Text>
     </View>

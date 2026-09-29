@@ -8,7 +8,9 @@ import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { date, money } from "../constants/format";
 import { RESERVATION_STATUS } from "../constants/tenant";
-import { Colors, Radius, Spacing } from "../constants/theme";
+import { Radius, Spacing, type ThemeColors } from "../constants/theme";
+import { useTheme } from "../context/ThemeProvider";
+import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useApi } from "../hooks/useApi";
 import { API_URL, api, type FleetVehicle, type Reservation } from "../services/api";
 
@@ -24,6 +26,8 @@ const maskDate = (v: string) => v.replace(/\D/g, "").slice(0, 8).replace(/(\d{2}
 
 /** Pedir uma nova reserva (a LOCAKAR confirma) e acompanhar/cancelar as suas. */
 export default function ReservasScreen() {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const { data, error, reload } = useApi<{ reservations: Reservation[]; fleet: FleetVehicle[] }>("/api/tenant/reservations");
   const [vehicleId, setVehicleId] = useState<string | null>(null);
   const [start, setStart] = useState("");
@@ -131,12 +135,13 @@ export default function ReservasScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   title: { color: Colors.text, fontSize: 15, fontWeight: "700" },
   muted: { color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
   price: { color: Colors.brandSoft, fontSize: 13, fontWeight: "700", marginTop: 2 },
   car: { flexDirection: "row", gap: Spacing.md, alignItems: "center", padding: Spacing.sm, borderRadius: Radius.lg, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.card },
-  carOn: { borderColor: Colors.magenta, backgroundColor: "#130A17" },
-  carImage: { width: 96, height: 60, borderRadius: Radius.sm, backgroundColor: "#F4F4F5" },
+  carOn: { borderColor: Colors.brandSoft, backgroundColor: Colors.brandTint },
+  carImage: { width: 96, height: 60, borderRadius: Radius.sm, backgroundColor: Colors.surfaceElevated },
 });

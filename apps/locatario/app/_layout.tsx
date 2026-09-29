@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBanner } from "../components/domain/ScreenState";
-import { Colors } from "../constants/theme";
 import { LocatarioProvider } from "../context/LocatarioProvider";
+import { ThemeProvider, useTheme } from "../context/ThemeProvider";
 import { useLocatario } from "../hooks/useLocatario";
 import { clearNotificationResponse, useNotificationResponse } from "../hooks/useNotificationResponse";
 
@@ -28,6 +28,7 @@ const SCREENS: Record<string, Href> = {
 /** Leva cada estado para a tela certa: login, conta não vinculada, privacidade ou o app. */
 function Gate() {
   const { state, summary, error, refresh } = useLocatario();
+  const { colors, isDark } = useTheme();
   const segments = useSegments();
   const router = useRouter();
   const needsConsent = state === "ready" && summary != null && !summary.consent;
@@ -53,51 +54,55 @@ function Gate() {
 
   if (state === "loading") {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.background }}>
-        <ActivityIndicator color={Colors.brandSoft} size="large" accessibilityLabel="Carregando" />
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
+        <ActivityIndicator color={colors.brandSoft} size="large" accessibilityLabel="Carregando" />
       </View>
     );
   }
   if (state === "error") {
     return (
-      <View style={{ flex: 1, justifyContent: "center", padding: 24, backgroundColor: Colors.background }}>
+      <View style={{ flex: 1, justifyContent: "center", padding: 24, backgroundColor: colors.background }}>
         <ErrorBanner message={error ?? "Sem conexão."} onRetry={refresh} />
       </View>
     );
   }
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: Colors.background },
-        animation: "fade",
-        headerStyle: { backgroundColor: Colors.background },
-        headerTintColor: Colors.text,
-        headerTitleStyle: { fontWeight: "700" },
-        headerShadowVisible: false,
-      }}
-    >
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="privacidade" options={{ headerShown: !needsConsent, title: "Privacidade", animation: "slide_from_right" }} />
-      <Stack.Screen name="vistoria" options={{ headerShown: true, title: "Vistoria", animation: "slide_from_right" }} />
-      <Stack.Screen name="veiculo" options={{ headerShown: true, title: "Meu veículo", animation: "slide_from_right" }} />
-      <Stack.Screen name="ocorrencias" options={{ headerShown: true, title: "Ocorrências", animation: "slide_from_right" }} />
-      <Stack.Screen name="documentos" options={{ headerShown: true, title: "Documentos", animation: "slide_from_right" }} />
-      <Stack.Screen name="multas" options={{ headerShown: true, title: "Multas", animation: "slide_from_right" }} />
-      <Stack.Screen name="reservas" options={{ headerShown: true, title: "Reservas", animation: "slide_from_right" }} />
-      <Stack.Screen name="solicitar" options={{ headerShown: true, title: "Solicitar locação", animation: "slide_from_right" }} />
-    </Stack>
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+          animation: "fade",
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
+          headerTitleStyle: { fontWeight: "700" },
+          headerShadowVisible: false,
+        }}
+      >
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="privacidade" options={{ headerShown: !needsConsent, title: "Privacidade", animation: "slide_from_right" }} />
+        <Stack.Screen name="vistoria" options={{ headerShown: true, title: "Vistoria", animation: "slide_from_right" }} />
+        <Stack.Screen name="veiculo" options={{ headerShown: true, title: "Meu veículo", animation: "slide_from_right" }} />
+        <Stack.Screen name="ocorrencias" options={{ headerShown: true, title: "Ocorrências", animation: "slide_from_right" }} />
+        <Stack.Screen name="documentos" options={{ headerShown: true, title: "Documentos", animation: "slide_from_right" }} />
+        <Stack.Screen name="multas" options={{ headerShown: true, title: "Multas", animation: "slide_from_right" }} />
+        <Stack.Screen name="reservas" options={{ headerShown: true, title: "Reservas", animation: "slide_from_right" }} />
+        <Stack.Screen name="solicitar" options={{ headerShown: true, title: "Solicitar locação", animation: "slide_from_right" }} />
+      </Stack>
+    </>
   );
 }
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <LocatarioProvider>
-        <StatusBar style="light" />
-        <Gate />
-      </LocatarioProvider>
+      <ThemeProvider>
+        <LocatarioProvider>
+          <Gate />
+        </LocatarioProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { PanResponder, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { Colors, Radius } from "../../constants/theme";
+import { Radius } from "../../constants/theme";
+import { useTheme } from "../../context/ThemeProvider";
 import { Button } from "../ui/Button";
 
 /** Área de 600×240 (mesma do servidor, lib/tenant.ts). O traço vira só números: "M x y L x y ...". */
@@ -9,6 +10,7 @@ const W = 600;
 const H = 240;
 
 export function SignaturePad({ onChange }: { onChange: (path: string | null) => void }) {
+  const { colors } = useTheme();
   const [path, setPath] = useState("");
   const size = useRef({ w: 1, h: 1 });
   const current = useRef("");
@@ -45,7 +47,12 @@ export function SignaturePad({ onChange }: { onChange: (path: string | null) => 
   return (
     <View style={{ gap: 8 }}>
       <View
-        style={styles.pad}
+        style={[
+          styles.pad,
+          {
+            borderColor: colors.borderStrong,
+          },
+        ]}
         onLayout={(e) => (size.current = { w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
         accessibilityLabel="Área de assinatura: desenhe sua assinatura com o dedo"
         {...responder.panHandlers}
@@ -61,6 +68,13 @@ export function SignaturePad({ onChange }: { onChange: (path: string | null) => 
 }
 
 const styles = StyleSheet.create({
-  pad: { width: "100%", aspectRatio: W / H, backgroundColor: "#FFFFFF", borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.borderStrong, overflow: "hidden" },
+  pad: {
+    width: "100%",
+    aspectRatio: W / H,
+    backgroundColor: "#FFFFFF",
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
   placeholder: { position: "absolute", alignSelf: "center", top: "42%", color: "#9CA3AF", fontSize: 15 },
 });

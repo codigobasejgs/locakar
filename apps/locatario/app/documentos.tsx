@@ -7,7 +7,8 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { date } from "../constants/format";
 import { DOCUMENT_KIND, REVIEW_STATUS } from "../constants/tenant";
-import { Colors, Radius, Spacing } from "../constants/theme";
+import { Radius, Spacing, type ThemeColors } from "../constants/theme";
+import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useApi } from "../hooks/useApi";
 import { useLocatario } from "../hooks/useLocatario";
 import { api, type TenantDocument } from "../services/api";
@@ -15,6 +16,7 @@ import { newId, uploadImage } from "../services/upload";
 
 /** CNH e comprovante de endereço: envio para conferência da LOCAKAR, com status de cada um. */
 export default function DocumentosScreen() {
+  const styles = useThemedStyles(makeStyles);
   const { summary } = useLocatario();
   const { data, error, reload } = useApi<{ documents: TenantDocument[] }>("/api/tenant/documents");
   const [picked, setPicked] = useState<Record<string, string | null>>({});
@@ -74,7 +76,8 @@ export default function DocumentosScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   intro: { color: Colors.textMuted, fontSize: 13, lineHeight: 19 },
   row: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   title: { color: Colors.text, fontSize: 16, fontWeight: "700" },

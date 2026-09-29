@@ -10,7 +10,9 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { whatsappUrl } from "../../constants/company";
 import { RENTAL_STATUS, date, money } from "../../constants/format";
-import { Colors, Radius, Spacing, Type } from "../../constants/theme";
+import { Radius, Spacing, Type, type ThemeColors } from "../../constants/theme";
+import { useTheme } from "../../context/ThemeProvider";
+import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
 import { API_URL } from "../../services/api";
@@ -25,6 +27,8 @@ const REQUEST_STATUS = {
 const imageUrl = (img?: string | null) => (img ? (img.startsWith("http") ? img : `${API_URL}${img}`) : null);
 
 export default function InicioScreen() {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { isDesktop, isTablet } = useLayout();
   const { summary, activeRental, error, offline, refreshing, refresh } = useLocatario();
@@ -185,7 +189,8 @@ export default function InicioScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   greetingBlock: { gap: 2, marginTop: Spacing.xs },
   greeting: { ...Type.title, fontSize: 24, lineHeight: 30, color: Colors.text },
   greetingDesktop: { ...Type.display },
@@ -201,8 +206,8 @@ const styles = StyleSheet.create({
   split: { flexDirection: "row", gap: Spacing.lg, alignItems: "stretch" },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.s12 },
   alert: { flexDirection: "row", gap: Spacing.sm, alignItems: "flex-start", padding: Spacing.md, borderRadius: Radius.md, borderWidth: 1 },
-  alert_danger: { borderColor: "rgba(248, 113, 113, 0.3)", backgroundColor: Colors.dangerSoft },
-  alert_warning: { borderColor: "rgba(251, 191, 36, 0.3)", backgroundColor: Colors.warningSoft },
-  alert_info: { borderColor: "rgba(96, 165, 250, 0.3)", backgroundColor: Colors.infoSoft },
+  alert_danger: { borderColor: Colors.dangerBorder, backgroundColor: Colors.dangerSoft },
+  alert_warning: { borderColor: Colors.warningBorder, backgroundColor: Colors.warningSoft },
+  alert_info: { borderColor: Colors.infoBorder, backgroundColor: Colors.infoSoft },
   alertText: { ...Type.small, flex: 1, color: Colors.text },
 });

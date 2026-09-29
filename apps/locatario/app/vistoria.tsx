@@ -9,7 +9,9 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { DAMAGE_SLOT, FUEL, INSPECTION_ITEMS, INSPECTION_KIND, MAX_DAMAGE_PHOTOS, PHOTO_SLOTS, type FuelLevel } from "../constants/tenant";
-import { Colors, Radius, Spacing } from "../constants/theme";
+import { Radius, Spacing, type ThemeColors } from "../constants/theme";
+import { useTheme } from "../context/ThemeProvider";
+import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useLocatario } from "../hooks/useLocatario";
 import { api } from "../services/api";
 import { readCache, removeCache, writeCache } from "../services/cache";
@@ -49,6 +51,8 @@ function emptyDraft(rentalId: string, kind: string): Draft {
 }
 
 export default function VistoriaScreen() {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const params = useLocalSearchParams<{ kind?: string }>();
   const { activeRental: rental, summary, refresh } = useLocatario();
@@ -281,6 +285,7 @@ export default function VistoriaScreen() {
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={{ flexDirection: "row", justifyContent: "space-between", gap: Spacing.md }}>
       <Text style={styles.muted}>{label}</Text>
@@ -289,7 +294,8 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   kicker: { color: Colors.brandSoft, fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
   title: { color: Colors.text, fontSize: 22, fontWeight: "700", marginTop: 2 },
   progress: { height: 4, backgroundColor: Colors.surfaceHover, borderRadius: 2, marginTop: Spacing.sm, overflow: "hidden" },
@@ -300,7 +306,7 @@ const styles = StyleSheet.create({
   plate: { color: Colors.brandSoft, fontSize: 15, fontWeight: "700", letterSpacing: 1 },
   fuelRow: { flexDirection: "row", gap: Spacing.sm, flexWrap: "wrap" },
   fuel: { flexGrow: 1, flexBasis: "18%", alignItems: "center", paddingVertical: Spacing.lg, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.borderStrong },
-  fuelOn: { borderColor: Colors.magenta, backgroundColor: Colors.brandGlow },
+  fuelOn: { borderColor: Colors.brandSoft, backgroundColor: Colors.brandTint },
   fuelText: { color: Colors.textMuted, fontWeight: "700", fontSize: 15 },
   itemLabel: { color: Colors.text, fontSize: 15, fontWeight: "600" },
   choice: { flex: 1, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center", paddingVertical: 12, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.borderStrong },

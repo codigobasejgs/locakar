@@ -5,7 +5,9 @@ import { Screen } from "../components/domain/Screen";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { date } from "../constants/format";
-import { Colors, Radius, Spacing } from "../constants/theme";
+import { Radius, Spacing, type ThemeColors } from "../constants/theme";
+import { useTheme } from "../context/ThemeProvider";
+import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useLocatario } from "../hooks/useLocatario";
 import { acceptPrivacy } from "../services/device";
 
@@ -20,6 +22,7 @@ const SECTIONS: [string, string][] = [
 ];
 
 export default function PrivacidadeScreen() {
+  const styles = useThemedStyles(makeStyles);
   const { summary, refresh } = useLocatario();
   const [push, setPush] = useState(true);
   const [agree, setAgree] = useState(false);
@@ -77,6 +80,8 @@ export default function PrivacidadeScreen() {
 }
 
 function Toggle({ checked, onPress, label }: { checked: boolean; onPress: () => void; label: string }) {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   return (
     <TouchableOpacity onPress={onPress} style={styles.toggle} accessibilityRole="checkbox" accessibilityState={{ checked }} accessibilityLabel={label}>
       <View style={[styles.box, checked && styles.boxOn]}>{checked && <Check color={Colors.text} size={16} />}</View>
@@ -85,13 +90,14 @@ function Toggle({ checked, onPress, label }: { checked: boolean; onPress: () => 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   title: { color: Colors.text, fontSize: 24, fontWeight: "700" },
   muted: { color: Colors.textMuted, fontSize: 13, marginTop: 4 },
   cardTitle: { color: Colors.text, fontSize: 15, fontWeight: "700" },
   body: { color: Colors.textMuted, fontSize: 14, lineHeight: 20 },
   toggle: { flexDirection: "row", gap: Spacing.md, alignItems: "flex-start", paddingVertical: Spacing.sm },
   box: { width: 24, height: 24, borderRadius: Radius.sm, borderWidth: 2, borderColor: Colors.borderStrong, alignItems: "center", justifyContent: "center", marginTop: 1 },
-  boxOn: { backgroundColor: Colors.magenta, borderColor: Colors.magenta },
+  boxOn: { backgroundColor: Colors.magenta, borderColor: Colors.brandSoft },
   error: { color: Colors.danger, fontSize: 14 },
 });

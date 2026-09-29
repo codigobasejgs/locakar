@@ -1,15 +1,27 @@
 import { CircleAlert } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
-import { Colors, Radius, Spacing, Type } from "../../constants/theme";
+import { Radius, Spacing, Type } from "../../constants/theme";
+import { useTheme } from "../../context/ThemeProvider";
 import { Button } from "../ui/Button";
 
-/** Aviso de erro no topo da tela (ex.: sem internet), sem esconder o que já estava carregado. */
+/** Aviso de erro no topo da tela, sem esconder o que já estava carregado. */
 export function ErrorBanner({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.banner} accessibilityRole="alert">
+    <View
+      style={[
+        styles.banner,
+        {
+          borderColor: colors.dangerBorder,
+          backgroundColor: colors.dangerSoft,
+        },
+      ]}
+      accessibilityRole="alert"
+    >
       <View style={styles.row}>
-        <CircleAlert color={Colors.danger} size={18} />
-        <Text style={styles.text}>{message}</Text>
+        <CircleAlert color={colors.danger} size={18} />
+        <Text style={[styles.text, { color: colors.text }]}>{message}</Text>
       </View>
       <Button label="Tentar novamente" size="sm" variant="outline" onPress={onRetry} style={{ alignSelf: "flex-start" }} />
     </View>
@@ -22,9 +34,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: "rgba(248, 113, 113, 0.3)",
-    backgroundColor: Colors.dangerSoft,
   },
   row: { flexDirection: "row", gap: Spacing.sm, alignItems: "flex-start" },
-  text: { ...Type.small, color: Colors.text, flex: 1 },
+  text: { ...Type.small, flex: 1 },
 });

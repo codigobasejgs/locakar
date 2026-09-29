@@ -11,7 +11,9 @@ import { ErrorBanner } from "../../components/domain/ScreenState";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { date, money } from "../../constants/format";
-import { Colors, Radius, Spacing, Type } from "../../constants/theme";
+import { Radius, Spacing, Type, type ThemeColors } from "../../constants/theme";
+import { useTheme } from "../../context/ThemeProvider";
+import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
 import { api, type Installment } from "../../services/api";
@@ -20,6 +22,8 @@ import { pickProofImage, sendPaymentProof } from "../../services/paymentProof";
 type Step = "pix" | "proof" | "sent";
 
 export default function PagamentosScreen() {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const { summary, activeRental, error, refreshing, refresh } = useLocatario();
   const [open, setOpen] = useState<Installment | null>(null);
   const [step, setStep] = useState<Step>("pix");
@@ -265,7 +269,8 @@ export default function PagamentosScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   list: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.s12 },
   itemWide: { width: undefined, flexBasis: "48%", flexGrow: 1 },
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: Spacing.sm, flexWrap: "wrap" },
@@ -284,7 +289,7 @@ const styles = StyleSheet.create({
   code: { color: Colors.textMuted, fontFamily: "monospace", fontSize: 11, backgroundColor: Colors.card, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, padding: Spacing.md },
   cardBox: { gap: Spacing.s12, padding: Spacing.md, borderRadius: Radius.lg, borderWidth: 1, borderColor: Colors.brandBorder, backgroundColor: Colors.brandTint },
   or: { ...Type.label, color: Colors.textSubtle, textAlign: "center" },
-  paidBox: { alignItems: "center", gap: Spacing.s12, padding: Spacing.lg, borderRadius: Radius.lg, borderWidth: 1, borderColor: "rgba(52, 211, 153, 0.3)", backgroundColor: Colors.successSoft },
+  paidBox: { alignItems: "center", gap: Spacing.s12, padding: Spacing.lg, borderRadius: Radius.lg, borderWidth: 1, borderColor: Colors.successBorder, backgroundColor: Colors.successSoft },
   divider: { height: 1, backgroundColor: Colors.border },
   preview: { width: "100%", height: 320, borderRadius: Radius.md, backgroundColor: Colors.card, resizeMode: "contain" },
 });

@@ -7,13 +7,17 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { date } from "../constants/format";
 import { INSPECTION_KIND, INSPECTION_STATUS, MAINTENANCE_STATUS, fuelLabel } from "../constants/tenant";
-import { Colors, Radius, Spacing } from "../constants/theme";
+import { Radius, Spacing, type ThemeColors } from "../constants/theme";
+import { useTheme } from "../context/ThemeProvider";
+import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useApi } from "../hooks/useApi";
 import { useLocatario } from "../hooks/useLocatario";
 import { API_URL, type AppInspection, type Maintenance } from "../services/api";
 
 /** Meu veículo: dados do carro, quilometragem, manutenções (sem custos) e vistorias feitas pelo app. */
 export default function VeiculoScreen() {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { activeRental: r, refreshing, refresh } = useLocatario();
   const vehicle = useApi<{ maintenance: Maintenance[] }>("/api/tenant/vehicle");
@@ -106,8 +110,9 @@ export default function VeiculoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  image: { width: "100%", aspectRatio: 16 / 9, backgroundColor: "#F4F4F5" },
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
+  image: { width: "100%", aspectRatio: 16 / 9, backgroundColor: Colors.surfaceElevated },
   name: { color: Colors.text, fontSize: 20, fontWeight: "700" },
   muted: { color: Colors.textMuted, fontSize: 13, lineHeight: 19 },
   grid: { flexDirection: "row", flexWrap: "wrap", rowGap: Spacing.md },

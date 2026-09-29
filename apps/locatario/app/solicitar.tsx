@@ -8,7 +8,9 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { money } from "../constants/format";
-import { Colors, Radius, Spacing } from "../constants/theme";
+import { Radius, Spacing, type ThemeColors } from "../constants/theme";
+import { useTheme } from "../context/ThemeProvider";
+import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useLocatario } from "../hooks/useLocatario";
 import { API_URL, api, type FleetVehicle } from "../services/api";
 import { readCache, removeCache, writeCache } from "../services/cache";
@@ -56,6 +58,8 @@ const STEPS = ["Veículo e período", "Uso e endereço", "Habilitação (CNH)", 
 const CATEGORIES = ["B", "AB", "A", "C", "D", "E"] as const;
 
 export default function SolicitarLocacaoScreen() {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const params = useLocalSearchParams<{ vehicleId?: string }>();
   const { summary, refresh } = useLocatario();
@@ -466,6 +470,7 @@ export default function SolicitarLocacaoScreen() {
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={{ flexDirection: "row", justifyContent: "space-between", gap: Spacing.md }}>
       <Text style={styles.muted}>{label}</Text>
@@ -474,7 +479,8 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   kicker: { color: Colors.brandSoft, fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
   title: { color: Colors.text, fontSize: 22, fontWeight: "700", marginTop: 2 },
   progress: { height: 4, backgroundColor: Colors.surfaceHover, borderRadius: 2, marginTop: Spacing.sm, overflow: "hidden" },
@@ -483,18 +489,18 @@ const styles = StyleSheet.create({
   muted: { color: Colors.textMuted, fontSize: 13, lineHeight: 18 },
   label: { fontSize: 13, fontWeight: "600", color: Colors.textMuted, textTransform: "uppercase", letterSpacing: 0.5 },
   carCard: { flexDirection: "row", gap: Spacing.md, alignItems: "center", padding: Spacing.sm, borderRadius: Radius.lg, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.card },
-  carCardOn: { borderColor: Colors.magenta, backgroundColor: "#130A17" },
-  carImg: { width: 90, height: 60, borderRadius: Radius.sm, backgroundColor: "#F4F4F5" },
+  carCardOn: { borderColor: Colors.brandSoft, backgroundColor: Colors.brandTint },
+  carImg: { width: 90, height: 60, borderRadius: Radius.sm, backgroundColor: Colors.surfaceElevated },
   carName: { color: Colors.text, fontSize: 16, fontWeight: "700" },
   carSpecs: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
   carPrice: { color: Colors.brandSoft, fontSize: 14, fontWeight: "700", marginTop: 2 },
   planBtn: { flex: 1, paddingVertical: 12, paddingHorizontal: 8, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.borderStrong, alignItems: "center" },
-  planBtnOn: { borderColor: Colors.magenta, backgroundColor: Colors.brandGlow },
+  planBtnOn: { borderColor: Colors.brandSoft, backgroundColor: Colors.brandTint },
   planText: { color: Colors.textMuted, fontSize: 13, fontWeight: "600" },
   planTextOn: { color: Colors.text },
   catsRow: { flexDirection: "row", gap: Spacing.sm, marginTop: 6 },
   catChip: { flex: 1, alignItems: "center", paddingVertical: 10, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.borderStrong },
-  catChipOn: { borderColor: Colors.magenta, backgroundColor: Colors.brandGlow },
+  catChipOn: { borderColor: Colors.brandSoft, backgroundColor: Colors.brandTint },
   catText: { color: Colors.textMuted, fontWeight: "700", fontSize: 14 },
   cardTitle: { color: Colors.text, fontSize: 16, fontWeight: "700" },
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

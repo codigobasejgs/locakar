@@ -4,7 +4,9 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-import { Colors, Spacing } from "../../constants/theme";
+import { Spacing, type ThemeColors } from "../../constants/theme";
+import { useTheme } from "../../context/ThemeProvider";
+import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { supabase } from "../../services/supabase";
 
 // Mesma regra de src/lib/utils.ts (dígitos verificadores do CPF).
@@ -36,6 +38,8 @@ function isValidCPF(value: string) {
 }
 
 export default function CadastroScreen() {
+  const { colors: Colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const [name, setName] = useState("");
   const [cpf, setCpf] = useState("");
   const [phone, setPhone] = useState("");
@@ -134,7 +138,8 @@ export default function CadastroScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: ThemeColors) =>
+  StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   scroll: { flexGrow: 1, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xl, justifyContent: "center", maxWidth: 480, width: "100%", alignSelf: "center" },
   title: { fontSize: 26, fontWeight: "700", color: Colors.text },
