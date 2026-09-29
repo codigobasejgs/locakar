@@ -21,6 +21,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
  * POST { action: "tap.start" | "tap.result" | "tap.confirm" | "checkout.create" | "checkout.check" | "checkout.whatsapp" | "cancel", ... }
  */
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || COMPANY.siteUrl).replace(/\/+$/, "");
 const PUBLIC_COLS =

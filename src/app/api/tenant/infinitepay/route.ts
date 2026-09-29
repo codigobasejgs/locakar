@@ -11,6 +11,8 @@ import { readBody, tenantOptions, tenantRoute } from "@/lib/server/tenant";
  * A baixa principal é feita pelo webhook; "check" só acelera quando o cliente volta ao app.
  */
 export const dynamic = "force-dynamic";
+// Cria o link na InfinitePay (API externa): folga acima do padrão da Vercel.
+export const maxDuration = 30;
 export const OPTIONS = tenantOptions;
 
 export const POST = tenantRoute(async (request, { clientId, ip }) => {

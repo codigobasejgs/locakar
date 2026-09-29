@@ -14,6 +14,7 @@ import { audit, clientIp } from "@/lib/server/tenant";
  *  3. confirmPaid é idempotente (webhook repetido não duplica parcela, receita nem notificação).
  */
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 

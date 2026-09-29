@@ -28,7 +28,8 @@ export async function api<T>(path: string, init: { method?: "GET" | "POST"; body
     throw new ApiError(0, "Sem conexão. Verifique a internet e tente de novo.");
   }
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, json.error ?? "Não foi possível carregar. Tente de novo.");
+  // Sem JSON (ex.: tempo esgotado no servidor): mostra o código para o suporte identificar a causa.
+  if (!res.ok) throw new ApiError(res.status, json.error ?? `Não foi possível carregar (erro ${res.status}). Tente de novo.`);
   return json as T;
 }
 
