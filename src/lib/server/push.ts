@@ -214,11 +214,49 @@ async function alertCompany(db: SupabaseClient, settings: CompanySettings, event
 }
 
 /**
+ * Pedido feito pelo cliente no app (reserva ou solicitação de locação): confirma ao cliente
+ * (WhatsApp, e-mail, push) e avisa os contatos de alerta das Configurações (WhatsApp, e-mail)
+ * sempre, independente de "alerta instantâneo". O Web Push da equipe segue por notifyStaff.
+ * Nunca lança: cada canal falha sozinho.
+ */
+export async function notifyClientSubmission(input: {
+  id: string;
+  clientId: string;
+  client: { name?: string | null; phone?: string | null; email?: string | null } | null;
+  title: string;
+  rows: [string, string][];
+  adminUrl: string;
+  screen: TenantScreen;
+}) {
+  if (!process.env.SUPABASE_SECRET_KEY) return;
+  const db = serviceDb();
+  const { email, phone } = companyContacts(await loadSettings(db));
+  const name = input.client?.name?.trim() || "Cliente";
+  const first = name.split(" ")[0];
+  const lines = input.rows.map(([k, v]) => `• *${k}:* ${v}`);
+  const adminLink = `${COMPANY.siteUrl}${input.adminUrl}`;
+  const clientIntro = `Olá, ${first}! Recebemos seu pedido e a equipe LOCAKAR vai analisar. Você será avisado assim que houver resposta.`;
+  const adminRows: [string, string][] = [["Cliente", name], ["Telefone", input.client?.phone || "—"], ...input.rows];
+  const safe = (label: string) => (e: unknown) => console.error(`[pedido] ${label}:`, (e as Error).message);
+
+  await Promise.all([
+    sendWhatsApp(db, { kind: "reservation", phone: input.client?.phone ?? undefined, text: [`✅ *${input.title} recebida*`, "", clientIntro, "", ...lines].join("\n") }).catch(safe("WhatsApp cliente")),
+    input.client?.email
+      ? sendEmail(db, { kind: "reservation", to: input.client.email, subject: `${input.title} recebida — LOCAKAR`, html: emailLayout({ title: `${input.title} recebida`, intro: clientIntro, rows: input.rows }) }).catch(safe("e-mail cliente"))
+      : null,
+    sendPushToClient(input.clientId, { title: `${input.title} recebida`, body: "A LOCAKAR vai analisar e te avisar por aqui.", url: "/", severity: "success", tag: `pedido-${input.id}` }, input.screen),
+    sendWhatsApp(db, { kind: "alert_admin", phone, text: [`🔔 *Nova ${input.title.toLowerCase()}*`, "", ...adminRows.map(([k, v]) => `• *${k}:* ${v}`), "", adminLink].join("\n") }).catch(safe("WhatsApp admin")),
+    sendEmail(db, { kind: "alert_admin", to: email, subject: `Nova ${input.title.toLowerCase()} — ${name}`, html: emailLayout({ title: `Nova ${input.title.toLowerCase()}`, intro: `${name} enviou um pedido pelo app. Analise no painel.`, rows: adminRows, cta: { label: "Abrir no painel", url: adminLink } }) }).catch(safe("e-mail admin")),
+  ]);
+}
+
+/**
  * Registra eventos na central (sem duplicar: dedupe_key único), avisa a equipe por Web Push
  * (respeitando as preferências) e manda os importantes ao e-mail/WhatsApp da empresa.
+ * `companyAlert: false` pula o e-mail/WhatsApp da empresa (quando quem chama já avisou).
  * Nunca lança: notificação é efeito secundário.
  */
-export async function notifyStaff(events: StaffEvent[], opts: { createdBy?: string; db?: SupabaseClient } = {}) {
+export async function notifyStaff(events: StaffEvent[], opts: { createdBy?: string; db?: SupabaseClient; companyAlert?: boolean } = {}) {
   const report = { created: 0, pushed: 0, failed: 0, expired: 0, skipped: 0 };
   if (!events.length || !process.env.SUPABASE_SECRET_KEY) return report;
   const db = opts.db ?? serviceDb();
@@ -243,7 +281,7 @@ export async function notifyStaff(events: StaffEvent[], opts: { createdBy?: stri
 
     const fresh = created.map((row) => ({ id: row.id as string, event: events.find((e) => key(e) === row.dedupe_key)! })).filter((x) => x.event);
     const settings = await loadSettings(db);
-    await alertCompany(db, settings, fresh.map((x) => x.event));
+    if (opts.companyAlert !== false) await alertCompany(db, settings, fresh.map((x) => x.event));
     if (!isPushConfigured()) return report;
 
     const wanted = fresh.filter((x) => wantsPush(settings.push, x.event.category));

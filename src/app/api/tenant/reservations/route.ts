@@ -1,5 +1,5 @@
 import { addDays, formatDate, todaySP } from "@/lib/utils";
-import { notifyStaff, serviceDb } from "@/lib/server/push";
+import { notifyClientSubmission, notifyStaff, serviceDb } from "@/lib/server/push";
 import { HttpError } from "@/lib/server/supabase";
 import { audit, readBody, tenantOptions, tenantRoute } from "@/lib/server/tenant";
 import { isIsoDate } from "@/lib/tenant";
@@ -46,7 +46,7 @@ export const GET = tenantRoute(async (_request, { db }) => {
 export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
   const body = await readBody(request);
   const admin = serviceDb();
-  const { data: profile } = await db.from("tenant_profile").select("name").single();
+  const { data: profile } = await db.from("tenant_profile").select("name,phone,email").single();
 
   if (body.action === "cancel") {
     const id = typeof body.id === "string" ? body.id : "";
@@ -116,7 +116,20 @@ export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
   }
 
   await audit({ actorType: "client", actorId: clientId, action: "reservation.requested", entity: "reservations", entityId: created.id, details: { vehicleId, startDate, endDate }, ip });
-  await notifyStaff([
+  await Promise.all([
+    notifyClientSubmission({
+      id: created.id,
+      clientId,
+      client: profile,
+      title: "Solicitação de reserva",
+      rows: [
+        ["Veículo", vehicle.name],
+        ["Período", `${formatDate(startDate)} a ${formatDate(endDate)}`],
+      ],
+      adminUrl: "/admin/reservations",
+      screen: "reservas",
+    }),
+    notifyStaff([
     {
       type: "reservation.created",
       category: "reservations",
@@ -126,6 +139,7 @@ export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
       url: "/admin/reservations",
       dedupeKey: `reservation:${created.id}`,
     },
+  ], { companyAlert: false }),
   ]);
   return { ok: true, id: created.id };
 });

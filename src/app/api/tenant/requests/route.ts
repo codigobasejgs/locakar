@@ -1,5 +1,5 @@
-import { addDays, formatDate, todaySP } from "@/lib/utils";
-import { notifyStaff, serviceDb } from "@/lib/server/push";
+import { addDays, formatCurrency, formatDate, todaySP } from "@/lib/utils";
+import { notifyClientSubmission, notifyStaff, serviceDb } from "@/lib/server/push";
 import { HttpError } from "@/lib/server/supabase";
 import { audit, filesExist, readBody, safePath, tenantOptions, tenantRoute, text } from "@/lib/server/tenant";
 import { isIsoDate } from "@/lib/tenant";
@@ -10,6 +10,8 @@ import { isIsoDate } from "@/lib/tenant";
  * POST → cria solicitação com carro escolhido, datas, CNH e upload dos 4 documentos obrigatórios
  */
 export const dynamic = "force-dynamic";
+
+const PLAN_LABEL: Record<string, string> = { daily: "Diária", weekly: "Semanal", biweekly: "Quinzenal", monthly: "Mensal", annual: "Anual" };
 export const OPTIONS = tenantOptions;
 
 export const GET = tenantRoute(async (_request, { db, clientId }) => {
@@ -160,8 +162,25 @@ export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
 
   await audit({ actorType: "client", actorId: clientId, action: "rental_request.created", entity: "rental_requests", entityId: created.id, details: { vehicleId, startDate, endDate, planType }, ip });
 
-  const { data: client } = await db.from("tenant_profile").select("name,phone").single();
-  await notifyStaff([
+  const { data: client } = await db.from("tenant_profile").select("name,phone,email").single();
+  const planLabel = PLAN_LABEL[planType] ?? planType;
+  // Admin (WhatsApp/e-mail) e cliente vão por notifyClientSubmission; notifyStaff fica com central + Web Push da equipe.
+  await Promise.all([
+    notifyClientSubmission({
+      id: created.id,
+      clientId,
+      client,
+      title: "Solicitação de locação",
+      rows: [
+        ["Veículo", vehicle.name],
+        ["Período", `${formatDate(startDate)} a ${formatDate(endDate)}`],
+        ["Plano", `${planLabel} · ${formatCurrency(rateAmount)}`],
+        ["Caução", formatCurrency(depositAmount)],
+      ],
+      adminUrl: "/admin/requests",
+      screen: "inicio",
+    }),
+    notifyStaff([
     {
       type: "rental.created",
       category: "rentals",
@@ -171,6 +190,7 @@ export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
       url: "/admin/requests",
       dedupeKey: `rental_request:${created.id}`,
     },
+  ], { companyAlert: false }),
   ]);
 
   return { ok: true, id: created.id };
