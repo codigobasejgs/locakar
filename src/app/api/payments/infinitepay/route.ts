@@ -1,24 +1,18 @@
-import { randomBytes } from "node:crypto";
 import { COMPANY } from "@/lib/company";
-import { billingOf, lateCharges } from "@/lib/billing";
 import {
   buildTapDeeplink,
-  checkoutPayload,
   isValidOrderId,
   normalizeHandle,
   parseTapResult,
-  toCents,
   validateTap,
   type TapMethod,
 } from "@/lib/infinitepay";
-import { confirmPaid, createCheckoutLink, reconcileCheckout, webhookUrl } from "@/lib/server/infinitepay";
+import { confirmPaid, createReceiptCheckout, openReceipt, reconcileCheckout } from "@/lib/server/infinitepay";
 import { loadSettings, serviceDb } from "@/lib/server/push";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { audit, clientIp } from "@/lib/server/tenant";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
-import { formatCurrency, formatDate, todaySP } from "@/lib/utils";
-import { fromRow } from "@/repositories/mapping";
-import type { Rental } from "@/types";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 /**
  * InfinitePay no painel (somente equipe). O valor sempre sai do servidor (parcela + multa/juros);
@@ -43,28 +37,6 @@ async function config() {
   const settings = await loadSettings(db);
   const ip = settings.infinitepay!;
   return { db, settings, ip, handle: normalizeHandle(ip.handle) };
-}
-
-/** Parcela em aberto + valor atualizado em centavos, calculados aqui (nunca vindos do navegador). */
-async function openReceipt(db: ReturnType<typeof serviceDb>, rentalId: unknown, receiptId: unknown) {
-  if (typeof rentalId !== "string" || typeof receiptId !== "string") throw new HttpError(400, "Parcela não informada.");
-  const { data: row } = await db.from("rentals").select("*").eq("id", rentalId).maybeSingle();
-  if (!row) throw new HttpError(404, "Locação não encontrada.");
-  const rental = fromRow<Rental>(row);
-  const index = rental.receipts.findIndex((r) => r.id === receiptId);
-  const receipt = rental.receipts[index];
-  if (!receipt) throw new HttpError(404, "Parcela não encontrada.");
-  if (receipt.paid) throw new HttpError(409, "Esta parcela já está paga.");
-  if (receipt.cancelled) throw new HttpError(409, "Esta parcela está cancelada.");
-  const today = todaySP();
-  const total = receipt.dueDate < today ? lateCharges(receipt.amount, receipt.dueDate, today, billingOf(rental)).total : receipt.amount;
-  const cents = toCents(total);
-  if (!(cents >= 100)) throw new HttpError(422, "O valor mínimo na InfinitePay é R$ 1,00.");
-  const [{ data: client }, { data: vehicle }] = await Promise.all([
-    db.from("clients").select("id,name,email,phone,cpf").eq("id", rental.clientId).maybeSingle(),
-    db.from("vehicles").select("name,plate").eq("id", rental.vehicleId).maybeSingle(),
-  ]);
-  return { rental, receipt, index, cents, client, vehicle };
 }
 
 async function loadTx(db: ReturnType<typeof serviceDb>, id: unknown) {
@@ -191,50 +163,8 @@ export async function POST(request: Request) {
     if (body.action === "checkout.create") {
       if (cfg.ip.mode === "tap") throw new HttpError(409, "Checkout desativado em Configurações.");
       if (!cfg.handle) throw new HttpError(409, "Configure a InfiniteTag em Configurações → InfinitePay.");
-      const { rental, receipt, index, cents, client, vehicle } = await openReceipt(db, body.rentalId, body.receiptId);
-
-      // Link já criado para o mesmo valor: reaproveita (não gera cobranças paralelas).
-      const { data: existing } = await db
-        .from("payment_transactions")
-        .select("id,checkout_url")
-        .eq("rental_id", rental.id)
-        .eq("receipt_id", receipt.id)
-        .eq("flow", "checkout")
-        .eq("status", "link_created")
-        .eq("amount_cents", cents)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (existing?.checkout_url) return Response.json({ id: existing.id, url: existing.checkout_url, amountCents: cents, reused: true });
-
-      const token = randomBytes(24).toString("base64url");
-      const { data: tx, error } = await db
-        .from("payment_transactions")
-        .insert({ flow: "checkout", rental_id: rental.id, receipt_id: receipt.id, client_id: rental.clientId, amount_cents: cents, handle: cfg.handle, webhook_token: token, operator_id: operator })
-        .select("id")
-        .single();
-      if (error) throw new HttpError(500, "Não foi possível registrar a cobrança.");
-      const period = `${formatDate(rental.startDate)} a ${formatDate(rental.endDate)}`;
-      try {
-        const link = await createCheckoutLink(
-          checkoutPayload({
-            handle: cfg.handle,
-            orderNsu: tx.id,
-            items: [{ quantity: 1, price: cents, description: `Aluguel ${vehicle?.plate ?? ""} - parcela ${index + 1} - ${period}`.replace(/\s+/g, " ") }],
-            redirectUrl: `${siteUrl()}/pagamento/infinitepay`,
-            webhookUrl: webhookUrl(siteUrl(), tx.id, token),
-            customer: { name: client?.name, email: client?.email ?? undefined, phone: client?.phone ?? undefined },
-          }),
-        );
-        await db.from("payment_transactions").update({ status: "link_created", checkout_url: link.url, invoice_slug: link.slug }).eq("id", tx.id);
-        await audit({ actorType: "staff", actorId: operator, action: "infinitepay_payment_created", entity: "payment_transactions", entityId: tx.id, details: { flow: "checkout", rentalId: rental.id, receiptId: receipt.id, amountCents: cents }, ip });
-        return Response.json({ id: tx.id, url: link.url, amountCents: cents });
-      } catch (e) {
-        const message = (e as Error).message;
-        await db.from("payment_transactions").update({ status: "failed", last_error: message.slice(0, 300) }).eq("id", tx.id);
-        await audit({ actorType: "staff", actorId: operator, action: "infinitepay_payment_failed", entity: "payment_transactions", entityId: tx.id, details: { flow: "checkout", error: message.slice(0, 300) }, ip });
-        throw new HttpError(502, message);
-      }
+      const r = await createReceiptCheckout(db, { handle: cfg.handle, rentalId: body.rentalId, receiptId: body.receiptId, operatorId: operator, actor: { type: "staff", id: operator, ip } });
+      return Response.json(r);
     }
 
     // ---------- Checkout: consulta payment_check (fonte da verdade) ----------

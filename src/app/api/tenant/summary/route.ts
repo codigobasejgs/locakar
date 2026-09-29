@@ -4,6 +4,7 @@ import { COMPANY } from "@/lib/company";
 import { loadSettings, serviceDb } from "@/lib/server/push";
 import { errorResponse } from "@/lib/server/supabase";
 import { corsHeaders, requireTenant, tenantOptions } from "@/lib/server/tenant";
+import { normalizeHandle } from "@/lib/infinitepay";
 import { todaySP } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
 import type { Rental } from "@/types";
@@ -121,6 +122,8 @@ export async function GET(request: Request) {
         })),
         pendingRequest,
         pix: settings?.pix.name ? { name: settings.pix.name } : null,
+        // Cartão/Pix pela InfinitePay (Checkout): só aparece no app quando a equipe ativou e informou a InfiniteTag.
+        infinitepay: settings?.infinitepay?.enabled && settings.infinitepay.mode !== "tap" && normalizeHandle(settings.infinitepay.handle) ? { checkout: true } : null,
         support: { whatsapp: COMPANY.whatsapp.e164, display: COMPANY.whatsapp.display },
         today,
         privacyVersion: PRIVACY_VERSION,

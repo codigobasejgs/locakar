@@ -1,6 +1,10 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { INFINITEPAY_API, decideCheckout, isValidOrderId, methodLabel, type CheckoutWebhook, type PaymentCheck, type TransactionFlow } from "@/lib/infinitepay";
+import { billingOf, lateCharges } from "@/lib/billing";
+import { COMPANY } from "@/lib/company";
+import { HttpError } from "@/lib/server/supabase";
+import { INFINITEPAY_API, checkoutPayload, decideCheckout, isValidOrderId, methodLabel, toCents, type CheckoutWebhook, type PaymentCheck, type TransactionFlow } from "@/lib/infinitepay";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { notifyStaff, sendPushToClient } from "@/lib/server/push";
 import { audit } from "@/lib/server/tenant";
@@ -210,6 +214,95 @@ export async function reconcileCheckout(
     await db.from("payment_transactions").update({ status: "amount_mismatch", last_error: `Valor pago ${check.amount} menor que o cobrado ${tx.amount_cents}` }).eq("id", tx.id).neq("status", "paid");
   }
   return decision;
+}
+
+const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || COMPANY.siteUrl).replace(/\/+$/, "");
+
+/** Parcela em aberto + valor atualizado em centavos, calculados aqui (nunca vindos do navegador/app). */
+export async function openReceipt(db: SupabaseClient, rentalId: unknown, receiptId: unknown) {
+  if (typeof rentalId !== "string" || typeof receiptId !== "string") throw new HttpError(400, "Parcela não informada.");
+  const { data: row } = await db.from("rentals").select("*").eq("id", rentalId).maybeSingle();
+  if (!row) throw new HttpError(404, "Locação não encontrada.");
+  const rental = fromRow<Rental>(row);
+  const index = rental.receipts.findIndex((r) => r.id === receiptId);
+  const receipt = rental.receipts[index];
+  if (!receipt) throw new HttpError(404, "Parcela não encontrada.");
+  if (receipt.paid) throw new HttpError(409, "Esta parcela já está paga.");
+  if (receipt.cancelled) throw new HttpError(409, "Esta parcela está cancelada.");
+  const today = todaySP();
+  const total = receipt.dueDate < today ? lateCharges(receipt.amount, receipt.dueDate, today, billingOf(rental)).total : receipt.amount;
+  const cents = toCents(total);
+  if (!(cents >= 100)) throw new HttpError(422, "O valor mínimo na InfinitePay é R$ 1,00.");
+  const [{ data: client }, { data: vehicle }] = await Promise.all([
+    db.from("clients").select("id,name,email,phone,cpf").eq("id", rental.clientId).maybeSingle(),
+    db.from("vehicles").select("name,plate").eq("id", rental.vehicleId).maybeSingle(),
+  ]);
+  return { rental, receipt, index, cents, client, vehicle };
+}
+
+/**
+ * Link do Checkout para uma parcela (painel ou app). Reaproveita o link aberto do mesmo valor,
+ * senão cria a tentativa (order_nsu = id) com token próprio no webhook. Lança HttpError com mensagem amigável.
+ */
+export async function createReceiptCheckout(
+  db: SupabaseClient,
+  p: { handle: string; rentalId: unknown; receiptId: unknown; operatorId?: string | null; clientId?: string; actor: { type: "staff" | "client"; id?: string | null; ip?: string | null } },
+) {
+  const { rental, receipt, index, cents, client, vehicle } = await openReceipt(db, p.rentalId, p.receiptId);
+  // App: a parcela precisa ser do próprio cliente (nunca confia no id enviado).
+  if (p.clientId && rental.clientId !== p.clientId) throw new HttpError(404, "Parcela não encontrada.");
+
+  const { data: existing } = await db
+    .from("payment_transactions")
+    .select("id,checkout_url")
+    .eq("rental_id", rental.id)
+    .eq("receipt_id", receipt.id)
+    .eq("flow", "checkout")
+    .eq("status", "link_created")
+    .eq("amount_cents", cents)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (existing?.checkout_url) return { id: existing.id as string, url: existing.checkout_url as string, amountCents: cents, reused: true };
+
+  const token = randomBytes(24).toString("base64url");
+  const { data: tx, error } = await db
+    .from("payment_transactions")
+    .insert({
+      flow: "checkout",
+      rental_id: rental.id,
+      receipt_id: receipt.id,
+      client_id: rental.clientId,
+      amount_cents: cents,
+      handle: p.handle,
+      webhook_token: token,
+      operator_id: p.operatorId ?? null,
+      device: p.actor.type === "client" ? "app-locatario" : null,
+    })
+    .select("id")
+    .single();
+  if (error) throw new HttpError(500, "Não foi possível registrar a cobrança.");
+  const period = `${formatDate(rental.startDate)} a ${formatDate(rental.endDate)}`;
+  try {
+    const link = await createCheckoutLink(
+      checkoutPayload({
+        handle: p.handle,
+        orderNsu: tx.id,
+        items: [{ quantity: 1, price: cents, description: `Aluguel ${vehicle?.plate ?? ""} - parcela ${index + 1} - ${period}`.replace(/\s+/g, " ") }],
+        redirectUrl: `${siteUrl()}/pagamento/infinitepay`,
+        webhookUrl: webhookUrl(siteUrl(), tx.id, token),
+        customer: { name: client?.name, email: client?.email ?? undefined, phone: client?.phone ?? undefined },
+      }),
+    );
+    await db.from("payment_transactions").update({ status: "link_created", checkout_url: link.url, invoice_slug: link.slug }).eq("id", tx.id);
+    await audit({ actorType: p.actor.type, actorId: p.actor.id ?? null, action: "infinitepay_payment_created", entity: "payment_transactions", entityId: tx.id, details: { flow: "checkout", rentalId: rental.id, receiptId: receipt.id, amountCents: cents, via: p.actor.type === "client" ? "app" : "painel" }, ip: p.actor.ip ?? null });
+    return { id: tx.id as string, url: link.url, amountCents: cents, reused: false };
+  } catch (e) {
+    const message = (e as Error).message;
+    await db.from("payment_transactions").update({ status: "failed", last_error: message.slice(0, 300) }).eq("id", tx.id);
+    await audit({ actorType: p.actor.type, actorId: p.actor.id ?? null, action: "infinitepay_payment_failed", entity: "payment_transactions", entityId: tx.id, details: { flow: "checkout", error: message.slice(0, 300) }, ip: p.actor.ip ?? null });
+    throw new HttpError(502, message);
+  }
 }
 
 export const webhookUrl = (base: string, id: string, token: string) => `${base}/api/webhooks/infinitepay?o=${encodeURIComponent(id)}&t=${encodeURIComponent(token)}`;

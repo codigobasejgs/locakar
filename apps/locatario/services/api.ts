@@ -118,6 +118,8 @@ export interface TenantSummary {
   fleet?: FleetVehicle[];
   pendingRequest?: PendingRentalRequest | null;
   pix: { name: string } | null;
+  /** Checkout InfinitePay ativo (cartão até 12x ou Pix pela InfinitePay). */
+  infinitepay?: { checkout: boolean } | null;
   support: { whatsapp: string; display: string };
   today: string;
   privacyVersion: string;

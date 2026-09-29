@@ -1,7 +1,7 @@
 import * as Clipboard from "expo-clipboard";
 import { Camera, Check, Copy, CreditCard, Image as ImageIcon, X } from "lucide-react-native";
-import { useState } from "react";
-import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { AppState, Image, Linking, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Empty } from "../../components/domain/Screen";
@@ -14,7 +14,7 @@ import { date, money } from "../../constants/format";
 import { Colors, Radius, Spacing, Type } from "../../constants/theme";
 import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
-import type { Installment } from "../../services/api";
+import { api, type Installment } from "../../services/api";
 import { pickProofImage, sendPaymentProof } from "../../services/paymentProof";
 
 type Step = "pix" | "proof" | "sent";
@@ -27,6 +27,13 @@ export default function PagamentosScreen() {
   const [image, setImage] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  // Checkout InfinitePay aberto: id da tentativa. Ao voltar ao app, consulta o status e baixa sozinho.
+  const [card, setCard] = useState<{ id: string; installmentId: string } | null>(null);
+  const [cardBusy, setCardBusy] = useState(false);
+  const [cardPaid, setCardPaid] = useState(false);
+  const cardRef = useRef(card);
+  cardRef.current = card;
+  const cardEnabled = Boolean(summary?.infinitepay?.checkout);
 
   const installments = activeRental?.installments ?? [];
   const insets = useSafeAreaInsets();
@@ -36,12 +43,55 @@ export default function PagamentosScreen() {
 
   const openInstallment = (i: Installment) => {
     setOpen(i);
+    setCardPaid(false);
     setStep("pix");
     setImage(null);
     setMessage(null);
     setCopied(false);
   };
-  const close = () => !sending && setOpen(null);
+  const close = () => !sending && !cardBusy && setOpen(null);
+
+  const checkCard = async (silent = false) => {
+    const current = cardRef.current;
+    if (!current) return;
+    if (!silent) setCardBusy(true);
+    try {
+      const r = await api<{ status: string }>("/api/tenant/infinitepay", { method: "POST", body: { action: "check", id: current.id } });
+      if (r.status === "paid") {
+        setCardPaid(true);
+        setCard(null);
+        refresh();
+      } else if (!silent) {
+        setMessage(r.status === "amount_mismatch" ? "O valor pago é diferente do cobrado. Fale com a LOCAKAR." : "Ainda não recebemos a confirmação da InfinitePay. Se você já pagou, aguarde alguns segundos e toque de novo.");
+      }
+    } catch (e) {
+      if (!silent) setMessage((e as Error).message);
+    }
+    if (!silent) setCardBusy(false);
+  };
+
+  // Voltou do checkout (app em primeiro plano): confere o pagamento automaticamente.
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (s) => {
+      if (s === "active" && cardRef.current) checkCard(true);
+    });
+    return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const payWithCard = async () => {
+    if (!open || !activeRental) return;
+    setMessage(null);
+    setCardBusy(true);
+    try {
+      const r = await api<{ id: string; url: string }>("/api/tenant/infinitepay", { method: "POST", body: { action: "checkout", rentalId: activeRental.id, installmentId: open.id } });
+      setCard({ id: r.id, installmentId: open.id });
+      await Linking.openURL(r.url);
+    } catch (e) {
+      setMessage((e as Error).message);
+    }
+    setCardBusy(false);
+  };
 
   const copy = async () => {
     if (!open?.pixCode) return;
@@ -102,7 +152,7 @@ export default function PagamentosScreen() {
               </View>
               {i.proofStatus === "rejected" && !i.paid && i.rejectionReason && <Text style={styles.rejected}>Motivo da recusa: {i.rejectionReason}</Text>}
               {!i.paid && i.proofStatus !== "pending_review" && (
-                <Button label={i.proofStatus === "rejected" ? "Pagar ou reenviar comprovante" : "Pagar com PIX"} size="sm" onPress={() => openInstallment(i)} />
+                <Button label={i.proofStatus === "rejected" ? "Pagar ou reenviar comprovante" : cardEnabled ? "Pagar" : "Pagar com PIX"} size="sm" onPress={() => openInstallment(i)} />
               )}
             </Card>
           ))}
@@ -114,14 +164,24 @@ export default function PagamentosScreen() {
         <View style={styles.overlay}>
           <View style={[styles.sheet, { paddingBottom: insets.bottom + Spacing.lg }, wide && styles.sheetWide]}>
             <View style={styles.rowBetween}>
-              <Text style={styles.sheetTitle}>{step === "sent" ? "Comprovante enviado" : step === "proof" ? "Confira o comprovante" : "Pagar com PIX"}</Text>
+              <Text style={styles.sheetTitle}>{cardPaid ? "Pagamento confirmado" : step === "sent" ? "Comprovante enviado" : step === "proof" ? "Confira o comprovante" : cardEnabled ? "Pagar parcela" : "Pagar com PIX"}</Text>
               <TouchableOpacity onPress={close} disabled={sending} accessibilityRole="button" accessibilityLabel="Fechar">
                 <X color={Colors.textMuted} size={24} />
               </TouchableOpacity>
             </View>
 
             <ScrollView contentContainerStyle={{ gap: Spacing.md, paddingTop: Spacing.md }}>
-              {open && step === "pix" && (
+              {cardPaid && (
+                <>
+                  <View style={styles.paidBox}>
+                    <Check color={Colors.success} size={28} />
+                    <Text style={styles.body}>Pagamento confirmado pela InfinitePay. A parcela já consta como paga e o recibo foi enviado para o seu e-mail.</Text>
+                  </View>
+                  <Button label="Concluir" onPress={() => setOpen(null)} />
+                </>
+              )}
+
+              {open && !cardPaid && step === "pix" && (
                 <>
                   <View style={{ alignItems: "center", gap: 4 }}>
                     <Text style={styles.label}>Total a pagar hoje</Text>
@@ -135,6 +195,19 @@ export default function PagamentosScreen() {
                       </Text>
                     )}
                   </View>
+
+                  {cardEnabled && (
+                    <View style={styles.cardBox}>
+                      <Text style={styles.cardTitle}>Cartão de crédito ou débito</Text>
+                      <Text style={styles.muted}>Pague com cartão em até 12x ou Pix pela InfinitePay. A confirmação é automática, sem enviar comprovante.</Text>
+                      <Button label={cardBusy ? "Abrindo pagamento..." : "Pagar com cartão (InfinitePay)"} loading={cardBusy && !card} icon={<CreditCard color={Colors.text} size={18} />} onPress={payWithCard} />
+                      {card?.installmentId === open.id && (
+                        <Button label={cardBusy ? "Verificando..." : "Já paguei — verificar pagamento"} variant="outline" size="sm" disabled={cardBusy} onPress={() => checkCard(false)} />
+                      )}
+                    </View>
+                  )}
+
+                  {cardEnabled && <Text style={styles.or}>ou pague com PIX</Text>}
 
                   {open.pixCode ? (
                     <>
@@ -209,6 +282,9 @@ const styles = StyleSheet.create({
   total: { ...Type.money, fontSize: 32, lineHeight: 38, color: Colors.text },
   qr: { alignSelf: "center", padding: 12, backgroundColor: "#FFFFFF", borderRadius: Radius.md },
   code: { color: Colors.textMuted, fontFamily: "monospace", fontSize: 11, backgroundColor: Colors.card, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, padding: Spacing.md },
+  cardBox: { gap: Spacing.s12, padding: Spacing.md, borderRadius: Radius.lg, borderWidth: 1, borderColor: Colors.brandBorder, backgroundColor: Colors.brandTint },
+  or: { ...Type.label, color: Colors.textSubtle, textAlign: "center" },
+  paidBox: { alignItems: "center", gap: Spacing.s12, padding: Spacing.lg, borderRadius: Radius.lg, borderWidth: 1, borderColor: "rgba(52, 211, 153, 0.3)", backgroundColor: Colors.successSoft },
   divider: { height: 1, backgroundColor: Colors.border },
   preview: { width: "100%", height: 320, borderRadius: Radius.md, backgroundColor: Colors.card, resizeMode: "contain" },
 });

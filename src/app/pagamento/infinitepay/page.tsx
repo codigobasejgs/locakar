@@ -48,6 +48,9 @@ export default async function InfinitePayReturn({ searchParams }: { searchParams
                 </a>
               </Button>
             )}
+            <Button asChild>
+              <a href="/locatario/pagamentos">Voltar ao app LOCAKAR</a>
+            </Button>
             <Button asChild variant="ghost">
               <a href={getWhatsAppUrl("Olá, LOCAKAR! Acabei de pagar pelo link da InfinitePay.")} target="_blank" rel="noopener noreferrer">
                 <WhatsAppIcon className="size-4" /> Falar com a LOCAKAR
