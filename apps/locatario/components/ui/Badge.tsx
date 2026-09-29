@@ -1,45 +1,42 @@
-import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Colors, Radius, Spacing } from "../../constants/theme";
 
 export type BadgeTone = "success" | "warning" | "danger" | "info" | "brand" | "neutral";
 
-interface BadgeProps {
-  label: string;
-  tone?: BadgeTone;
-}
+const TONE: Record<BadgeTone, { bg: string; fg: string; border: string }> = {
+  success: { bg: Colors.successSoft, fg: Colors.success, border: "rgba(52, 211, 153, 0.25)" },
+  warning: { bg: Colors.warningSoft, fg: Colors.warning, border: "rgba(251, 191, 36, 0.25)" },
+  danger: { bg: Colors.dangerSoft, fg: Colors.danger, border: "rgba(248, 113, 113, 0.25)" },
+  info: { bg: Colors.infoSoft, fg: Colors.info, border: "rgba(96, 165, 250, 0.25)" },
+  brand: { bg: Colors.brandTint, fg: Colors.brandSoft, border: Colors.brandBorder },
+  neutral: { bg: "rgba(255, 255, 255, 0.05)", fg: Colors.textMuted, border: Colors.border },
+};
 
-export function Badge({ label, tone = "neutral" }: BadgeProps) {
+/** Status com ponto + texto (nunca só cor): fundo translúcido, borda suave. */
+export function Badge({ label, tone = "neutral" }: { label: string; tone?: BadgeTone }) {
+  const t = TONE[tone];
   return (
-    <View style={[styles.badge, styles[`tone_${tone}`]]}>
-      <Text style={[styles.text, styles[`text_${tone}`]]}>{label}</Text>
+    <View style={[styles.badge, { backgroundColor: t.bg, borderColor: t.border }]} accessibilityLabel={`Status: ${label}`}>
+      <View style={[styles.dot, { backgroundColor: t.fg }]} />
+      <Text style={[styles.text, { color: t.fg }]} numberOfLines={1}>
+        {label}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: Spacing.s12 - 2,
+    paddingVertical: 4,
     borderRadius: Radius.full,
+    borderWidth: 1,
     alignSelf: "flex-start",
+    flexShrink: 0,
   },
-  text: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  tone_success: { backgroundColor: Colors.successSoft },
-  text_success: { color: Colors.success },
-  tone_warning: { backgroundColor: Colors.warningSoft },
-  text_warning: { color: Colors.warning },
-  tone_danger: { backgroundColor: Colors.dangerSoft },
-  text_danger: { color: Colors.danger },
-  tone_info: { backgroundColor: Colors.infoSoft },
-  text_info: { color: Colors.info },
-  tone_brand: { backgroundColor: "rgba(160, 0, 160, 0.15)" },
-  text_brand: { color: Colors.brandSoft },
-  tone_neutral: { backgroundColor: "rgba(255, 255, 255, 0.06)" },
-  text_neutral: { color: Colors.textMuted },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  text: { fontSize: 11, lineHeight: 14, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.6 },
 });

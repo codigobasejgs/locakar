@@ -1,15 +1,18 @@
 import * as Clipboard from "expo-clipboard";
 import { Camera, Check, Copy, CreditCard, Image as ImageIcon, X } from "lucide-react-native";
 import { useState } from "react";
-import { Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Empty } from "../../components/domain/Screen";
+import { TenantPage } from "../../components/layout/TenantPage";
 import { InstallmentBadge } from "../../components/domain/InstallmentStatus";
 import { ErrorBanner } from "../../components/domain/ScreenState";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { date, money } from "../../constants/format";
-import { Colors, Radius, Spacing } from "../../constants/theme";
+import { Colors, Radius, Spacing, Type } from "../../constants/theme";
+import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
 import type { Installment } from "../../services/api";
 import { pickProofImage, sendPaymentProof } from "../../services/paymentProof";
@@ -26,6 +29,10 @@ export default function PagamentosScreen() {
   const [message, setMessage] = useState<string | null>(null);
 
   const installments = activeRental?.installments ?? [];
+  const insets = useSafeAreaInsets();
+  const { isDesktop, isTablet } = useLayout();
+  const wide = isDesktop || isTablet;
+  const openCount = installments.filter((i) => !i.paid).length;
 
   const openInstallment = (i: Installment) => {
     setOpen(i);
@@ -70,20 +77,18 @@ export default function PagamentosScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView contentContainerStyle={styles.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={Colors.brandSoft} />}>
-        <Text style={styles.title}>Pagamentos</Text>
+    <>
+    <TenantPage title="Pagamentos" subtitle={installments.length ? `${openCount} em aberto · ${installments.length - openCount} pago(s)` : undefined} refreshing={refreshing} onRefresh={refresh}>
         {error && <ErrorBanner message={error} onRetry={refresh} />}
 
         {installments.length === 0 ? (
-          <Card style={{ alignItems: "center", padding: Spacing.xl, gap: Spacing.sm }}>
-            <CreditCard color={Colors.textMuted} size={40} />
-            <Text style={styles.cardTitle}>Nenhuma parcela</Text>
-            <Text style={[styles.muted, { textAlign: "center" }]}>As parcelas da sua locação aparecem aqui.</Text>
+          <Card>
+            <Empty icon={<CreditCard color={Colors.textMuted} size={24} />} title="Nenhuma parcela" text="As parcelas da sua locação aparecem aqui." />
           </Card>
         ) : (
-          installments.map((i) => (
-            <Card key={i.id} style={{ gap: Spacing.sm }}>
+          <View style={styles.list}>
+          {installments.map((i) => (
+            <Card key={i.id} style={[{ gap: Spacing.s12, width: "100%" }, wide && styles.itemWide]}>
               <View style={styles.rowBetween}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitle}>{i.label || "Parcela"}</Text>
@@ -100,13 +105,14 @@ export default function PagamentosScreen() {
                 <Button label={i.proofStatus === "rejected" ? "Pagar ou reenviar comprovante" : "Pagar com PIX"} size="sm" onPress={() => openInstallment(i)} />
               )}
             </Card>
-          ))
+          ))}
+          </View>
         )}
-      </ScrollView>
+    </TenantPage>
 
       <Modal visible={!!open} animationType="slide" transparent onRequestClose={close}>
         <View style={styles.overlay}>
-          <View style={styles.sheet}>
+          <View style={[styles.sheet, { paddingBottom: insets.bottom + Spacing.lg }, wide && styles.sheetWide]}>
             <View style={styles.rowBetween}>
               <Text style={styles.sheetTitle}>{step === "sent" ? "Comprovante enviado" : step === "proof" ? "Confira o comprovante" : "Pagar com PIX"}</Text>
               <TouchableOpacity onPress={close} disabled={sending} accessibilityRole="button" accessibilityLabel="Fechar">
@@ -182,25 +188,25 @@ export default function PagamentosScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: Spacing.md, gap: Spacing.md, paddingBottom: 110 },
-  title: { fontSize: 24, fontWeight: "700", color: Colors.text },
-  rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: Spacing.sm },
-  cardTitle: { color: Colors.text, fontSize: 15, fontWeight: "700" },
-  muted: { color: Colors.textMuted, fontSize: 13 },
-  body: { color: Colors.text, fontSize: 15, lineHeight: 22 },
-  amount: { color: Colors.success, fontSize: 17, fontWeight: "800" },
+  list: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.s12 },
+  itemWide: { width: undefined, flexBasis: "48%", flexGrow: 1 },
+  rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: Spacing.sm, flexWrap: "wrap" },
+  cardTitle: { ...Type.heading, color: Colors.text },
+  muted: { ...Type.small, color: Colors.textMuted, flexShrink: 1 },
+  body: { ...Type.body, color: Colors.text },
+  amount: { ...Type.money, fontSize: 18, color: Colors.text },
   rejected: { color: Colors.danger, fontSize: 13, lineHeight: 18 },
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "flex-end" },
-  sheet: { maxHeight: "92%", backgroundColor: Colors.surface, borderTopLeftRadius: Radius.xl, borderTopRightRadius: Radius.xl, padding: Spacing.lg, borderTopWidth: 1, borderColor: Colors.border },
+  overlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: "flex-end", alignItems: "center" },
+  sheetWide: { maxWidth: 520, borderRadius: Radius.xl, marginVertical: "auto", borderWidth: 1 },
+  sheet: { width: "100%", maxHeight: "92%", backgroundColor: Colors.surface, borderTopLeftRadius: Radius.xl, borderTopRightRadius: Radius.xl, padding: Spacing.lg, borderTopWidth: 1, borderColor: Colors.border },
   sheetTitle: { color: Colors.text, fontSize: 18, fontWeight: "700" },
   label: { color: Colors.textMuted, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 },
-  total: { color: Colors.success, fontSize: 30, fontWeight: "900" },
+  total: { ...Type.money, fontSize: 32, lineHeight: 38, color: Colors.text },
   qr: { alignSelf: "center", padding: 12, backgroundColor: "#FFFFFF", borderRadius: Radius.md },
   code: { color: Colors.textMuted, fontFamily: "monospace", fontSize: 11, backgroundColor: Colors.card, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, padding: Spacing.md },
   divider: { height: 1, backgroundColor: Colors.border },

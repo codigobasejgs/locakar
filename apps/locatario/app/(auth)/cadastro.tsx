@@ -136,7 +136,7 @@ export default function CadastroScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  scroll: { flexGrow: 1, padding: Spacing.xl, justifyContent: "center", maxWidth: 480, width: "100%", alignSelf: "center" },
+  scroll: { flexGrow: 1, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xl, justifyContent: "center", maxWidth: 480, width: "100%", alignSelf: "center" },
   title: { fontSize: 26, fontWeight: "700", color: Colors.text },
   subtitle: { fontSize: 14, color: Colors.textMuted, lineHeight: 20, marginTop: 4 },
   link: { color: Colors.brandSoft, fontWeight: "700", fontSize: 14 },

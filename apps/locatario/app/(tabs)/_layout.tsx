@@ -1,65 +1,25 @@
 import { Tabs } from "expo-router";
-import { Car, CreditCard, Key, User } from "lucide-react-native";
-import { Platform } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TenantTabBar } from "../../components/layout/TenantNavigation";
 import { Colors } from "../../constants/theme";
+import { useLayout } from "../../hooks/useLayout";
 
+/** Abas do app: barra inferior no celular/tablet e barra lateral no desktop (mesmo componente). */
 export default function TabLayout() {
-  const insets = useSafeAreaInsets();
-  const bottomPad = insets.bottom > 0 ? insets.bottom : (Platform.OS === "android" ? 10 : 8);
-
+  const { isDesktop } = useLayout();
   return (
     <Tabs
+      tabBar={(props) => <TenantTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
-          borderTopWidth: 1,
-          paddingTop: 8,
-          paddingBottom: bottomPad,
-          height: 60 + bottomPad,
-        },
-        tabBarActiveTintColor: Colors.brandSoft,
-        tabBarInactiveTintColor: Colors.textSubtle,
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "600",
-          marginTop: 2,
-        },
-        tabBarItemStyle: {
-          paddingVertical: 2,
-        },
+        tabBarPosition: isDesktop ? "left" : "bottom",
+        tabBarHideOnKeyboard: true,
+        sceneStyle: { backgroundColor: Colors.background },
       }}
     >
-      <Tabs.Screen
-        name="inicio"
-        options={{
-          title: "Início",
-          tabBarIcon: ({ color, size }) => <Car color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="locacao"
-        options={{
-          title: "Locação",
-          tabBarIcon: ({ color, size }) => <Key color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="pagamentos"
-        options={{
-          title: "Pagamentos",
-          tabBarIcon: ({ color, size }) => <CreditCard color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="perfil"
-        options={{
-          title: "Perfil",
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
-        }}
-      />
+      <Tabs.Screen name="inicio" options={{ title: "Início" }} />
+      <Tabs.Screen name="locacao" options={{ title: "Minha locação" }} />
+      <Tabs.Screen name="pagamentos" options={{ title: "Pagamentos" }} />
+      <Tabs.Screen name="perfil" options={{ title: "Perfil" }} />
     </Tabs>
   );
 }

@@ -1,14 +1,16 @@
 import { useRouter } from "expo-router";
 import { AlertTriangle, Car, ClipboardCheck, FileText, MessageCircle } from "lucide-react-native";
-import { Linking, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Linking, StyleSheet, Text, View } from "react-native";
+import { Empty } from "../../components/domain/Screen";
+import { SectionHeader, TenantPage } from "../../components/layout/TenantPage";
 import { ErrorBanner } from "../../components/domain/ScreenState";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { whatsappUrl } from "../../constants/company";
 import { INTEREST_LABEL, RENTAL_STATUS, date, money } from "../../constants/format";
-import { Colors, Spacing } from "../../constants/theme";
+import { Colors, Spacing, Type } from "../../constants/theme";
+import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
 
 const PERIOD: Record<string, string> = { daily: "Diária", weekly: "Semanal", biweekly: "Quinzenal", monthly: "Mensal", quarterly: "Trimestral", semiannual: "Semestral", annual: "Anual" };
@@ -28,21 +30,22 @@ export default function LocacaoScreen() {
   const others = (summary?.rentals ?? []).filter((x) => x.id !== r?.id);
   const b = r?.billing;
   const paid = r?.installments.filter((i) => i.paid).length ?? 0;
+  const { isDesktop, isTablet } = useLayout();
+  const wide = isDesktop || isTablet;
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView contentContainerStyle={styles.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={Colors.brandSoft} />}>
-        <Text style={styles.title}>Minha locação</Text>
+    <TenantPage title="Minha locação" subtitle="Veículo, contrato e condições" refreshing={refreshing} onRefresh={refresh}>
         {error && <ErrorBanner message={error} onRetry={refresh} />}
 
         {!r ? (
-          <Card style={{ alignItems: "center", padding: Spacing.xl, gap: Spacing.sm }}>
-            <Car color={Colors.textMuted} size={40} />
-            <Text style={styles.value}>Nenhuma locação</Text>
+          <Card>
+            <Empty icon={<Car color={Colors.textMuted} size={24} />} title="Nenhuma locação" text="Quando sua locação for aprovada, os dados do carro e do contrato aparecem aqui." />
+            <Button label="Solicitar locação" onPress={() => router.push("/solicitar")} />
           </Card>
         ) : (
           <>
-            <Card style={{ gap: Spacing.md }}>
+            <View style={[styles.cols, wide && { flexDirection: "row" }]}>
+            <Card style={[{ gap: Spacing.md }, wide && { flex: 1 }]}>
               <View style={styles.header}>
                 <Car color={Colors.brandSoft} size={20} />
                 <Text style={styles.cardTitle}>Veículo</Text>
@@ -57,7 +60,7 @@ export default function LocacaoScreen() {
               </View>
             </Card>
 
-            <Card style={{ gap: Spacing.md }}>
+            <Card style={[{ gap: Spacing.md }, wide && { flex: 1 }]}>
               <View style={styles.header}>
                 <FileText color={Colors.brandSoft} size={20} />
                 <Text style={styles.cardTitle}>Contrato</Text>
@@ -79,6 +82,7 @@ export default function LocacaoScreen() {
                 </Text>
               )}
             </Card>
+            </View>
 
             <Button label="Meu veículo e vistorias" icon={<ClipboardCheck color={Colors.text} size={18} />} onPress={() => router.push("/veiculo")} />
             <Button label="Relatar um problema com o veículo" variant="outline" icon={<AlertTriangle color={Colors.text} size={18} />} onPress={() => router.push("/ocorrencias")} />
@@ -93,7 +97,7 @@ export default function LocacaoScreen() {
 
         {others.length > 0 && (
           <>
-            <Text style={styles.section}>Outras locações</Text>
+            <SectionHeader title="Outras locações" />
             {others.map((x) => (
               <Card key={x.id} style={{ gap: 4 }}>
                 <View style={styles.header}>
@@ -107,21 +111,17 @@ export default function LocacaoScreen() {
             ))}
           </>
         )}
-      </ScrollView>
-    </SafeAreaView>
+    </TenantPage>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: Spacing.md, gap: Spacing.md, paddingBottom: 110 },
-  title: { fontSize: 24, fontWeight: "700", color: Colors.text },
+  cols: { gap: Spacing.md },
   header: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   cardTitle: { color: Colors.text, fontSize: 15, fontWeight: "700" },
   grid: { flexDirection: "row", flexWrap: "wrap", rowGap: Spacing.md },
   field: { width: "50%", paddingRight: Spacing.sm },
-  label: { fontSize: 11, color: Colors.textMuted, textTransform: "uppercase", letterSpacing: 0.5 },
-  value: { fontSize: 15, fontWeight: "600", color: Colors.text, marginTop: 2 },
-  muted: { color: Colors.textMuted, fontSize: 13, lineHeight: 19 },
-  section: { fontSize: 13, fontWeight: "700", color: Colors.textMuted, textTransform: "uppercase", letterSpacing: 1, marginTop: Spacing.sm },
+  label: { ...Type.label, color: Colors.textSubtle },
+  value: { ...Type.heading, color: Colors.text, marginTop: 4 },
+  muted: { ...Type.small, color: Colors.textMuted },
 });

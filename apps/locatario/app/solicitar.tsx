@@ -7,7 +7,7 @@ import { Screen } from "../components/domain/Screen";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
-import { date, money } from "../constants/format";
+import { money } from "../constants/format";
 import { Colors, Radius, Spacing } from "../constants/theme";
 import { useLocatario } from "../hooks/useLocatario";
 import { API_URL, api, type FleetVehicle } from "../services/api";

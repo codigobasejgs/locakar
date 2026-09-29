@@ -1,6 +1,6 @@
 import { Link } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -44,9 +44,7 @@ export default function LoginScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <Text style={styles.brand}>
-              LOCA<Text style={{ color: Colors.brandSoft }}>KAR</Text>
-            </Text>
+            <Image source={require("../../assets/logo-light.png")} style={styles.logo} resizeMode="contain" accessibilityLabel="LOCAKAR" />
             <Text style={styles.title}>Entrar</Text>
             <Text style={styles.subtitle}>Acompanhe sua locação, pague com PIX e envie comprovantes.</Text>
           </View>
@@ -77,9 +75,9 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  scroll: { flexGrow: 1, padding: Spacing.xl, justifyContent: "center", maxWidth: 480, width: "100%", alignSelf: "center" },
+  scroll: { flexGrow: 1, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xl, justifyContent: "center", maxWidth: 480, width: "100%", alignSelf: "center" },
   header: { marginBottom: Spacing.xl },
-  brand: { fontSize: 28, fontWeight: "900", color: Colors.text, letterSpacing: 2, marginBottom: Spacing.lg },
+  logo: { width: 132, height: 68, marginBottom: Spacing.lg, marginLeft: -6 },
   title: { fontSize: 26, fontWeight: "700", color: Colors.text },
   subtitle: { fontSize: 14, color: Colors.textMuted, lineHeight: 20, marginTop: 4 },
   form: { gap: Spacing.md },
