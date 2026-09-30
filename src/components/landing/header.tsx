@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { Menu, Settings, Smartphone, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { InstallButton } from "@/components/pwa/install-button";
@@ -9,7 +9,7 @@ import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { Logo } from "@/components/ui/logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { COMPANY, WHATSAPP_MESSAGES } from "@/lib/company";
-import { LANDING_NAV } from "@/lib/constants";
+import { LANDING_NAV, ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { getWhatsAppUrl } from "@/lib/whatsapp";
 
@@ -44,7 +44,7 @@ export function Header() {
         solid ? "border-white/10 bg-[rgb(5_5_5/0.95)] backdrop-blur-[24px]" : "border-transparent bg-transparent",
       )}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:h-20 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-20 lg:px-8">
         <a href="#inicio" aria-label="LOCAKAR — voltar ao início" className="shrink-0">
           <Logo priority className="w-[104px] logo-glow lg:w-[124px]" />
         </a>
@@ -62,17 +62,40 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="icon" className="hidden text-zinc-300 hover:text-white md:inline-flex">
+          {/* Acesso à Área do Cliente */}
+          <a
+            href="/locatario"
+            className="hidden items-center gap-1.5 rounded-xl border border-magenta/40 bg-magenta/15 px-3 py-1.5 text-xs font-semibold text-brand-soft transition-all duration-200 hover:border-magenta/70 hover:bg-magenta/25 hover:text-white sm:inline-flex"
+            title="Acessar Área do Cliente"
+          >
+            <Smartphone className="size-3.5" aria-hidden />
+            <span>Área do Cliente</span>
+          </a>
+
+          {/* Acesso à Área do Locador (Painel Admin com símbolo da engrenagem) */}
+          <a
+            href={ROUTES.admin}
+            className="hidden items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-all duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white sm:inline-flex"
+            title="Acesso Administrativo — Área do Locador"
+            aria-label="Área do Locador"
+          >
+            <Settings className="size-3.5 text-zinc-400" aria-hidden />
+            <span>Área do Locador</span>
+          </a>
+
+          <Button asChild variant="ghost" size="icon" className="hidden text-zinc-300 hover:text-white lg:inline-flex">
             <a href={COMPANY.instagram.url} target="_blank" rel="noopener noreferrer" aria-label={`Instagram da LOCAKAR (${COMPANY.instagram.handle})`}>
               <InstagramIcon className="!size-6" />
             </a>
           </Button>
+
           <Button asChild variant="whatsapp" size="md" className="hidden md:inline-flex">
             <a href={getWhatsAppUrl(WHATSAPP_MESSAGES.availability)} target="_blank" rel="noopener noreferrer">
               <WhatsAppIcon className="size-4" />
               WhatsApp
             </a>
           </Button>
+
           <Button
             variant="ghost"
             size="icon"
@@ -117,8 +140,26 @@ export function Header() {
                 </motion.li>
               ))}
             </ul>
-            <div className="flex flex-col gap-3 px-4">
-              <Button asChild variant="whatsapp" size="lg" className="w-full">
+            <div className="flex flex-col gap-2.5 px-4 pb-6">
+              {/* Botões de Acesso Mobile */}
+              <a
+                href="/locatario"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 rounded-xl border border-magenta/40 bg-magenta/20 py-3 text-sm font-semibold text-white transition-colors hover:bg-magenta/30"
+              >
+                <Smartphone className="size-4 text-brand-soft" />
+                <span>Área do Cliente</span>
+              </a>
+              <a
+                href={ROUTES.admin}
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <Settings className="size-4 text-zinc-400" />
+                <span>Área do Locador</span>
+              </a>
+
+              <Button asChild variant="whatsapp" size="lg" className="w-full mt-1">
                 <a href={getWhatsAppUrl(WHATSAPP_MESSAGES.availability)} target="_blank" rel="noopener noreferrer">
                   <WhatsAppIcon className="size-5" />
                   Falar no WhatsApp
