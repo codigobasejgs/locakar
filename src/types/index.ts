@@ -32,8 +32,14 @@ export type PaymentState = "paid" | "open" | "late";
 export interface FleetVehicle extends Vehicle {
   plate: string;
   vehicleType: string;
+  chassis?: string;
+  odometer?: number;
+  color?: string;
+  licensingDueDate?: string;
   purchaseDate?: string;
   purchaseValue?: number;
+  photos?: string[];
+  crlvUrl?: string;
   yearModel?: string;
   renavam?: string;
   ipvaValue?: number;

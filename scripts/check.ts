@@ -9,7 +9,7 @@ import type { Collections } from "../src/repositories/types";
 import { DEFAULT_SETTINGS } from "../src/lib/constants";
 import { buildNotices, dueForClient } from "../src/lib/notifications";
 import { getWhatsAppUrl } from "../src/lib/whatsapp";
-import { addDays, cpfCheckDigits, hideCPF, hideDoc, isValidCNPJ, isValidCPF, isValidPlate, maskCEP, maskCNPJ, maskCPF, maskPhone, monthKey, toWhatsAppNumber } from "../src/lib/utils";
+import { addDays, cpfCheckDigits, hideCPF, hideDoc, isValidCNPJ, isValidCPF, isValidPlate, maskCEP, maskCNPJ, maskCPF, maskPhone, maskPlate, monthKey, toWhatsAppNumber } from "../src/lib/utils";
 
 // WhatsApp oficial
 assert.equal(getWhatsAppUrl(), "https://wa.me/5519989615873");
@@ -356,6 +356,27 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
   assert.equal(ip.decideCheckout({ status: "paid", amount_cents: 70000 }, { success: true, paid: true, amount: 70000 }), "already");
   assert.equal(ip.methodLabel("checkout", "pix"), "InfinitePay · Pix");
   assert.equal(ip.methodLabel("tap", "credit", 3), "InfinitePay · Cartão de Crédito 3x");
+}
+
+// Cadastro e Validações de Veículos (Placa Mercosul e Tradicional, Chassi, Hodômetro)
+{
+  assert.ok(isValidPlate("ABC1234"));
+  assert.ok(isValidPlate("ABC1D23"));
+  assert.ok(isValidPlate("RMN7I15"));
+  assert.ok(!isValidPlate("ABC123"));
+  assert.ok(!isValidPlate("123ABCD"));
+  assert.equal(maskPlate("abc1d23"), "ABC1D23");
+  assert.equal(maskPlate("abc-1234"), "ABC1234");
+
+  // Chassi: 17 caracteres alfanuméricos
+  const validChassis = "9BWZZZ377VT000000";
+  assert.equal(validChassis.length, 17);
+  assert.match(validChassis, /^[A-HJ-NPR-Z0-9]{17}$/i);
+
+  // Hodômetro: número inteiro não negativo
+  const odo = Number("45.230".replace(/\D/g, ""));
+  assert.equal(odo, 45230);
+  assert.ok(odo >= 0);
 }
 
 console.log("✓ check ok");

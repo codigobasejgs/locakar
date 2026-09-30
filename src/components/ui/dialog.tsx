@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useState } from "react";
 import { Dialog as D } from "radix-ui";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
@@ -65,27 +66,39 @@ export function ConfirmDialog({
   title: string;
   description: string;
   confirmLabel?: string;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<unknown>;
 }) {
+  const [busy, setBusy] = useState(false);
+
+  const handleConfirm = async () => {
+    setBusy(true);
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } catch {
+      // Erro é tratado pelo handler (ex: toast), mantém aberto se falhar
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(o) => !busy && onOpenChange(o)}
       title={title}
       size="sm"
       footer={
         <>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button
             variant="danger"
-            onClick={() => {
-              onConfirm();
-              onOpenChange(false);
-            }}
+            disabled={busy}
+            onClick={handleConfirm}
           >
-            {confirmLabel}
+            {busy ? "Excluindo..." : confirmLabel}
           </Button>
         </>
       }

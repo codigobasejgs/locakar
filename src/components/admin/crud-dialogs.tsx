@@ -65,7 +65,7 @@ export function DeleteDialog({
 }: {
   open: boolean;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<unknown>;
   what: string;
 }) {
   return (

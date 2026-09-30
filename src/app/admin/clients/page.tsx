@@ -3,7 +3,7 @@
 import { ExternalLink, FileText, FileUp, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { FormDialog } from "@/components/admin/crud-dialogs";
+import { DeleteDialog, FormDialog } from "@/components/admin/crud-dialogs";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { DetailList, PageHeader } from "@/components/admin/page-header";
 import { Badge, StatusBadge } from "@/components/ui/badge";
@@ -624,6 +624,13 @@ export default function ClientsPage() {
           </div>
         )}
       </Dialog>
+
+      <DeleteDialog
+        open={!!crud.deleting}
+        onCancel={() => crud.setDeleting(null)}
+        onConfirm={crud.confirmDelete}
+        what={`o motorista "${crud.deleting?.name ?? ""}"`}
+      />
     </>
   );
 }
