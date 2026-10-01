@@ -1,0 +1,4875 @@
+{
+  "operations": {
+    "findAlerta": {
+      "path": "/v2/alerta/{id}",
+      "label": "Consultar um Evento",
+      "group": "Integração Monitoramento Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/EventoDto"
+      }
+    },
+    "findAlertaByPosicaoId": {
+      "path": "/v2/alerta/posicao/{posicaoId}",
+      "label": "Consultar a posição de um Evento",
+      "group": "Integração Monitoramento Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "posicaoId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/EventoDto"
+      }
+    },
+    "listAlerta": {
+      "path": "/v2/alerta",
+      "label": "Pesquisar Alertas",
+      "group": "Integração Monitoramento Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "NEW",
+            "OPENED",
+            "CLOSED",
+            "ARCHIVED"
+          ]
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "IGNITION",
+            "SECURITY_ATTACK",
+            "PANIC",
+            "SPEED_LIMIT",
+            "LOCK_UNLOCK",
+            "GEO_FENCE",
+            "SENSOR_LIMITS",
+            "ENERGY_SOURCE",
+            "COLLISION_ALARM",
+            "DEVICE_BATTERY",
+            "GPS",
+            "OFFLINE_TIMEOUT",
+            "SLEEP_MODE",
+            "INPUT1_OPEN",
+            "INPUT1_GROUND",
+            "INPUT2_OPEN",
+            "INPUT2_GROUND",
+            "INPUT3_OPEN",
+            "INPUT3_GROUND",
+            "EXTERNAL_INPUT",
+            "OUTPUT",
+            "BEHAVIOR",
+            "STOPPED_OVERTIME",
+            "CALIBRATION",
+            "I_BUTTON",
+            "DRIVER_AUTHORIZATION",
+            "PARKING_LOCK",
+            "DRIVING_SCHEDULE",
+            "MAGNETIC_CONNECTION",
+            "DOCUMENTATION",
+            "MECHANICAL_ISSUE",
+            "DEVICE_ISSUE",
+            "GPRS",
+            "OBD",
+            "CUSTOM",
+            "GENERIC",
+            "REDE_INPUTS",
+            "REDE_OUTPUTS",
+            "REPORTADO",
+            "CAMERA",
+            "INPUT4_OPEN",
+            "INPUT4_GROUND",
+            "IMPLEMENT_CONNECTION",
+            "SENSOR_LIGHT",
+            "SENSOR_BETONEIRA",
+            "INPUT5_OPEN",
+            "INPUT5_GROUND",
+            "INPUT6_OPEN",
+            "INPUT6_GROUND"
+          ]
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "Lista de ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "deparatamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do deparatamento",
+          "type": "number"
+        },
+        {
+          "name": "motorista",
+          "in": "query",
+          "required": false,
+          "description": " de ID do motorista",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": " de ID do rastreavel",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": " de ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "monitoramento",
+          "in": "query",
+          "required": false,
+          "description": "Alerta monitorado",
+          "type": "boolean"
+        },
+        {
+          "name": "size",
+          "in": "query",
+          "required": false,
+          "description": "Limite de Registros por página",
+          "type": "number",
+          "default": 100
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "description": "Pagina atual",
+          "type": "number",
+          "default": 0
+        }
+      ],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EventoResultDto"
+        }
+      }
+    },
+    "listAlertaMonitormento": {
+      "path": "/v2/alerta/monitoramento",
+      "label": "Pesquisar Alertas para monitoramento",
+      "group": "Integração Monitoramento Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "NEW",
+            "OPENED",
+            "CLOSED",
+            "ARCHIVED"
+          ]
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "IGNITION",
+            "SECURITY_ATTACK",
+            "PANIC",
+            "SPEED_LIMIT",
+            "LOCK_UNLOCK",
+            "GEO_FENCE",
+            "SENSOR_LIMITS",
+            "ENERGY_SOURCE",
+            "COLLISION_ALARM",
+            "DEVICE_BATTERY",
+            "GPS",
+            "OFFLINE_TIMEOUT",
+            "SLEEP_MODE",
+            "INPUT1_OPEN",
+            "INPUT1_GROUND",
+            "INPUT2_OPEN",
+            "INPUT2_GROUND",
+            "INPUT3_OPEN",
+            "INPUT3_GROUND",
+            "EXTERNAL_INPUT",
+            "OUTPUT",
+            "BEHAVIOR",
+            "STOPPED_OVERTIME",
+            "CALIBRATION",
+            "I_BUTTON",
+            "DRIVER_AUTHORIZATION",
+            "PARKING_LOCK",
+            "DRIVING_SCHEDULE",
+            "MAGNETIC_CONNECTION",
+            "DOCUMENTATION",
+            "MECHANICAL_ISSUE",
+            "DEVICE_ISSUE",
+            "GPRS",
+            "OBD",
+            "CUSTOM",
+            "GENERIC",
+            "REDE_INPUTS",
+            "REDE_OUTPUTS",
+            "REPORTADO",
+            "CAMERA",
+            "INPUT4_OPEN",
+            "INPUT4_GROUND",
+            "IMPLEMENT_CONNECTION",
+            "SENSOR_LIGHT",
+            "SENSOR_BETONEIRA",
+            "INPUT5_OPEN",
+            "INPUT5_GROUND",
+            "INPUT6_OPEN",
+            "INPUT6_GROUND"
+          ]
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "Lista de ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "deparatamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do deparatamento",
+          "type": "number"
+        },
+        {
+          "name": "motorista",
+          "in": "query",
+          "required": false,
+          "description": " de ID do motorista",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": " de ID do rastreavel",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": " de ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "monitoramento",
+          "in": "query",
+          "required": false,
+          "description": "Alerta monitorado",
+          "type": "boolean"
+        },
+        {
+          "name": "size",
+          "in": "query",
+          "required": false,
+          "description": "Limite de Registros por página",
+          "type": "number",
+          "default": 100
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "description": "Pagina atual",
+          "type": "number",
+          "default": 0
+        }
+      ],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EventoResultDto"
+        }
+      }
+    },
+    "getDashboardAvaliacaoConducao": {
+      "path": "/dashboard/cliente/avaliacao-conducao/{entidade}",
+      "label": "Dashboard de avaliação condução",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "entidade",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "pattern": "motorista|rastreavel",
+          "type": "string"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/DashboardAvaliacaoConducaoResultDto"
+      }
+    },
+    "getDashboardClientGasto": {
+      "path": "/dashboard/cliente/gasto",
+      "label": "Dashboard de gastos gerais",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "grupo",
+          "in": "query",
+          "required": false,
+          "description": "ID do grupo",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "number"
+        },
+        {
+          "name": "motorista",
+          "in": "query",
+          "required": false,
+          "description": "ID do motorista",
+          "type": "number"
+        },
+        {
+          "name": "fornecedor",
+          "in": "query",
+          "required": false,
+          "description": "ID do fornecedor",
+          "type": "number"
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "required": false,
+          "description": "Tipo do gasto",
+          "type": "string",
+          "enum": [
+            "OUTROS",
+            "MULTA",
+            "PEDAGIO",
+            "DOCUMENTACAO",
+            "ALIMENTACAO",
+            "HOSPEDAGEM",
+            "SALARIO",
+            "DESCARGA_MERCADORIA"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/DashboardGastoResultDto"
+      }
+    },
+    "getDashboardCliente": {
+      "path": "/dashboard/cliente",
+      "label": "Dashboard situação atual",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/DashboardClienteResultDto"
+      }
+    },
+    "getDashboardClienteAbastecimento": {
+      "path": "/dashboard/cliente/abastecimento",
+      "label": "Dashboard de abastecimento",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "number"
+        },
+        {
+          "name": "motorista",
+          "in": "query",
+          "required": false,
+          "description": "ID do motorista",
+          "type": "number"
+        },
+        {
+          "name": "fornecedor",
+          "in": "query",
+          "required": false,
+          "description": "ID do fornecedor",
+          "type": "number"
+        },
+        {
+          "name": "arla",
+          "in": "query",
+          "required": false,
+          "description": "Tipo abastecimento arla",
+          "type": "string",
+          "default": "false"
+        },
+        {
+          "name": "categoria",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "VEICULO",
+          "enum": [
+            "VEICULO",
+            "NAUTICO",
+            "AERONAUTICO",
+            "PESSOA",
+            "ANIMAL",
+            "MAQUINA",
+            "OBJETO"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/DashboardAbastecimentoResultDto"
+      }
+    },
+    "getDashboardClienteManutencao": {
+      "path": "/dashboard/cliente/manutencao",
+      "label": "Dashboard de manutenção",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "grupo",
+          "in": "query",
+          "required": false,
+          "description": "ID do grupo",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "number"
+        },
+        {
+          "name": "motorista",
+          "in": "query",
+          "required": false,
+          "description": "ID do motorista",
+          "type": "number"
+        },
+        {
+          "name": "fornecedor",
+          "in": "query",
+          "required": false,
+          "description": "ID do fornecedor",
+          "type": "number"
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "required": false,
+          "description": "Tipo da Manutenção",
+          "type": "string",
+          "enum": [
+            "OUTROS",
+            "PROGRAMADA",
+            "EMERGENCIAL",
+            "ELETRICA",
+            "PNEU",
+            "FUNILARIA",
+            "MECANICA",
+            "OLEO",
+            "BORRACHARIA",
+            "TAPECARIA",
+            "REFRIGERACAO",
+            "SERVICO",
+            "SINISTRO",
+            "REBOQUE",
+            "DOCUMENTACAO",
+            "SEGURO",
+            "PECAS",
+            "LIMPEZA",
+            "BATERIA",
+            "TACOGRAFO",
+            "MUNCK",
+            "GNV",
+            "VISTORIA"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/DashboardManutencaoResultDto"
+      }
+    },
+    "gdrAovivo": {
+      "path": "/v1/integracao/gdr/posicao/aovivo",
+      "label": "Consultar Última Atualização",
+      "group": "Integração Gerenciamento de Risco - V1",
+      "parameters": [
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "grupo",
+          "in": "query",
+          "required": false,
+          "description": "ID do grupo de rastreaveis",
+          "type": "number"
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "description": "Status atual do rastreavel",
+          "type": "string",
+          "enum": [
+            "MOVING_ON",
+            "MOVING_OFF",
+            "STOPPED_ON",
+            "STOPPED_OFF",
+            "MOVING_NO_IGNITION",
+            "STOPPED_NO_IGNITION",
+            "NO_IGNITION_INFO",
+            "NO_SPEED_INFO",
+            "OFF_LINE"
+          ]
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "Lista de ID de rastreaveis",
+          "type": "number"
+        }
+      ],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/AoVivoDto"
+        }
+      }
+    },
+    "gdrAovivoPorIdentificador": {
+      "path": "/v1/integracao/gdr/posicao/aovivo/{identificador}",
+      "label": "Consultar Última Atualização por Identificador",
+      "group": "Integração Gerenciamento de Risco - V1",
+      "parameters": [
+        {
+          "name": "identificador",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "string"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/AoVivoDto"
+      }
+    },
+    "gdrExportarEventoPerifericoById": {
+      "path": "/v1/integracao/gdr/evento-periferico/exportar/{fromEventoPerifericoId}",
+      "label": "Exportar Evento Periférico",
+      "group": "Integração Gerenciamento de Risco - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "size",
+          "in": "query",
+          "required": false,
+          "description": "Limite de registros por página",
+          "type": "number",
+          "default": 10000
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "description": "Página atual",
+          "type": "number",
+          "default": 0
+        },
+        {
+          "name": "fromEventoPerifericoId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EventoPerifericoExportDto"
+        }
+      }
+    },
+    "gdrExportarPosicao": {
+      "path": "/v1/integracao/gdr/posicao/exportar/{fromPositionId}",
+      "label": "Exportar Posições",
+      "group": "Integração Gerenciamento de Risco - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "size",
+          "in": "query",
+          "required": false,
+          "description": "Limite de registros por página",
+          "type": "number",
+          "default": 10000
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "description": "Página atual",
+          "type": "number",
+          "default": 0
+        },
+        {
+          "name": "fromPositionId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PosicaoExportDto"
+        }
+      }
+    },
+    "gdrFindRastreavelPorIdentificador": {
+      "path": "/v1/integracao/gdr/rastreavel/{identificador}",
+      "label": "Consultar Rastreável por Identificador",
+      "group": "Integração Gerenciamento de Risco - V1",
+      "parameters": [
+        {
+          "name": "identificador",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "string"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/RastreavelIntegracaoDto"
+      }
+    },
+    "gdrGetEventoPerifericoById": {
+      "path": "/v1/integracao/gdr/evento-periferico/{id}",
+      "label": "Consultar Evento Periférico",
+      "group": "Integração Gerenciamento de Risco - V1",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/EventoPerifericoDto"
+      }
+    },
+    "gdrListAlertas": {
+      "path": "/v1/integracao/gdr/alerta",
+      "label": "Consultar Alertas",
+      "group": "Integração Gerenciamento de Risco - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "NEW",
+            "OPENED",
+            "CLOSED",
+            "ARCHIVED"
+          ]
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "required": false,
+          "description": "Lista de tipos para busca",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "IGNITION",
+            "SECURITY_ATTACK",
+            "PANIC",
+            "SPEED_LIMIT",
+            "LOCK_UNLOCK",
+            "GEO_FENCE",
+            "SENSOR_LIMITS",
+            "ENERGY_SOURCE",
+            "COLLISION_ALARM",
+            "DEVICE_BATTERY",
+            "GPS",
+            "OFFLINE_TIMEOUT",
+            "SLEEP_MODE",
+            "INPUT1_OPEN",
+            "INPUT1_GROUND",
+            "INPUT2_OPEN",
+            "INPUT2_GROUND",
+            "INPUT3_OPEN",
+            "INPUT3_GROUND",
+            "EXTERNAL_INPUT",
+            "OUTPUT",
+            "BEHAVIOR",
+            "STOPPED_OVERTIME",
+            "CALIBRATION",
+            "I_BUTTON",
+            "DRIVER_AUTHORIZATION",
+            "PARKING_LOCK",
+            "DRIVING_SCHEDULE",
+            "MAGNETIC_CONNECTION",
+            "DOCUMENTATION",
+            "MECHANICAL_ISSUE",
+            "DEVICE_ISSUE",
+            "GPRS",
+            "OBD",
+            "CUSTOM",
+            "GENERIC",
+            "REDE_INPUTS",
+            "REDE_OUTPUTS",
+            "REPORTADO",
+            "CAMERA",
+            "INPUT4_OPEN",
+            "INPUT4_GROUND",
+            "IMPLEMENT_CONNECTION",
+            "SENSOR_LIGHT",
+            "SENSOR_BETONEIRA",
+            "INPUT5_OPEN",
+            "INPUT5_GROUND",
+            "INPUT6_OPEN",
+            "INPUT6_GROUND"
+          ]
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "string"
+        },
+        {
+          "name": "monitoramento",
+          "in": "query",
+          "required": false,
+          "description": "Alerta monitorado",
+          "type": "boolean"
+        },
+        {
+          "name": "size",
+          "in": "query",
+          "required": false,
+          "description": "Limite de registros por página",
+          "type": "number",
+          "default": 100
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "description": "Pagina atual",
+          "type": "number",
+          "default": 0
+        }
+      ],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EventoResultDto"
+        }
+      }
+    },
+    "gdrListHistoricoPosicaoPorRastreavel": {
+      "path": "/v1/integracao/gdr/posicao/historico/{identificador}",
+      "label": "Consultar Histórico de Posições",
+      "group": "Integração Gerenciamento de Risco - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "type",
+          "in": "query",
+          "required": false,
+          "description": "Tipo de evento",
+          "type": "string",
+          "enum": [
+            "STT",
+            "ALT",
+            "EMG",
+            "EVT",
+            "PID",
+            "UEX",
+            "UBL"
+          ]
+        },
+        {
+          "name": "dispositivo",
+          "in": "query",
+          "required": false,
+          "description": "ID do dispositivo",
+          "type": "number"
+        },
+        {
+          "name": "identificador",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "string"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/HistoricoResultDto"
+      }
+    },
+    "gdrfindAlertaById": {
+      "path": "/v1/integracao/gdr/alerta/{id}",
+      "label": "Consultar Alerta por ID",
+      "group": "Integração Gerenciamento de Risco - V1",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/EventoDto"
+      }
+    },
+    "integracaoAlerta": {
+      "path": "/v1/integracao/alerta",
+      "label": "Consultar Ultimos Alertas",
+      "group": "Integração Monitoramento Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "ultimosMinutos",
+          "in": "query",
+          "required": false,
+          "description": "Ultimos minutos para a busca",
+          "type": "number",
+          "example": 1,
+          "enum": [
+            null
+          ]
+        }
+      ],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/AlertaIntegracaoDto"
+        }
+      }
+    },
+    "integracaoAlertaAgrupador": {
+      "path": "/v1/integracao/alerta/agrupador",
+      "label": "Consultar Agrupadores de Alertas",
+      "group": "Integração Monitoramento Nível Cliente - V1",
+      "parameters": [],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/SelectableDto"
+        }
+      }
+    },
+    "integracaoAoVivo": {
+      "path": "/v1/integracao/posicao",
+      "label": "Consultar Ultima Atualização",
+      "group": "Integração Monitoramento Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "identificador",
+          "in": "query",
+          "required": false,
+          "description": "Identificador será a PLACA do rastreavel",
+          "type": "string",
+          "example": "ABC1234"
+        }
+      ],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PosicaoIntegracaoDto"
+        }
+      }
+    },
+    "integracaoAoVivoPorPlaca": {
+      "path": "/v1/integracao/posicao/{identificador}",
+      "label": "Consultar Ultima Atualização de um Rastreavel",
+      "group": "Integração Monitoramento Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "identificador",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "string"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/PosicaoIntegracaoDto"
+      }
+    },
+    "integracapListAlertaAgrupador": {
+      "path": "/v1/integracao/alerta/tipo/{agrupador}",
+      "label": "Consultar Alerta por Agrupador",
+      "group": "Integração Monitoramento Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "agrupador",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "IGNITION",
+            "SECURITY_ATTACK",
+            "PANIC",
+            "SPEED_LIMIT",
+            "LOCK_UNLOCK",
+            "GEO_FENCE",
+            "SENSOR_LIMITS",
+            "ENERGY_SOURCE",
+            "COLLISION_ALARM",
+            "DEVICE_BATTERY",
+            "GPS",
+            "OFFLINE_TIMEOUT",
+            "SLEEP_MODE",
+            "INPUT1_OPEN",
+            "INPUT1_GROUND",
+            "INPUT2_OPEN",
+            "INPUT2_GROUND",
+            "INPUT3_OPEN",
+            "INPUT3_GROUND",
+            "EXTERNAL_INPUT",
+            "OUTPUT",
+            "BEHAVIOR",
+            "STOPPED_OVERTIME",
+            "CALIBRATION",
+            "I_BUTTON",
+            "DRIVER_AUTHORIZATION",
+            "PARKING_LOCK",
+            "DRIVING_SCHEDULE",
+            "MAGNETIC_CONNECTION",
+            "DOCUMENTATION",
+            "MECHANICAL_ISSUE",
+            "DEVICE_ISSUE",
+            "GPRS",
+            "OBD",
+            "CUSTOM",
+            "GENERIC",
+            "REDE_INPUTS",
+            "REDE_OUTPUTS",
+            "REPORTADO",
+            "CAMERA",
+            "INPUT4_OPEN",
+            "INPUT4_GROUND",
+            "IMPLEMENT_CONNECTION",
+            "SENSOR_LIGHT",
+            "SENSOR_BETONEIRA",
+            "INPUT5_OPEN",
+            "INPUT5_GROUND",
+            "INPUT6_OPEN",
+            "INPUT6_GROUND"
+          ]
+        }
+      ],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/SelectableDto"
+        }
+      }
+    },
+    "intergacaoListTipoAlerta": {
+      "path": "/v1/integracao/alerta/tipo",
+      "label": "Consultar Todos os Tipos de Alertas",
+      "group": "Integração Monitoramento Nível Cliente - V1",
+      "parameters": [],
+      "response": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/TipoAlertaResultDto"
+        }
+      }
+    },
+    "ancoraPorRastreavel": {
+      "path": "/posicao/v2/ancora/{rastreavelId}",
+      "label": "Ancora do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "rastreavelId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/AncoraDto"
+      }
+    },
+    "aovivo": {
+      "path": "/posicao/v2/aovivo",
+      "label": "Ultima posição",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "string"
+        },
+        {
+          "name": "grupo",
+          "in": "query",
+          "required": false,
+          "description": "ID do grupo de rastreaveis",
+          "type": "number"
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "description": "Lista de status atual do rastreavel",
+          "type": "string",
+          "enum": [
+            "MOVING_ON",
+            "MOVING_OFF",
+            "STOPPED_ON",
+            "STOPPED_OFF",
+            "MOVING_NO_IGNITION",
+            "STOPPED_NO_IGNITION",
+            "NO_IGNITION_INFO",
+            "NO_SPEED_INFO",
+            "OFF_LINE"
+          ]
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "aovivoPorRastreavel": {
+      "path": "/posicao/v2/aovivo/{rastreavelId}",
+      "label": "Ultima posição do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "rastreavelId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/AoVivoDto"
+      }
+    },
+    "aovivoSatelital": {
+      "path": "/posicao/v2/satelital/aovivo/{rastreavelId}",
+      "label": "Ultima posição satelital do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "rastreavelId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/AoVivoDto"
+      }
+    },
+    "jornadaRastreavel": {
+      "path": "/posicao/v2/jornada/rastreavel/{rastreavelId}",
+      "label": "Jornadas do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "rastreavelId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "listHistoricoPosicaoArquivadoPorRastreavel": {
+      "path": "/posicao/v2/historico/arquivado/{rastreavelId}",
+      "label": "Histórico de posições arquivadas do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "type",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "STT",
+            "ALT",
+            "EMG",
+            "EVT",
+            "PID",
+            "UEX",
+            "UBL"
+          ]
+        },
+        {
+          "name": "dispositivo",
+          "in": "query",
+          "required": false,
+          "description": "ID do dispositivo",
+          "type": "number"
+        },
+        {
+          "name": "endereco",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "rastreavelId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "listHistoricoPosicaoPorRastreavel": {
+      "path": "/posicao/v2/historico/{rastreavelId}",
+      "label": "Histórico de posições do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "type",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "STT",
+            "ALT",
+            "EMG",
+            "EVT",
+            "PID",
+            "UEX",
+            "UBL"
+          ]
+        },
+        {
+          "name": "dispositivo",
+          "in": "query",
+          "required": false,
+          "description": "ID do dispositivo",
+          "type": "number"
+        },
+        {
+          "name": "endereco",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "rastreavelId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "listHistoricoSatelitalPorRastreavel": {
+      "path": "/posicao/v2/satelital/historico/{rastreavelId}",
+      "label": "Histórico de posições satelitais do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dispositivo",
+          "in": "query",
+          "required": false,
+          "description": "ID do dispositivo",
+          "type": "number"
+        },
+        {
+          "name": "endereco",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "rastreavelId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "exportarPositionPorRastreavel": {
+      "path": "/relatorio/exportar-posicao/{idRastreavel}",
+      "label": "Relatório de exportação de posições",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dispositivo",
+          "in": "query",
+          "required": false,
+          "description": "ID do dispositivo",
+          "type": "number"
+        },
+        {
+          "name": "endereco",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "idRastreavel",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioAbastecimento": {
+      "path": "/relatorio/abastecimento",
+      "label": "Relatório de abastecimento",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "string"
+        },
+        {
+          "name": "fornecedor",
+          "in": "query",
+          "required": false,
+          "description": "ID do fornecedor",
+          "type": "number"
+        },
+        {
+          "name": "categoria",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "VEICULO",
+          "enum": [
+            "VEICULO",
+            "NAUTICO",
+            "AERONAUTICO",
+            "PESSOA",
+            "ANIMAL",
+            "MAQUINA",
+            "OBJETO"
+          ]
+        },
+        {
+          "name": "arla",
+          "in": "query",
+          "required": false,
+          "description": "Tipo abastecimento arla",
+          "type": "string",
+          "default": "false"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioAvaliacaoConducao": {
+      "path": "/relatorio/avaliacao-conducao/{entidade}",
+      "label": "Relatório de avaliação de condução",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "entidade",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "pattern": "motorista|rastreavel",
+          "type": "string"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioCustoOperacional": {
+      "path": "/relatorio/custo-operacional",
+      "label": "Relatório de custo operacional",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioEvento": {
+      "path": "/relatorio/evento",
+      "label": "Relatório de eventos",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "NEW",
+            "OPENED",
+            "CLOSED",
+            "ARCHIVED"
+          ]
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "IGNITION",
+            "SECURITY_ATTACK",
+            "PANIC",
+            "SPEED_LIMIT",
+            "LOCK_UNLOCK",
+            "GEO_FENCE",
+            "SENSOR_LIMITS",
+            "ENERGY_SOURCE",
+            "COLLISION_ALARM",
+            "DEVICE_BATTERY",
+            "GPS",
+            "OFFLINE_TIMEOUT",
+            "SLEEP_MODE",
+            "INPUT1_OPEN",
+            "INPUT1_GROUND",
+            "INPUT2_OPEN",
+            "INPUT2_GROUND",
+            "INPUT3_OPEN",
+            "INPUT3_GROUND",
+            "EXTERNAL_INPUT",
+            "OUTPUT",
+            "BEHAVIOR",
+            "STOPPED_OVERTIME",
+            "CALIBRATION",
+            "I_BUTTON",
+            "DRIVER_AUTHORIZATION",
+            "PARKING_LOCK",
+            "DRIVING_SCHEDULE",
+            "MAGNETIC_CONNECTION",
+            "DOCUMENTATION",
+            "MECHANICAL_ISSUE",
+            "DEVICE_ISSUE",
+            "GPRS",
+            "OBD",
+            "CUSTOM",
+            "GENERIC",
+            "REDE_INPUTS",
+            "REDE_OUTPUTS",
+            "REPORTADO",
+            "CAMERA",
+            "INPUT4_OPEN",
+            "INPUT4_GROUND",
+            "IMPLEMENT_CONNECTION",
+            "SENSOR_LIGHT",
+            "SENSOR_BETONEIRA",
+            "INPUT5_OPEN",
+            "INPUT5_GROUND",
+            "INPUT6_OPEN",
+            "INPUT6_GROUND"
+          ]
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "string"
+        },
+        {
+          "name": "motorista",
+          "in": "query",
+          "required": false,
+          "description": "ID do motorista",
+          "type": "number"
+        },
+        {
+          "name": "statusCerca",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "TODOS",
+          "enum": [
+            "DENTRO",
+            "FORA",
+            "TODOS"
+          ]
+        },
+        {
+          "name": "cerca",
+          "in": "query",
+          "required": false,
+          "description": "Lista de IDs das cercas",
+          "type": "number"
+        },
+        {
+          "name": "eventoPersonalizado",
+          "in": "query",
+          "required": false,
+          "description": "ID do evento personalizado",
+          "type": "number"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioFonteEnergia": {
+      "path": "/relatorio/fonte-energia",
+      "label": "Relatório de fonte de energia",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "power-ge",
+          "in": "query",
+          "required": false,
+          "description": "Fonte Principal maior igual",
+          "type": "number"
+        },
+        {
+          "name": "power-le",
+          "in": "query",
+          "required": false,
+          "description": "Fonte Principal menor igual",
+          "type": "number"
+        },
+        {
+          "name": "battery-ge",
+          "in": "query",
+          "required": false,
+          "description": "Bateria Rastreador maior igual",
+          "type": "number"
+        },
+        {
+          "name": "battery-le",
+          "in": "query",
+          "required": false,
+          "description": "Bateria Rastreador menor igual",
+          "type": "number"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioGasto": {
+      "path": "/relatorio/gasto",
+      "label": "Relatório de gastos gerais",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "string"
+        },
+        {
+          "name": "fornecedor",
+          "in": "query",
+          "required": false,
+          "description": "ID do fornecedor",
+          "type": "number"
+        },
+        {
+          "name": "motorista",
+          "in": "query",
+          "required": false,
+          "description": "ID do motorista",
+          "type": "number"
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "required": false,
+          "description": "Tipo do Gasto",
+          "type": "string",
+          "enum": [
+            "OUTROS",
+            "MULTA",
+            "PEDAGIO",
+            "DOCUMENTACAO",
+            "ALIMENTACAO",
+            "HOSPEDAGEM",
+            "SALARIO",
+            "DESCARGA_MERCADORIA"
+          ]
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioHistoricoEventoPeriferico": {
+      "path": "/relatorio/evento-periferico/historico/{idRastreavel}",
+      "label": "Relatório de histórico de eventos do periférico",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dispositivo",
+          "in": "query",
+          "required": false,
+          "description": "ID do dispositivo",
+          "type": "number"
+        },
+        {
+          "name": "atuadorId",
+          "in": "query",
+          "required": false,
+          "description": "ID do atuador",
+          "type": "number"
+        },
+        {
+          "name": "type",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "STT",
+            "ALT",
+            "EMG",
+            "EVT",
+            "PID",
+            "UEX",
+            "UBL"
+          ]
+        },
+        {
+          "name": "endereco",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "idRastreavel",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioHistoricoParada": {
+      "path": "/relatorio/historico-parada/{idRastreavel}",
+      "label": "Relatório de histórico de paradas",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "tempo",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "number",
+          "default": 0
+        },
+        {
+          "name": "tipoParada",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "TODOS",
+          "enum": [
+            "TODOS",
+            "LIGADO",
+            "DESLIGADO"
+          ]
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "idRastreavel",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioHistoricoPosicao": {
+      "path": "/relatorio/historico-posicao/{idRastreavel}",
+      "label": "Relatório de histórico de posições",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dispositivo",
+          "in": "query",
+          "required": false,
+          "description": "ID do dispositivo",
+          "type": "number"
+        },
+        {
+          "name": "type",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "STT",
+            "ALT",
+            "EMG",
+            "EVT",
+            "PID",
+            "UEX",
+            "UBL"
+          ]
+        },
+        {
+          "name": "endereco",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "sumario",
+          "in": "query",
+          "required": false,
+          "description": "Caso TRUE irá retornar apenas o sumário.",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "idRastreavel",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioHistoricoSensor": {
+      "path": "/relatorio/sensor/historico/{idRastreavel}",
+      "label": "Relatório de histórico de sensor",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "idRastreavel",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioJornadaCerca": {
+      "path": "/relatorio/jornada/cerca",
+      "label": "Relatório de jornadas por cerca",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "string"
+        },
+        {
+          "name": "motorista",
+          "in": "query",
+          "required": false,
+          "description": "ID do motorista",
+          "type": "number"
+        },
+        {
+          "name": "cerca",
+          "in": "query",
+          "required": false,
+          "description": "ID da cerca",
+          "type": "number"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioJornadaMotorista": {
+      "path": "/relatorio/jornada/motorista/{motoristaId}",
+      "label": "Relatório de jornadas do motorista",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "turnoInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "turnoFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "turnoDoisInicial",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "turnoDoisFinal",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "motoristaId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioJornadaRastreavel": {
+      "path": "/relatorio/jornada/rastreavel/{idRastreavel}",
+      "label": "Relatório de jornadas do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "turnoInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "turnoFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "turnoDoisInicial",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "turnoDoisFinal",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "idRastreavel",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioManutencao": {
+      "path": "/relatorio/manutencao",
+      "label": "Relatório de manutenção",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "string"
+        },
+        {
+          "name": "fornecedor",
+          "in": "query",
+          "required": false,
+          "description": "ID do fornecedor",
+          "type": "number"
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "required": false,
+          "description": "Tipo da Manutenção",
+          "type": "string",
+          "enum": [
+            "OUTROS",
+            "PROGRAMADA",
+            "EMERGENCIAL",
+            "ELETRICA",
+            "PNEU",
+            "FUNILARIA",
+            "MECANICA",
+            "OLEO",
+            "BORRACHARIA",
+            "TAPECARIA",
+            "REFRIGERACAO",
+            "SERVICO",
+            "SINISTRO",
+            "REBOQUE",
+            "DOCUMENTACAO",
+            "SEGURO",
+            "PECAS",
+            "LIMPEZA",
+            "BATERIA",
+            "TACOGRAFO",
+            "MUNCK",
+            "GNV",
+            "VISTORIA"
+          ]
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioMonitoramento": {
+      "path": "/relatorio/monitoramento",
+      "label": "Relatório de monitoramento",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "NEW",
+            "OPENED",
+            "CLOSED",
+            "ARCHIVED"
+          ]
+        },
+        {
+          "name": "tipo",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "IGNITION",
+            "SECURITY_ATTACK",
+            "PANIC",
+            "SPEED_LIMIT",
+            "LOCK_UNLOCK",
+            "GEO_FENCE",
+            "SENSOR_LIMITS",
+            "ENERGY_SOURCE",
+            "COLLISION_ALARM",
+            "DEVICE_BATTERY",
+            "GPS",
+            "OFFLINE_TIMEOUT",
+            "SLEEP_MODE",
+            "INPUT1_OPEN",
+            "INPUT1_GROUND",
+            "INPUT2_OPEN",
+            "INPUT2_GROUND",
+            "INPUT3_OPEN",
+            "INPUT3_GROUND",
+            "EXTERNAL_INPUT",
+            "OUTPUT",
+            "BEHAVIOR",
+            "STOPPED_OVERTIME",
+            "CALIBRATION",
+            "I_BUTTON",
+            "DRIVER_AUTHORIZATION",
+            "PARKING_LOCK",
+            "DRIVING_SCHEDULE",
+            "MAGNETIC_CONNECTION",
+            "DOCUMENTATION",
+            "MECHANICAL_ISSUE",
+            "DEVICE_ISSUE",
+            "GPRS",
+            "OBD",
+            "CUSTOM",
+            "GENERIC",
+            "REDE_INPUTS",
+            "REDE_OUTPUTS",
+            "REPORTADO",
+            "CAMERA",
+            "INPUT4_OPEN",
+            "INPUT4_GROUND",
+            "IMPLEMENT_CONNECTION",
+            "SENSOR_LIGHT",
+            "SENSOR_BETONEIRA",
+            "INPUT5_OPEN",
+            "INPUT5_GROUND",
+            "INPUT6_OPEN",
+            "INPUT6_GROUND"
+          ]
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "rastreavel",
+          "in": "query",
+          "required": false,
+          "description": "ID do rastreavel",
+          "type": "string"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioSensorDetalhado": {
+      "path": "/relatorio/sensor/detalhado/{idRastreavel}/{sensorId}",
+      "label": "Relatório de histórico detalhado de sensor",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "sensorId",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "number"
+        },
+        {
+          "name": "statusSensor",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "TODOS",
+          "enum": [
+            "EXCEDIDO",
+            "TODOS"
+          ]
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "idRastreavel",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        },
+        {
+          "name": "sensorId",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int32"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioSituacaoAtual": {
+      "path": "/relatorio/situacao-atual/{idRastreavel}",
+      "label": "Relatório da situação atual",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "idRastreavel",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioTotalizador": {
+      "path": "/relatorio/totalizador",
+      "label": "Relatório de totalizadores do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "cliente",
+          "in": "query",
+          "required": false,
+          "description": "ID do cliente",
+          "type": "number"
+        },
+        {
+          "name": "departamento",
+          "in": "query",
+          "required": false,
+          "description": "ID do departamento",
+          "type": "number"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioTotalizadorDiario": {
+      "path": "/relatorio/totalizador/diario/{idRastreavel}",
+      "label": "Relatório de totalizador diário do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "idRastreavel",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    },
+    "relatorioVelocidade": {
+      "path": "/relatorio/velocidade/{idRastreavel}/{limiteVelocidade}",
+      "label": "Relatório de velocidades do rastreavel",
+      "group": "Integração Consulta Nível Cliente - V1",
+      "parameters": [
+        {
+          "name": "dataInicial",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dataFinal",
+          "in": "query",
+          "required": true,
+          "description": "",
+          "type": "string",
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        },
+        {
+          "name": "dispositivo",
+          "in": "query",
+          "required": false,
+          "description": "ID do dispositivo",
+          "type": "number"
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "description": "",
+          "type": "string",
+          "default": "JSON",
+          "enum": [
+            "JSON",
+            "PDF_PORTRAIT",
+            "PDF_LANDSCAPE",
+            "XLSX",
+            "HTML"
+          ]
+        },
+        {
+          "name": "idRastreavel",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int64"
+        },
+        {
+          "name": "limiteVelocidade",
+          "in": "path",
+          "required": true,
+          "description": "",
+          "type": "integer",
+          "format": "int32"
+        }
+      ],
+      "response": {
+        "$ref": "#/components/schemas/ReportResultDto"
+      }
+    }
+  },
+  "schemas": {
+    "AbastecimentoSummaryDto": {
+      "type": "object",
+      "properties": {
+        "descricao": {
+          "type": "string"
+        },
+        "valorTotal": {
+          "type": "number"
+        },
+        "quantidadeTotal": {
+          "type": "number"
+        },
+        "distanciaTotal": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "horimetroTotal": {
+          "type": "number"
+        },
+        "consumoMedio": {
+          "type": "number"
+        },
+        "custoMedioKm": {
+          "type": "number"
+        },
+        "custoMedioHora": {
+          "type": "number"
+        },
+        "custoMedioLitro": {
+          "type": "number"
+        },
+        "custoDiario": {
+          "type": "number"
+        },
+        "consumoDiario": {
+          "type": "number"
+        }
+      }
+    },
+    "AlertaIntegracaoDto": {
+      "type": "object",
+      "properties": {
+        "alerta": {
+          "type": "string"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "dataHora": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "identificador": {
+          "type": "string"
+        },
+        "rastreavel": {
+          "type": "string"
+        }
+      }
+    },
+    "AncoraDto": {
+      "type": "object",
+      "properties": {
+        "posicao": {
+          "$ref": "#/components/schemas/GeoPtDto"
+        },
+        "raio": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "dataCriacao": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "usuario": {
+          "type": "string"
+        }
+      }
+    },
+    "AoVivoDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tipo": {
+          "type": "string"
+        },
+        "funcao": {
+          "type": "string"
+        },
+        "categoria": {
+          "type": "string"
+        },
+        "identificador": {
+          "type": "string"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "imagem": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "bloqueioHabilitado": {
+          "type": "boolean"
+        },
+        "offLine": {
+          "type": "boolean"
+        },
+        "listSaidas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/SaidaDispositivoDto"
+          }
+        },
+        "cliente": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "departamento": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "engatado": {
+          "type": "boolean"
+        },
+        "lock": {
+          "type": "boolean"
+        },
+        "ancorado": {
+          "type": "boolean"
+        },
+        "posicaoLora": {
+          "$ref": "#/components/schemas/PosicaoLoraDto"
+        },
+        "eventoPerifericoId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "trip": {
+          "type": "boolean"
+        },
+        "timeAtualizacaoPosicao": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timeUltimaParada": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "value": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "formattedIdentificador": {
+          "type": "string"
+        },
+        "ultimaAtualizacaoSensor": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/SensorDataDto"
+          }
+        },
+        "ultimaPosicao": {
+          "$ref": "#/components/schemas/PosicaoDto"
+        },
+        "timeUltimaAtualizacaoSensor": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timeUltimaComunicacao": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tempoUltimaPosicao": {
+          "type": "string"
+        }
+      }
+    },
+    "ComentarioDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "comentario": {
+          "type": "string"
+        },
+        "usuario": {
+          "$ref": "#/components/schemas/UsuarioDto"
+        },
+        "data": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "DashboardAbastecimentoResultDto": {
+      "type": "object",
+      "properties": {
+        "summaryByRastreavelDto": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/AbastecimentoSummaryDto"
+          }
+        },
+        "summaryByCombustivelDto": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/AbastecimentoSummaryDto"
+          }
+        },
+        "summaryTotalDto": {
+          "$ref": "#/components/schemas/AbastecimentoSummaryDto"
+        },
+        "abastecimentoPorDia": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/DashboardDiaryDataDto"
+          }
+        }
+      }
+    },
+    "DashboardAvaliacaoConducaoItemDto": {
+      "type": "object",
+      "properties": {
+        "entidade": {
+          "type": "string"
+        },
+        "distancia": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tempoConducao": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "totalPontuacao": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pontuacaoKm": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pontuacaoHora": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "detalhes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/DashboardAvaliacaoConducaoSubItemDto"
+          }
+        }
+      }
+    },
+    "DashboardAvaliacaoConducaoResultDto": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "$ref": "#/components/schemas/DashboardAvaliacaoConducaoSummaryDto"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/DashboardAvaliacaoConducaoItemDto"
+          }
+        }
+      }
+    },
+    "DashboardAvaliacaoConducaoSubItemDto": {
+      "type": "object",
+      "properties": {
+        "evento": {
+          "type": "string"
+        },
+        "quantidade": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "velocidadeMedia": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "velocidadeMaxima": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "DashboardAvaliacaoConducaoSummaryDto": {
+      "type": "object",
+      "properties": {
+        "pontuacaoTotal": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pontuacaoMedia": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pontuacaoMediaKm": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pontuacaoMediaHora": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pontuacaoMaxima": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pontuacaoMaximaKm": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pontuacaoMaximaHora": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "qtdAvaliacao": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "detalhesTotais": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/DashboardAvaliacaoConducaoSubItemDto"
+          }
+        }
+      }
+    },
+    "DashboardClienteResultDto": {
+      "type": "object",
+      "properties": {
+        "distanciaPorDia": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "horasPorDia": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "totalDistancia": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "totalHorasMovimento": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "qtdRastreavel": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "DashboardDiaryDataDto": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "date"
+        },
+        "valor": {
+          "type": "number"
+        }
+      }
+    },
+    "DashboardGastoResultDto": {
+      "type": "object",
+      "properties": {
+        "summaryByTipo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/GastoSummaryDto"
+          }
+        },
+        "summaryByRastreavel": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/GastoSummaryDto"
+          }
+        },
+        "summaryByMotorista": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/GastoSummaryDto"
+          }
+        },
+        "gastoPorDia": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/DashboardDiaryDataDto"
+          }
+        },
+        "valorTotal": {
+          "type": "number"
+        }
+      }
+    },
+    "DashboardManutencaoResultDto": {
+      "type": "object",
+      "properties": {
+        "summaryByTipo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/ManutencaoSummaryDto"
+          }
+        },
+        "summaryByRastreavel": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/ManutencaoSummaryDto"
+          }
+        },
+        "manutencaoPorDia": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/DashboardDiaryDataDto"
+          }
+        },
+        "valorPecas": {
+          "type": "number"
+        },
+        "valorServico": {
+          "type": "number"
+        },
+        "valorTotal": {
+          "type": "number"
+        }
+      }
+    },
+    "EnderecoReportDto": {
+      "type": "object",
+      "properties": {
+        "link": {
+          "type": "string"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "referencia": {
+          "type": "string"
+        }
+      }
+    },
+    "EntradaDispositivoDto": {
+      "type": "object",
+      "properties": {
+        "tipo": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "descricao": {
+          "type": "string"
+        }
+      }
+    },
+    "EstadoIODto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "ativo": {
+          "type": "boolean"
+        }
+      }
+    },
+    "EventoDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tipo": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "agrupador": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "data": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tempo": {
+          "type": "string"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "sonoro": {
+          "type": "boolean"
+        },
+        "email": {
+          "type": "boolean"
+        },
+        "push": {
+          "type": "boolean"
+        },
+        "monitorado": {
+          "type": "boolean"
+        },
+        "posicao": {
+          "$ref": "#/components/schemas/PosicaoDto"
+        },
+        "manutencaoId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "rastreavel": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "motorista": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "cliente": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "departamento": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "dataCriacao": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dataAlteracao": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "comentarios": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/ComentarioDto"
+          }
+        },
+        "usuario": {
+          "$ref": "#/components/schemas/UsuarioDto"
+        },
+        "dataFechamento": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "isAlerta": {
+          "type": "boolean"
+        },
+        "tipoUsuario": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "videoUrl": {
+          "type": "string"
+        },
+        "fotoUrl": {
+          "type": "string"
+        }
+      }
+    },
+    "EventoPerifericoDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "data": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tipo": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "rastreavel": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "dispositivo": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/EventoPerifericoItemDto"
+          }
+        }
+      }
+    },
+    "EventoPerifericoExportDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "data": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tipo": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "rastreavel": {
+          "type": "string"
+        },
+        "imei": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/EventoPerifericoItemDto"
+          }
+        }
+      }
+    },
+    "EventoPerifericoItemDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "atuadorId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "atuadorDesc": {
+          "type": "string"
+        },
+        "valorSensor1": {
+          "type": "number",
+          "format": "double"
+        },
+        "percentualSensor1": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "descriptionSensor1": {
+          "type": "string"
+        },
+        "unitSensor1": {
+          "type": "string"
+        },
+        "valorSensor2": {
+          "type": "number",
+          "format": "double"
+        },
+        "percentualSensor2": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "descriptionSensor2": {
+          "type": "string"
+        },
+        "unitSensor2": {
+          "type": "string"
+        },
+        "activatedInputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/EstadoIODto"
+          }
+        },
+        "activatedOutputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/EstadoIODto"
+          }
+        }
+      }
+    },
+    "EventoResultDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tipo": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "agrupador": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "data": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dataAlteracao": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tempo": {
+          "type": "string"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "sonoro": {
+          "type": "boolean"
+        },
+        "email": {
+          "type": "boolean"
+        },
+        "push": {
+          "type": "boolean"
+        },
+        "monitorado": {
+          "type": "boolean"
+        },
+        "posicaoId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "manutencaoId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "rastreavel": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "motorista": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "cliente": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "departamento": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "cerca": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "videoUrl": {
+          "type": "string"
+        },
+        "fotoUrl": {
+          "type": "string"
+        }
+      }
+    },
+    "GastoSummaryDto": {
+      "type": "object",
+      "properties": {
+        "descricao": {
+          "type": "string"
+        },
+        "quantidade": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "valorTotal": {
+          "type": "number"
+        },
+        "percentual": {
+          "type": "number"
+        }
+      }
+    },
+    "GeoPtDto": {
+      "type": "object",
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "HistoricoResultDto": {
+      "type": "object",
+      "properties": {
+        "distanciaTotal": {
+          "type": "number"
+        },
+        "tempoTotalMovimento": {
+          "type": "string"
+        },
+        "tempoMovimentoLigado": {
+          "type": "string"
+        },
+        "tempoMovimentoDesligado": {
+          "type": "string"
+        },
+        "tempoTotalParado": {
+          "type": "string"
+        },
+        "tempoParadoLigado": {
+          "type": "string"
+        },
+        "tempoTotalLigado": {
+          "type": "string"
+        },
+        "tempoParadoDesligado": {
+          "type": "string"
+        },
+        "mediaVelocidadeMovimento": {
+          "type": "number"
+        },
+        "quantidadePosicoes": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "velocidadeMaxima": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "posicaoVelocidadeMaxima": {
+          "$ref": "#/components/schemas/PosicaoDto"
+        },
+        "posicoes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/PosicaoDto"
+          }
+        },
+        "rastreavel": {
+          "$ref": "#/components/schemas/RastreavelSummaryDto"
+        }
+      }
+    },
+    "ManutencaoSummaryDto": {
+      "type": "object",
+      "properties": {
+        "descricao": {
+          "type": "string"
+        },
+        "quantidade": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "valorPecas": {
+          "type": "number"
+        },
+        "valorServico": {
+          "type": "number"
+        },
+        "valorTotal": {
+          "type": "number"
+        },
+        "percentual": {
+          "type": "number"
+        }
+      }
+    },
+    "OnBoardDiagnosticDto": {
+      "type": "object",
+      "properties": {
+        "pid": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "code": {
+          "type": "string"
+        },
+        "info": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        }
+      }
+    },
+    "PosicaoDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "type": {
+          "type": "string"
+        },
+        "alert": {
+          "type": "string"
+        },
+        "agrupador": {
+          "type": "string"
+        },
+        "deviceId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "iccid": {
+          "type": "string"
+        },
+        "telefone": {
+          "type": "string"
+        },
+        "operadora": {
+          "type": "string"
+        },
+        "motorista": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "speed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "course": {
+          "type": "number",
+          "format": "double"
+        },
+        "distance": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "driveHours": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "altitude": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "power": {
+          "type": "number",
+          "format": "double"
+        },
+        "battery": {
+          "type": "number",
+          "format": "double"
+        },
+        "additional": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "sequencial": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "satellite": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "rssi": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "realTime": {
+          "type": "boolean"
+        },
+        "ignition": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "rpm": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "driverRegistered": {
+          "type": "boolean"
+        },
+        "activatedInputs": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "inputDescriptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "activatedOutputs": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "outputDescriptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "obd": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/OnBoardDiagnosticDto"
+          }
+        },
+        "sensor": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/SensorDataDto"
+          }
+        },
+        "createDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "info": {
+          "type": "string"
+        },
+        "powerUnit": {
+          "type": "string"
+        },
+        "batteryUnit": {
+          "type": "string"
+        },
+        "endereco": {
+          "$ref": "#/components/schemas/EnderecoReportDto"
+        }
+      }
+    },
+    "PosicaoExportDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "type": {
+          "type": "string"
+        },
+        "alert": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "imei": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "motorista": {
+          "type": "string"
+        },
+        "rastreavel": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "speed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "course": {
+          "type": "number",
+          "format": "double"
+        },
+        "distance": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "driveHours": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "altitude": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "power": {
+          "type": "number",
+          "format": "double"
+        },
+        "battery": {
+          "type": "number",
+          "format": "double"
+        },
+        "sequencial": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "satellite": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "rssi": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "realTime": {
+          "type": "boolean"
+        },
+        "ignition": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "rpm": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "driverRegistered": {
+          "type": "boolean"
+        },
+        "activatedInputs": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "inputDescriptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "activatedOutputs": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "outputDescriptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sensor": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/SensorDataDto"
+          }
+        },
+        "createDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "powerUnit": {
+          "type": "string"
+        },
+        "batteryUnit": {
+          "type": "string"
+        },
+        "info": {
+          "type": "string"
+        }
+      }
+    },
+    "PosicaoIntegracaoDto": {
+      "type": "object",
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "velocidade": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ignicao": {
+          "type": "boolean"
+        },
+        "dispositivo": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "identificador": {
+          "type": "string"
+        },
+        "rastreavel": {
+          "type": "string"
+        },
+        "funcao": {
+          "type": "string"
+        },
+        "tipo": {
+          "type": "string"
+        },
+        "odometro": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "horimetro": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "fonteEnergia": {
+          "type": "number",
+          "format": "double"
+        },
+        "dataHora": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dataComunicacao": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "PosicaoLoraDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "rastreavel": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "dispositivo": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "precision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "createDate": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "RastreavelIntegracaoDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "identificador": {
+          "type": "string"
+        },
+        "tipo": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "categoria": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "funcao": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "modelo": {
+          "type": "string"
+        },
+        "chassis": {
+          "type": "string"
+        },
+        "renavam": {
+          "type": "string"
+        },
+        "cor": {
+          "type": "string"
+        },
+        "ano": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "marca": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "combustivel": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "cliente": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "observacao": {
+          "type": "string"
+        },
+        "dispositivo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/SelectableDto"
+          }
+        },
+        "entradas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/EntradaDispositivoDto"
+          }
+        },
+        "saidas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/SaidaDispositivoDto"
+          }
+        },
+        "redePerifericos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/RedePerifericosDto"
+          }
+        },
+        "dataCriacao": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ativo": {
+          "type": "boolean"
+        },
+        "lockKey": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "RastreavelSummaryDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tipo": {
+          "type": "string"
+        },
+        "identificador": {
+          "type": "string"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "isOffLine": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RedePerifericosDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "perifericos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/SensorInputDto"
+          }
+        }
+      }
+    },
+    "ReportResultDto": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "object"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "status": {
+          "$ref": "#/components/schemas/SelectableDto"
+        },
+        "mensagem": {
+          "type": "string"
+        }
+      }
+    },
+    "SaidaDispositivoDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "descricao": {
+          "type": "string"
+        }
+      }
+    },
+    "SelectableDto": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "ativo": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SensorDataDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "value": {
+          "type": "string"
+        },
+        "percentual": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "description": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "modeloSensor": {
+          "type": "string"
+        }
+      }
+    },
+    "SensorInputDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "min": {
+          "type": "number",
+          "format": "double"
+        },
+        "max": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "TipoAlertaResultDto": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "ativo": {
+          "type": "boolean"
+        },
+        "grupo": {
+          "$ref": "#/components/schemas/SelectableDto"
+        }
+      }
+    },
+    "UsuarioDto": {
+      "type": "object",
+      "properties": {
+        "nome": {
+          "type": "string"
+        },
+        "cpf": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "perfil": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

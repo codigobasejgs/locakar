@@ -32,6 +32,7 @@ export const ROUTES = {
   requests: "/admin/requests",
   incidents: "/admin/incidents",
   security: "/admin/security",
+  monitoring: "/admin/monitoring",
 } as const;
 
 export const LANDING_NAV = [

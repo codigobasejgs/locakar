@@ -40,6 +40,9 @@ export interface FleetVehicle extends Vehicle {
   purchaseValue?: number;
   photos?: string[];
   crlvUrl?: string;
+  selsynRastreavelId?: string;
+  selsynIdentificador?: string;
+  selsynLinkedAt?: string;
   yearModel?: string;
   renavam?: string;
   ipvaValue?: number;

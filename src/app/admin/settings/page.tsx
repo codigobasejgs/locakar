@@ -3,6 +3,7 @@
 import { Bell, BellRing, Building2, CreditCard, QrCode, ExternalLink, FileSignature, FileText, FileUp, Mail, MessageCircle, Moon, Palette, RotateCcw, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { SelsynSettings } from "@/components/admin/selsyn-settings";
 import { PageHeader } from "@/components/admin/page-header";
 import { PushSettings } from "@/components/admin/push-settings";
 import { PixSettingsFields } from "@/components/admin/pix-settings";
@@ -200,6 +201,10 @@ export default function SettingsPage() {
 
         <Section icon={CreditCard} title="InfinitePay" description="Receber parcelas por aproximação no celular (InfiniteTap) ou link de pagamento Pix / cartão (Checkout Integrado).">
           <InfinitePaySettingsFields value={draft.infinitepay ?? DEFAULT_INFINITEPAY} onChange={(infinitepay) => set("infinitepay", infinitepay)} />
+        </Section>
+
+        <Section icon={SlidersHorizontal} title="Selsyn — Rastreamento" description="Posições, sensores, histórico e relatórios da frota. Credencial somente no backend.">
+          <SelsynSettings />
         </Section>
 
         <Section icon={BellRing} title="Alertas para a empresa" description="E-mail e WhatsApp que recebem os avisos importantes da operação, além do Web Push da equipe.">

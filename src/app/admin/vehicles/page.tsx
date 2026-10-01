@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DeleteDialog, FormDialog } from "@/components/admin/crud-dialogs";
+import { VehicleTrackingPanel } from "@/components/admin/vehicle-tracking-panel";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { DetailList, PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/ui/badge";
@@ -703,6 +704,8 @@ export default function VehiclesPage() {
                 { label: "Valor de Compra", value: v.purchaseValue ? formatCurrency(v.purchaseValue) : "—" },
               ]}
             />
+
+            <VehicleTrackingPanel key={v.id} vehicle={v} />
 
             {/* Documento CRLV */}
             {v.crlvUrl && (
