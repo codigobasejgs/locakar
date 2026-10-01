@@ -22,11 +22,11 @@ export class SelsynError extends Error {
   constructor(public readonly code: string, message: string, public readonly status = 400) { super(message); }
 }
 export function providerError(status: number) {
-  if (status === 401 || status === 403) return new SelsynError("PROVIDER_FORBIDDEN", "A credencial Selsyn não permite esta consulta. Confira com o fornecedor.", 502);
+  if (status === 401 || status === 403) return new SelsynError("PROVIDER_FORBIDDEN", `A credencial Selsyn não permite esta consulta (HTTP ${status}). Confira chave/permissões com o fornecedor.`, 424);
   if (status === 404) return new SelsynError("NOT_FOUND", "Nenhum resultado foi encontrado na Selsyn.", 404);
   if (status === 429) return new SelsynError("RATE_LIMITED", "Limite temporário da Selsyn atingido. Aguarde antes de consultar novamente.", 429);
   if (status === 400 || status === 422) return new SelsynError("INVALID_INPUT", "A Selsyn recusou os parâmetros desta consulta.", 422);
-  return new SelsynError("PROVIDER_ERROR", "Serviço Selsyn temporariamente indisponível.", 502);
+  return new SelsynError("PROVIDER_ERROR", `Serviço Selsyn indisponível (HTTP ${status}).`, 424);
 }
 
 /** Validação contra o catálogo oficial. Rejeita URL, headers, método e qualquer campo não documentado. */
@@ -86,7 +86,7 @@ export function localDateToUtc(s: string) {
 export function validateSelsynResponse(operationId: string, value: unknown): Json {
   const operation = SELSYN_OPERATIONS[operationId];
   if (!operation) throw new SelsynError("INVALID_OPERATION", "Consulta não permitida.", 404);
-  const bad = () => { throw new SelsynError("INVALID_PROVIDER_RESPONSE", "A Selsyn retornou dados em formato inesperado.", 502); };
+  const bad = () => { throw new SelsynError("INVALID_PROVIDER_RESPONSE", "A Selsyn retornou dados em formato inesperado.", 424); };
   function check(schema: Schema, data: unknown, depth = 0): void {
     if (depth > 40) return bad();
     if (schema.$ref) { const s = SCHEMAS[schema.$ref.split("/").pop()!]; if (!s) return bad(); return check(s, data, depth + 1); }
@@ -141,7 +141,7 @@ export function trackingPoint(v: unknown, id: string, label: string): TrackingPo
 }
 export function mapTrackedVehicle(v: unknown): TrackedVehicle {
   const raw = record(v); const id = trackingId(raw.id);
-  if (!id || typeof raw.identificador !== "string") throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Rastreável sem identificação válida.", 502);
+  if (!id || typeof raw.identificador !== "string") throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Rastreável sem identificação válida.", 424);
   const pos = record(raw.ultimaPosicao);
   const sensors = Array.isArray(raw.ultimaAtualizacaoSensor) ? raw.ultimaAtualizacaoSensor : Array.isArray(pos.sensor) ? pos.sensor : [];
   return {

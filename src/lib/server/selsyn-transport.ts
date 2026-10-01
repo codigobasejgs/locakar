@@ -12,12 +12,12 @@ export async function fetchSelsyn(operationId: string, input: Record<string, unk
   try {
     const res = await send(url, { method: "GET", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(20000), redirect: "error", cache: "no-store" });
     if (!res.ok) throw providerError(res.status);
-    if (Number(res.headers.get("content-length")) > 8 * 1024 * 1024) throw new SelsynError("RESPONSE_TOO_LARGE", "Consulta muito grande. Reduza o período ou o tamanho da página.", 502);
+    if (Number(res.headers.get("content-length")) > 8 * 1024 * 1024) throw new SelsynError("RESPONSE_TOO_LARGE", "Consulta muito grande. Reduza o período ou o tamanho da página.", 424);
     const reader = res.body?.getReader(); const chunks: Uint8Array[] = []; let bytes = 0;
     if (reader) while (true) {
       const { done, value } = await reader.read(); if (done) break;
       bytes += value.length;
-      if (bytes > 8 * 1024 * 1024) { await reader.cancel(); throw new SelsynError("RESPONSE_TOO_LARGE", "Consulta muito grande. Reduza o período.", 502); }
+      if (bytes > 8 * 1024 * 1024) { await reader.cancel(); throw new SelsynError("RESPONSE_TOO_LARGE", "Consulta muito grande. Reduza o período.", 424); }
       chunks.push(value);
     }
     const body = Buffer.concat(chunks);
@@ -29,15 +29,18 @@ export async function fetchSelsyn(operationId: string, input: Record<string, unk
     if (format === "XLSX" && mime === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" && body[0] === 0x50 && body[1] === 0x4b) extension = "xlsx";
     if (format === "HTML" && mime === "text/html") extension = "html";
     if (extension) {
-      if (body.includes(Buffer.from(key)) || body.includes(Buffer.from(encodeURIComponent(key)))) throw new SelsynError("UNSAFE_EXPORT", "A exportação contém referência sensível e não pode ser entregue.", 502);
+      if (body.includes(Buffer.from(key)) || body.includes(Buffer.from(encodeURIComponent(key)))) throw new SelsynError("UNSAFE_EXPORT", "A exportação contém referência sensível e não pode ser entregue.", 424);
       return { data: null, file: { name: `selsyn-${operationId}.${extension}`, mime: mime!, base64: body.toString("base64") } };
     }
     let raw: unknown;
-    try { raw = body.toString("utf8").trim() ? JSON.parse(body.toString("utf8")) : null; } catch { throw new SelsynError("INVALID_PROVIDER_RESPONSE", "A Selsyn retornou um formato não documentado para esta consulta/exportação.", 502); }
+    try { raw = body.toString("utf8").trim() ? JSON.parse(body.toString("utf8")) : null; } catch { throw new SelsynError("INVALID_PROVIDER_RESPONSE", "A Selsyn retornou um formato não documentado para esta consulta/exportação.", 424); }
     return { data: sanitizeSelsyn(validateSelsynResponse(operationId, raw), key) };
   } catch (e) {
     if (e instanceof SelsynError) throw e;
     if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) throw new SelsynError("TIMEOUT", "A Selsyn demorou para responder. Não houve nova tentativa automática.", 504);
-    throw new SelsynError("PROVIDER_ERROR", "Não foi possível conectar à Selsyn.", 502);
+    // Só o código de rede (ex.: UND_ERR_CONNECT_TIMEOUT, ENOTFOUND); nunca a URL, que contém a credencial.
+    const cause = (e as { cause?: { code?: unknown } })?.cause?.code;
+    const net = typeof cause === "string" && /^[A-Z0-9_]{2,40}$/.test(cause) ? cause : "NETWORK";
+    throw new SelsynError("PROVIDER_UNREACHABLE", `Não foi possível conectar ao servidor Selsyn (${net}). Verifique se o acesso está liberado para o servidor LOCAKAR.`, 503);
   }
 }

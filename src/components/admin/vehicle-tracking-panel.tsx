@@ -9,7 +9,7 @@ import { mapTrackedVehicle, type TrackedVehicle } from "@/lib/selsyn";
 export async function selsynPost<T>(path: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<T> {
   const res = await fetch(`/api/selsyn/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, requestId: crypto.randomUUID() }), signal, cache: "no-store" });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json.error ?? "Não foi possível consultar a Selsyn.");
+  if (!res.ok) throw new Error(`${json.error ?? "Não foi possível consultar a Selsyn."} [${json.code ?? `HTTP ${res.status}`}]`);
   return json as T;
 }
 const time = (s?: string) => s && Number.isFinite(Date.parse(s)) ? new Date(s).toLocaleString("pt-BR") : "Não informado";

@@ -63,7 +63,7 @@ export async function querySelsyn(userId: string, operationId: string, input: Re
     console.info("[selsyn] completed", { id, operation: operationId, durationMs: duration });
     return { ...response, requestId: id, queriedAt: new Date().toISOString() };
   } catch (e) {
-    const safe = e instanceof SelsynError ? e : e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError") ? new SelsynError("TIMEOUT", "A Selsyn demorou para responder. Não houve nova tentativa automática.", 504) : new SelsynError("PROVIDER_ERROR", "Não foi possível conectar à Selsyn.", 502);
+    const safe = e instanceof SelsynError ? e : e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError") ? new SelsynError("TIMEOUT", "A Selsyn demorou para responder. Não houve nova tentativa automática.", 504) : new SelsynError("PROVIDER_UNREACHABLE", "Não foi possível conectar ao servidor Selsyn.", 503);
     await db.from("selsyn_requests").update({ status: "error", error_code: safe.code, duration_ms: Date.now() - started, finished_at: new Date().toISOString() }).eq("id", id);
     await audit({ actorType: "staff", actorId: userId, action: "selsyn.error", entity: "selsyn_requests", entityId: id, details: { operation: operationId, code: safe.code, durationMs: Date.now() - started } });
     console.warn("[selsyn] error", { id, operation: operationId, code: safe.code });
