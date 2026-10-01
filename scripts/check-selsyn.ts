@@ -60,7 +60,7 @@ assert.ok(pdf.file?.name.endsWith(".pdf"));
 await assert.rejects(fetchSelsyn("relatorioHistoricoSensor", { ...dates, idRastreavel: "123", format: "HTML" }, secret, responseFetch(new Response(`<html>${secret}</html>`, { headers: { "content-type": "text/html" } }))), e => e instanceof SelsynError && e.code === "UNSAFE_EXPORT");
 // Catálogo não contém operações de escrita; guardas nas rotas e na migration estão presentes.
 for (const op of Object.values(SELSYN_OPERATIONS)) assert.ok(!/intervencao|bloqueio|desbloqueio|saida\/ativar/.test(op.path));
-for (const p of ["status/route.ts", "fleet/route.ts", "link/route.ts", "query/[operationId]/route.ts"]) assert.ok(readFileSync(`src/app/api/selsyn/${p}`, "utf8").includes("await selsynStaff()"));
+for (const p of ["status/route.ts", "fleet/route.ts", "link/route.ts", "diagnostic/route.ts", "query/[operationId]/route.ts"]) assert.ok(readFileSync(`src/app/api/selsyn/${p}`, "utf8").includes("await selsynStaff()"));
 const sql = readFileSync("supabase/migrations/20261007000000_selsyn_tracking.sql", "utf8");
 assert.ok(sql.includes("pg_advisory_xact_lock")); assert.ok(sql.includes("enable row level security")); assert.ok(sql.includes("from public,anon,authenticated"));
 console.log("✓ selsyn offline check ok (sem chamadas reais)");
