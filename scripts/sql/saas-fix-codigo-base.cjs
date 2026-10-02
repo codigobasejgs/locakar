@@ -15,6 +15,16 @@ const part = (n) => sql.split(/^-- ==== PARTE /m).find((s) => s.startsWith(Strin
   await db.query(`update organizations set name='Código Base' where id=$1`, [cb]);
   await as(db, dono, () => db.exec(`insert into vehicles(name,brand,model,year,image,category,transmission,fuel,seats,plate) values ('Onix','GM','Onix',2024,'x','Hatch','Manual','Flex',5,'BBB2B22')`));
   await db.query(`insert into notifications(type,category,title,body,dedupe_key,organization_id) values ('vehicle','vehicles','Novo veículo na frota','x','kcb',$1)`, [cb]);
+  // Seu cenário: mesmo veículo cadastrado de novo na LOCAKAR (placa GBD3D08 nas duas) + manutenção ligada à cópia
+  await as(db, dono, () => db.exec(`insert into vehicles(name,brand,model,year,image,category,transmission,fuel,seats,plate) values ('Kwid','Renault','Kwid',2024,'x','Hatch','Manual','Flex',5,'GBD3D08')`));
+  const copia = (await one(`select id from vehicles where plate='GBD3D08' and organization_id=$1`, [cb])).id;
+  await as(db, dono, () => db.exec(`insert into maintenance(date,vehicle_id,description) values ('2026-10-02','${copia}','Troca de óleo')`));
+  await db.query(`update user_preferences set active_organization_id=$1 where user_id=$2`, [loca, dono]);
+  await as(db, dono, () => db.exec(`insert into vehicles(name,brand,model,year,image,category,transmission,fuel,seats,plate) values ('Kwid','Renault','Kwid',2024,'x','Hatch','Manual','Flex',5,'GBD3D08')`));
+  const original = (await one(`select id from vehicles where plate='GBD3D08' and organization_id=$1`, [loca])).id;
+  for (const v of [copia, original]) await db.query(`insert into vehicle_fipe_history(vehicle_id,fipe_code,year_id,price,reference_month,reference_label) values ($1,'025266-2','2020-5',50000,'2026-10','outubro/2026')`, [v]);
+  await db.query(`insert into vehicle_fipe_history(vehicle_id,fipe_code,year_id,price,reference_month,reference_label) values ($1,'025266-2','2020-5',49000,'2026-09','setembro/2026')`, [copia]);
+  await db.query(`update user_preferences set active_organization_id=$1 where user_id=$2`, [cb, dono]);
   assert.equal((await one(`select organization_id o from vehicles where plate='BBB2B22'`)).o, cb, 'reproduz: veículo caiu na Código Base');
 
   const diag = (await db.query(part(1))).rows;
@@ -23,9 +33,14 @@ const part = (n) => sql.split(/^-- ==== PARTE /m).find((s) => s.startsWith(Strin
   await db.exec(part(2).split('-- Conferência')[0]);
   assert.equal((await one(`select organization_id o from vehicles where plate='BBB2B22'`)).o, loca, 'veículo voltou para a LOCAKAR');
   assert.equal((await one(`select count(*)::int n from notifications where organization_id=$1`, [cb])).n, 0);
+  assert.equal((await one(`select count(*)::int n from vehicles where plate='GBD3D08'`)).n, 1, "duplicado: fica só o da LOCAKAR");
+  const kwid = (await one(`select id, organization_id o from vehicles where plate='GBD3D08'`));
+  assert.equal(kwid.o, loca);
+  assert.equal((await one(`select vehicle_id v, organization_id o from maintenance where description='Troca de óleo'`)).v, kwid.id, "manutenção passou para o veículo da LOCAKAR");
+  assert.deepEqual((await db.query(`select reference_month m from vehicle_fipe_history where vehicle_id=$1 order by 1`, [kwid.id])).rows.map((r) => r.m), ["2026-09", "2026-10"], "FIPE: mês repetido descartado, mês novo preservado");
   assert.equal((await one(`select count(*)::int n from memberships where organization_id=$1`, [cb])).n, 0, 'dono saiu da Código Base');
   assert.equal((await one(`select active_organization_id a from user_preferences where user_id=$1`, [dono])).a, loca);
-  await as(db, dono, async () => assert.equal((await one(`select count(*)::int n from vehicles`)).n, 2, 'LOCAKAR vê os 2'));
+  await as(db, dono, async () => assert.equal((await one(`select count(*)::int n from vehicles`)).n, 3, 'LOCAKAR vê os 3'));
   const conf = (await db.query(part(2).split('-- Conferência')[1].replace(/^.*\n/, ''))).rows;
   assert.ok(conf.find((r) => r.locadora === 'Código Base').membros.includes('sem membros'));
   // guard do contrato e regra de locadora religados

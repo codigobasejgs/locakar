@@ -26,6 +26,69 @@ begin
   end if;
   select id into v_cb from public.organizations where name ilike 'c_digo base';
 
+  -- Duplicados: o mesmo veículo/cliente cadastrado de novo na LOCAKAR depois de cair na Código Base.
+  -- Fica o da LOCAKAR; o que for vinculado à cópia (locações, manutenções, multas...) passa para ele
+  -- e a cópia é apagada.
+  create temp table dup_vehicles on commit drop as
+    select cb.id as old_id, l.id as new_id, cb.plate
+      from public.vehicles cb
+      join lateral (
+        select v.id from public.vehicles v
+         where v.organization_id = v_loca
+           and (v.plate = cb.plate
+                or (nullif(trim(cb.chassis), '') is not null and upper(trim(v.chassis)) = upper(trim(cb.chassis)))
+                or (cb.selsyn_rastreavel_id is not null and v.selsyn_rastreavel_id = cb.selsyn_rastreavel_id))
+         order by (v.plate = cb.plate) desc limit 1) l on true
+     where cb.organization_id = v_cb;
+  create temp table dup_clients on commit drop as
+    select cb.id as old_id, l.id as new_id
+      from public.clients cb
+      join lateral (
+        select c.id from public.clients c
+         where c.organization_id = v_loca
+           and (regexp_replace(c.cpf, '\D', '', 'g') = regexp_replace(cb.cpf, '\D', '', 'g')
+                or (cb.user_id is not null and c.user_id = cb.user_id))
+         limit 1) l on true
+     where cb.organization_id = v_cb;
+
+  -- Histórico FIPE do mesmo mês já existe no veículo da LOCAKAR: descarta o da cópia (é só a cotação repetida).
+  delete from public.vehicle_fipe_history h using dup_vehicles d
+   where h.vehicle_id = d.old_id and exists (select 1 from public.vehicle_fipe_history k
+     where k.vehicle_id = d.new_id and k.fipe_code = h.fipe_code and k.year_id = h.year_id and k.reference_month = h.reference_month);
+  foreach t in array array['rentals','reservations','expenses','maintenance','fines','vehicle_incidents','tenant_inspections','rental_requests','vehicle_fipe_history'] loop
+    execute format('alter table public.%I disable trigger user', t);
+    execute format('update public.%I x set vehicle_id = d.new_id from dup_vehicles d where x.vehicle_id = d.old_id', t);
+    get diagnostics n = row_count;
+    execute format('alter table public.%I enable trigger user', t);
+    if n > 0 then raise notice '% vínculo(s) de % passados para o veículo da LOCAKAR', n, t; end if;
+  end loop;
+  -- Vínculos únicos por cliente: descarta o da cópia quando o da LOCAKAR já existe.
+  delete from public.asaas_customers a using dup_clients d
+   where a.client_id = d.old_id and exists (select 1 from public.asaas_customers b where b.client_id = d.new_id and b.environment = a.environment);
+  delete from public.tenant_devices a using dup_clients d
+   where a.client_id = d.old_id and exists (select 1 from public.tenant_devices b where b.client_id = d.new_id and b.installation_id = a.installation_id);
+  delete from public.tenant_inspections a using dup_clients d
+   where a.client_id = d.old_id and a.request_id is not null
+     and exists (select 1 from public.tenant_inspections b where b.client_id = d.new_id and b.request_id = a.request_id);
+  foreach t in array array['rentals','reservations','fines','notes','payment_receipts','vehicle_incidents','tenant_devices','antifraud_telemetry',
+                           'tenant_consents','tenant_inspections','tenant_documents','rental_requests','payment_transactions','asaas_customers','client_push_subscriptions'] loop
+    execute format('alter table public.%I disable trigger user', t);
+    execute format('update public.%I x set client_id = d.new_id from dup_clients d where x.client_id = d.old_id', t);
+    get diagnostics n = row_count;
+    execute format('alter table public.%I enable trigger user', t);
+    if n > 0 then raise notice '% vínculo(s) de % passados para o cliente da LOCAKAR', n, t; end if;
+  end loop;
+  alter table public.vehicles disable trigger user;
+  delete from public.vehicles v using dup_vehicles d where v.id = d.old_id;
+  get diagnostics n = row_count;
+  alter table public.vehicles enable trigger user;
+  if n > 0 then raise notice '% veículo(s) duplicado(s) apagados da Código Base (já existem na LOCAKAR): %', n, (select string_agg(plate, ', ') from dup_vehicles); end if;
+  alter table public.clients disable trigger user;
+  delete from public.clients c using dup_clients d where c.id = d.old_id;
+  get diagnostics n = row_count;
+  alter table public.clients enable trigger user;
+  if n > 0 then raise notice '% cliente(s) duplicado(s) apagados da Código Base (já existem na LOCAKAR)', n; end if;
+
   -- Código do cliente é único por locadora: renumera os que vierem, depois dos da LOCAKAR.
   alter table public.clients disable trigger user;
   update public.clients set code = code + coalesce((select max(code) from public.clients where organization_id = v_loca), 0)
