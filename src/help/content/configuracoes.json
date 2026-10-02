@@ -1,0 +1,498 @@
+[
+  {
+    "slug": "configurar-empresa-dados",
+    "title": "Como configurar os dados da sua locadora (Empresa)",
+    "description": "Preencha razão social, CNPJ, telefone, WhatsApp oficial, site e endereço que aparecem nos contratos e comprovantes.",
+    "category": "empresa",
+    "audience": "admin",
+    "permission": "settings",
+    "keywords": ["empresa", "cnpj", "razao social", "dados", "endereco", "telefone", "whatsapp", "link"],
+    "aliases": ["como mudar dados da locadora", "alterar cnpj da locadora", "configurar empresa", "link da locadora"],
+    "routes": ["/admin/settings#empresa"],
+    "sources": ["src/components/admin/org-company-form.tsx", "src/components/admin/org-share-link.tsx"],
+    "minutes": 4,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Perfil de Proprietário (owner) ou Administrador (admin)."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Configurações > Empresa",
+        "text": "No menu lateral, clique em 'Configurações'. A primeira aba é 'Empresa'.",
+        "image": "/help/screenshots/settings/company.webp"
+      },
+      {
+        "title": "Passo 2 — Confira seu Link Público e QR Code",
+        "text": "No topo da aba, o card 'Link do aplicativo para seus clientes' exibe o endereço exclusivo da sua locadora (ex.: locakar.com.br/l/sualocadora). Você pode copiar o link ou baixar o QR Code em alta resolução para balcão e redes sociais."
+      },
+      {
+        "title": "Passo 3 — Preencha os dados cadastrais",
+        "text": "Preencha os campos da empresa:",
+        "fields": [
+          { "name": "Nome fantasia", "required": true, "description": "Nome da marca exibido no topo do painel e no app.", "example": "Rota Sul Locadora" },
+          { "name": "Razão social", "required": false, "description": "Nome empresarial que sairá no cabeçalho dos contratos.", "example": "Rota Sul Locadora de Veículos Ltda" },
+          { "name": "CNPJ / CPF", "required": false, "description": "Documento da empresa para qualificação contratual.", "example": "00.000.000/0000-00" },
+          { "name": "E-mail principal", "required": false, "description": "E-mail de contato oficial da locadora." },
+          { "name": "WhatsApp de atendimento", "required": false, "description": "Número acionado quando os clientes clicam em 'Falar no WhatsApp' no app.", "example": "(19) 99999-0000" },
+          { "name": "Endereço completo, Cidade, UF e CEP", "required": false, "description": "Localização física da locadora utilizada nos contratos e termos de vistoria." }
+        ]
+      },
+      {
+        "title": "Passo 4 — Salve as alterações",
+        "text": "Clique no botão 'Salvar dados'. A atualização é imediata para toda a plataforma."
+      }
+    ],
+    "tips": [
+      "O link público direciona o cliente automaticamente para o app da sua locadora com as suas cores e logotipo aplicados."
+    ],
+    "warnings": [
+      "Sem endereço e documento preenchidos, o sistema bloqueia a emissão de novos contratos digitais."
+    ],
+    "problems": [
+      {
+        "question": "O WhatsApp de suporte não abre com o número certo",
+        "answer": "Confira se o campo 'WhatsApp de atendimento' inclui o DDD correto e se foi salvo com sucesso."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Posso alterar o endereço /l/sualocadora?",
+        "answer": "O endereço exclusivo (slug) pode ser alterado através do Super Admin da plataforma. Cuidado: alterar quebra QR Codes já impressos."
+      }
+    ],
+    "related": ["configurar-identidade-visual", "gerar-assinar-contrato"],
+    "result": "Sua locadora identificada com profissionalismo em todos os documentos emitidos."
+  },
+  {
+    "slug": "configurar-identidade-visual",
+    "title": "Como personalizar sua marca: logo, cores e tema (White Label)",
+    "description": "Envie seu logotipo para fundo claro e escuro, defina cores primárias e secundárias com verificação de contraste WCAG.",
+    "category": "aparencia",
+    "audience": "admin",
+    "permission": "settings",
+    "keywords": ["marca", "logo", "cores", "white label", "personalizar", "contraste", "tema"],
+    "aliases": ["como mudar o logo", "trocar cor do sistema", "personalizar aparencia", "marca propria"],
+    "routes": ["/admin/settings#aparencia"],
+    "sources": ["src/components/admin/org-branding-form.tsx", "src/lib/contrast.ts"],
+    "minutes": 4,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Arquivos de imagem da sua logomarca (PNG, JPG ou WebP até 1 MB)."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Configurações > Aparência",
+        "text": "Vá em Configurações e clique na aba 'Aparência'.",
+        "image": "/help/screenshots/settings/branding.webp"
+      },
+      {
+        "title": "Passo 2 — Envie os logotipos da sua empresa",
+        "text": "Você pode enviar até 3 variações da sua marca:",
+        "fields": [
+          { "name": "Logo Principal (Fundo escuro)", "required": false, "description": "Logotipo para uso no painel escuro e topo do app." },
+          { "name": "Logo para Fundo Claro", "required": false, "description": "Versão com cores escuras para contraste em fundos brancos (caso não envie, usa a principal)." },
+          { "name": "Ícone / Logo Compacto", "required": false, "description": "Versão circular ou quadrada para ícones e favicon do navegador." }
+        ]
+      },
+      {
+        "title": "Passo 3 — Escolha sua paleta de cores",
+        "text": "Defina a Cor Principal (botões e barras ativas), Secundária (gradientes e fundos) e de Destaque (ícones e avisos). Você pode digitar o código hexadecimal (ex.: #2563eb) ou clicar no seletor de cores."
+      },
+      {
+        "title": "Passo 4 — Confira a pré-visualização ao vivo",
+        "text": "O quadro inferior mostra em tempo real como seus botões, cartões e contrastes ficarão no aplicativo. Se a cor escolhida tiver baixo contraste, um aviso de acessibilidade orienta o ajuste."
+      },
+      {
+        "title": "Passo 5 — Salve a identidade visual",
+        "text": "Clique no botão 'Salvar identidade visual'. As cores e logos são aplicados imediatamente em todas as abas e no app do locatário."
+      }
+    ],
+    "tips": [
+      "Para obter o melhor resultado, utilize imagens em formato PNG com fundo transparente.",
+      "Você pode alternar o tema do seu próprio painel administrativo entre Claro e Escuro sem afetar a marca dos seus clientes."
+    ],
+    "warnings": [
+      "Arquivos SVG não são permitidos por segurança: utilize apenas imagens PNG, JPG ou WebP de até 1 MB."
+    ],
+    "problems": [
+      {
+        "question": "Aparece 'Aviso de acessibilidade: baixo contraste'",
+        "answer": "A cor principal escolhida é muito clara para texto branco ou muito escura para leitura. Escolha uma tonalidade com melhor legibilidade."
+      }
+    ],
+    "faq": [
+      {
+        "question": "O cliente locatário vê a minha marca?",
+        "answer": "Sim! O aplicativo web e os links de cobrança exibem o seu logotipo, o nome da sua locadora e as suas cores personalizadas."
+      }
+    ],
+    "related": ["configurar-empresa-dados", "onboarding-checklist-locadora"],
+    "result": "O sistema passa a operar como uma plataforma exclusiva com a identidade da sua locadora."
+  },
+  {
+    "slug": "gerenciar-equipe-permissoes",
+    "title": "Como convidar usuários e gerenciar permissões da equipe",
+    "description": "Convide colaboradores por link de e-mail e defina papéis: Administrador, Gerente, Financeiro, Operador ou Leitura.",
+    "category": "equipe",
+    "audience": "admin",
+    "permission": "team",
+    "keywords": ["equipe", "usuario", "convite", "papel", "permissao", "gerente", "operador", "financeiro"],
+    "aliases": ["como cadastrar funcionario", "adicionar usuario", "convidar colaborador", "mudar funcao de funcionario"],
+    "routes": ["/admin/settings#equipe", "/convite/[token]"],
+    "sources": ["src/components/admin/org-team-manager.tsx", "src/lib/permissions.ts"],
+    "minutes": 4,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Perfil de Proprietário (owner) ou Administrador (admin)."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Configurações > Equipe",
+        "text": "Na aba Equipe de Configurações, você vê os membros ativos da locadora e os convites recentes pendentes.",
+        "image": "/help/screenshots/settings/team.webp"
+      },
+      {
+        "title": "Passo 2 — Clique em 'Convidar usuário'",
+        "text": "Clique no botão '+ Convidar usuário' no canto superior direito para abrir o modal de convite."
+      },
+      {
+        "title": "Passo 3 — Informe o e-mail e a função",
+        "text": "Digite o e-mail do colaborador e selecione o papel correspondente à atuação dele:",
+        "fields": [
+          { "name": "Administrador", "required": false, "description": "Acesso amplo a cadastros, contratos, financeiro, configurações e equipe." },
+          { "name": "Gerente", "required": false, "description": "Opera frota, reservas, clientes, contratos e relatórios financeiros." },
+          { "name": "Financeiro", "required": false, "description": "Acesso focado em cobranças, baixas, despesas e faturamento." },
+          { "name": "Operador", "required": false, "description": "Operação diária de veículos, vistorias, multas e locações." },
+          { "name": "Somente leitura", "required": false, "description": "Visualiza os dados sem permissão de alteração ou exclusão." }
+        ]
+      },
+      {
+        "title": "Passo 4 — Envie o link gerado",
+        "text": "Clique em 'Gerar convite'. O sistema cria um link seguro exclusivo (com validade de 7 dias). Copie o link e envie para o colaborador pelo WhatsApp ou e-mail."
+      },
+      {
+        "title": "Passo 5 — Aceite pelo colaborador",
+        "text": "O convidado abre o link /convite/[token], entra com a conta dele e confirma o aceite. Ele é adicionado à equipe imediatamente."
+      }
+    ],
+    "tips": [
+      "Se um convite ainda não foi aceito, você pode clicar em 'Revogar' a qualquer momento para cancelar o acesso.",
+      "Para remover um colaborador desligado da empresa, clique no ícone de lixeira vermelha ao lado do nome dele."
+    ],
+    "warnings": [
+      "O convite só pode ser aceito pelo mesmo endereço de e-mail para o qual foi emitido: entrar com outro e-mail causará erro de permissão.",
+      "O sistema não permite que você remova o seu próprio acesso."
+    ],
+    "problems": [
+      {
+        "question": "O colaborador recebeu a mensagem 'Este convite expirou ou já foi utilizado'",
+        "answer": "Os links de convite têm validade de 7 dias. Basta gerar um novo convite na tela e enviar novamente."
+      }
+    ],
+    "faq": [
+      {
+        "question": "O proprietário da locadora pode ser excluído da equipe?",
+        "answer": "O único proprietário não pode ser removido diretamente. É necessário atribuir outro proprietário antes para garantir a continuidade da locadora."
+      }
+    ],
+    "related": ["configurar-empresa-dados", "onboarding-checklist-locadora"],
+    "result": "Sua equipe trabalha de forma colaborativa com níveis de acesso seguros e organizados."
+  },
+  {
+    "slug": "configurar-mensagens-textos",
+    "title": "Como personalizar textos de boas-vindas, cobrança e suporte",
+    "description": "Edite os avisos automáticos exibidos no aplicativo do cliente, observações em cobranças e mensagens de rodapé.",
+    "category": "textos",
+    "audience": "admin",
+    "permission": "settings",
+    "keywords": ["textos", "mensagens", "boas-vindas", "suporte", "rodape", "cobranca", "personalizar"],
+    "aliases": ["como mudar mensagem do app", "alterar texto de boas vindas", "personalizar mensagens"],
+    "routes": ["/admin/settings#textos"],
+    "sources": ["src/components/admin/org-texts-form.tsx"],
+    "minutes": 3,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Acesso a Configurações."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Configurações > Textos",
+        "text": "Na aba Textos de Configurações, localize os campos de comunicação automática.",
+        "image": "/help/screenshots/settings/texts.webp"
+      },
+      {
+        "title": "Passo 2 — Ajuste as mensagens da locadora",
+        "text": "Personalize conforme o tom da sua empresa:",
+        "fields": [
+          { "name": "Mensagem de boas-vindas do aplicativo", "required": false, "description": "Exibida no topo da tela inicial do aplicativo do cliente (até 400 caracteres)." },
+          { "name": "Observação nas cobranças", "required": false, "description": "Texto orientativo que acompanha as faturas e cobranças PIX." },
+          { "name": "Instruções de suporte", "required": false, "description": "Orientações sobre horário de atendimento ou plantão 24h em caso de emergência." },
+          { "name": "Texto de rodapé", "required": false, "description": "Mensagem institucional curta exibida no final das páginas (até 200 caracteres)." }
+        ]
+      },
+      {
+        "title": "Passo 3 — Salve as alterações",
+        "text": "Clique em 'Salvar textos'. Os avisos são atualizados imediatamente no aplicativo do locatário."
+      },
+      {
+        "title": "Passo 4 — Exportação de dados (LGPD)",
+        "text": "No final desta aba, clique em 'Baixar dados (JSON)' para exportar um arquivo completo com todos os cadastros, veículos, locações e contratos da sua locadora."
+      }
+    ],
+    "tips": [
+      "Mantenha as mensagens objetivas e acolhedoras para transmitir segurança aos clientes."
+    ],
+    "warnings": [
+      "Textos com caracteres acima do limite são cortados no momento da gravação."
+    ],
+    "problems": [
+      {
+        "question": "A mensagem no aplicativo do cliente não mudou na hora",
+        "answer": "O app mantém um cache local de 5 minutos por performance. Ao reabrir o app ou puxar a tela para atualizar, o novo texto é carregado."
+      }
+    ],
+    "faq": [
+      {
+        "question": "O que contém o arquivo de backup baixado?",
+        "answer": "Contém todos os registros da sua organização em formato JSON estruturado, garantindo conformidade com a portabilidade de dados da LGPD."
+      }
+    ],
+    "related": ["configurar-empresa-dados", "configurar-identidade-visual"],
+    "result": "Sua comunicação alinhada com as necessidades e identidade da sua empresa."
+  },
+  {
+    "slug": "configurar-tabela-fipe",
+    "title": "Como ativar e usar a Tabela FIPE para precificação da frota",
+    "description": "Consulte valores de mercado oficiais de carros e motos, mantenha histórico mensal de depreciação e veja o patrimônio da frota.",
+    "category": "integracoes",
+    "audience": "admin",
+    "permission": "integrations",
+    "keywords": ["fipe", "tabela fipe", "valor de mercado", "patrimonio", "depreciacao", "cotacao"],
+    "aliases": ["como configurar fipe", "consultar tabela fipe", "atualizar valor fipe do carro"],
+    "routes": ["/admin/settings#integracoes", "/admin/vehicles"],
+    "sources": ["src/components/admin/fipe-settings.tsx", "src/lib/server/fipe.ts"],
+    "minutes": 4,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Acesso a Configurações > Integrações."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Configurações > Integrações",
+        "text": "Na aba Integrações, localize a seção 'Tabela FIPE'. O sistema informa o status 'Ativo' e 'Conectado'.",
+        "image": "/help/screenshots/settings/fipe.webp"
+      },
+      {
+        "title": "Passo 2 — Modos de consulta",
+        "text": "A plataforma já opera por padrão no modo público oficial da FIPE API (com limite de até 500 consultas/dia por IP). Caso sua locadora possua um token próprio da Parallelum, informe no campo 'Novo token FIPE' e clique em 'Salvar token'."
+      },
+      {
+        "title": "Passo 3 — Ative as opções de automação",
+        "text": "Marque 'Ativar integração FIPE' e 'Atualizar vínculos automaticamente na nova referência mensal'. Assim, a cada virada de mês a frota ganha a nova cotação automaticamente."
+      },
+      {
+        "title": "Passo 4 — Vincular na tela de Veículos",
+        "text": "Ao cadastrar ou editar um carro em Veículos, clique em 'Buscar na FIPE'. Selecione a marca, modelo e ano modelo correspondentes. O valor FIPE oficial é associado ao carro."
+      }
+    ],
+    "tips": [
+      "No topo do Dashboard, confira o card 'Valor FIPE da frota' com o patrimônio comercial atualizado dos carros conectados.",
+      "Na visualização do veículo, clique no painel FIPE para ver o gráfico histórico de variação e depreciação dos últimos meses."
+    ],
+    "warnings": [
+      "A Tabela FIPE não realiza busca automática por placa: a localização do veículo ocorre selecionando o tipo, fabricante e versão."
+    ],
+    "problems": [
+      {
+        "question": "O carro não mostra o valor FIPE",
+        "answer": "Abra a edição do veículo em Veículos e utilize o botão 'Buscar na FIPE' para vincular a versão exata do catálogo."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Valor de compra e Valor FIPE são a mesma coisa?",
+        "answer": "Não. O 'Valor Pago / Investido' é o que sua locadora pagou na aquisição. O 'Valor FIPE' é a cotação média de mercado calculada mensalmente pela Fundação Instituto de Pesquisas Econômicas."
+      }
+    ],
+    "related": ["cadastrar-veiculo", "visao-360-veiculo"],
+    "result": "Patrimônio da frota valorado de acordo com as cotações oficiais do mercado brasileiro."
+  },
+  {
+    "slug": "configurar-whatsapp-notificacoes",
+    "title": "Como conectar o WhatsApp da locadora para notificações automáticas",
+    "description": "Escaneie o QR Code no celular da empresa para disparar contratos, recibos, cobranças PIX e alertas automáticos aos clientes.",
+    "category": "integracoes",
+    "audience": "admin",
+    "permission": "integrations",
+    "keywords": ["whatsapp", "qrcode", "conexao", "evolution", "notificacao", "alerta"],
+    "aliases": ["como conectar whatsapp", "escanear qrcode whatsapp", "ativar mensagens whatsapp"],
+    "routes": ["/admin/settings#integracoes"],
+    "sources": ["src/components/admin/whatsapp-connection.tsx"],
+    "minutes": 3,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Aparelho celular com o WhatsApp oficial da locadora em mãos."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Configurações > Integrações",
+        "text": "Na aba Integrações, localize a seção 'WhatsApp das notificações'.",
+        "image": "/help/screenshots/settings/whatsapp.webp"
+      },
+      {
+        "title": "Passo 2 — Abra o WhatsApp no celular da locadora",
+        "text": "No celular com o número oficial da sua empresa, abra o WhatsApp, toque em ⋮ (Android) ou Configurações (iPhone) > Dispositivos conectados > Conectar dispositivo."
+      },
+      {
+        "title": "Passo 3 — Aponte a câmera para o QR Code na tela",
+        "text": "Aponte para o QR Code exibido no painel. O código se renova automaticamente a cada 20 segundos para manter a segurança da sessão."
+      },
+      {
+        "title": "Passo 4 — Confirmação de conexão",
+        "text": "Assim que a câmera fizer a leitura, o card muda para 'Conectado · Ativo' com o número e nome do perfil exibidos. Use o campo 'Enviar mensagem de teste' para validar."
+      }
+    ],
+    "tips": [
+      "Mesmo se o celular ficar temporariamente sem bateria, as notificações que falharem continuam sendo entregues pelo canal de e-mail como contingência."
+    ],
+    "warnings": [
+      "Não desconecte o aparelho nas configurações do WhatsApp do celular sem necessidade para não interromper os envios automáticos."
+    ],
+    "problems": [
+      {
+        "question": "O QR Code não carrega ou aparece erro de conexão",
+        "answer": "Clique em 'Tentar novamente' ou aguarde alguns segundos enquanto o gateway Evolution restabelece a instância da sua locadora."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Os clientes podem responder por esse número?",
+        "answer": "Sim! As conversas ficam disponíveis no celular físico da locadora normalmente, permitindo atendimento humano aos locatários."
+      }
+    ],
+    "related": ["cobrar-whatsapp-pix", "gerar-assinar-contrato"],
+    "result": "Sua locadora comunicando em tempo real com clientes direto no aplicativo de mensagens mais usado."
+  },
+  {
+    "slug": "notificacoes-web-push-alertas",
+    "title": "Como ativar notificações no navegador (Web Push) e alertas",
+    "description": "Receba avisos instantâneos de novos contratos assinados, pagamentos e vencimentos no computador ou celular.",
+    "category": "notificacoes",
+    "audience": "admin",
+    "permission": "settings",
+    "keywords": ["notificacao", "push", "sino", "alertas", "navegador", "celular", "vapid"],
+    "aliases": ["como ativar notificacoes", "nao recebo notificacao", "ativar sino de alerta"],
+    "routes": ["/admin/settings#preferencias"],
+    "sources": ["src/components/admin/push-settings.tsx", "src/hooks/use-notifications.ts"],
+    "minutes": 3,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Navegador compatível (Chrome, Edge, Safari iOS 16.4+, Firefox)."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Configurações > Preferências",
+        "text": "Na aba Preferências de Configurações, desça até a seção 'Notificações da equipe (Web Push)'.",
+        "image": "/help/screenshots/settings/push.webp"
+      },
+      {
+        "title": "Passo 2 — Clique em 'Ativar notificações'",
+        "text": "Clique no botão 'Ativar notificações'. O navegador exibirá um pop-up pedindo permissão de notificações. Clique em 'Permitir'."
+      },
+      {
+        "title": "Passo 3 — Escolha as categorias de alerta",
+        "text": "Marque as caixas das categorias que deseja receber: Locações, Pagamentos, Multas, Manutenções, Vistorias, Contratos e Alertas urgentes."
+      },
+      {
+        "title": "Passo 4 — Teste o recebimento",
+        "text": "Clique no botão 'Enviar teste'. Um aviso sonoro e visual deve surgir imediatamente na sua área de trabalho ou tela de bloqueio."
+      }
+    ],
+    "tips": [
+      "No topo do painel, o ícone de Sino reúne o histórico das notificações e as pendências calculadas da operação. Clique sobre ele para marcar como lidas.",
+      "Em celulares iPhone (iOS), é necessário instalar o aplicativo pelo Safari (Compartilhar > Adicionar à Tela de Início) para ativar o Web Push."
+    ],
+    "warnings": [
+      "Se você clicar em 'Bloquear' no pop-up do navegador, será necessário clicar no ícone de cadeado ao lado da barra de endereço para liberar a permissão."
+    ],
+    "problems": [
+      {
+        "question": "Aparece 'Bloqueadas pelo navegador'",
+        "answer": "Clique no cadeado ao lado de https:// na barra de endereço do seu navegador, mude 'Notificações' para 'Permitir' e recarregue a página."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Preciso deixar a aba do sistema aberta para receber?",
+        "answer": "Não! A tecnologia Web Push entrega as mensagens mesmo com o navegador em segundo plano ou com a aba fechada."
+      }
+    ],
+    "related": ["configurar-empresa-dados", "detalhes-locacao-gestao"],
+    "result": "Você nunca perde um contrato assinado ou pagamento de locação na sua operação."
+  },
+  {
+    "slug": "super-admin-gestao-plataforma",
+    "title": "Como usar o Super Admin da plataforma (Super Admins)",
+    "description": "Visão geral de todas as locadoras, gestão de planos, prorrogação de testes, suporte e regras da plataforma.",
+    "category": "plataforma",
+    "audience": "platform",
+    "permission": "settings",
+    "keywords": ["super admin", "plataforma", "locadoras", "prorrogar", "suspender", "suporte", "excluir"],
+    "aliases": ["como acessar super admin", "gerenciar locadoras saas", "painel master"],
+    "routes": ["/plataforma/admin"],
+    "sources": ["src/app/plataforma/admin/page.tsx", "src/app/api/platform/admin/route.ts"],
+    "minutes": 5,
+    "difficulty": "Intermediário",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Conta cadastrada na tabela de Super Admins da plataforma (is_platform_admin)."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse /plataforma/admin",
+        "text": "Super Admins autenticados encontram o link no rodapé do menu lateral ou acessam diretamente /plataforma/admin. A tela exige validação de segurança no banco.",
+        "image": "/help/screenshots/platform/overview.webp"
+      },
+      {
+        "title": "Passo 2 — Acompanhe os números globais",
+        "text": "Os indicadores do topo somam todas as locadoras cadastradas: Total de locadoras, Ativas, Em teste, Pendentes/suspensas e total de veículos na plataforma."
+      },
+      {
+        "title": "Passo 3 — Gerencie cada locadora",
+        "text": "Clique no botão 'Gerenciar' da locadora desejada para abrir o painel master:",
+        "fields": [
+          { "name": "Status e plano", "required": false, "description": "Alterne entre Ativa, Teste grátis, Pagamento pendente e Suspensa, ou troque o plano da assinatura." },
+          { "name": "Prorrogar teste", "required": false, "description": "Informe a quantidade de dias (1 a 365) para estender o período de avaliação da locadora." },
+          { "name": "Dados e endereço", "required": false, "description": "Edite o nome, CNPJ, contatos ou o endereço exclusivo (slug /l/...) da locadora." },
+          { "name": "Equipe da locadora", "required": false, "description": "Adicione colaboradores por e-mail, altere papéis ou remova membros." },
+          { "name": "Acesso de suporte", "required": false, "description": "Entra no painel daquela locadora como administrador para apoiar o cliente com auditoria registrada." }
+        ]
+      },
+      {
+        "title": "Passo 4 — Exclusão definitiva de locadoras",
+        "text": "Caso uma locadora de testes ou cancelada precise ser apagada com todos os seus dados, digite o slug exato no campo de confirmação e confirme a exclusão. A locadora principal da plataforma é protegida contra exclusão acidental."
+      }
+    ],
+    "tips": [
+      "Na parte inferior da página, confira a trilha de auditoria com as últimas 50 ações realizadas por qualquer Super Admin.",
+      "Você pode adicionar outros sócios ou analistas como Super Admin pelo bloco 'Super Admins'."
+    ],
+    "warnings": [
+      "A exclusão de uma locadora apaga definitivamente seus carros, clientes, contratos e recebimentos: certifique-se antes de confirmar.",
+      "Você não pode remover o seu próprio acesso de Super Admin para evitar bloqueio involuntário."
+    ],
+    "problems": [
+      {
+        "question": "Aparece a mensagem 'Acesso restrito ao Super Admin da plataforma'",
+        "answer": "O seu e-mail logado não possui privilégio na tabela platform_admins. Fale com um Super Admin existente para incluir seu e-mail."
+      }
+    ],
+    "faq": [
+      {
+        "question": "O dono da locadora comum vê esse painel?",
+        "answer": "Não. Este painel é invisível e inacessível para contas de locadoras convencionais."
+      }
+    ],
+    "related": ["configurar-empresa-dados", "gerenciar-equipe-permissoes"],
+    "result": "Gestão centralizada de todas as empresas e clientes da plataforma SaaS."
+  }
+]

@@ -9,7 +9,10 @@
     "start": "next start",
     "lint": "eslint",
     "check": "node node_modules/jiti/lib/jiti-cli.mjs scripts/check.ts",
-    "locatario": "npm --prefix apps/locatario start"
+    "locatario": "npm --prefix apps/locatario start",
+    "help:validate": "node scripts/help/validate.cjs && node scripts/check-help.cjs",
+    "help:audit": "node scripts/help/audit.cjs",
+    "help:screenshots": "node scripts/help/screenshots.cjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

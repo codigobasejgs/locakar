@@ -16,6 +16,7 @@ import {
   Users,
   Wallet,
   Wrench,
+  HelpCircle,
   type LucideIcon,
 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
@@ -45,6 +46,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: ROUTES.security, label: "Segurança", icon: ShieldCheck, description: "Antifraude, aparelhos e auditoria do app" },
   { href: ROUTES.reports, label: "Relatórios", icon: ChartColumn, description: "Relatórios por período, veículo e status" },
   { href: ROUTES.settings, label: "Configurações", icon: Settings, description: "Empresa e preferências do painel" },
+  { href: ROUTES.help, label: "Ajuda e Treinamento", icon: HelpCircle, description: "Tutoriais, manuais e FAQ" },
 ];
 
 export function findNavItem(pathname: string) {

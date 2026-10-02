@@ -1,0 +1,407 @@
+[
+  {
+    "slug": "visao-geral-pagamentos",
+    "title": "Como gerenciar pagamentos e cobranças das locações",
+    "description": "Aprenda a acompanhar cobranças em aberto, vencidas e pagas, filtrar por vencimento e dar baixa em parcelas.",
+    "category": "pagamentos",
+    "audience": "admin",
+    "permission": "finance",
+    "keywords": ["pagamento", "cobranca", "parcela", "baixa", "vencido", "filtro", "recebimento"],
+    "aliases": ["como ver pagamentos", "lista de parcelas", "cobrar aluguel", "acompanhar parcelas"],
+    "routes": ["/admin/pagamentos"],
+    "sources": ["src/app/admin/pagamentos/page.tsx", "src/components/admin/payment-card.tsx"],
+    "minutes": 4,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Locações criadas com parcelas na grade."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Pagamentos",
+        "text": "No menu lateral, clique em 'Pagamentos'. No topo, os cards resumem os valores reais: Em aberto (a vencer), Recebido (total pago), Vencido (com multa e juros) e Total de contratos.",
+        "image": "/help/screenshots/payments/list.webp"
+      },
+      {
+        "title": "Passo 2 — Use a barra de filtros",
+        "text": "Você pode buscar por nome do cliente, CPF, placa ou descrição. Filtre por status (Todos, Em aberto, Vencidos, Pagos ou Cancelados) ou por vencimento (Hoje, Amanhã, Vencidos ou Futuros)."
+      },
+      {
+        "title": "Passo 3 — Ações rápidas no card da parcela",
+        "text": "Cada cartão de pagamento oferece botões diretos:",
+        "fields": [
+          { "name": "Dar baixa", "required": false, "description": "Abre o modal para registrar o pagamento manual com data, valor e meio utilizado." },
+          { "name": "Cobrar", "required": false, "description": "Permite escolher o meio de cobrança (WhatsApp com código PIX, fatura Asaas ou link InfinitePay)." },
+          { "name": "Menu '...'", "required": false, "description": "Abre opções adicionais: Ver detalhes, Editar valor/vencimento, Cancelar pagamento ou Excluir parcela." }
+        ]
+      }
+    ],
+    "tips": [
+      "A ordenação inteligente padrão coloca os vencidos no topo, seguidos pelos que vencem hoje, facilitando a rotina do financeiro.",
+      "Clique em 'Limpar filtros' para restaurar a listagem completa."
+    ],
+    "warnings": [
+      "Cancelar uma parcela mantém o registro histórico como 'Cancelado'. Já 'Excluir parcela' remove definitivamente o lançamento da locação."
+    ],
+    "problems": [
+      {
+        "question": "A parcela está marcada como 'Atrasada' mas o cliente pagou",
+        "answer": "Clique no botão 'Dar baixa' no card da parcela, informe a data em que o dinheiro entrou e confirme."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Se o cliente pagar pelo Asaas ou InfinitePay, a baixa é automática?",
+        "answer": "Sim! Quando as integrações online estão configuradas com webhook ativo, a confirmação do gateway dá baixa na parcela sem intervenção manual."
+      }
+    ],
+    "related": ["dar-baixa-pagamento", "cobrar-whatsapp-pix", "aprovar-comprovante-pix"],
+    "result": "Controle financeiro rigoroso sobre cada recebimento da locadora."
+  },
+  {
+    "slug": "dar-baixa-pagamento",
+    "title": "Como dar baixa manual em uma parcela",
+    "description": "Registre o recebimento de uma parcela paga em dinheiro, transferência bancária ou PIX direto na conta da locadora.",
+    "category": "pagamentos",
+    "audience": "admin",
+    "permission": "finance",
+    "keywords": ["baixa", "receber", "quitar", "confirmar pagamento", "manual", "dinheiro"],
+    "aliases": ["como dar baixa", "marcar como pago", "receber parcela manual", "baixar pagamento"],
+    "routes": ["/admin/pagamentos", "/admin/rentals/[id]"],
+    "sources": ["src/components/admin/payment-settle-dialog.tsx", "src/app/admin/pagamentos/page.tsx"],
+    "minutes": 3,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Parcela pendente ou vencida."],
+    "steps": [
+      {
+        "title": "Passo 1 — Clique em 'Dar baixa'",
+        "text": "No card da parcela em Pagamentos (ou no menu de ações), clique no botão 'Dar baixa'.",
+        "image": "/help/screenshots/payments/settle.webp"
+      },
+      {
+        "title": "Passo 2 — Preencha os dados do recebimento",
+        "text": "Confira e preencha os campos:",
+        "fields": [
+          { "name": "Valor recebido (R$)", "required": true, "description": "Valor efetivamente pago pelo cliente (padrão é o total da parcela com eventuais juros).", "example": "650.00" },
+          { "name": "Data do pagamento", "required": true, "description": "Dia em que o recurso entrou no caixa ou na conta." },
+          { "name": "Forma de pagamento", "required": true, "description": "PIX, Dinheiro, Transferência, Cartão de débito, Cartão de crédito ou Boleto." },
+          { "name": "Observações", "required": false, "description": "Número de autorização, banco ou combinado especial." }
+        ]
+      },
+      {
+        "title": "Passo 3 — Confirme a baixa",
+        "text": "Clique no botão 'Confirmar baixa'. O status da parcela muda imediatamente para 'Pago' em verde."
+      }
+    ],
+    "tips": [
+      "Se havia uma cobrança Asaas em aberto para esta parcela, o sistema cancela a cobrança no Asaas automaticamente para evitar pagamento duplicado."
+    ],
+    "warnings": [
+      "Caso precise desfazer a baixa, abra o modal 'Editar' da parcela e altere o status ou apague a data de pagamento."
+    ],
+    "problems": [
+      {
+        "question": "O cliente pagou um valor menor que a parcela",
+        "answer": "Você pode informar o valor exato no campo 'Valor recebido'. O sistema registra quanto foi pago e preserva o histórico."
+      }
+    ],
+    "faq": [
+      {
+        "question": "A baixa manual gera comprovante?",
+        "answer": "Sim! Na página da locação ou no menu Mais, você pode clicar em 'Enviar comprovante' para disparar o recibo por e-mail."
+      }
+    ],
+    "related": ["visao-geral-pagamentos", "aprovar-comprovante-pix"],
+    "result": "A parcela fica quitada e o saldo da locadora é atualizado."
+  },
+  {
+    "slug": "cobrar-whatsapp-pix",
+    "title": "Como cobrar o cliente pelo WhatsApp com código PIX",
+    "description": "Gere mensagem pronta de cobrança com dados do carro, vencimento, valor e código PIX Copia e Cola para o WhatsApp.",
+    "category": "pagamentos",
+    "audience": "admin",
+    "permission": "operate",
+    "keywords": ["cobrar", "whatsapp", "pix", "copia e cola", "mensagem", "lembrete"],
+    "aliases": ["como cobrar no whatsapp", "enviar pix pelo whatsapp", "cobrar cliente atrasado"],
+    "routes": ["/admin/pagamentos"],
+    "sources": ["src/app/admin/pagamentos/page.tsx", "src/lib/billing.ts"],
+    "minutes": 2,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Cliente com telefone cadastrado e chave PIX configurada em Configurações."],
+    "steps": [
+      {
+        "title": "Passo 1 — Clique em 'Cobrar'",
+        "text": "No card da parcela, clique no botão 'Cobrar'. Se você tiver múltiplos meios de pagamento ativos, escolha 'PIX Manual (WhatsApp)'.",
+        "image": "/help/screenshots/payments/charge.webp"
+      },
+      {
+        "title": "Passo 2 — O WhatsApp Web abre com mensagem pronta",
+        "text": "O sistema monta a mensagem personalizada com: saudação com o primeiro nome do cliente, placa do veículo, data de vencimento, valor atualizado e o código PIX Copia e Cola da sua chave."
+      },
+      {
+        "title": "Passo 3 — Envie a mensagem",
+        "text": "Basta clicar em 'Enviar' no WhatsApp. A mensagem também instrui o cliente a enviar o comprovante pela Área do Cliente no app."
+      }
+    ],
+    "tips": [
+      "A mensagem calcula juros e multas automaticamente caso a parcela esteja vencida além do prazo de carência."
+    ],
+    "warnings": [
+      "Certifique-se de que sua chave PIX está configurada em Configurações > Pagamentos para que o código seja incluído na mensagem."
+    ],
+    "problems": [
+      {
+        "question": "Aparece a mensagem 'O cliente não possui um telefone/WhatsApp cadastrado'",
+        "answer": "Abra o cadastro do cliente em Clientes e preencha o número de telefone com o DDD."
+      }
+    ],
+    "faq": [
+      {
+        "question": "O código PIX é dinâmico ou estático?",
+        "answer": "No modo PIX Manual, o código é gerado no padrão BR Code com o valor exato da parcela e sua chave cadastrada."
+      }
+    ],
+    "related": ["configurar-meios-pagamento", "aprovar-comprovante-pix"],
+    "result": "O cliente recebe a cobrança de forma profissional e pode pagar direto no app do banco dele."
+  },
+  {
+    "slug": "aprovar-comprovante-pix",
+    "title": "Como aprovar ou rejeitar comprovantes PIX enviados pelo app",
+    "description": "Veja o comprovante em imagem ou PDF enviado pelo locatário, confira os dados da conta e aprove ou recuse.",
+    "category": "pagamentos",
+    "audience": "admin",
+    "permission": "finance",
+    "keywords": ["comprovante", "analise", "aprovar", "rejeitar", "pix", "foto", "pdf"],
+    "aliases": ["onde aprovo comprovante", "como aprovar pix do cliente", "recusar comprovante de aluguel"],
+    "routes": ["/admin/finance", "/admin/pagamentos"],
+    "sources": ["src/components/admin/receipt-approval-dialog.tsx", "src/app/api/payments/receipt/route.ts"],
+    "minutes": 3,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Comprovante enviado por um cliente pelo aplicativo do locatário."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Financeiro ou Pagamentos",
+        "text": "Quando há comprovantes pendentes, o bloco amarelo 'Comprovantes para conferir' é exibido no topo da tela com o alerta 'Ação necessária'.",
+        "image": "/help/screenshots/payments/receipt-review.webp"
+      },
+      {
+        "title": "Passo 2 — Clique em 'Conferir'",
+        "text": "Clique no botão 'Conferir' na linha do comprovante desejado. O modal exibe o nome do cliente, o valor esperado da parcela e a foto ou documento enviado."
+      },
+      {
+        "title": "Passo 3 — Verifique os dados bancários",
+        "text": "Confira na imagem se o valor bate com a parcela, se a data é recente e se o dinheiro caiu na conta bancária correta da sua locadora. Você pode clicar em 'Abrir em tamanho original' para dar zoom."
+      },
+      {
+        "title": "Passo 4 — Aprovar ou Rejeitar",
+        "text": "Tome a ação adequada:",
+        "fields": [
+          { "name": "Aprovar pagamento", "required": false, "description": "Confirma o recebimento, dá baixa automática na parcela como Paga e notifica o cliente no celular." },
+          { "name": "Rejeitar", "required": false, "description": "Abre o campo de justificativa (ex.: 'valor diferente da parcela', 'comprovante ilegível'). O cliente é notificado no app para reenviar." }
+        ]
+      }
+    ],
+    "tips": [
+      "A aprovação pede uma confirmação de segurança para evitar cliques acidentais.",
+      "Após a aprovação, a parcela já consta como paga no painel e na visualização do cliente sem precisar recarregar."
+    ],
+    "warnings": [
+      "Sempre confira no extrato do seu banco antes de aprovar comprovantes de alto valor."
+    ],
+    "problems": [
+      {
+        "question": "A imagem do comprovante não abre ou aparece erro",
+        "answer": "Clique no link 'Abrir em tamanho original' para carregar diretamente do armazenamento seguro."
+      }
+    ],
+    "faq": [
+      {
+        "question": "O cliente pode reenviar o comprovante se for rejeitado?",
+        "answer": "Sim! No app do locatário, a parcela passa a exibir 'Comprovante recusado' junto com o motivo e o botão 'Pagar ou reenviar comprovante'."
+      }
+    ],
+    "related": ["visao-geral-pagamentos", "dar-baixa-pagamento"],
+    "result": "O recebimento é validado com segurança e o histórico da locação é atualizado."
+  },
+  {
+    "slug": "integracao-asaas-cobrancas",
+    "title": "Como configurar e usar a integração Asaas (Pix, Boleto e Cartão)",
+    "description": "Automatize cobranças por Pix, boleto e cartão de crédito com baixa automática por webhook sem conferir comprovantes.",
+    "category": "integracoes",
+    "audience": "admin",
+    "permission": "integrations",
+    "keywords": ["asaas", "cobranca automatica", "boleto", "cartao", "webhook", "api key", "sandbox"],
+    "aliases": ["como configurar asaas", "ativar boleto asaas", "baixa automatica asaas"],
+    "routes": ["/admin/settings#pagamentos", "/admin/pagamentos"],
+    "sources": ["src/components/admin/asaas-settings.tsx", "src/lib/server/asaas.ts"],
+    "minutes": 5,
+    "difficulty": "Intermediário",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Conta ativa no Asaas (homologada ou conta de testes Sandbox)."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Configurações > Pagamentos",
+        "text": "Na aba Pagamentos de Configurações, desça até a seção 'Asaas (Cobranças automáticas)'.",
+        "image": "/help/screenshots/settings/asaas.webp"
+      },
+      {
+        "title": "Passo 2 — Escolha o ambiente e salve a chave",
+        "text": "Selecione 'Sandbox' para testar ou 'Produção' para cobranças reais. Cole sua API Key gerada no painel do Asaas (em Integrações > Chaves de API). Ela é cifrada com AES-256 no servidor e nunca é revelada."
+      },
+      {
+        "title": "Passo 3 — Teste a conexão",
+        "text": "Clique no botão 'Testar conexão'. O sistema valida a credencial e registra automaticamente a URL de webhook da sua locadora no Asaas."
+      },
+      {
+        "title": "Passo 4 — Escolha as formas aceitas",
+        "text": "Marque as opções que deseja disponibilizar: Pix, Boleto bancário ou Cartão de crédito. Você também pode definir regras de multa e juros padrão da conta."
+      },
+      {
+        "title": "Passo 5 — Ative o switch em Meios de pagamento",
+        "text": "No topo da aba Pagamentos, ligue o interruptor do cartão Asaas. O meio fica imediatamente ativo para a equipe e para o app do locatário."
+      }
+    ],
+    "tips": [
+      "Quando o cliente paga pelo Asaas, o webhook confirma o pagamento na hora e dá baixa na parcela sem você precisar analisar comprovante.",
+      "O cliente paga com cartão na página segura hospedada do próprio Asaas: dados de cartão nunca passam pelos servidores da sua locadora."
+    ],
+    "warnings": [
+      "Não ative em 'Produção' usando chave de Sandbox, pois as cobranças não funcionarão para clientes reais.",
+      "Desativar o Asaas impede novas cobranças, mas cobranças já emitidas continuam sendo processadas quando pagas."
+    ],
+    "problems": [
+      {
+        "question": "Aparece a mensagem 'Conectado · webhook pendente'",
+        "answer": "Clique novamente em 'Testar conexão' para que o sistema registre a URL oficial de webhook no painel do Asaas."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Posso usar Asaas e PIX Manual ao mesmo tempo?",
+        "answer": "Sim! Você pode manter ambos os switches ativos. Ao cobrar, você escolhe qual meio prefere utilizar."
+      }
+    ],
+    "related": ["configurar-meios-pagamento", "visao-geral-pagamentos"],
+    "result": "Cobranças com baixa automática funcionando para a sua locadora."
+  },
+  {
+    "slug": "integracao-infinitepay",
+    "title": "Como configurar e usar o InfinitePay (Checkout e InfiniteTap)",
+    "description": "Receba parcelas por aproximação no celular do operador (InfiniteTap) ou gere links de checkout com cartão e Pix.",
+    "category": "integracoes",
+    "audience": "admin",
+    "permission": "integrations",
+    "keywords": ["infinitepay", "infinitetap", "aproximacao", "cartao", "checkout", "handle", "tag"],
+    "aliases": ["como configurar infinitepay", "receber por aproximacao", "pagar com infinitepay"],
+    "routes": ["/admin/settings#pagamentos", "/admin/pagamentos"],
+    "sources": ["src/components/admin/infinitepay-settings.tsx", "src/lib/infinitepay.ts"],
+    "minutes": 4,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Conta na InfinitePay com InfiniteTag (handle) ativa."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Configurações > Pagamentos",
+        "text": "Na aba Pagamentos de Configurações, localize a seção 'InfinitePay'.",
+        "image": "/help/screenshots/settings/infinitepay.webp"
+      },
+      {
+        "title": "Passo 2 — Informe sua InfiniteTag",
+        "text": "Preencha o campo 'InfiniteTag (handle)' com o seu nome de usuário da InfinitePay (sem o símbolo $). Ex.: se sua tag é $minhalocadora, digite 'minhalocadora'."
+      },
+      {
+        "title": "Passo 3 — Escolha o modo de operação",
+        "text": "Escolha entre 'Ambos (aproximação e link)', 'Somente InfiniteTap (aproximação)' ou 'Somente Checkout (link Pix / cartão)'."
+      },
+      {
+        "title": "Passo 4 — Ative o switch em Meios de pagamento",
+        "text": "Suba até a seção 'Meios de pagamento ativos' e ligue o interruptor da InfinitePay. O botão 'Pagar com InfinitePay' passa a aparecer nas cobranças."
+      }
+    ],
+    "tips": [
+      "Nenhuma chave secreta de API é necessária: a comunicação ocorre via Deep Link do InfiniteTap e pelo Checkout Integrado oficial da InfinitePay.",
+      "No app do locatário, o cliente pode tocar em 'Pagar com cartão (InfinitePay)' e concluir o pagamento em ambiente seguro."
+    ],
+    "warnings": [
+      "Para receber por aproximação no balcão, o operador precisa estar com o aplicativo da InfinitePay instalado e autenticado no celular."
+    ],
+    "problems": [
+      {
+        "question": "Aparece a mensagem 'InfiniteTag inválida'",
+        "answer": "Certifique-se de não incluir espaços, acentos ou o caractere $ no início do handle."
+      }
+    ],
+    "faq": [
+      {
+        "question": "O cliente pode parcelar no cartão?",
+        "answer": "Sim, a página do Checkout da InfinitePay permite parcelamento em até 12x conforme as taxas da sua conta InfinitePay."
+      }
+    ],
+    "related": ["configurar-meios-pagamento", "visao-geral-pagamentos"],
+    "result": "Sua locadora pronta para receber por aproximação e link com confirmação automática."
+  },
+  {
+    "slug": "configurar-meios-pagamento",
+    "title": "Como ativar e gerenciar os meios de pagamento da locadora",
+    "description": "Controle quais formas de pagamento ficam ativas para os clientes no painel e no aplicativo do locatário.",
+    "category": "pagamentos",
+    "audience": "admin",
+    "permission": "settings",
+    "keywords": ["meios de pagamento", "ativar", "desativar", "pix", "asaas", "infinitepay"],
+    "aliases": ["como mudar forma de pagamento", "desativar meio de pagamento", "escolher como receber"],
+    "routes": ["/admin/settings#pagamentos"],
+    "sources": ["src/components/admin/payment-methods-settings.tsx", "src/lib/payment-methods.ts"],
+    "minutes": 3,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Perfil de Proprietário (owner) ou Administrador (admin)."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Configurações > Pagamentos",
+        "text": "No topo da aba, a seção 'Meios de pagamento ativos' exibe 3 cartões: PIX QR Code (manual), InfinitePay e Asaas.",
+        "image": "/help/screenshots/settings/payment-methods.webp"
+      },
+      {
+        "title": "Passo 2 — Entenda os status dos cartões",
+        "text": "Cada cartão mostra um selo indicando a situação:",
+        "fields": [
+          { "name": "Disponível (verde)", "required": false, "description": "Meio configurado e ativo: os clientes e operadores podem utilizá-lo." },
+          { "name": "Desativado (cinza)", "required": false, "description": "Configurado, porém desligado para novas cobranças." },
+          { "name": "Não configurado (amarelo)", "required": false, "description": "Exige preenchimento dos dados (chave PIX, tag ou API key) antes de ser ligado." }
+        ]
+      },
+      {
+        "title": "Passo 3 — Ative ou desative com o interruptor",
+        "text": "Toque no switch do meio desejado. Se o meio ainda não estiver configurado, o sistema avisa na tela e rola até a seção de configuração correspondente."
+      }
+    ],
+    "tips": [
+      "Desativar um meio de pagamento apenas bloqueia novas cobranças: pagamentos já enviados ou cobranças abertas continuam sendo processados normalmente."
+    ],
+    "warnings": [
+      "Se todos os 3 meios forem desativados, o app do locatário exibirá a mensagem 'Não há meios de pagamento online disponíveis no momento'."
+    ],
+    "problems": [
+      {
+        "question": "Aparece um modal de aviso ao tentar desativar",
+        "answer": "O sistema avisa se existirem comprovantes pendentes de análise ou cobranças abertas para aquele meio. Você pode clicar em 'Desativar mesmo assim' com segurança."
+      }
+    ],
+    "faq": [
+      {
+        "question": "A alteração vale na mesma hora?",
+        "answer": "Sim! A gravação é imediata no servidor e atualiza o painel e o aplicativo do locatário em tempo real."
+      }
+    ],
+    "related": ["integracao-asaas-cobrancas", "integracao-infinitepay", "cobrar-whatsapp-pix"],
+    "result": "Você escolhe exatamente como quer receber os aluguéis da sua frota."
+  }
+]

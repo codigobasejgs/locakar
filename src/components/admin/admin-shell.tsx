@@ -21,6 +21,8 @@ import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { ROUTES } from "@/lib/constants";
 import { cn, todayISO } from "@/lib/utils";
 import { ADMIN_NAV, findNavItem } from "./nav";
+import { ContextualHelpButton } from "@/help/components/contextual";
+import { AdminHelpProvider } from "@/help/components/context";
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -257,6 +259,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         <span className="font-medium text-white">{item.label}</span>
       </nav>
       <InstallButton appName="LOCAKAR Gestão" size="sm" variant="ghost" label="Instalar" className="hidden sm:inline-flex" />
+      <ContextualHelpButton />
       <OrgSwitcher />
       {!isSupabaseEnabled && (
         <span className="hidden rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300 md:inline">
@@ -375,7 +378,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     <OrganizationProvider>
       <BrandingStyle theme={theme} />
       <AdminDataProvider>
-        <div className="min-h-dvh bg-ink text-white admin-shell">
+        <AdminHelpProvider>
+          <div className="min-h-dvh bg-ink text-white admin-shell">
           <OrgStatusBanner />
           {/* Sidebar desktop */}
         <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-[#070708] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] lg:flex">
@@ -431,6 +435,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         richColors
         toastOptions={{ className: "!bg-panel !border-line-strong !rounded-xl" }}
       />
+        </AdminHelpProvider>
       </AdminDataProvider>
     </OrganizationProvider>
   );

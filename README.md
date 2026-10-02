@@ -343,6 +343,30 @@ Na página da locação, o ícone de **QR Code** em cada parcela envia a cobran�
 O código segue o padrão **BR Code (EMV-MPM) do Banco Central** para PIX estático com valor (`src/lib/billing.ts` → `pixPayload`): GUI `br.gov.bcb.pix`, chave no formato oficial por tipo (celular `+55…`, CPF/CNPJ só dígitos, e-mail minúsculo), moeda 986, valor com 2 casas, nome (até 25) e cidade (até 15) sem acento, `txid` por parcela e **CRC16-CCITT** — validado contra o exemplo do manual do BCB em `npm run check`. Sem o campo de descrição, que alguns bancos recusam.
 > Sem integração bancária: o sistema não sabe sozinho quando o PIX cai. A baixa é manual (marcar a parcela como paga). O `txid` identifica a parcela no extrato.
 
+## Central de Ajuda e Treinamento
+
+Manual interativo dentro do produto: busca, tutoriais com screenshots reais, FAQ, trilhas com progresso e ajuda contextual.
+
+- **Equipe:** `/admin/ajuda` (menu "Ajuda e Treinamento" e botão "Ajuda" no topo, que lista os artigos da tela aberta).
+- **Locatário:** `/ajuda?org=<slug>` (botão "Central de Ajuda e Treinamento" no Perfil do app). Mostra só conteúdo do locatário.
+- **Super Admin:** artigo da plataforma só aparece para quem passa em `is_platform_admin()`.
+
+Como funciona:
+- Conteúdo em JSON (`src/help/content/*.json`), separado da UI. Categorias e trilhas são geradas a partir dos artigos.
+- Busca local (`src/help/search.ts`): ignora acentos, entende sinônimos ("carro" = "veículo") e erros de digitação. Sem IA e sem serviço externo.
+- Permissões (`src/help/access.ts`): artigos seguem `can(role, permission)` de `src/lib/permissions.ts` e os módulos do plano.
+- Progresso, favoritos, recentes e avaliação ficam no aparelho (`localStorage`, por usuário e locadora).
+
+Comandos:
+
+```bash
+npm run help:validate     # esquema + testes de busca, perfis, rotas e progresso
+npm run help:audit        # inventário de telas, cobertura e fontes alteradas → docs/help-inventory.json
+npm run help:screenshots  # recaptura com dados fictícios e Supabase falso local
+```
+
+Detalhes: `docs/HELP-MAINTENANCE.md` (como adicionar artigo e recapturar), `docs/HELP-COVERAGE.md` (números medidos e limites), `docs/HELP-CENTER-MAP.md` (mapa de módulos).
+
 ## O que não foi inventado
 
 Nenhum depoimento, avaliação, número de clientes/veículos, tempo de mercado, prêmio, preço ou dado legal aparece no site. Diárias não são exibidas publicamente — o preço é consultado via WhatsApp. As especificações dos cards (transmissão, combustível, lugares, ar) são de fábrica das versões de entrada e estão em `src/data/fleet.ts` para revisão.

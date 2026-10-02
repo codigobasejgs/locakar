@@ -9,11 +9,14 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".next-help/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
     // App do Locatário (Expo): tem tsconfig, dependências e regras próprias em apps/locatario.
     "apps/**",
+    // Bundle web gerado por `npm run build:locatario`.
+    "public/locatario/**",
   ]),
 ]);
 

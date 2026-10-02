@@ -47,3 +47,4 @@ next-env.d.ts
 /*.jpg
 
 !.env.example
+.next-help/

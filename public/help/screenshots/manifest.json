@@ -1,0 +1,443 @@
+[
+  {
+    "id": "app/documentos",
+    "route": "/locatario/documentos",
+    "viewport": "390x844",
+    "theme": "dark",
+    "state": "app",
+    "capturedAt": "2026-10-02T21:23:52.452Z",
+    "file": "public/help/screenshots/app/documentos.webp"
+  },
+  {
+    "id": "app/login",
+    "route": "/locatario/login",
+    "viewport": "390x844",
+    "theme": "dark",
+    "state": "app",
+    "capturedAt": "2026-10-02T21:23:36.996Z",
+    "file": "public/help/screenshots/app/login.webp"
+  },
+  {
+    "id": "app/ocorrencias",
+    "route": "/locatario/ocorrencias",
+    "viewport": "390x844",
+    "theme": "dark",
+    "state": "app",
+    "capturedAt": "2026-10-02T21:23:48.590Z",
+    "file": "public/help/screenshots/app/ocorrencias.webp"
+  },
+  {
+    "id": "app/pagamentos",
+    "route": "/locatario/pagamentos",
+    "viewport": "390x844",
+    "theme": "dark",
+    "state": "app",
+    "capturedAt": "2026-10-02T21:23:40.848Z",
+    "file": "public/help/screenshots/app/pagamentos.webp"
+  },
+  {
+    "id": "app/vistoria",
+    "route": "/locatario/veiculo",
+    "viewport": "390x844",
+    "theme": "dark",
+    "state": "app",
+    "capturedAt": "2026-10-02T21:23:44.733Z",
+    "file": "public/help/screenshots/app/vistoria.webp"
+  },
+  {
+    "id": "clients/form",
+    "route": "/admin/clients",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "text=Novo cliente",
+    "capturedAt": "2026-10-02T21:17:51.589Z",
+    "file": "public/help/screenshots/clients/form.webp"
+  },
+  {
+    "id": "clients/list",
+    "route": "/admin/clients",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:17:48.004Z",
+    "file": "public/help/screenshots/clients/list.webp"
+  },
+  {
+    "id": "contracts/sign",
+    "route": "/assinar/[token]",
+    "viewport": "390x844",
+    "theme": "dark",
+    "state": "link sem contrato",
+    "capturedAt": "2026-10-02T21:23:55.837Z",
+    "file": "public/help/screenshots/contracts/sign.webp"
+  },
+  {
+    "id": "dashboard/onboarding",
+    "route": "/admin",
+    "viewport": "element",
+    "theme": "dark",
+    "state": "section",
+    "capturedAt": "2026-10-02T21:17:38.042Z",
+    "file": "public/help/screenshots/dashboard/onboarding.webp"
+  },
+  {
+    "id": "dashboard/overview",
+    "route": "/admin",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:17:34.964Z",
+    "file": "public/help/screenshots/dashboard/overview.webp"
+  },
+  {
+    "id": "expenses/form",
+    "route": "/admin/expenses",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "text=Nova despesa",
+    "capturedAt": "2026-10-02T21:18:48.496Z",
+    "file": "public/help/screenshots/expenses/form.webp"
+  },
+  {
+    "id": "expenses/list",
+    "route": "/admin/expenses",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:18:42.126Z",
+    "file": "public/help/screenshots/expenses/list.webp"
+  },
+  {
+    "id": "finance/overview",
+    "route": "/admin/finance",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:18:37.243Z",
+    "file": "public/help/screenshots/finance/overview.webp"
+  },
+  {
+    "id": "fines/form",
+    "route": "/admin/fines",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "text=Nova multa",
+    "capturedAt": "2026-10-02T21:19:08.844Z",
+    "file": "public/help/screenshots/fines/form.webp"
+  },
+  {
+    "id": "fines/list",
+    "route": "/admin/fines",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:02.156Z",
+    "file": "public/help/screenshots/fines/list.webp"
+  },
+  {
+    "id": "incidents/overview",
+    "route": "/admin/incidents",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:22.909Z",
+    "file": "public/help/screenshots/incidents/overview.webp"
+  },
+  {
+    "id": "maintenance/form",
+    "route": "/admin/maintenance",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "text=Nova manutenção",
+    "capturedAt": "2026-10-02T21:18:58.422Z",
+    "file": "public/help/screenshots/maintenance/form.webp"
+  },
+  {
+    "id": "maintenance/list",
+    "route": "/admin/maintenance",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:18:52.671Z",
+    "file": "public/help/screenshots/maintenance/list.webp"
+  },
+  {
+    "id": "monitoring/overview",
+    "route": "/admin/monitoring",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:32.178Z",
+    "file": "public/help/screenshots/monitoring/overview.webp"
+  },
+  {
+    "id": "notes/form",
+    "route": "/admin/notes",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "text=Nova anotação",
+    "capturedAt": "2026-10-02T21:19:19.168Z",
+    "file": "public/help/screenshots/notes/form.webp"
+  },
+  {
+    "id": "notes/list",
+    "route": "/admin/notes",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:13.531Z",
+    "file": "public/help/screenshots/notes/list.webp"
+  },
+  {
+    "id": "payments/charge",
+    "route": "/admin/pagamentos",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "button:has-text('Cobrar')",
+    "capturedAt": "2026-10-02T21:18:26.187Z",
+    "file": "public/help/screenshots/payments/charge.webp"
+  },
+  {
+    "id": "payments/list",
+    "route": "/admin/pagamentos",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:18:17.961Z",
+    "file": "public/help/screenshots/payments/list.webp"
+  },
+  {
+    "id": "payments/receipt-review",
+    "route": "/admin/finance",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "text=Conferir",
+    "capturedAt": "2026-10-02T21:18:32.439Z",
+    "file": "public/help/screenshots/payments/receipt-review.webp"
+  },
+  {
+    "id": "payments/settle",
+    "route": "/admin/pagamentos",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "button:has-text('Dar baixa')",
+    "capturedAt": "2026-10-02T21:18:21.954Z",
+    "file": "public/help/screenshots/payments/settle.webp"
+  },
+  {
+    "id": "platform/overview",
+    "route": "/plataforma/admin",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:20:22.384Z",
+    "file": "public/help/screenshots/platform/overview.webp"
+  },
+  {
+    "id": "rentals/details",
+    "route": "/admin/rentals/l01",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:18:08.220Z",
+    "file": "public/help/screenshots/rentals/details.webp"
+  },
+  {
+    "id": "rentals/form",
+    "route": "/admin/rentals",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "text=Nova locação",
+    "capturedAt": "2026-10-02T21:18:04.956Z",
+    "file": "public/help/screenshots/rentals/form.webp"
+  },
+  {
+    "id": "rentals/list",
+    "route": "/admin/rentals",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:18:01.209Z",
+    "file": "public/help/screenshots/rentals/list.webp"
+  },
+  {
+    "id": "reports/overview",
+    "route": "/admin/reports",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:37.136Z",
+    "file": "public/help/screenshots/reports/overview.webp"
+  },
+  {
+    "id": "requests/details",
+    "route": "/admin/requests",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "text=Analisar e aprovar",
+    "capturedAt": "2026-10-02T21:18:14.793Z",
+    "file": "public/help/screenshots/requests/details.webp"
+  },
+  {
+    "id": "requests/list",
+    "route": "/admin/requests",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:18:11.138Z",
+    "file": "public/help/screenshots/requests/list.webp"
+  },
+  {
+    "id": "reservations/form",
+    "route": "/admin/reservations",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "text=Nova reserva",
+    "capturedAt": "2026-10-02T21:17:58.322Z",
+    "file": "public/help/screenshots/reservations/form.webp"
+  },
+  {
+    "id": "reservations/list",
+    "route": "/admin/reservations",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:17:54.723Z",
+    "file": "public/help/screenshots/reservations/list.webp"
+  },
+  {
+    "id": "security/overview",
+    "route": "/admin/security",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:27.014Z",
+    "file": "public/help/screenshots/security/overview.webp"
+  },
+  {
+    "id": "settings/asaas",
+    "route": "/admin/settings#pagamentos",
+    "viewport": "element",
+    "theme": "dark",
+    "state": "#config-asaas",
+    "capturedAt": "2026-10-02T21:20:10.363Z",
+    "file": "public/help/screenshots/settings/asaas.webp"
+  },
+  {
+    "id": "settings/branding",
+    "route": "/admin/settings#aparencia",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:44.003Z",
+    "file": "public/help/screenshots/settings/branding.webp"
+  },
+  {
+    "id": "settings/company",
+    "route": "/admin/settings#empresa",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:40.829Z",
+    "file": "public/help/screenshots/settings/company.webp"
+  },
+  {
+    "id": "settings/contracts",
+    "route": "/admin/settings#contratos",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:51.251Z",
+    "file": "public/help/screenshots/settings/contracts.webp"
+  },
+  {
+    "id": "settings/fipe",
+    "route": "/admin/settings#integracoes",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:20:12.709Z",
+    "file": "public/help/screenshots/settings/fipe.webp"
+  },
+  {
+    "id": "settings/infinitepay",
+    "route": "/admin/settings#pagamentos",
+    "viewport": "element",
+    "theme": "dark",
+    "state": "#config-infinitepay",
+    "capturedAt": "2026-10-02T21:20:05.211Z",
+    "file": "public/help/screenshots/settings/infinitepay.webp"
+  },
+  {
+    "id": "settings/payment-methods",
+    "route": "/admin/settings#pagamentos",
+    "viewport": "element",
+    "theme": "dark",
+    "state": "#config-meios",
+    "capturedAt": "2026-10-02T21:19:59.587Z",
+    "file": "public/help/screenshots/settings/payment-methods.webp"
+  },
+  {
+    "id": "settings/payments",
+    "route": "/admin/settings#pagamentos",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:53.972Z",
+    "file": "public/help/screenshots/settings/payments.webp"
+  },
+  {
+    "id": "settings/push",
+    "route": "/admin/settings#preferencias",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:20:18.280Z",
+    "file": "public/help/screenshots/settings/push.webp"
+  },
+  {
+    "id": "settings/team",
+    "route": "/admin/settings#equipe",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:46.078Z",
+    "file": "public/help/screenshots/settings/team.webp"
+  },
+  {
+    "id": "settings/texts",
+    "route": "/admin/settings#textos",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:19:48.148Z",
+    "file": "public/help/screenshots/settings/texts.webp"
+  },
+  {
+    "id": "settings/whatsapp",
+    "route": "/admin/settings#integracoes",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:20:14.869Z",
+    "file": "public/help/screenshots/settings/whatsapp.webp"
+  },
+  {
+    "id": "vehicles/form",
+    "route": "/admin/vehicles",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "text=Novo veículo",
+    "capturedAt": "2026-10-02T21:17:45.015Z",
+    "file": "public/help/screenshots/vehicles/form.webp"
+  },
+  {
+    "id": "vehicles/list",
+    "route": "/admin/vehicles",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-02T21:17:41.389Z",
+    "file": "public/help/screenshots/vehicles/list.webp"
+  }
+]

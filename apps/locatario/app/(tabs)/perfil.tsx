@@ -54,7 +54,7 @@ export default function PerfilScreen() {
   const router = useRouter();
   const { summary, signOut, refresh } = useLocatario();
   const { colors, mode, setMode } = useTheme();
-  const { switchOrg } = useOrg();
+  const { switchOrg, slug } = useOrg();
   const [confirmExit, setConfirmExit] = useState(false);
   const [switching, setSwitching] = useState(false);
   const c = summary?.client;
@@ -189,6 +189,13 @@ export default function PerfilScreen() {
           </Card>
         </>
       )}
+
+      <Button
+        label="Central de Ajuda e Treinamento"
+        variant="outline"
+        icon={<HelpCircle color={colors.text} size={18} />}
+        onPress={() => Linking.openURL(`https://www.locakar.com.br/ajuda?org=${slug}`)}
+      />
 
       <Button
         label={`Suporte no WhatsApp ${summary?.support.display ?? ""}`.trim()}

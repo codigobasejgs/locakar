@@ -1,0 +1,184 @@
+[
+  {
+    "slug": "primeiros-passos-visao-geral",
+    "title": "Primeiros passos no sistema: conhecendo o painel",
+    "description": "Aprenda a navegar pela barra lateral, entender os indicadores do Dashboard e os atalhos essenciais.",
+    "category": "primeiros-passos",
+    "audience": "admin",
+    "permission": "read",
+    "keywords": ["inicio", "painel", "dashboard", "menu", "sidebar", "navegacao", "comecar"],
+    "aliases": ["como comecar", "visao geral do sistema", "aprender a usar o sistema", "primeiro acesso"],
+    "routes": ["/admin"],
+    "sources": ["src/app/admin/page.tsx", "src/components/admin/admin-shell.tsx", "src/components/admin/nav.ts"],
+    "minutes": 4,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Estar logado no painel administrativo com uma conta autorizada."],
+    "steps": [
+      {
+        "title": "Acesse o painel",
+        "text": "Entre em /admin com seu e-mail e senha. O menu lateral à esquerda dá acesso a todos os módulos operacionais, de Veículos até Configurações.",
+        "image": "/help/screenshots/dashboard/overview.webp",
+        "caption": "Menu lateral com os 17 módulos da locadora e cabeçalho com atalhos de tema e perfil."
+      },
+      {
+        "title": "Confira o checklist de implantação",
+        "text": "No topo do Dashboard, o card 'Configure sua locadora' orienta os 5 passos essenciais: Dados da empresa, Identidade visual, Primeiro veículo, Pagamentos e Modelo de contrato.",
+        "image": "/help/screenshots/dashboard/onboarding.webp"
+      },
+      {
+        "title": "Acompanhe os indicadores operacionais",
+        "text": "Os cartões resumem os números em tempo real: Total investido na frota, Veículos disponíveis, Alugados, Locações ativas e Reservas abertas."
+      }
+    ],
+    "tips": [
+      "Use o botão de alternar tema no topo da tela para trabalhar no modo Claro ou Escuro.",
+      "Se tiver mais de uma locadora associada ao seu e-mail, alterne entre elas pelo seletor no topo."
+    ],
+    "warnings": [
+      "Se a locadora estiver em período de teste vencido ou com status suspenso, um aviso em amarelo ou vermelho aparecerá no topo e as gravações serão bloqueadas."
+    ],
+    "problems": [
+      {
+        "question": "Aparece 'Modo demonstração · dados locais' no topo",
+        "answer": "Significa que o painel está funcionando com dados fictícios locais no navegador, sem conexão com o banco de dados Supabase."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Onde encontro os atalhos de cada módulo?",
+        "answer": "Na barra lateral à esquerda. Em telas de celular ou tablet, toque no ícone de menu (três barras) no canto superior esquerdo para abrir o menu."
+      }
+    ],
+    "related": ["onboarding-checklist-locadora", "configurar-empresa-dados", "cadastrar-veiculo"],
+    "result": "Você conhece a organização básica do sistema e está pronto para configurar sua empresa."
+  },
+  {
+    "slug": "onboarding-checklist-locadora",
+    "title": "Checklist de implantação: configurando sua locadora",
+    "description": "Siga o passo a passo recomendado para colocar sua locadora para funcionar com a sua marca e regras.",
+    "category": "primeiros-passos",
+    "audience": "admin",
+    "permission": "settings",
+    "keywords": ["onboarding", "passos", "implantacao", "configuracao inicial", "comeco"],
+    "aliases": ["passo a passo para comecar", "como implantar minha locadora", "configurar do zero"],
+    "routes": ["/admin", "/admin/settings"],
+    "sources": ["src/components/admin/onboarding-card.tsx", "src/app/admin/settings/page.tsx"],
+    "minutes": 5,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Perfil de Proprietário (owner) ou Administrador (admin)."],
+    "steps": [
+      {
+        "title": "1. Dados da empresa",
+        "text": "Em Configurações > Empresa, preencha o Nome fantasia, Razão social, CNPJ, telefone, WhatsApp e endereço completo. Esses dados saem nos contratos emitidos e no app.",
+        "image": "/help/screenshots/settings/company.webp"
+      },
+      {
+        "title": "2. Identidade visual e logo",
+        "text": "Em Configurações > Aparência, envie sua logomarca (PNG/JPG até 1 MB) e ajuste as cores da sua marca para personalizar o painel e o aplicativo do cliente.",
+        "image": "/help/screenshots/settings/branding.webp"
+      },
+      {
+        "title": "3. Cadastre o primeiro veículo",
+        "text": "Vá em Veículos > Novo veículo e informe placa, marca, modelo, ano e quilometragem atual.",
+        "image": "/help/screenshots/vehicles/form.webp"
+      },
+      {
+        "title": "4. Configure seus pagamentos",
+        "text": "Em Configurações > Pagamentos, ative a chave PIX da sua conta para receber por QR Code com comprovante e, opcionalmente, ative Asaas ou InfinitePay.",
+        "image": "/help/screenshots/settings/payments.webp"
+      },
+      {
+        "title": "5. Configure o modelo de contrato",
+        "text": "Em Configurações > Contratos, cadastre os dados do representante legal da locadora e anexe o modelo em PDF/DOCX da sua empresa."
+      }
+    ],
+    "tips": [
+      "O card de implantação calcula a porcentagem automaticamente e desaparece sozinho quando você conclui todos os 5 passos."
+    ],
+    "warnings": [
+      "Sem cadastrar os dados da empresa e do representante, o sistema impede a emissão de contratos digitais."
+    ],
+    "problems": [
+      {
+        "question": "Completei os dados e a barra não chegou a 100%",
+        "answer": "Confira se ao menos um veículo e um modelo de contrato foram salvos no sistema."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Posso mudar o nome e logo depois?",
+        "answer": "Sim, a qualquer momento na aba Aparência de Configurações."
+      }
+    ],
+    "related": ["configurar-empresa-dados", "configurar-identidade-visual", "cadastrar-veiculo"],
+    "result": "Sua locadora fica pronta para operar, gerar contratos e receber pagamentos com a sua marca."
+  },
+  {
+    "slug": "fluxo-completo-locacao",
+    "title": "Guia ponta a ponta: do cadastro do cliente até a devolução do veículo",
+    "description": "Entenda a jornada completa de uma locação no sistema: pedido, aprovação, contrato, entrega, cobranças e devolução.",
+    "category": "primeiros-passos",
+    "audience": "admin",
+    "permission": "operate",
+    "keywords": ["jornada", "fluxo", "ciclo", "locacao completa", "passo a passo geral"],
+    "aliases": ["como funciona uma locacao", "processo completo de aluguel", "fluxo de atendimento"],
+    "routes": ["/admin/rentals", "/admin/requests", "/admin/rentals/[id]"],
+    "sources": ["src/app/admin/requests/page.tsx", "src/app/admin/rentals/[id]/page.tsx", "src/components/admin/inspection-panel.tsx"],
+    "minutes": 6,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Veículo disponível cadastrado e cliente criado ou pedido recebido pelo app."],
+    "steps": [
+      {
+        "title": "Passo 1 — Entrada do pedido",
+        "text": "O cliente pode solicitar pelo app do locatário (aparece em Solicitações com CNH, selfie e comprovante de residência) ou você pode criar diretamente em Locações > Nova locação."
+      },
+      {
+        "title": "Passo 2 — Aprovação e emissão do contrato",
+        "text": "Ao aprovar a solicitação ou salvar a locação, o sistema gera o contrato digital. Você pode enviar o link de assinatura por e-mail, WhatsApp ou abrir para assinatura presencial."
+      },
+      {
+        "title": "Passo 3 — Assinatura eletrônica",
+        "text": "O cliente abre o link, confere as cláusulas, preenche o CPF, tira uma selfie para comprovação de identidade e desenha a assinatura com o dedo."
+      },
+      {
+        "title": "Passo 4 — Vistoria de entrega (check-out)",
+        "text": "Na página da locação, clique em 'Registrar entrega'. Marque os itens do checklist, registre o combustível e o KM inicial e colete a assinatura do cliente. O status do veículo muda automaticamente para 'Alugado'."
+      },
+      {
+        "title": "Passo 5 — Acompanhamento e cobranças",
+        "text": "As parcelas (semanais, quinzenais ou mensais) aparecem na locação e na tela de Pagamentos. O cliente paga por PIX ou cartão e a equipe dá baixa ou aprova o comprovante."
+      },
+      {
+        "title": "Passo 6 — Vistoria de devolução (check-in)",
+        "text": "No encerramento, clique em 'Registrar devolução'. Informe o KM final, o combustível e eventuais custos adicionais. O veículo volta automaticamente para 'Disponível'."
+      }
+    ],
+    "tips": [
+      "A vistoria de entrega é obrigatória antes de registrar a devolução.",
+      "Após a devolução, você pode imprimir o termo completo com assinatura e checklist."
+    ],
+    "warnings": [
+      "Nunca entregue as chaves antes da assinatura do contrato e da conclusão da vistoria de entrega."
+    ],
+    "problems": [
+      {
+        "question": "O botão 'Registrar devolução' está desabilitado",
+        "answer": "É necessário registrar a vistoria de entrega primeiro para estabelecer a quilometragem inicial de comparação."
+      }
+    ],
+    "faq": [
+      {
+        "question": "O cliente pode fazer a vistoria pelo celular dele?",
+        "answer": "Sim, pelo aplicativo na opção 'Meu veículo > Vistoria pelo app'. A equipe pode conferir as fotos enviadas."
+      }
+    ],
+    "related": ["aprovar-solicitacao-locacao", "gerar-assinar-contrato", "vistoria-entrega-devolucao"],
+    "result": "Você domina todas as etapas do atendimento e sabe exatamente o que fazer em cada momento."
+  }
+]

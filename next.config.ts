@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   // Evita que um package-lock.json em pasta-pai seja tomado como raiz do workspace.
   turbopack: { root: process.cwd() },
   poweredByHeader: false,
+  // Captura de screenshots da Central de Ajuda roda num dev isolado (não disputa a pasta .next com outro dev).
+  ...(process.env.HELP_DIST_DIR ? { distDir: process.env.HELP_DIST_DIR } : {}),
   // Logo lido do disco pelas rotas que geram PDF (lib/pdf.ts).
   outputFileTracingIncludes: {
     "/api/email": ["./public/logos/locakar-logo-light.png"],
