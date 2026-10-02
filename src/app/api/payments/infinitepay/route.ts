@@ -42,7 +42,7 @@ async function config() {
 
 async function loadTx(db: ReturnType<typeof serviceDb>, id: unknown) {
   if (!isValidOrderId(id)) throw new HttpError(400, "Transação inválida.");
-  const { data } = await db.from("payment_transactions").select("*").eq("id", id).maybeSingle();
+  const { data } = await db.from("payment_transactions").select("*").eq("id", id).eq("provider", "infinitepay").maybeSingle();
   if (!data) throw new HttpError(404, "Transação não encontrada.");
   return data;
 }
@@ -54,9 +54,9 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     if (url.searchParams.get("view") === "status") {
       const [last, lastWebhook, lastError] = await Promise.all([
-        db.from("payment_transactions").select("id,flow,status,amount_cents,created_at").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        db.from("payment_transactions").select("id,flow,status,amount_cents,created_at").eq("provider", "infinitepay").order("created_at", { ascending: false }).limit(1).maybeSingle(),
         db.from("audit_log").select("created_at,details").eq("action", "infinitepay_webhook_received").order("created_at", { ascending: false }).limit(1).maybeSingle(),
-        db.from("payment_transactions").select("last_error,updated_at").not("last_error", "is", null).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+        db.from("payment_transactions").select("last_error,updated_at").eq("provider", "infinitepay").not("last_error", "is", null).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
       ]);
       const state = !ip.enabled ? "disabled" : handle ? "configured" : "incomplete";
       return Response.json({
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     const rentalId = url.searchParams.get("rentalId");
     const receiptId = url.searchParams.get("receiptId");
     if (!rentalId || !receiptId) throw new HttpError(400, "Parcela não informada.");
-    const { data } = await db.from("payment_transactions").select(PUBLIC_COLS).eq("rental_id", rentalId).eq("receipt_id", receiptId).order("created_at", { ascending: false }).limit(20);
+    const { data } = await db.from("payment_transactions").select(PUBLIC_COLS).eq("provider", "infinitepay").eq("rental_id", rentalId).eq("receipt_id", receiptId).order("created_at", { ascending: false }).limit(20);
     return Response.json({ transactions: data ?? [] });
   } catch (e) {
     return errorResponse(e);

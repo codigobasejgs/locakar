@@ -1,9 +1,10 @@
 "use client";
 
-import { Bell, BellRing, Building2, CreditCard, QrCode, ExternalLink, FileSignature, FileText, FileUp, Mail, MessageCircle, Moon, Palette, RotateCcw, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
+import { Bell, BellRing, Building2, CreditCard, Landmark, QrCode, ExternalLink, FileSignature, FileText, FileUp, Mail, MessageCircle, Moon, Palette, RotateCcw, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SelsynSettings } from "@/components/admin/selsyn-settings";
+import { AsaasSettings } from "@/components/admin/asaas-settings";
 import { PageHeader } from "@/components/admin/page-header";
 import { PushSettings } from "@/components/admin/push-settings";
 import { PixSettingsFields } from "@/components/admin/pix-settings";
@@ -203,6 +204,9 @@ export default function SettingsPage() {
           <InfinitePaySettingsFields value={draft.infinitepay ?? DEFAULT_INFINITEPAY} onChange={(infinitepay) => set("infinitepay", infinitepay)} />
         </Section>
 
+        <Section icon={Landmark} title="Integrações → Asaas" description="Cobranças Pix, boleto, cartão e fatura com baixa automática por webhook. Opcional: desligado, o PIX e a baixa manual continuam iguais.">
+          <AsaasSettings />
+        </Section>
         <Section icon={SlidersHorizontal} title="Selsyn — Rastreamento" description="Posições, sensores, histórico e relatórios da frota. Credencial somente no backend.">
           <SelsynSettings />
         </Section>

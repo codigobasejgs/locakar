@@ -4,6 +4,7 @@ import { CheckCircle2, MoreHorizontal, Pencil, User, Car } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { statusLabel, statusTone } from "@/lib/asaas";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { UnifiedPaymentItem } from "./payment-actions-sheet";
 
@@ -53,7 +54,8 @@ export function PaymentCard({ payment, onSettle, onEdit, onCharge, onMore }: Pay
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Pagamento:</p>
-            <p className="text-xs font-medium text-zinc-300">
+            <p className="flex items-center gap-1.5 text-xs font-medium text-zinc-300">
+              {payment.asaas && <span className="rounded bg-sky-400/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-sky-300">ASAAS</span>}
               {payment.paymentMethod || (isPaid ? "PIX" : "-")}
             </p>
           </div>
@@ -80,7 +82,11 @@ export function PaymentCard({ payment, onSettle, onEdit, onCharge, onMore }: Pay
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-0.5">Status:</p>
             <Badge
               tone={
-                isPaid
+                payment.asaas && !isPaid && !isCancelled && payment.asaas.status === "link_created"
+                  ? statusTone({ status: payment.asaas.status, provider_status: payment.asaas.providerStatus })
+                  : payment.asaas?.status === "chargeback"
+                  ? "danger"
+                  : isPaid
                   ? "success"
                   : isOverdue
                   ? "danger"
@@ -91,7 +97,9 @@ export function PaymentCard({ payment, onSettle, onEdit, onCharge, onMore }: Pay
                   : "warning"
               }
             >
-              {isPaid
+              {payment.asaas && !isCancelled && payment.asaas.status !== "failed" && payment.asaas.status !== "cancelled"
+                ? statusLabel({ status: payment.asaas.status, provider_status: payment.asaas.providerStatus })
+                : isPaid
                 ? "Pago"
                 : isOverdue
                 ? "Vencido"

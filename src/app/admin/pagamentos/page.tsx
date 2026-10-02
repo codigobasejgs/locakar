@@ -8,7 +8,7 @@ import {
   Search,
   TriangleAlert,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
 import { PaymentActionsSheet, type UnifiedPaymentItem } from "@/components/admin/payment-actions-sheet";
@@ -17,6 +17,8 @@ import { PaymentDetailsDialog } from "@/components/admin/payment-details-dialog"
 import { PaymentEditDialog } from "@/components/admin/payment-edit-dialog";
 import { PaymentSettleDialog } from "@/components/admin/payment-settle-dialog";
 import { InfinitePayDialog } from "@/components/admin/infinitepay-dialog";
+import { AsaasChargeDialog, asaasApi, type AsaasCharge, type AsaasPanelConfig } from "@/components/admin/asaas-charge-dialog";
+import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Card, EmptyState, StatCard } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/form";
@@ -46,6 +48,18 @@ export default function PagamentosPage() {
   const [deletingTarget, setDeletingTarget] = useState<UnifiedPaymentItem | null>(null);
   const [infinitePayTarget, setInfinitePayTarget] = useState<UnifiedPaymentItem | null>(null);
   const infinitePay = settings.infinitepay;
+  // Asaas (opcional): config pública + última cobrança Asaas por parcela. Sem migration/desligado = fluxo atual.
+  const [asaas, setAsaas] = useState<{ config: AsaasPanelConfig; charges: Record<string, AsaasCharge> } | null>(null);
+  const [asaasTarget, setAsaasTarget] = useState<UnifiedPaymentItem | null>(null);
+  const loadAsaas = useCallback(() => {
+    if (!isSupabaseEnabled) return;
+    fetch("/api/asaas/charges", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => j && setAsaas(j))
+      .catch(() => {});
+  }, []);
+  useEffect(loadAsaas, [loadAsaas]);
+  const asaasOn = Boolean(asaas?.config.ready);
 
   // Mapeia todas as parcelas das locações existentes em uma lista unificada
   const allPayments = useMemo<UnifiedPaymentItem[]>(() => {
@@ -94,10 +108,14 @@ export default function PagamentosPage() {
           cancelReason: rc.cancelReason,
           status,
           lateCharges: lateCh,
+          asaas: (() => {
+            const t = asaas?.charges[`${r.id}:${rc.id}`];
+            return t ? { id: t.id, status: t.status, providerStatus: t.provider_status, providerPaymentId: t.provider_payment_id, billingType: t.billing_type, invoiceUrl: t.invoice_url } : undefined;
+          })(),
         };
       });
     });
-  }, [data, clientById, vehicleById, today]);
+  }, [data, clientById, vehicleById, today, asaas]);
 
   // Indicadores de Resumo Financeiro (calculados sobre os dados reais)
   const totals = useMemo(() => {
@@ -244,6 +262,36 @@ export default function PagamentosPage() {
 
     const ok = await update("rentals", rental.id, { receipts });
     if (!ok) throw new Error("Não foi possível salvar as alterações.");
+    const open = editTarget.asaas?.status === "link_created" ? editTarget.asaas : null;
+    if (open && (editData.amount !== editTarget.amount || editData.dueDate !== editTarget.dueDate)) {
+      await asaasApi({ action: "sync", id: open.id }).then(
+        () => toast.success("Cobrança Asaas atualizada com o novo valor/vencimento."),
+        (e) => toast.error(`Parcela salva, mas a cobrança Asaas não foi atualizada: ${(e as Error).message}`),
+      );
+      loadAsaas();
+    }
+  };
+
+  // Ação: Cobrar — Asaas ativo (ou parcela com cobrança Asaas aberta) abre o modal; senão mantém o WhatsApp atual.
+  const handleCharge = (p: UnifiedPaymentItem) => {
+    if (asaasOn || p.asaas?.status === "link_created") setAsaasTarget(p);
+    else handleChargeWhatsApp(p);
+  };
+  const asaasInvoice = (p: UnifiedPaymentItem) => {
+    const url = p.asaas?.invoiceUrl;
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => toast.success("Link da fatura copiado."), () => window.open(url, "_blank", "noopener"));
+  };
+  const asaasReconcile = async (p: UnifiedPaymentItem) => {
+    if (!p.asaas) return;
+    try {
+      const r = await asaasApi<{ charge: AsaasCharge }>({ action: "reconcile", id: p.asaas.id });
+      toast.success("Status Asaas atualizado.");
+      loadAsaas();
+      if (r.charge.status !== p.asaas.status) reload("rentals", p.rentalId);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
   };
 
   // Ação: Cobrar pelo WhatsApp
@@ -460,7 +508,7 @@ export default function PagamentosPage() {
               payment={payment}
               onSettle={(p) => setSettleTarget(p)}
               onEdit={(p) => setEditTarget(p)}
-              onCharge={handleChargeWhatsApp}
+              onCharge={handleCharge}
               onMore={(p) => setMoreTarget(p)}
             />
           ))}
@@ -496,12 +544,30 @@ export default function PagamentosPage() {
         onClose={() => setMoreTarget(null)}
         onSettle={(p) => setSettleTarget(p)}
         onEdit={(p) => setEditTarget(p)}
-        onCharge={handleChargeWhatsApp}
+        onCharge={handleCharge}
         onCancel={(p) => setCancellingTarget(p)}
         onDelete={(p) => setDeletingTarget(p)}
         onViewDetails={(p) => setDetailsTarget(p)}
         onInfinitePay={infinitePay?.enabled ? (p) => setInfinitePayTarget(p) : undefined}
+        onAsaas={asaas && (asaasOn || Object.keys(asaas.charges).length) ? (p) => setAsaasTarget(p) : undefined}
+        onAsaasInvoice={asaasInvoice}
+        onAsaasReconcile={asaasReconcile}
       />
+
+      {/* Cobrança Asaas (modal Cobrar / detalhes) */}
+      {asaas && asaasTarget && (
+        <AsaasChargeDialog
+          key={asaasTarget.id}
+          payment={asaasTarget}
+          config={asaas.config}
+          existing={asaas.charges[`${asaasTarget.rentalId}:${asaasTarget.id}`] ?? null}
+          onClose={() => setAsaasTarget(null)}
+          onChanged={(c, paid) => {
+            setAsaas((a) => (a ? { ...a, charges: { ...a.charges, [`${asaasTarget.rentalId}:${asaasTarget.id}`]: c } } : a));
+            if (paid) reload("rentals", asaasTarget.rentalId);
+          }}
+        />
+      )}
 
       {/* 5. Receber com InfinitePay */}
       {infinitePay?.enabled && (

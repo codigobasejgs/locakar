@@ -195,7 +195,7 @@ export async function reconcileCheckout(
   input: { orderNsu: string; transactionNsu: string; slug: string; receiptUrl?: string },
 ): Promise<"paid" | "already" | "mismatch" | "pending" | "unknown"> {
   if (!isValidOrderId(input.orderNsu) || !input.transactionNsu || !input.slug) return "unknown";
-  const { data: tx } = await db.from("payment_transactions").select("*").eq("id", input.orderNsu).eq("flow", "checkout").maybeSingle();
+  const { data: tx } = await db.from("payment_transactions").select("*").eq("id", input.orderNsu).eq("provider", "infinitepay").eq("flow", "checkout").maybeSingle();
   if (!tx) return "unknown";
   if (tx.status === "paid") return "already";
   const check = await paymentCheck({ handle: tx.handle, order_nsu: tx.id, transaction_nsu: input.transactionNsu, slug: input.slug });
@@ -232,7 +232,7 @@ export async function openReceipt(db: SupabaseClient, rentalId: unknown, receipt
   const today = todaySP();
   const total = receipt.dueDate < today ? lateCharges(receipt.amount, receipt.dueDate, today, billingOf(rental)).total : receipt.amount;
   const cents = toCents(total);
-  if (!(cents >= 100)) throw new HttpError(422, "O valor mínimo na InfinitePay é R$ 1,00.");
+  if (!(cents >= 100)) throw new HttpError(422, "O valor mínimo da cobrança é R$ 1,00.");
   const [{ data: client }, { data: vehicle }] = await Promise.all([
     db.from("clients").select("id,name,email,phone,cpf").eq("id", rental.clientId).maybeSingle(),
     db.from("vehicles").select("name,plate").eq("id", rental.vehicleId).maybeSingle(),

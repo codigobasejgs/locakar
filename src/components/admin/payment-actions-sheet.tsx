@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, ExternalLink, FileText, Link as LinkIcon, Trash2, X } from "lucide-react";
+import { Ban, ExternalLink, FileText, Landmark, Link as LinkIcon, RefreshCw, Trash2, X } from "lucide-react";
 import { Dialog as D } from "radix-ui";
 import type { CompanyProfile, Rental } from "@/types";
 import { paymentReceiptDocument } from "@/lib/documents";
@@ -32,6 +32,8 @@ export interface UnifiedPaymentItem {
   cancelReason?: string;
   status: "open" | "paid" | "overdue" | "cancelled" | "pending_review";
   lateCharges?: { fee: number; interest: number; total: number };
+  /** Última cobrança Asaas da parcela (ausente quando a parcela é manual). */
+  asaas?: { id: string; status: string; providerStatus: string | null; providerPaymentId: string | null; billingType: string | null; invoiceUrl: string | null };
 }
 
 interface PaymentActionsSheetProps {
@@ -46,6 +48,10 @@ interface PaymentActionsSheetProps {
   onViewDetails: (p: UnifiedPaymentItem) => void;
   /** Ausente quando a InfinitePay está desligada em Configurações. */
   onInfinitePay?: (p: UnifiedPaymentItem) => void;
+  /** Abre os detalhes da cobrança Asaas. */
+  onAsaas?: (p: UnifiedPaymentItem) => void;
+  onAsaasInvoice?: (p: UnifiedPaymentItem) => void;
+  onAsaasReconcile?: (p: UnifiedPaymentItem) => void;
 }
 
 export function PaymentActionsSheet({
@@ -56,6 +62,9 @@ export function PaymentActionsSheet({
   onDelete,
   onViewDetails,
   onInfinitePay,
+  onAsaas,
+  onAsaasInvoice,
+  onAsaasReconcile,
 }: PaymentActionsSheetProps) {
   if (!payment) return null;
 
@@ -72,7 +81,7 @@ export function PaymentActionsSheet({
       amount: payment.amountPaid ?? payment.amount,
       paymentDate: payment.paidAt || payment.dueDate,
       paymentMethod: payment.paymentMethod || (payment.paid ? "PIX / Dinheiro" : "Aguardando"),
-      notes: payment.notes,
+      notes: [payment.notes, payment.asaas?.providerPaymentId && payment.paid && !payment.notes?.includes(payment.asaas.providerPaymentId) ? `Asaas ${payment.asaas.providerPaymentId}` : null].filter(Boolean).join(" · ") || undefined,
     });
     openDocument(html);
   };
@@ -184,6 +193,63 @@ export function PaymentActionsSheet({
                 </p>
               </div>
             </button>
+
+            {/* 5. Asaas: fatura e conciliação manual (fallback do webhook) */}
+            {onAsaas && (
+              <>
+                <button
+                  type="button"
+                  disabled={!payment.asaas?.invoiceUrl}
+                  onClick={() => {
+                    onClose();
+                    onAsaasInvoice?.(payment);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent"
+                >
+                  <div className="grid size-9 place-items-center rounded-full bg-sky-400/10 text-sky-300">
+                    <Landmark className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-white">Obter Link da Fatura (Asaas)</p>
+                    <p className="text-xs text-muted">{payment.asaas?.invoiceUrl ? "Copia o link da fatura para o cliente" : "Gere a cobrança Asaas em Cobrar"}</p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  disabled={!payment.asaas}
+                  onClick={() => {
+                    onClose();
+                    onAsaasReconcile?.(payment);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent"
+                >
+                  <div className="grid size-9 place-items-center rounded-full bg-sky-400/10 text-sky-300">
+                    <RefreshCw className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-white">Atualizar status Asaas</p>
+                    <p className="text-xs text-muted">{payment.asaas ? "Consulta a cobrança no Asaas e concilia" : "Sem cobrança Asaas nesta parcela"}</p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  disabled={!payment.asaas}
+                  onClick={() => {
+                    onClose();
+                    onAsaas(payment);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent"
+                >
+                  <div className="grid size-9 place-items-center rounded-full bg-sky-400/10 text-sky-300">
+                    <ExternalLink className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-white">Ver cobrança Asaas</p>
+                    <p className="text-xs text-muted">Pix, boleto, fatura, cancelamento e histórico</p>
+                  </div>
+                </button>
+              </>
+            )}
 
             {/* 5. Ver detalhes */}
             <button

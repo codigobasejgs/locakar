@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Empty } from "../../components/domain/Screen";
 import { TenantPage } from "../../components/layout/TenantPage";
 import { InstallmentBadge } from "../../components/domain/InstallmentStatus";
+import { AsaasPay } from "../../components/domain/AsaasPay";
 import { ErrorBanner } from "../../components/domain/ScreenState";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -38,6 +39,9 @@ export default function PagamentosScreen() {
   const cardRef = useRef(card);
   cardRef.current = card;
   const cardEnabled = Boolean(summary?.infinitepay?.checkout);
+  // Asaas: métodos habilitados pela LOCAKAR; parcela com cobrança Asaas aberta sempre mostra o pagamento online.
+  const asaasMethods = summary?.asaas ? [...summary.asaas.methods, ...(summary.asaas.allowUndefined ? ["UNDEFINED"] : [])] : [];
+  const asaasFor = (i: Installment) => Boolean(i.asaas) || asaasMethods.length > 0;
 
   const installments = activeRental?.installments ?? [];
   const insets = useSafeAreaInsets();
@@ -156,7 +160,7 @@ export default function PagamentosScreen() {
               </View>
               {i.proofStatus === "rejected" && !i.paid && i.rejectionReason && <Text style={styles.rejected}>Motivo da recusa: {i.rejectionReason}</Text>}
               {!i.paid && i.proofStatus !== "pending_review" && (
-                <Button label={i.proofStatus === "rejected" ? "Pagar ou reenviar comprovante" : cardEnabled ? "Pagar" : "Pagar com PIX"} size="sm" onPress={() => openInstallment(i)} />
+                <Button label={i.proofStatus === "rejected" ? "Pagar ou reenviar comprovante" : asaasFor(i) ? "Pagar agora" : cardEnabled ? "Pagar" : "Pagar com PIX"} size="sm" onPress={() => openInstallment(i)} />
               )}
             </Card>
           ))}
@@ -179,7 +183,7 @@ export default function PagamentosScreen() {
                 <>
                   <View style={styles.paidBox}>
                     <Check color={Colors.success} size={28} />
-                    <Text style={styles.body}>Pagamento confirmado pela InfinitePay. A parcela já consta como paga e o recibo foi enviado para o seu e-mail.</Text>
+                    <Text style={styles.body}>Pagamento confirmado. A parcela já consta como paga e o recibo foi enviado para o seu e-mail.</Text>
                   </View>
                   <Button label="Concluir" onPress={() => setOpen(null)} />
                 </>
@@ -199,6 +203,11 @@ export default function PagamentosScreen() {
                       </Text>
                     )}
                   </View>
+
+                  {asaasFor(open) && activeRental && (
+                    <AsaasPay installment={open} rentalId={activeRental.id} methods={asaasMethods} onPaid={() => { setCardPaid(true); refresh(); }} />
+                  )}
+                  {asaasFor(open) && <Text style={styles.or}>{cardEnabled ? "ou" : "ou pague com o PIX da LOCAKAR"}</Text>}
 
                   {cardEnabled && (
                     <View style={styles.cardBox}>

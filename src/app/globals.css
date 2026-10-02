@@ -77,6 +77,22 @@
   color: #64748b !important;
 }
 
+/* Textos de status claros (feitos para fundo escuro) ganham tom legível no tema claro. */
+:root[data-theme="light"] .text-amber-200,
+:root[data-theme="light"] .text-amber-300 {
+  color: #92400e !important;
+}
+:root[data-theme="light"] .text-emerald-300 {
+  color: #047857 !important;
+}
+:root[data-theme="light"] .text-red-300,
+:root[data-theme="light"] .text-red-400 {
+  color: #b91c1c !important;
+}
+:root[data-theme="light"] .text-sky-300 {
+  color: #0369a1 !important;
+}
+
 :root[data-theme="light"] .bg-\[\#070708\],
 :root[data-theme="light"] .bg-\[\#050505\],
 :root[data-theme="light"] .bg-ink {
@@ -143,7 +159,7 @@ html {
 
 body {
   background: var(--color-ink);
-  color: #fff;
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
 }
 
