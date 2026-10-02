@@ -4,6 +4,7 @@ import { ChevronLeft, CircleDollarSign, Clock, Gauge, Mail, Pencil, Printer, QrC
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { releaseAsaasCharge } from "@/components/admin/asaas-charge-dialog";
 import { ContractPanel } from "@/components/admin/contract-panel";
 import { EmailHistory } from "@/components/admin/email-history";
 import { InspectionPanel } from "@/components/admin/inspection-panel";
@@ -19,6 +20,7 @@ import { sendEmailRequest } from "@/lib/api";
 import { rentalDays, rentalKm, rentalPending, rentalReceived } from "@/lib/analytics";
 import { INTEREST_LABEL, PERIOD_LABEL, PERIOD_UNIT, billingOf, lateCharges } from "@/lib/billing";
 import { RENTAL_STATUS, ROUTES } from "@/lib/constants";
+import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { formatCurrency, formatDate, formatNumber, hideCPF, todayISO } from "@/lib/utils";
 
 export default function RentalDetailPage() {
@@ -58,7 +60,11 @@ export default function RentalDetailPage() {
           ? { ...r, paid: false, paidAt: undefined, amountPaid: undefined }
           : { ...r, paid: true, paidAt: today, amountPaid: r.dueDate < today ? lateCharges(r.amount, r.dueDate, today, billing).total : r.amount },
     );
-    if (await update("rentals", rental.id, { receipts })) toast.success("Parcela atualizada.");
+    if (await update("rentals", rental.id, { receipts })) {
+      toast.success("Parcela atualizada.");
+      // Marcada como paga: encerra a cobrança Asaas aberta, se houver (servidor confere no banco).
+      if (receipts.find((r) => r.id === receiptId)?.paid && isSupabaseEnabled) await releaseAsaasCharge(rental.id, receiptId, "baixa manual");
+    }
   };
 
   const sendCharge = async (receiptId: string) => {

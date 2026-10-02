@@ -61,6 +61,7 @@ Autenticação: header `access_token` + `User-Agent: LOCAKAR`; bases `https://ap
 - Multa/juros/desconto só enviados quando preenchidos (não sobrescreve padrões da conta).
 - Duplicidade: índice único de cobrança ativa por parcela (duplo clique/concorrência), `externalReference = locakar-tx:<id>`, e timeout/5xx inconclusivo deixam a tentativa `started` até a conciliação provar o resultado.
 - Editar valor/vencimento de parcela com cobrança aberta faz `PUT` no Asaas.
+- Cancelamento automático: parcela quitada por baixa manual (Pagamentos ou tela da locação), comprovante aprovado ou InfinitePay — ou cancelada/excluída — cancela a cobrança Asaas aberta (`DELETE /payments/{id}`). O servidor confere no banco que a parcela não está mais em aberto e consulta o Asaas antes: se o cliente já pagou lá, não cancela e só concilia. Falha no Asaas não desfaz a baixa: vira aviso para a equipe e erro na tentativa.
 
 ## Webhook
 `POST /api/webhooks/asaas` — sem sessão; header `asaas-access-token`. Persiste `event.id` (PRIMARY KEY, `ON CONFLICT DO NOTHING`) e só então responde 200; processamento em `after()`. Eventos com falha são reprocessados a cada novo webhook (sem polling). Funciona com a integração desativada (cobranças antigas continuam conciliando).

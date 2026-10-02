@@ -283,12 +283,44 @@ globalThis.fetch = (async (i: string | URL | Request, init?: RequestInit) => {
   await wh.processEvent(db, "evt_10");
   assert.equal(tables.asaas_webhook_events.find((e) => e.id === "evt_10")!.status, "ignored");
 
+  // 9b. Cancelamento automático: parcela paga por outro meio encerra a cobrança Asaas aberta
+  tables.asaas_config[0].enabled = true;
+  const on = (await s.loadAsaasConfig(db))!;
+  tables.rentals[0].receipts = [...(tables.rentals[0].receipts as Row[]), { id: "p7", dueDate: future, amount: 200, paid: false }];
+  const r7 = await s.createCharge(db, on, { rentalId: "r1", receiptId: "p7", billingType: "PIX", actor });
+  // parcela ainda aberta: não cancela (navegador não consegue forçar)
+  assert.equal(await s.releaseChargeIfSettled(db, "r1", "p7", { type: "staff", id: "u1" }, "baixa manual"), "open");
+  assert.equal(tables.payment_transactions.find((t) => t.id === r7.tx.id)!.status, "link_created");
+  receipt("p7").paid = true; // baixa manual / comprovante / InfinitePay
+  assert.equal(await s.releaseChargeIfSettled(db, "r1", "p7", { type: "staff", id: "u1" }, "baixa manual"), "cancelled");
+  assert.equal(tables.payment_transactions.find((t) => t.id === r7.tx.id)!.status, "cancelled");
+  assert.ok(remote[r7.tx.provider_payment_id!].deleted);
+  assert.equal(receipt("p7").paid, true, "baixa manual preservada");
+  assert.equal(await s.releaseChargeIfSettled(db, "r1", "p7", { type: "staff", id: "u1" }, "baixa manual"), "none", "idempotente");
+  // Cliente já pagou no Asaas antes do cancelamento: não cancela, reconcilia (duplicidade fica registrada)
+  tables.rentals[0].receipts = [...(tables.rentals[0].receipts as Row[]), { id: "p8", dueDate: future, amount: 200, paid: false }];
+  const r8 = await s.createCharge(db, on, { rentalId: "r1", receiptId: "p8", billingType: "PIX", actor });
+  receipt("p8").paid = true;
+  remote[r8.tx.provider_payment_id!].status = "RECEIVED";
+  const res8 = await s.releaseChargeIfSettled(db, "r1", "p8", { type: "staff", id: "u1" }, "baixa manual");
+  assert.notEqual(res8, "cancelled");
+  assert.ok(!remote[r8.tx.provider_payment_id!].deleted);
+  // Asaas fora do ar: não lança, registra erro na tentativa
+  tables.rentals[0].receipts = [...(tables.rentals[0].receipts as Row[]), { id: "p9", dueDate: future, amount: 200, paid: false }];
+  const r9 = await s.createCharge(db, on, { rentalId: "r1", receiptId: "p9", billingType: "PIX", actor });
+  receipt("p9").cancelled = true;
+  const saved = globalThis.fetch;
+  globalThis.fetch = (async () => new Response("{}", { status: 503 })) as typeof fetch;
+  assert.equal(await s.releaseChargeIfSettled(db, "r1", "p9", { type: "staff", id: "u1" }, "parcela cancelada"), "error");
+  globalThis.fetch = saved;
+  assert.match(String(tables.payment_transactions.find((t) => t.id === r9.tx.id)!.last_error), /não foi cancelada/);
+
   // 10. Pix: QR vem do endpoint oficial da cobrança
   const qr = await s.pixQrCode(cfg, await s.loadTx(db, r4.tx.id));
   assert.ok(qr.image?.startsWith("data:image/png;base64,") && qr.payload);
   assert.ok(calls.some((c) => c.endsWith(`/payments/${r4.tx.provider_payment_id}/pixQrCode`)));
 
-  console.log("✓ asaas fluxo ok: cobrança única, baixa única, duplicado/fora de ordem, estorno, chargeback, vencida, cancelamento, timeout, desativada");
+  console.log("✓ asaas fluxo ok: cobrança única, baixa única, duplicado/fora de ordem, estorno, chargeback, vencida, cancelamento, timeout, desativada, cancelamento automático");
 
 })().catch((e) => {
   console.error(e);

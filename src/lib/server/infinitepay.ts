@@ -143,6 +143,8 @@ export async function confirmPaid(
     );
     await db.from("rentals").update({ receipts, updated_at: now }).eq("id", rental.id);
   }
+  // Cobrança Asaas aberta desta parcela é cancelada (import dinâmico: asaas.ts já importa este módulo).
+  await (await import("@/lib/server/asaas")).releaseChargeIfSettled(db, tx.rental_id, tx.receipt_id, { type: actor.type === "staff" ? "staff" : "system", id: actor.id }, "InfinitePay");
 
   await audit({ actorType: actor.type, actorId: actor.id ?? null, action: "infinitepay_payment_confirmed", entity: "payment_transactions", entityId: tx.id, details: { rentalId: tx.rental_id, receiptId: tx.receipt_id, amountCents: data.paidCents, flow: tx.flow, method: label, transactionNsu: data.transactionNsu ?? null }, ip: actor.ip ?? null });
   log("infinitepay_payment_confirmed", { tx: tx.id, flow: tx.flow });

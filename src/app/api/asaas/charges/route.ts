@@ -1,5 +1,5 @@
 import { BILLING_LABEL } from "@/lib/asaas";
-import { bankSlipLine, cancelCharge, createCharge, loadAsaasConfig, loadTx, pixQrCode, publicConfig, readyForCharges, reconcileTx, syncChargeWithReceipt, TX_COLS, asaasFetch, apiKeyFor, type AsaasTx } from "@/lib/server/asaas";
+import { bankSlipLine, cancelCharge, releaseChargeIfSettled, createCharge, loadAsaasConfig, loadTx, pixQrCode, publicConfig, readyForCharges, reconcileTx, syncChargeWithReceipt, TX_COLS, asaasFetch, apiKeyFor, type AsaasTx } from "@/lib/server/asaas";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { openReceipt } from "@/lib/server/infinitepay";
 import { serviceDb } from "@/lib/server/push";
@@ -11,7 +11,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 /**
  * Cobranças Asaas no painel (somente equipe). Valor/vencimento sempre do servidor.
  * GET  → { config, charges } (cobranças Asaas para os badges da tela Pagamentos) | ?rentalId&receiptId → histórico da parcela
- * POST { action: "create" | "reconcile" | "pix" | "boleto" | "cancel" | "sync" | "whatsapp" | "email" | "sandbox.confirm", ... }
+ * POST { action: "create" | "receipt.settled" | "reconcile" | "pix" | "boleto" | "cancel" | "sync" | "whatsapp" | "email" | "sandbox.confirm", ... }
  */
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -57,6 +57,12 @@ export async function POST(request: Request) {
     if (body.action === "create") {
       const r = await createCharge(db, cfg, { rentalId: body.rentalId, receiptId: body.receiptId, billingType: body.billingType, actor: { type: "staff", id: operator, ip } });
       return Response.json({ charge: r.tx, reused: r.reused });
+    }
+
+    // Parcela baixada/cancelada/excluída no painel: cancela a cobrança Asaas aberta (estado conferido no banco).
+    if (body.action === "receipt.settled") {
+      if (typeof body.rentalId !== "string" || typeof body.receiptId !== "string") throw new HttpError(400, "Parcela não informada.");
+      return Response.json({ result: await releaseChargeIfSettled(db, body.rentalId, body.receiptId, { type: "staff", id: operator }, typeof body.reason === "string" ? body.reason.slice(0, 40) : "baixa manual") });
     }
 
     const tx = await loadTx(db, body.id);

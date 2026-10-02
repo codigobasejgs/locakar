@@ -46,6 +46,20 @@ export async function asaasApi<T>(body: Record<string, unknown>): Promise<T> {
   if (!res.ok) throw new Error(json.error ?? "Não foi possível concluir.");
   return json as T;
 }
+/**
+ * Parcela quitada/cancelada/excluída no painel: pede ao servidor para cancelar a cobrança Asaas aberta.
+ * O servidor confere o estado da parcela no banco. Silencioso quando não há cobrança ou o Asaas não está instalado.
+ */
+export async function releaseAsaasCharge(rentalId: string, receiptId: string, reason: string) {
+  try {
+    const r = await asaasApi<{ result: string }>({ action: "receipt.settled", rentalId, receiptId, reason });
+    if (r.result === "cancelled") toast.success("Cobrança Asaas desta parcela cancelada automaticamente.");
+    if (r.result === "error") toast.error("A cobrança Asaas não foi cancelada. Cancele em Mais → Ver cobrança Asaas.");
+    return r.result;
+  } catch {
+    return "none";
+  }
+}
 const copy = (text: string, label: string) => navigator.clipboard.writeText(text).then(() => toast.success(`${label} copiado.`), () => toast.error("Não foi possível copiar."));
 const when = (iso?: string | null) => (iso ? new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—");
 

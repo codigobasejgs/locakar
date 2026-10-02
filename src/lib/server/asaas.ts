@@ -490,15 +490,54 @@ export async function bankSlipLine(cfg: AsaasConfigRow, tx: AsaasTx) {
   return { identificationField: r.identificationField ?? null, barCode: r.barCode ?? null };
 }
 
+/** DELETE no Asaas + marca cancelada. Só chamar com o estado já reconciliado (link_created). */
+async function deleteCharge(db: SupabaseClient, cfg: AsaasConfigRow, fresh: AsaasTx) {
+  const env = fresh.environment ?? cfg.environment;
+  await asaasFetch(env, apiKeyFor(cfg, env), "DELETE", `/payments/${encodeURIComponent(fresh.provider_payment_id!)}`);
+  await db.from("payment_transactions").update({ status: "cancelled", provider_status: "DELETED", provider_updated_at: new Date().toISOString() }).eq("id", fresh.id).eq("status", "link_created");
+  return env;
+}
+
 /** Exclui (cancela) a cobrança no Asaas. Só cobranças não pagas. */
 export async function cancelCharge(db: SupabaseClient, cfg: AsaasConfigRow, tx: AsaasTx, actor: { id: string; ip?: string | null }) {
   if (tx.status !== "link_created" && tx.status !== "started") throw new HttpError(409, "Só é possível cancelar cobranças em aberto.");
   const fresh = await reconcileTx(db, cfg, tx, { type: "staff", id: actor.id });
   if (fresh.status !== "link_created") throw new HttpError(409, fresh.status === "failed" ? "Esta tentativa não chegou a ser criada no Asaas." : "A cobrança mudou de status no Asaas e não pode ser cancelada.");
-  const env = fresh.environment ?? cfg.environment;
-  await asaasFetch(env, apiKeyFor(cfg, env), "DELETE", `/payments/${encodeURIComponent(fresh.provider_payment_id!)}`);
-  await db.from("payment_transactions").update({ status: "cancelled", provider_status: "DELETED", provider_updated_at: new Date().toISOString() }).eq("id", tx.id).eq("status", "link_created");
+  const env = await deleteCharge(db, cfg, fresh);
   await audit({ actorType: "staff", actorId: actor.id, action: "asaas_charge_cancelled", entity: "payment_transactions", entityId: tx.id, details: { providerPaymentId: fresh.provider_payment_id, environment: env }, ip: actor.ip ?? null });
+}
+
+/**
+ * Parcela quitada/cancelada/removida por outro meio (baixa manual, comprovante, InfinitePay): cancela a cobrança
+ * Asaas que ficou aberta, para o cliente não pagar duas vezes. O estado da parcela é lido do banco (nunca do navegador).
+ * Nunca lança: falha vira last_error na tentativa e aviso para a equipe, sem desfazer a baixa que já aconteceu.
+ */
+export async function releaseChargeIfSettled(db: SupabaseClient, rentalId: string, receiptId: string, actor: { type: "staff" | "system"; id?: string | null }, reason: string) {
+  try {
+    const active = await activeCharge(db, rentalId, receiptId);
+    if (!active) return "none";
+    const { data: row } = await db.from("rentals").select("receipts").eq("id", rentalId).maybeSingle();
+    const receipt = ((row?.receipts as Rental["receipts"] | undefined) ?? []).find((r) => r.id === receiptId);
+    if (receipt && !receipt.paid && !receipt.cancelled) return "open";
+    const cfg = await loadAsaasConfig(db);
+    if (!cfg) return "none";
+    // Mesmo com a integração desativada: a cobrança antiga continua pagável e precisa ser encerrada.
+    const fresh = await reconcileTx(db, cfg, active, actor);
+    if (fresh.status !== "link_created") return fresh.status; // já paga/cancelada no Asaas: reconcileTx registrou
+    const env = await deleteCharge(db, cfg, fresh);
+    await audit({ actorType: actor.type, actorId: actor.id ?? null, action: "asaas_charge_auto_cancelled", entity: "payment_transactions", entityId: active.id, details: { rentalId, receiptId, reason, providerPaymentId: fresh.provider_payment_id, environment: env } });
+    log("charge_auto_cancelled", { tx: active.id, reason });
+    return "cancelled";
+  } catch (e) {
+    const message = `Parcela baixada (${reason}), mas a cobrança Asaas não foi cancelada automaticamente: ${e instanceof Error ? e.message : "erro"}. Cancele em Pagamentos → Mais → Ver cobrança Asaas.`;
+    console.error("[asaas] auto-cancel:", redact(message));
+    const { data: open } = await db.from("payment_transactions").select("id").eq("provider", "asaas").eq("rental_id", rentalId).eq("receipt_id", receiptId).in("status", ["started", "link_created"]).maybeSingle();
+    if (open) {
+      await db.from("payment_transactions").update({ last_error: message.slice(0, 300) }).eq("id", open.id);
+      await notifyStaff([{ type: "payment.asaas_cancel_failed", category: "payments", severity: "warning", title: "Cancele a cobrança Asaas", body: "A parcela foi paga por outro meio, mas a cobrança Asaas continua aberta.", url: "/admin/pagamentos", dedupeKey: `asaas:${open.id}:autocancel` }], { db });
+    }
+    return "error";
+  }
 }
 
 /** Mantém valor/vencimento iguais no Asaas quando a parcela é editada no LOCAKAR. Só cobranças em aberto. */

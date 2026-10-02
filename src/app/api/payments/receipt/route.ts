@@ -1,3 +1,4 @@
+import { releaseChargeIfSettled } from "@/lib/server/asaas";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { sendPushToClient, serviceDb } from "@/lib/server/push";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
@@ -93,6 +94,7 @@ export async function POST(request: Request) {
       if (rental && index >= 0) {
         const receipts = rental.receipts.map((r) => (r.id === proof.receipt_id ? { ...r, paid: true, paidAt: todaySP(), amountPaid: amount } : r));
         await db.from("rentals").update({ receipts, updated_at: now }).eq("id", rental.id);
+        await releaseChargeIfSettled(db, rental.id, proof.receipt_id, { type: "staff", id: reviewer }, "comprovante aprovado");
       }
       if (client) {
         await sendPushToClient(client.id, {

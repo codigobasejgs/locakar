@@ -17,7 +17,7 @@ import { PaymentDetailsDialog } from "@/components/admin/payment-details-dialog"
 import { PaymentEditDialog } from "@/components/admin/payment-edit-dialog";
 import { PaymentSettleDialog } from "@/components/admin/payment-settle-dialog";
 import { InfinitePayDialog } from "@/components/admin/infinitepay-dialog";
-import { AsaasChargeDialog, asaasApi, type AsaasCharge, type AsaasPanelConfig } from "@/components/admin/asaas-charge-dialog";
+import { AsaasChargeDialog, asaasApi, releaseAsaasCharge, type AsaasCharge, type AsaasPanelConfig } from "@/components/admin/asaas-charge-dialog";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Card, EmptyState, StatCard } from "@/components/ui/card";
@@ -60,6 +60,12 @@ export default function PagamentosPage() {
   }, []);
   useEffect(loadAsaas, [loadAsaas]);
   const asaasOn = Boolean(asaas?.config.ready);
+  const asaasOpen = (p: UnifiedPaymentItem) => p.asaas?.status === "link_created" || p.asaas?.status === "started";
+  const releaseAsaas = async (p: UnifiedPaymentItem, reason: string) => {
+    if (!asaasOpen(p)) return;
+    await releaseAsaasCharge(p.rentalId, p.id, reason);
+    loadAsaas();
+  };
 
   // Mapeia todas as parcelas das locações existentes em uma lista unificada
   const allPayments = useMemo<UnifiedPaymentItem[]>(() => {
@@ -234,6 +240,7 @@ export default function PagamentosPage() {
     const ok = await update("rentals", rental.id, { receipts });
     if (!ok) throw new Error("Não foi possível salvar o pagamento.");
     toast.success("Pagamento baixado com sucesso!");
+    await releaseAsaas(settleTarget, "baixa manual");
   };
 
   // Ação: Editar
@@ -349,6 +356,7 @@ export default function PagamentosPage() {
     const ok = await update("rentals", rental.id, { receipts });
     if (ok) {
       toast.success("Pagamento cancelado.");
+      await releaseAsaas(cancellingTarget, "parcela cancelada");
       setCancellingTarget(null);
       setCancelReason("");
     }
@@ -362,6 +370,7 @@ export default function PagamentosPage() {
     const ok = await update("rentals", rental.id, { receipts });
     if (ok) {
       toast.success("Pagamento excluído da locação.");
+      await releaseAsaas(deletingTarget, "parcela excluída");
       setDeletingTarget(null);
     }
   };
