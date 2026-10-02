@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fipePath, fipeMonth, fipePrice, mapFipe, variation, fipeFleet } from "../src/lib/fipe";
+import { inTestOrg } from "./test-org";
 const root = join(__dirname, "..");
-(async () => {
+inTestOrg(async () => {
  assert.equal(fipePrice("R$ 118.358,00"), 118358);
  assert.equal(fipePrice("R$ 1.234.567,89"), 1234567.89);
  for(const v of ["R$ 0,00", "1200", "R$ 1,2", null]) assert.throws(() => fipePrice(v));
@@ -45,4 +46,4 @@ const root = join(__dirname, "..");
  for(const p of ['fipe-picker','fipe-settings','vehicle-fipe-panel'])assert.ok(!readFileSync(join(root,`src/components/admin/${p}.tsx`),'utf8').includes('X-Subscription-Token'));
  const sql=readFileSync(join(root,'supabase/migrations/20261010000000_fipe.sql'),'utf8');assert.ok(sql.includes('unique(vehicle_id,fipe_code,year_id,reference_month)'));assert.ok(sql.includes('revoke all on public.%I from anon,authenticated'));
  console.log('✓ FIPE offline: paths, preços, referências, zero KM, DTOs, histórico, erros, token e autorização');
-})().catch(e=>{console.error(e);process.exitCode=1});
+}).catch(e=>{console.error(e);process.exitCode=1});

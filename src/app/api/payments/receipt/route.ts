@@ -5,6 +5,7 @@ import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { formatCurrency, formatDate, todaySP } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
 import type { Rental } from "@/types";
+import { brand, scoped } from "@/lib/server/org-context";
 
 /**
  * Comprovantes enviados pelo App do Locatário. Somente equipe.
@@ -14,7 +15,7 @@ import type { Rental } from "@/types";
  */
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export const GET = scoped(async function GET() {
   try {
     const { supabase } = await requireStaff();
     const { data, error } = await supabase
@@ -53,9 +54,9 @@ export async function GET() {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     const { supabase } = await requireStaff();
     const { data: claims } = await supabase.auth.getClaims();
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
 
     if (body.action === "approve") {
       if (rental && index >= 0) {
-        const receipts = rental.receipts.map((r) => (r.id === proof.receipt_id ? { ...r, paid: true, paidAt: todaySP(), amountPaid: amount, paymentMethod: "Pix · comprovante aprovado (LOCAKAR)", settledBy: "Pix manual" } : r));
+        const receipts = rental.receipts.map((r) => (r.id === proof.receipt_id ? { ...r, paid: true, paidAt: todaySP(), amountPaid: amount, paymentMethod: `Pix · comprovante aprovado (${brand().name})`, settledBy: "Pix manual" } : r));
         await db.from("rentals").update({ receipts, updated_at: now }).eq("id", rental.id);
         await releaseChargeIfSettled(db, rental.id, proof.receipt_id, { type: "staff", id: reviewer }, "comprovante aprovado");
       }
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
             kind: "receipt",
             to: client.email,
             rentalId: proof.rental_id,
-            subject: `Pagamento confirmado — ${formatCurrency(amount)} — LOCAKAR`,
+            subject: `Pagamento confirmado — ${formatCurrency(amount)} — ${brand().name}`,
             html: emailLayout({
               title: "Pagamento confirmado",
               intro: `Olá, ${client.name}! Conferimos seu comprovante e confirmamos o pagamento abaixo.`,
@@ -139,4 +140,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});

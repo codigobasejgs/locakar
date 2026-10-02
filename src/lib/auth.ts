@@ -52,7 +52,7 @@ const supabaseAuth: AuthService = {
     const { data, error } = await getSupabase().rpc("is_staff");
     if (error) throw new Error(dbErrorMessage(error));
     if (data !== true) {
-      throw new Error("Seu usuário ainda não tem acesso ao painel. Peça ao administrador para liberar o seu e-mail.");
+      throw new Error("Seu usuário ainda não pertence a nenhuma locadora. Aceite o convite recebido por e-mail ou cadastre sua locadora em /plataforma/cadastro.");
     }
   },
 };

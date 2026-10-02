@@ -4,6 +4,7 @@ import { ASAAS_WEBHOOK_EVENTS, AsaasError, apiKeyFor, asaasFetch, envCols, loadA
 import { serviceDb } from "@/lib/server/push";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { audit, clientIp } from "@/lib/server/tenant";
+import { brand, scoped } from "@/lib/server/org-context";
 
 /**
  * Configurações → Asaas (somente equipe; asaas_config só é acessível pelo service role).
@@ -30,7 +31,7 @@ const pct = (v: unknown, max: number) => {
 };
 const noStore = { headers: { "Cache-Control": "private, no-store" } };
 
-export async function GET() {
+export const GET = scoped(async function GET() {
   try {
     await staff();
     const db = serviceDb();
@@ -38,9 +39,9 @@ export async function GET() {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     const operator = await staff();
     const ip = clientIp(request);
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
     const cfg = await loadAsaasConfig(db);
     if (!cfg) throw new HttpError(409, "Aplique a migration 20261008000000_asaas.sql no Supabase.");
     const save = async (patch: Record<string, unknown>) => {
-      const { error } = await db.from("asaas_config").update({ ...patch, updated_by: operator }).eq("id", 1);
+      const { error } = await db.from("asaas_config").update({ ...patch, updated_by: operator });
       if (error) throw new HttpError(500, "Não foi possível salvar a configuração.");
     };
 
@@ -86,8 +87,8 @@ export async function POST(request: Request) {
       }
       // Webhook com token próprio (independente da API Key). Guardamos só o hash.
       const token = newWebhookToken();
-      const email = typeof body.email === "string" && body.email.includes("@") ? body.email.trim() : "locakarveiculos@gmail.com";
-      const hook = { name: "LOCAKAR — Cobranças", url: webhookUrl(), email, enabled: true, interrupted: false, apiVersion: 3, authToken: token, sendType: "NON_SEQUENTIALLY", events: ASAAS_WEBHOOK_EVENTS };
+      const email = typeof body.email === "string" && body.email.includes("@") ? body.email.trim() : brand().email || undefined;
+      const hook = { name: `${brand().name} — Cobranças`.slice(0, 60), url: webhookUrl(), email, enabled: true, interrupted: false, apiVersion: 3, authToken: token, sendType: "NON_SEQUENTIALLY", events: ASAAS_WEBHOOK_EVENTS };
       let webhookId = cfg[c.webhookId];
       let webhookError: string | null = null;
       try {
@@ -156,4 +157,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});

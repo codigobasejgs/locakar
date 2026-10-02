@@ -2,6 +2,7 @@ import { serviceDb } from "@/lib/server/push";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { analyzeContractDocument, getAIKey, loadContractAIConfig } from "@/lib/server/contract-ai";
 import { createHash } from "node:crypto";
+import { requireOrg, scoped } from "@/lib/server/org-context";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -11,7 +12,7 @@ export const maxDuration = 60;
  * GET  → lista os templates cadastrados
  * POST { action: "create" | "analyze" | "save-mapping" | "delete", ... }
  */
-export async function GET() {
+export const GET = scoped(async function GET() {
   try {
     await requireStaff();
     const db = serviceDb();
@@ -25,7 +26,7 @@ export async function GET() {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});
 
 const MAX_TEMPLATE_BYTES = 4 * 1024 * 1024; // ponytail: limite de corpo da Vercel (~4,5 MB); acima disso, usar signed upload URL
 const TEMPLATE_MIME = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" } as const;
@@ -50,7 +51,7 @@ async function createTemplate(form: FormData, db: ReturnType<typeof serviceDb>) 
   const { count } = await db.from("contract_templates").select("id", { count: "exact", head: true });
   if ((count ?? 0) >= 5) throw new HttpError(409, "Limite atingido: você já possui 5 modelos de contrato cadastrados.");
 
-  const filePath = `templates/${crypto.randomUUID()}.${fileType}`;
+  const filePath = `${requireOrg().org.id}/templates/${crypto.randomUUID()}.${fileType}`;
   const { error: upErr } = await db.storage.from("documentos").upload(filePath, bytes, { contentType: TEMPLATE_MIME[fileType] });
   if (upErr) throw new HttpError(500, `Falha ao salvar arquivo: ${upErr.message}`);
 
@@ -75,7 +76,7 @@ async function createTemplate(form: FormData, db: ReturnType<typeof serviceDb>) 
   return Response.json({ template: created });
 }
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     await requireStaff();
     const db = serviceDb();
@@ -182,4 +183,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});

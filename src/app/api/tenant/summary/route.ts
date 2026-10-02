@@ -1,6 +1,5 @@
 import { PRIVACY_VERSION } from "@/lib/antifraud";
 import { chargeFor } from "@/lib/billing";
-import { COMPANY } from "@/lib/company";
 import { loadSettings, serviceDb } from "@/lib/server/push";
 import { errorResponse } from "@/lib/server/supabase";
 import { corsHeaders, requireTenant, tenantOptions } from "@/lib/server/tenant";
@@ -8,6 +7,7 @@ import { getPaymentMethods, usable } from "@/lib/server/payment-methods";
 import { todaySP } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
 import type { Rental } from "@/types";
+import { requireOrg, scoped } from "@/lib/server/org-context";
 
 /**
  * Tudo que a tela inicial do App do Locatário precisa, em uma chamada.
@@ -18,14 +18,14 @@ export const dynamic = "force-dynamic";
 
 export const OPTIONS = tenantOptions;
 
-export async function GET(request: Request) {
+export const GET = scoped(async function GET(request: Request) {
   const headers = corsHeaders(request);
   try {
     const { db } = await requireTenant(request);
     const today = todaySP();
 
     // Views do locatário: só os dados dele e sem campos internos (observações da equipe, custos...).
-    const [client, rentals, vehicles, proofs, consent, lastRequest, fleet] = await Promise.all([
+    const [client, rentals, vehicles, proofs, consent, lastRequest, fleet, orgs] = await Promise.all([
       db.from("tenant_profile").select("*").maybeSingle(),
       db.from("tenant_rentals").select("*").order("start_date", { ascending: false }),
       db.from("tenant_vehicles").select("*"),
@@ -33,7 +33,11 @@ export async function GET(request: Request) {
       db.from("tenant_consents").select("policy_version,scopes,consented_at").order("consented_at", { ascending: false }).limit(1).maybeSingle(),
       db.from("rental_requests").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle(),
       db.from("tenant_fleet").select("*").order("name"),
+      db.rpc("my_tenant_organizations"),
     ]);
+    const org = requireOrg().org;
+    const b = org.branding ?? {};
+    const supportPhone = (org.whatsapp || org.phone || "").replace(/\D/g, "");
 
     // Configurações só pelo servidor (settings é restrito à equipe): usa a chave de serviço.
     const settings = process.env.SUPABASE_SECRET_KEY ? await loadSettings(serviceDb()) : null;
@@ -149,7 +153,32 @@ export async function GET(request: Request) {
         paymentMethods: availability?.methods.filter((m) => usable(m) && (m.id !== "infinitepay" || ipOn)).map((m) => m.id) ?? [],
         asaas: asaasOn && asaasCfg ? { methods: asaasCfg.methods, allowUndefined: asaasCfg.allow_undefined, sandbox: asaasCfg.environment === "sandbox" } : null,
         infinitepay: ipOn ? { checkout: true } : null,
-        support: { whatsapp: COMPANY.whatsapp.e164, display: COMPANY.whatsapp.display },
+        support: {
+          whatsapp: supportPhone ? (supportPhone.startsWith("55") ? supportPhone : `55${supportPhone}`) : null,
+          display: supportPhone ? supportPhone.replace(/^(?:55)?(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3") : null,
+          email: org.email,
+          text: org.texts?.support ?? null,
+        },
+        // Marca da locadora (white label do app). Locadoras do usuário: seletor quando houver mais de uma.
+        brand: {
+          slug: org.slug,
+          name: b.displayName || org.name,
+          logo: b.logo ?? null,
+          logoLight: b.logoLight ?? null,
+          logoCompact: b.logoCompact ?? null,
+          primary: b.primary ?? null,
+          secondary: b.secondary ?? null,
+          accent: b.accent ?? null,
+          welcome: org.texts?.welcome ?? null,
+        },
+        organizations: ((orgs.data ?? []) as { id: string; slug: string; name: string; branding: { displayName?: string; logoCompact?: string; primary?: string } }[]).map((o) => ({
+          id: o.id,
+          slug: o.slug,
+          name: o.branding?.displayName || o.name,
+          logo: o.branding?.logoCompact ?? null,
+          primary: o.branding?.primary ?? null,
+          active: o.id === org.id,
+        })),
         today,
         privacyVersion: PRIVACY_VERSION,
         consent: consent.data?.policy_version === PRIVACY_VERSION ? { scopes: consent.data.scopes as string[], at: consent.data.consented_at } : null,
@@ -161,4 +190,4 @@ export async function GET(request: Request) {
     Object.entries(headers).forEach(([k, v]) => res.headers.set(k, v));
     return res;
   }
-}
+});

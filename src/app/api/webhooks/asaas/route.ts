@@ -2,9 +2,12 @@ import { after } from "next/server";
 import { loadAsaasConfig } from "@/lib/server/asaas";
 import { parseEvent, processBacklog, processEvent, webhookEnvironment } from "@/lib/server/asaas-webhook";
 import { serviceDb } from "@/lib/server/push";
+import { legacyOrgId, loadOrg, scoped, setOrg } from "@/lib/server/org-context";
 
 /**
  * Webhook Asaas (docs: entrega "at least once"; responder 200 só após persistir; 15 falhas seguidas pausam a fila).
+ * 0. locadora: `?o=<id>` da URL registrada por ela (webhooks antigos sem ?o= = LOCAKAR). O parâmetro só
+ *    escolhe QUAL configuração consultar — a autenticação é o token abaixo, conferido com o hash daquela locadora;
  * 1. autentica pelo header asaas-access-token (token próprio, nunca a API Key; só o hash fica no banco);
  * 2. persiste event.id (PRIMARY KEY) — reenvio do mesmo evento não cria registro nem efeito novo;
  * 3. responde 200 e processa depois da resposta (after), consultando a cobrança no Asaas.
@@ -13,7 +16,10 @@ import { serviceDb } from "@/lib/server/push";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
+  const org = await loadOrg(new URL(request.url).searchParams.get("o") || (await legacyOrgId()) || "");
+  if (!org) return Response.json({ error: "unauthorized" }, { status: 401 });
+  setOrg({ org });
   const db = serviceDb();
   const cfg = await loadAsaasConfig(db);
   const env = webhookEnvironment(cfg, request.headers.get("asaas-access-token"));
@@ -42,4 +48,4 @@ export async function POST(request: Request) {
     await processBacklog(db, ev.id);
   });
   return Response.json({ received: true, duplicate: !inserted?.length });
-}
+});

@@ -3,6 +3,7 @@ import { getPaymentMethods, openCount, setMethodEnabled } from "@/lib/server/pay
 import { serviceDb } from "@/lib/server/push";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { clientIp } from "@/lib/server/tenant";
+import { scoped } from "@/lib/server/org-context";
 
 /**
  * Configurações → Meios de pagamento (somente equipe).
@@ -20,7 +21,7 @@ async function staff() {
 const withOpen = async (db: ReturnType<typeof serviceDb>, methods: Awaited<ReturnType<typeof getPaymentMethods>>["methods"]) =>
   Promise.all(methods.map(async (m) => ({ ...m, open: await openCount(db, m.id) })));
 
-export async function GET() {
+export const GET = scoped(async function GET() {
   try {
     await staff();
     const db = serviceDb();
@@ -28,9 +29,9 @@ export async function GET() {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     const operator = await staff();
     const body = (await request.json().catch(() => ({}))) as { method?: unknown; enabled?: unknown };
@@ -41,4 +42,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});

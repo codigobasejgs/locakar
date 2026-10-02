@@ -8,10 +8,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Toaster } from "sonner";
 import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/ui/logo";
 import { AdminDataProvider, useAdminData } from "@/hooks/use-admin-data";
+import { BrandingStyle, OrganizationProvider } from "@/hooks/use-organization";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useTheme } from "@/hooks/use-theme";
+import { OrgBrandLogo, OrgStatusBanner, OrgSwitcher } from "./org-ui";
 import { buildAlerts } from "@/lib/analytics";
 import { authService } from "@/lib/auth";
 import { CATEGORY_LABEL, unreadCount } from "@/lib/push-events";
@@ -244,6 +245,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         <span className="font-medium text-white">{item.label}</span>
       </nav>
       <InstallButton appName="LOCAKAR Gestão" size="sm" variant="ghost" label="Instalar" className="hidden sm:inline-flex" />
+      <OrgSwitcher />
       {!isSupabaseEnabled && (
         <span className="hidden rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300 md:inline">
           Modo demonstração · dados locais
@@ -358,12 +360,15 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
 
   return (
-    <AdminDataProvider>
-      <div className="min-h-dvh bg-ink text-white">
-        {/* Sidebar desktop */}
+    <OrganizationProvider>
+      <BrandingStyle theme={theme} />
+      <AdminDataProvider>
+        <div className="min-h-dvh bg-ink text-white admin-shell">
+          <OrgStatusBanner />
+          {/* Sidebar desktop */}
         <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-[#070708] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] lg:flex">
-          <Link href={ROUTES.admin} className="flex h-16 items-center border-b border-line px-6" aria-label="Dashboard LOCAKAR">
-            <Logo className="w-24" variant={theme === "light" ? "original" : "light"} />
+          <Link href={ROUTES.admin} className="flex h-16 items-center border-b border-line px-6" aria-label="Dashboard">
+            <OrgBrandLogo className="w-28" variant={theme === "light" ? "original" : "light"} />
           </Link>
           <SidebarNav />
           <SidebarFooter />
@@ -391,7 +396,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 transition={{ type: "spring", stiffness: 380, damping: 38 }}
               >
                 <div className="flex h-16 items-center justify-between border-b border-line px-5">
-                  <Logo className="w-24" variant={theme === "light" ? "original" : "light"} />
+                  <OrgBrandLogo className="w-28" variant={theme === "light" ? "original" : "light"} />
                   <Button variant="ghost" size="icon" aria-label="Fechar menu" onClick={() => setOpen(false)}>
                     <X />
                   </Button>
@@ -414,6 +419,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         richColors
         toastOptions={{ className: "!bg-panel !border-line-strong !rounded-xl" }}
       />
-    </AdminDataProvider>
+      </AdminDataProvider>
+    </OrganizationProvider>
   );
 }

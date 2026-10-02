@@ -24,6 +24,7 @@ interface View {
   expiresAt?: string;
   signedName?: string;
   signedAt?: string;
+  brand?: { name?: string; logo?: string; primary?: string; whatsapp?: string; email?: string };
 }
 
 const when = (iso?: string) => (iso ? new Date(iso).toLocaleString("pt-BR", { dateStyle: "long", timeStyle: "short" }) : "");
@@ -51,6 +52,10 @@ export default function SignPage() {
   }, [token]);
 
   const expired = !!view?.expiresAt && new Date(view.expiresAt) < new Date();
+  const orgName = view?.brand?.name || COMPANY.name;
+  const whatsappUrl = view?.brand?.whatsapp
+    ? `https://wa.me/${view.brand.whatsapp}?text=${encodeURIComponent(`Olá, ${orgName}! Tenho uma dúvida sobre o meu contrato.`)}`
+    : getWhatsAppUrl(`Olá, ${orgName}! Tenho uma dúvida sobre o meu contrato.`);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +78,12 @@ export default function SignPage() {
     <main className="min-h-dvh bg-ink px-4 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]">
       <div className="mx-auto max-w-3xl">
         <header className="mb-6 flex items-center justify-between">
-          <Logo priority className="w-28" />
+          {view?.brand?.logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={view.brand.logo} alt={orgName} className="h-10 w-auto max-w-36 object-contain" />
+          ) : (
+            <Logo priority className="w-28" />
+          )}
           <span className="inline-flex items-center gap-1.5 text-xs text-muted">
             <ShieldCheck className="size-4 text-brand-soft" aria-hidden /> Assinatura eletrônica
           </span>
@@ -82,11 +92,11 @@ export default function SignPage() {
         {view === undefined && <div className="h-96 animate-pulse rounded-2xl bg-white/[0.04]" aria-busy="true" aria-label="Carregando contrato" />}
 
         {view === null && (
-          <Message title="Contrato não encontrado" text="O link pode estar incompleto. Confira o e-mail recebido ou fale com a LOCAKAR." />
+          <Message title="Contrato não encontrado" text={`O link pode estar incompleto. Confira o e-mail recebido ou fale com a ${orgName}.`} />
         )}
 
         {view && view.status === "cancelled" && (
-          <Message title="Contrato cancelado" text="Este contrato foi cancelado pela locadora. Fale com a LOCAKAR para receber um novo link." />
+          <Message title="Contrato cancelado" text={`Este contrato foi cancelado pela locadora. Fale com a ${orgName} para receber um novo link.`} />
         )}
 
         {view && view.status === "signed" && (
@@ -103,7 +113,7 @@ export default function SignPage() {
         {view && view.status !== "cancelled" && <ClientPushButton token={token} />}
 
         {view && view.status === "pending" && expired && (
-          <Message title="Link expirado" text="O prazo para assinatura terminou. Fale com a LOCAKAR para receber um novo link." />
+          <Message title="Link expirado" text={`O prazo para assinatura terminou. Fale com a ${orgName} para receber um novo link.`} />
         )}
 
         {view && view.status === "pending" && !expired && (
@@ -153,8 +163,8 @@ export default function SignPage() {
         )}
 
         <p className="mt-8 text-center text-sm">
-          <a href={getWhatsAppUrl("Olá, LOCAKAR! Tenho uma dúvida sobre o meu contrato.")} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white">
-            <WhatsAppIcon className="size-4" /> Dúvidas? {COMPANY.whatsapp.display}
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white">
+            <WhatsAppIcon className="size-4" /> Dúvidas? Fale com a {orgName}
           </a>
         </p>
       </div>

@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { audit, corsHeaders, requireTenant, tenantOptions } from "@/lib/server/tenant";
 import { fromRow } from "@/repositories/mapping";
 import type { Rental } from "@/types";
+import { scoped } from "@/lib/server/org-context";
 
 /**
  * "Já paguei" no App do Locatário: registra o comprovante para a equipe aprovar.
@@ -20,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export const OPTIONS = tenantOptions;
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   const headers = corsHeaders(request);
   try {
     const { db, clientId, ip } = await requireTenant(request);
@@ -101,4 +102,4 @@ export async function POST(request: Request) {
     Object.entries(headers).forEach(([k, v]) => res.headers.set(k, v));
     return res;
   }
-}
+});

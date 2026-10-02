@@ -1,8 +1,8 @@
 import "server-only";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import webpush from "web-push";
-import { COMPANY } from "@/lib/company";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
+import { PLATFORM } from "@/lib/platform";
 import {
   MAX_INDIVIDUAL_PUSHES,
   fanOut,
@@ -13,8 +13,9 @@ import {
   type StaffEvent,
 } from "@/lib/push-events";
 import { emailLayout, sendEmail } from "@/lib/server/email";
+import { orgDb } from "@/lib/server/org-db";
+import { brand, globalDb, requireOrg, siteUrl } from "@/lib/server/org-context";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
-import { SUPABASE_URL } from "@/lib/supabase/env";
 import { mergeSettings } from "@/repositories/types";
 import type { CompanySettings } from "@/types";
 
@@ -29,14 +30,18 @@ export const isPushConfigured = () => Boolean(process.env.VAPID_PUBLIC_KEY && pr
 let configured = false;
 function vapid() {
   if (!configured) {
-    webpush.setVapidDetails(process.env.VAPID_SUBJECT || "mailto:locakarveiculos@gmail.com", process.env.VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
+    webpush.setVapidDetails(process.env.VAPID_SUBJECT || `mailto:contato@${new URL(PLATFORM.siteUrl).hostname.replace(/^www\./, "")}`, process.env.VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
     configured = true;
   }
   return webpush;
 }
 
+/**
+ * Service role da LOCADORA da requisição (org-context): toda tabela da locadora sai filtrada/carimbada.
+ * Sem locadora definida, lança — nunca devolve acesso global por engano. Acesso global: globalDb().
+ */
 export function serviceDb(): SupabaseClient {
-  return createClient(SUPABASE_URL, process.env.SUPABASE_SECRET_KEY!, { auth: { persistSession: false } });
+  return orgDb(globalDb(), requireOrg().org.id);
 }
 
 interface SubRow {
@@ -93,15 +98,13 @@ async function deliver(db: SupabaseClient, payload: PushPayload, owners?: string
 
 export const sendPushToUser = (db: SupabaseClient, userId: string, payload: PushPayload) => deliver(db, payload, [userId]);
 
-/** Papel real do sistema: "staff" (tabela public.staff). É o único papel com acesso ao painel. */
-export async function sendPushToRole(db: SupabaseClient, role: "staff", payload: PushPayload) {
-  const { data, error } = await db.from(role).select("user_id");
-  if (error) throw new Error(`${role}: ${error.message}`);
-  return deliver(db, payload, (data ?? []).map((r) => r.user_id as string));
+/** Equipe da locadora atual (memberships). Dispositivos de quem está em outra locadora não recebem. */
+export async function sendPushToTeam(db: SupabaseClient, payload: PushPayload) {
+  const { data, error } = await globalDb().from("memberships").select("user_id").eq("organization_id", requireOrg().org.id);
+  if (error) throw new Error(`memberships: ${error.message}`);
+  const users = (data ?? []).map((r) => r.user_id as string);
+  return users.length ? deliver(db, payload, users) : { sent: 0, failed: 0, expired: 0 };
 }
-
-/** Todos os dispositivos da equipe. Restrito ao servidor (inscrever exige ser da equipe). */
-export const sendPushToAll = (db: SupabaseClient, payload: PushPayload) => deliver(db, payload);
 
 /** Tela do App do Locatário aberta ao tocar na notificação (rotas do Expo Router). */
 export type TenantScreen = "inicio" | "pagamentos" | "locacao" | "veiculo" | "ocorrencias" | "documentos" | "multas" | "reservas" | "notificacoes";
@@ -167,16 +170,18 @@ export async function sendPushToClient(clientId: string | undefined, payload: Pu
   return { sent: web.sent + native.sent, failed: web.failed + native.failed, expired: web.expired };
 }
 
+/** Configurações da locadora atual (db escopado: a linha da própria locadora). */
 export async function loadSettings(db: SupabaseClient): Promise<CompanySettings> {
-  const { data } = await db.from("settings").select("data").eq("id", 1).maybeSingle();
+  const { data } = await db.from("settings").select("data").maybeSingle();
   return mergeSettings(DEFAULT_SETTINGS, data?.data as Partial<CompanySettings> | undefined);
 }
 
-/** Destino dos alertas da empresa: Configurações → Alertas para a empresa; vazio = padrão do servidor. */
+/** Destino dos alertas da locadora: Configurações → Alertas; vazio = contato cadastrado da locadora. */
 export function companyContacts(settings: CompanySettings) {
+  const b = brand();
   return {
-    email: settings.alerts.email.trim() || process.env.ALERTS_ADMIN_EMAIL || "locakarveiculos@gmail.com",
-    phone: settings.alerts.phone.trim() || process.env.ALERTS_ADMIN_WHATSAPP || COMPANY.whatsapp.e164,
+    email: settings.alerts.email.trim() || b.email,
+    phone: settings.alerts.phone.trim() || b.whatsapp,
   };
 }
 
@@ -188,23 +193,24 @@ async function alertCompany(db: SupabaseClient, settings: CompanySettings, event
   const important = events.filter(isAdminAlert);
   if (!important.length || !settings.alerts.instant) return;
   const { email, phone } = companyContacts(settings);
+  const name = brand().name;
   const one = important.length === 1;
-  const link = `${COMPANY.siteUrl}${one ? important[0].url : "/admin"}`;
+  const link = `${siteUrl()}${one ? important[0].url : "/admin"}`;
   const text = [
-    "🔔 *Alerta LOCAKAR*",
+    `🔔 *Alerta ${name}*`,
     "",
     ...important.map((e) => `${e.severity === "critical" ? "⚠️" : "•"} *${e.title}*${e.body ? ` — ${e.body}` : ""}`),
     "",
     link,
   ].join("\n");
   await Promise.all([
-    sendEmail(db, {
+    email && sendEmail(db, {
       kind: "alert_admin",
       to: email,
-      subject: one ? `${important[0].title} — LOCAKAR` : `${important.length} alertas — LOCAKAR`,
+      subject: one ? `${important[0].title} — ${name}` : `${important.length} alertas — ${name}`,
       html: emailLayout({
         title: one ? important[0].title : `${important.length} novos alertas`,
-        intro: one ? important[0].body || "Novo evento no painel da LOCAKAR." : "Eventos importantes no painel da LOCAKAR:",
+        intro: one ? important[0].body || `Novo evento no painel da ${name}.` : `Eventos importantes no painel da ${name}:`,
         rows: one ? undefined : important.map((e) => [e.title, e.body] as [string, string]),
         cta: { label: "Abrir no painel", url: link },
       }),
@@ -233,20 +239,21 @@ export async function notifyClientSubmission(input: {
   const { email, phone } = companyContacts(await loadSettings(db));
   const name = input.client?.name?.trim() || "Cliente";
   const first = name.split(" ")[0];
+  const company = brand().name;
   const lines = input.rows.map(([k, v]) => `• *${k}:* ${v}`);
-  const adminLink = `${COMPANY.siteUrl}${input.adminUrl}`;
-  const clientIntro = `Olá, ${first}! Recebemos seu pedido e a equipe LOCAKAR vai analisar. Você será avisado assim que houver resposta.`;
+  const adminLink = `${siteUrl()}${input.adminUrl}`;
+  const clientIntro = `Olá, ${first}! Recebemos seu pedido e a equipe ${company} vai analisar. Você será avisado assim que houver resposta.`;
   const adminRows: [string, string][] = [["Cliente", name], ["Telefone", input.client?.phone || "—"], ...input.rows];
   const safe = (label: string) => (e: unknown) => console.error(`[pedido] ${label}:`, (e as Error).message);
 
   await Promise.all([
     sendWhatsApp(db, { kind: "reservation", phone: input.client?.phone ?? undefined, text: [`✅ *${input.title} recebida*`, "", clientIntro, "", ...lines].join("\n") }).catch(safe("WhatsApp cliente")),
     input.client?.email
-      ? sendEmail(db, { kind: "reservation", to: input.client.email, subject: `${input.title} recebida — LOCAKAR`, html: emailLayout({ title: `${input.title} recebida`, intro: clientIntro, rows: input.rows }) }).catch(safe("e-mail cliente"))
+      ? sendEmail(db, { kind: "reservation", to: input.client.email, subject: `${input.title} recebida — ${company}`, html: emailLayout({ title: `${input.title} recebida`, intro: clientIntro, rows: input.rows }) }).catch(safe("e-mail cliente"))
       : null,
-    sendPushToClient(input.clientId, { title: `${input.title} recebida`, body: "A LOCAKAR vai analisar e te avisar por aqui.", url: "/", severity: "success", tag: `pedido-${input.id}` }, input.screen),
+    sendPushToClient(input.clientId, { title: `${input.title} recebida`, body: `A ${company} vai analisar e te avisar por aqui.`, url: "/", severity: "success", tag: `pedido-${input.id}` }, input.screen),
     sendWhatsApp(db, { kind: "alert_admin", phone, text: [`🔔 *Nova ${input.title.toLowerCase()}*`, "", ...adminRows.map(([k, v]) => `• *${k}:* ${v}`), "", adminLink].join("\n") }).catch(safe("WhatsApp admin")),
-    sendEmail(db, { kind: "alert_admin", to: email, subject: `Nova ${input.title.toLowerCase()} — ${name}`, html: emailLayout({ title: `Nova ${input.title.toLowerCase()}`, intro: `${name} enviou um pedido pelo app. Analise no painel.`, rows: adminRows, cta: { label: "Abrir no painel", url: adminLink } }) }).catch(safe("e-mail admin")),
+    email ? sendEmail(db, { kind: "alert_admin", to: email, subject: `Nova ${input.title.toLowerCase()} — ${name}`, html: emailLayout({ title: `Nova ${input.title.toLowerCase()}`, intro: `${name} enviou um pedido pelo app. Analise no painel.`, rows: adminRows, cta: { label: "Abrir no painel", url: adminLink } }) }).catch(safe("e-mail admin")) : null,
   ]);
 }
 
@@ -261,7 +268,9 @@ export async function notifyStaff(events: StaffEvent[], opts: { createdBy?: stri
   if (!events.length || !process.env.SUPABASE_SECRET_KEY) return report;
   const db = opts.db ?? serviceDb();
   try {
-    const key = (e: StaffEvent) => e.dedupeKey.slice(0, 300);
+    // dedupe_key é único global: prefixo da locadora evita colisão entre locadoras.
+    const org = requireOrg().org.id;
+    const key = (e: StaffEvent) => `${org}:${e.dedupeKey}`.slice(0, 300);
     const rows = events.map((e) => ({
       type: e.type,
       category: e.category,
@@ -294,7 +303,7 @@ export async function notifyStaff(events: StaffEvent[], opts: { createdBy?: stri
           }));
 
     for (const { id, payload } of payloads) {
-      const r = await sendPushToRole(db, "staff", payload);
+      const r = await sendPushToTeam(db, payload);
       report.pushed += r.sent;
       report.failed += r.failed;
       report.expired += r.expired;

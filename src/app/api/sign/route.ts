@@ -6,6 +6,7 @@ import { notifyStaff, sendPushToClient, serviceDb } from "@/lib/server/push";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 import type { Contract } from "@/types";
+import { brand, scoped, withOrgId } from "@/lib/server/org-context";
 
 /**
  * Assinatura pública do contrato pelo cliente (sem login).
@@ -16,7 +17,7 @@ export const maxDuration = 60;
 
 const anon = () => createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   let body: { token?: string; name?: string; cpf?: string; signature?: string; selfie?: string; accepted?: boolean };
   try {
     body = await request.json();
@@ -49,73 +50,76 @@ export async function POST(request: Request) {
   }
 
   // Via assinada por e-mail + confirmação por WhatsApp. Falha no envio não desfaz a assinatura (já registrada).
-  const signed = data as { clientName: string; clientEmail?: string; clientPhone?: string; companyEmail?: string; id: string; rentalId: string };
+  const signed = data as { organizationId: string; clientName: string; clientEmail?: string; clientPhone?: string; companyEmail?: string; id: string; rentalId: string };
   const when = new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
 
-  // Resposta imediata ao cliente; PDF + e-mail + WhatsApp seguem após a resposta (after).
+  // Resposta imediata ao cliente; PDF + e-mail + WhatsApp seguem após a resposta (after) no contexto da locadora.
   after(async () => {
-    await notifyStaff([
-      {
-        type: "contract.signed",
-        category: "contracts",
-        severity: "success",
-        title: "Contrato assinado",
-        body: `${signed.clientName} assinou o contrato em ${when}.`,
-        url: `/admin/rentals/${signed.rentalId}`,
-        dedupeKey: `contract:${signed.id}:signed`,
-      },
-    ]);
-    // Via assinada em PDF (sem a selfie: ela fica só com a LOCAKAR). CPF, IP e navegador já foram validados/gravados acima.
-    const { data: view } = await db.rpc("contract_for_signing", { p_token: body.token });
-    let pdf: { filename: string; content: Uint8Array } | undefined;
-    if (view) {
-      const cpf = (body.cpf ?? "").replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-      const contract = { ...(view as Contract), id: signed.id, rentalId: signed.rentalId, status: "signed", signedCpf: cpf, signedIp: ip, signedUserAgent: ua } as Contract;
-      pdf = await contractPdf(contract)
-        .then((content) => ({ filename: `contrato-locakar-${signed.id.slice(0, 8)}.pdf`, content }))
-        .catch((e) => (console.error("geração do PDF:", e), undefined));
-    }
-
-    await sendWhatsApp(db, {
-      kind: "contract_signed",
-      phone: signed.clientPhone,
-      contractId: signed.id,
-      rentalId: signed.rentalId,
-      document: pdf,
-      text: [
-        "✅ *Contrato assinado*",
-        "",
-        `Olá, ${signed.clientName.split(" ")[0]}! Recebemos sua assinatura em ${when}.`,
-        pdf ? "Segue a via assinada do seu contrato em PDF." : "",
-        ...(signed.clientEmail ? ["Uma cópia também foi enviada para o seu e-mail."] : []),
-        "",
-        "_LOCAKAR · www.locakar.com.br_",
-      ]
-        .filter((l, i, a) => l !== "" || a[i - 1] !== "")
-        .join("\n"),
-    });
-    if (process.env.SUPABASE_SECRET_KEY) {
-      const { data: clientId } = await serviceDb().rpc("client_for_token", { p_token: body.token });
-      await sendPushToClient(clientId as string | undefined, {
-        title: "Contrato assinado",
-        body: `Recebemos sua assinatura em ${when}. A via assinada foi enviada ${signed.clientEmail ? "por e-mail e WhatsApp" : "pelo WhatsApp"}.`,
-        url: `/assinar/${body.token}`,
-        severity: "success",
-        tag: `contract-${signed.id}`,
-      }, "locacao");
-    }
-    if (pdf) {
-      const html = emailLayout({
-        title: "Contrato assinado",
-        intro: `O contrato de locação de ${signed.clientName} foi assinado eletronicamente em ${when}. A via assinada, com o certificado de assinatura, segue em anexo (PDF).`,
-        footerNote: "Guarde este documento. O código SHA-256 impresso no PDF comprova que o conteúdo não foi alterado após a assinatura.",
-      });
-      for (const to of [signed.clientEmail, signed.companyEmail].filter(Boolean) as string[]) {
-        await sendEmail(db, { kind: "contract_signed", to, subject: "Contrato de locação assinado — LOCAKAR", html, attachments: [pdf], contractId: signed.id, rentalId: signed.rentalId }).catch(
-          (e) => console.error("envio da via assinada:", e),
-        );
+    await withOrgId(signed.organizationId, async () => {
+      const co = brand();
+      await notifyStaff([
+        {
+          type: "contract.signed",
+          category: "contracts",
+          severity: "success",
+          title: "Contrato assinado",
+          body: `${signed.clientName} assinou o contrato em ${when}.`,
+          url: `/admin/rentals/${signed.rentalId}`,
+          dedupeKey: `contract:${signed.id}:signed`,
+        },
+      ]);
+      // Via assinada em PDF (sem a selfie: fica arquivada com a locadora). CPF, IP e navegador já gravados.
+      const { data: view } = await db.rpc("contract_for_signing", { p_token: body.token });
+      let pdf: { filename: string; content: Uint8Array } | undefined;
+      if (view) {
+        const cpf = (body.cpf ?? "").replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+        const contract = { ...(view as Contract), id: signed.id, rentalId: signed.rentalId, status: "signed", signedCpf: cpf, signedIp: ip, signedUserAgent: ua } as Contract;
+        pdf = await contractPdf(contract, co)
+          .then((content) => ({ filename: `contrato-${signed.id.slice(0, 8)}.pdf`, content }))
+          .catch((e) => (console.error("geração do PDF:", e), undefined));
       }
-    }
+
+      await sendWhatsApp(db, {
+        kind: "contract_signed",
+        phone: signed.clientPhone,
+        contractId: signed.id,
+        rentalId: signed.rentalId,
+        document: pdf,
+        text: [
+          "✅ *Contrato assinado*",
+          "",
+          `Olá, ${signed.clientName.split(" ")[0]}! Recebemos sua assinatura em ${when}.`,
+          pdf ? "Segue a via assinada do seu contrato em PDF." : "",
+          ...(signed.clientEmail ? ["Uma cópia também foi enviada para o seu e-mail."] : []),
+          "",
+          `_${co.name}_`,
+        ]
+          .filter((l, i, a) => l !== "" || a[i - 1] !== "")
+          .join("\n"),
+      });
+      if (process.env.SUPABASE_SECRET_KEY) {
+        const { data: clientId } = await serviceDb().rpc("client_for_token", { p_token: body.token });
+        await sendPushToClient(clientId as string | undefined, {
+          title: "Contrato assinado",
+          body: `Recebemos sua assinatura em ${when}. A via assinada foi enviada ${signed.clientEmail ? "por e-mail e WhatsApp" : "pelo WhatsApp"}.`,
+          url: `/assinar/${body.token}`,
+          severity: "success",
+          tag: `contract-${signed.id}`,
+        }, "locacao");
+      }
+      if (pdf) {
+        const html = emailLayout({
+          title: "Contrato assinado",
+          intro: `O contrato de locação de ${signed.clientName} foi assinado eletronicamente em ${when}. A via assinada, com o certificado de assinatura, segue em anexo (PDF).`,
+          footerNote: "Guarde este documento. O código SHA-256 impresso no PDF comprova que o conteúdo não foi alterado após a assinatura.",
+        });
+        for (const to of [signed.clientEmail, signed.companyEmail].filter(Boolean) as string[]) {
+          await sendEmail(db, { kind: "contract_signed", to, subject: `Contrato de locação assinado — ${co.name}`, html, attachments: [pdf], contractId: signed.id, rentalId: signed.rentalId }).catch(
+            (e) => console.error("envio da via assinada:", e),
+          );
+        }
+      }
+    });
   });
   return Response.json({ ok: true });
-}
+});

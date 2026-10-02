@@ -4,6 +4,7 @@ import { renderContractContent, resolveContractVariables } from "@/lib/server/co
 import { buildContractText } from "@/lib/contract";
 import { fromRow } from "@/repositories/mapping";
 import type { Client, CompanyProfile, FleetVehicle, Rental } from "@/types";
+import { scoped } from "@/lib/server/org-context";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -12,7 +13,7 @@ export const maxDuration = 30;
  * Endpoint de resolução e pré-visualização de contrato determinístico.
  * POST { rentalId, templateId?, manualValues? }
  */
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     await requireStaff();
     const body = await request.json();
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     // 1. Carrega locação, cliente, veículo e dados da empresa
     const [{ data: rentalRow }, { data: settingsRow }] = await Promise.all([
       db.from("rentals").select("*").eq("id", rentalId).maybeSingle(),
-      db.from("settings").select("data").eq("id", 1).maybeSingle(),
+      db.from("settings").select("data").maybeSingle(),
     ]);
 
     if (!rentalRow) throw new HttpError(404, "Locação não encontrada.");
@@ -99,4 +100,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});

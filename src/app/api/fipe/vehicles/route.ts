@@ -3,9 +3,10 @@ import { fipeErrorResponse, readFipeBody, saveFipeVehicle } from "@/lib/server/f
 import { serviceDb } from "@/lib/server/push";
 import { requireStaff } from "@/lib/server/supabase";
 import { audit } from "@/lib/server/tenant";
+import { scoped } from "@/lib/server/org-context";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-export async function GET(request: Request) {
+export const GET = scoped(async function GET(request: Request) {
  try {
   await requireStaff(); const id = new URL(request.url).searchParams.get("vehicleId");
   if (!id || id.length > 100) throw new FipeError("FIPE_INVALID_INPUT", "Veículo inválido.");
@@ -17,8 +18,8 @@ export async function GET(request: Request) {
   if (!vehicle) throw new FipeError("FIPE_NOT_FOUND", "Veículo não encontrado.", 404);
   return Response.json({ vehicle, history: history ?? [] }, { headers: { "Cache-Control": "private, no-store" } });
  } catch(e) { return fipeErrorResponse(e); }
-}
-export async function POST(request: Request) {
+});
+export const POST = scoped(async function POST(request: Request) {
  try {
   const { supabase } = await requireStaff(); const { data: claims } = await supabase.auth.getClaims();
   const b = await readFipeBody(request), actorId = claims!.claims.sub as string, db = serviceDb();
@@ -35,4 +36,4 @@ export async function POST(request: Request) {
   } else throw new FipeError("FIPE_INVALID_INPUT", "Ação inválida.");
   return Response.json({ ok: true });
  } catch(e) { return fipeErrorResponse(e); }
-}
+});

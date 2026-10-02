@@ -3,6 +3,7 @@ import { notifyClientSubmission, notifyStaff, serviceDb } from "@/lib/server/pus
 import { HttpError } from "@/lib/server/supabase";
 import { audit, filesExist, readBody, safePath, tenantOptions, tenantRoute, text } from "@/lib/server/tenant";
 import { isIsoDate } from "@/lib/tenant";
+import { brand } from "@/lib/server/org-context";
 
 /**
  * Solicitações de Locação pelo App do Locatário (fluxo de auto-onboarding).
@@ -97,7 +98,7 @@ export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
 
   // Checa se já existe solicitação pendente do mesmo cliente
   const { count } = await admin.from("rental_requests").select("id", { count: "exact", head: true }).eq("client_id", clientId).eq("status", "pending");
-  if ((count ?? 0) >= 2) throw new HttpError(429, "Você já possui uma solicitação em análise. Aguarde a aprovação da LOCAKAR.");
+  if ((count ?? 0) >= 2) throw new HttpError(429, `Você já possui uma solicitação em análise. Aguarde a aprovação da ${brand().name}.`);
 
   let rateAmount = vehicle.weekly_rate ?? 650;
   if (planType === "daily") rateAmount = vehicle.daily_rate ?? 120;

@@ -54,13 +54,17 @@ export class SupabaseRepository<T extends Entity> implements Repository<T> {
 export class SupabaseSettingsRepository implements SettingsRepository {
   constructor(private readonly defaults: CompanySettings) {}
 
+  // RLS devolve só a linha da locadora ativa; organization_id é preenchido pelo banco (inherit_org).
   async get() {
-    const found = check(await getSupabase().from("settings").select("data").eq("id", 1).maybeSingle());
+    const found = check(await getSupabase().from("settings").select("data").maybeSingle());
     return mergeSettings(this.defaults, found?.data as Partial<CompanySettings> | undefined);
   }
 
   async save(settings: CompanySettings) {
-    const saved = check(await getSupabase().from("settings").upsert({ id: 1, data: settings }).select("data").single());
+    const sb = getSupabase();
+    const { data: orgId } = await sb.rpc("current_org_id");
+    if (!orgId) throw new Error("Locadora não identificada. Entre novamente.");
+    const saved = check(await sb.from("settings").upsert({ organization_id: orgId, data: settings }, { onConflict: "organization_id" }).select("data").single());
     return mergeSettings(this.defaults, saved?.data as Partial<CompanySettings>);
   }
 }

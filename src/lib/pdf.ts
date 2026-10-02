@@ -44,12 +44,17 @@ const logoBytes = () =>
 const pngFromDataUrl = (src?: string) =>
   src?.startsWith("data:image/png;base64,") ? Buffer.from(src.slice("data:image/png;base64,".length), "base64") : null;
 
-async function writer(opts: { title: string; subtitle: string; badge?: string; footer: string }) {
+export interface PdfCompany {
+  name: string;
+  legalName?: string;
+}
+
+async function writer(opts: { title: string; subtitle: string; badge?: string; footer: string; author?: string }) {
   const doc = await PDFDocument.create();
   doc.setTitle(opts.title);
-  doc.setAuthor(COMPANY.name);
-  doc.setCreator(COMPANY.name);
-  doc.setProducer(COMPANY.name);
+  doc.setAuthor(opts.author || COMPANY.name);
+  doc.setCreator(opts.author || COMPANY.name);
+  doc.setProducer(opts.author || COMPANY.name);
   doc.setLanguage("pt-BR");
   const f = {
     r: await doc.embedFont(StandardFonts.Helvetica),
@@ -214,13 +219,15 @@ async function writer(opts: { title: string; subtitle: string; badge?: string; f
 }
 
 /** Contrato com as assinaturas e, se assinado, o certificado de assinatura eletrônica na última página. */
-export async function contractPdf(c: Contract): Promise<Uint8Array> {
+export async function contractPdf(c: Contract, co?: PdfCompany): Promise<Uint8Array> {
   const signed = c.status === "signed";
+  const orgName = co?.name || COMPANY.name;
   const w = await writer({
     title: "Contrato de locação de veículo",
     subtitle: `Documento nº ${c.id.slice(0, 8).toUpperCase()} · emitido em ${when(c.issuedAt)}`,
     badge: signed ? "ASSINADO ELETRONICAMENTE" : undefined,
-    footer: `Documento ${c.id} · SHA-256 ${c.contentHash ?? "—"}`,
+    footer: `Documento ${c.id} · ${orgName} · SHA-256 ${c.contentHash ?? "—"}`,
+    author: orgName,
   });
 
   // O texto do contrato vem de buildContractText: títulos em caixa alta, "Rótulo: valor" e cláusulas numeradas.
@@ -269,7 +276,7 @@ export async function contractPdf(c: Contract): Promise<Uint8Array> {
     w.addPage();
     w.heading(
       "Certificado de assinatura eletrônica",
-      "Registro técnico da assinatura deste contrato, gerado automaticamente pela plataforma da LOCAKAR no momento da assinatura.",
+      `Registro técnico da assinatura deste contrato, gerado automaticamente pela plataforma para ${orgName} no momento da assinatura.`,
     );
     w.section("Assinatura");
     w.row("Documento", `Contrato de locação nº ${c.id.slice(0, 8).toUpperCase()}`);
@@ -287,7 +294,7 @@ export async function contractPdf(c: Contract): Promise<Uint8Array> {
     for (const item of [
       "Link pessoal e intransferível enviado ao e-mail e/ou WhatsApp cadastrados do locatário.",
       "Confirmação do CPF do locatário, conferido com o CPF registrado no contrato.",
-      "Selfie capturada ao vivo pela câmera no ato da assinatura (arquivada com a LOCAKAR).",
+      `Selfie capturada ao vivo pela câmera no ato da assinatura (arquivada com a ${orgName}).`,
       "Assinatura manuscrita desenhada na tela e aceite expresso de todas as cláusulas.",
       "Registro de data, hora, endereço IP e dispositivo utilizados.",
     ])

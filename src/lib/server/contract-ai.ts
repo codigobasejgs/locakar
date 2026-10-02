@@ -20,7 +20,7 @@ export interface ContractAIConfig {
 }
 
 export async function loadContractAIConfig(): Promise<ContractAIConfig | null> {
-  const { data } = await serviceDb().from("contract_ai_config").select("*").eq("id", 1).maybeSingle();
+  const { data } = await serviceDb().from("contract_ai_config").select("*").maybeSingle();
   return data;
 }
 

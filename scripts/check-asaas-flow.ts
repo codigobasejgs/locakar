@@ -5,6 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { txReference, type PaymentSnapshot } from "../src/lib/asaas";
+import { inTestOrg } from "./test-org";
 
 process.env.ASAAS_ENCRYPTION_KEY = Buffer.alloc(32, 3).toString("base64");
 delete process.env.SUPABASE_SECRET_KEY; // audit/push/notificações viram no-op neste teste
@@ -130,7 +131,7 @@ globalThis.fetch = (async (i: string | URL | Request, init?: RequestInit) => {
   return realFetch(i, init);
 }) as typeof fetch;
 
-(async () => {
+inTestOrg(async () => {
   const crypto = await import("../src/lib/server/asaas-crypto");
   const s = await import("../src/lib/server/asaas");
   const wh = await import("../src/lib/server/asaas-webhook");
@@ -322,7 +323,7 @@ globalThis.fetch = (async (i: string | URL | Request, init?: RequestInit) => {
 
   console.log("✓ asaas fluxo ok: cobrança única, baixa única, duplicado/fora de ordem, estorno, chargeback, vencida, cancelamento, timeout, desativada, cancelamento automático");
 
-})().catch((e) => {
+}).catch((e) => {
   console.error(e);
   process.exitCode = 1;
 });

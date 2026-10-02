@@ -402,6 +402,53 @@ export interface CompanySettings {
   notifyReceipts: boolean;
 }
 
+/* ---------- Multiempresa (SaaS) ---------- */
+
+export type OrgRole = "owner" | "admin" | "manager" | "finance" | "operator" | "viewer";
+export type OrgStatus = "active" | "trial" | "past_due" | "suspended" | "cancelled";
+
+/** Identidade visual da locadora (white label). Cores em #rrggbb; logos: URL pública do bucket branding. */
+export interface OrgBranding {
+  displayName?: string;
+  primary?: string;
+  secondary?: string;
+  accent?: string;
+  theme?: "light" | "dark" | "system";
+  logo?: string;
+  logoLight?: string;
+  logoCompact?: string;
+  favicon?: string;
+}
+
+/** Textos curtos personalizáveis (não é CMS). */
+export interface OrgTexts {
+  welcome?: string;
+  billing?: string;
+  support?: string;
+  footer?: string;
+}
+
+export interface Organization {
+  id: string;
+  slug: string;
+  name: string;
+  legal_name: string | null;
+  document: string | null;
+  email: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  website: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  cep: string | null;
+  status: OrgStatus;
+  branding: OrgBranding;
+  texts: OrgTexts;
+  onboarding: Record<string, boolean>;
+  created_at: string;
+}
+
 /* ---------- Entidades do App do Locatário ---------- */
 
 export type PaymentReceiptStatus = "pending_review" | "approved" | "rejected";

@@ -1,9 +1,10 @@
 import { normalizeIdentifier, record, SelsynError, trackingId } from "@/lib/selsyn";
 import { querySelsyn, readSelsynBody, selsynErrorResponse, selsynResponse, selsynStaff } from "@/lib/server/selsyn";
 import { audit } from "@/lib/server/tenant";
+import { scoped } from "@/lib/server/org-context";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     const { db, userId } = await selsynStaff();
     const body = await readSelsynBody(request);
@@ -26,4 +27,4 @@ export async function POST(request: Request) {
     await audit({ actorType: "staff", actorId: userId, action: body.unlink === true ? "selsyn.unlinked" : "selsyn.linked", entity: "vehicles", entityId: vehicle.id, details: { rastreavelId: patch.selsyn_rastreavel_id } });
     return selsynResponse({ ok: true });
   } catch (e) { return selsynErrorResponse(e); }
-}
+});

@@ -3,6 +3,7 @@ import { isPushConfigured, notifyStaff, sendPushToUser, serviceDb, vapidPublicKe
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { parseSubscription } from "@/lib/server/subscription";
 import { fromRow } from "@/repositories/mapping";
+import { brand, scoped } from "@/lib/server/org-context";
 
 /**
  * Web Push da equipe (VAPID). Somente usuários da equipe (tabela staff).
@@ -27,16 +28,16 @@ const TABLE: Record<PushCollection, string> = {
   notes: "notes",
 };
 
-export async function GET() {
+export const GET = scoped(async function GET() {
   try {
     await requireStaff();
     return Response.json({ configured: isPushConfigured(), publicKey: vapidPublicKey() || null });
   } catch (e) {
     return errorResponse(e);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     const { supabase } = await requireStaff();
     const { data: claims } = await supabase.auth.getClaims();
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
     if (body.action === "test") {
       const r = await sendPushToUser(serviceDb(), userId, {
         title: "Notificações ativadas",
-        body: "Você vai receber aqui os avisos do painel da LOCAKAR.",
+        body: `Você vai receber aqui os avisos do painel da ${brand().name}.`,
         url: "/admin/settings",
         severity: "success",
         tag: "locakar-teste",
@@ -103,4 +104,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});

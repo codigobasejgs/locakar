@@ -9,6 +9,7 @@ import { audit, clientIp } from "@/lib/server/tenant";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { DOCUMENT_KIND, INCIDENT_CATEGORY, INCIDENT_STATUS } from "@/lib/tenant";
 import { formatCurrency, formatDate, newId } from "@/lib/utils";
+import { brand, scoped } from "@/lib/server/org-context";
 
 /**
  * Painel ↔ App do Locatário. Somente equipe.
@@ -36,7 +37,7 @@ async function names(db: Sb, ids: string[]) {
   return new Map((data ?? []).map((c) => [c.id as string, c.name as string]));
 }
 
-export async function GET(request: Request) {
+export const GET = scoped(async function GET(request: Request) {
   try {
     const { supabase: db } = await requireStaff();
     const url = new URL(request.url);
@@ -223,9 +224,9 @@ export async function GET(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     const { supabase: db } = await requireStaff();
     const { data: claims } = await db.auth.getClaims();
@@ -362,7 +363,7 @@ export async function POST(request: Request) {
           phone: client.phone,
           rentalId,
           contractId,
-          text: `🎉 *Parabéns, ${client.name}!* Sua solicitação de locação do *${vehicle.name}* foi *APROVADA* pela LOCAKAR!\n\n📄 Para concluir, acesse o link seguro e assine seu contrato pelo celular:\n${signUrl}\n\nDúvidas? Estamos à disposição.`,
+          text: `🎉 *Parabéns, ${client.name}!* Sua solicitação de locação do *${vehicle.name}* foi *APROVADA* pela ${brand().name}!\n\n📄 Para concluir, acesse o link seguro e assine seu contrato pelo celular:\n${signUrl}\n\nDúvidas? Estamos à disposição.`,
         }).catch((e) => console.error("[solicitação] whatsapp:", (e as Error).message));
       }
 
@@ -372,10 +373,10 @@ export async function POST(request: Request) {
           to: client.email,
           rentalId,
           contractId,
-          subject: `Locação aprovada — Assine seu contrato — LOCAKAR`,
+          subject: `Locação aprovada — Assine seu contrato — ${brand().name}`,
           html: emailLayout({
             title: "Sua locação foi aprovada!",
-            intro: `Olá, ${client.name}! Sua solicitação para o veículo <strong>${vehicle.name}</strong> foi aprovada pela equipe da LOCAKAR.`,
+            intro: `Olá, ${client.name}! Sua solicitação para o veículo <strong>${vehicle.name}</strong> foi aprovada pela equipe da ${brand().name}.`,
             rows: [
               ["Veículo", vehicle.name],
               ["Período", `${formatDate(startDate)} a ${formatDate(endDate)}`],
@@ -429,7 +430,7 @@ export async function POST(request: Request) {
       await audit({ actorType: "staff", actorId: reviewer, action: "rental_request.correction", entity: "rental_requests", entityId: id, details: { notes }, ip });
       await sendPushToClient(row.client_id, {
         title: "Correção de documento necessária",
-        body: `A LOCAKAR solicitou um ajuste na sua documentação: ${notes}`,
+        body: `A ${brand().name} solicitou um ajuste na sua documentação: ${notes}`,
         url: "/",
         severity: "warning",
         tag: `request-correction-${id}`,
@@ -478,14 +479,14 @@ export async function POST(request: Request) {
         isDoc
           ? {
               title: approve ? "Documento aprovado" : "Documento recusado",
-              body: approve ? `${DOCUMENT_KIND[r.kind]} conferido pela LOCAKAR.` : `${DOCUMENT_KIND[r.kind]}: ${reason}. Envie de novo pelo app.`,
+              body: approve ? `${DOCUMENT_KIND[r.kind]} conferido pela ${brand().name}.` : `${DOCUMENT_KIND[r.kind]}: ${reason}. Envie de novo pelo app.`,
               url: "/",
               severity: approve ? "success" : "warning",
               tag: `document-${id}`,
             }
           : {
               title: approve ? "Vistoria conferida" : "Refaça a vistoria",
-              body: approve ? "A LOCAKAR conferiu a vistoria que você enviou." : `${note ?? reason}`.slice(0, 180),
+              body: approve ? `A ${brand().name} conferiu a vistoria que você enviou.` : `${note ?? reason}`.slice(0, 180),
               url: "/",
               severity: approve ? "success" : "warning",
               tag: `inspection-${id}`,
@@ -504,4 +505,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});

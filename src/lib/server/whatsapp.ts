@@ -1,13 +1,21 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { currentOrg } from "@/lib/server/org-context";
 import { toWhatsAppNumber } from "@/lib/utils";
 import type { EmailKind } from "@/types";
 
 /**
- * Envio de WhatsApp pela Evolution API (v2). Chaves só no servidor.
- * EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE (padrão "locakar").
+ * Envio de WhatsApp pela Evolution API (v2). Chaves só no servidor (EVOLUTION_API_URL, EVOLUTION_API_KEY).
+ * Cada locadora conecta o próprio número: instância "org-<slug>". A LOCAKAR (slug "locakar") mantém
+ * a instância existente (EVOLUTION_INSTANCE, padrão "locakar").
  */
 export const isWhatsAppEnabled = () => Boolean(process.env.EVOLUTION_API_URL && process.env.EVOLUTION_API_KEY);
+
+export function whatsAppInstance() {
+  const slug = currentOrg()?.org.slug;
+  if (!slug) throw new Error("WhatsApp sem locadora definida.");
+  return slug === "locakar" ? process.env.EVOLUTION_INSTANCE || "locakar" : `org-${slug}`;
+}
 
 export interface OutgoingWhatsApp {
   kind: EmailKind;
@@ -33,7 +41,7 @@ export async function sendWhatsApp(db: SupabaseClient, msg: OutgoingWhatsApp): P
   if (!number) return { ok: false, error: "Telefone do cliente inválido para WhatsApp." };
 
   const base = process.env.EVOLUTION_API_URL!.replace(/\/+$/, "");
-  const instance = process.env.EVOLUTION_INSTANCE || "locakar";
+  const instance = whatsAppInstance();
   let error: string | undefined;
   let providerId: string | undefined;
   try {

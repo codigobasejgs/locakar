@@ -1,10 +1,11 @@
 import { SELSYN_OPERATIONS, SelsynError } from "@/lib/selsyn";
 import { querySelsyn, selsynErrorResponse, selsynResponse, selsynStaff } from "@/lib/server/selsyn";
+import { scoped } from "@/lib/server/org-context";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 // Um GET sem parâmetros obrigatórios por módulo; só status, nunca dados.
 const PROBES = ["gdrAovivo", "integracaoAoVivo", "aovivo", "intergacaoListTipoAlerta"] as const;
-export async function POST() {
+export const POST = scoped(async function POST() {
   try {
     const { userId } = await selsynStaff();
     const results = [];
@@ -17,4 +18,4 @@ export async function POST() {
     }
     return selsynResponse({ results, checkedAt: new Date().toISOString() });
   } catch (e) { return selsynErrorResponse(e); }
-}
+});

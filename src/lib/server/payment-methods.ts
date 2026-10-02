@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { infinitePayState, methodStatus, pixState, type PaymentMethodId, type PaymentMethodState } from "@/lib/payment-methods";
 import { envCols, loadAsaasConfig, readyForCharges, type AsaasConfigRow } from "@/lib/server/asaas";
+import { requireOrg } from "@/lib/server/org-context";
 import { loadSettings } from "@/lib/server/push";
 import { HttpError } from "@/lib/server/supabase";
 import { audit } from "@/lib/server/tenant";
@@ -51,11 +52,11 @@ export async function setMethodEnabled(db: SupabaseClient, id: PaymentMethodId, 
   if (enabled && !m.configured) throw new HttpError(409, `Configure este meio de pagamento antes de ativá-lo. ${m.detail ?? ""}`.trim());
   if (m.enabled !== enabled) {
     if (id === "asaas") {
-      const { error } = await db.from("asaas_config").update({ enabled, updated_by: actor.id }).eq("id", 1);
+      const { error } = await db.from("asaas_config").update({ enabled, updated_by: actor.id });
       if (error) throw new HttpError(500, "Não foi possível salvar.");
     } else {
-      const { error } = await db.rpc("set_payment_method_enabled", { p_method: id, p_enabled: enabled });
-      if (error) throw new HttpError(503, "Aplique a migration 20261009000000_payment_methods.sql para salvar os switches.");
+      const { error } = await db.rpc("set_payment_method_enabled", { p_org: requireOrg().org.id, p_method: id, p_enabled: enabled });
+      if (error) throw new HttpError(503, "Aplique as migrations multiempresa (20261013*) para salvar os switches.");
     }
     await audit({ actorType: "staff", actorId: actor.id, action: enabled ? "payment_method_enabled" : "payment_method_disabled", entity: "payment_methods", entityId: id, details: { method: id }, ip: actor.ip ?? null });
   }

@@ -3,15 +3,14 @@ import { fetchSelsyn } from "./selsyn-transport";
 import { createHash, randomUUID } from "node:crypto";
 import { buildSelsynRequest, SelsynError, type Json } from "@/lib/selsyn";
 import { requireStaff, HttpError } from "@/lib/server/supabase";
+import { requireOrg } from "@/lib/server/org-context";
 import { serviceDb } from "@/lib/server/push";
 import { audit } from "@/lib/server/tenant";
 
 export const selsynRefreshSeconds = () => Math.max(60, Math.min(3600, Number(process.env.SELSYN_POSITION_REFRESH_SECONDS) || 120));
 export async function selsynStaff() {
-  const { supabase } = await requireStaff();
-  const { data } = await supabase.auth.getClaims();
-  if (!data?.claims?.sub) throw new HttpError(401, "Sessão expirada.");
-  return { db: serviceDb(), userId: data.claims.sub as string };
+  const { userId } = await requireStaff("operate");
+  return { db: serviceDb(), userId };
 }
 export function selsynResponse(value: unknown, status = 200) { return Response.json(value, { status, headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } }); }
 export function selsynErrorResponse(e: unknown) {
@@ -48,7 +47,7 @@ export async function querySelsyn(userId: string, operationId: string, input: Re
   const { normalized } = buildSelsynRequest(operationId, input);
   const hash = createHash("sha256").update(operationId + JSON.stringify(Object.entries(normalized).sort())).digest("hex");
   const db = serviceDb();
-  const { data: reservation, error } = await db.rpc("reserve_selsyn_request", { p_id: id, p_operator: userId, p_operation: operationId, p_hash: hash });
+  const { data: reservation, error } = await db.rpc("reserve_selsyn_request", { p_org: requireOrg().org.id, p_id: id, p_operator: userId, p_operation: operationId, p_hash: hash });
   if (error) throw new SelsynError("DATABASE_NOT_READY", "Aplique a migration Selsyn no Supabase antes de consultar.", 503);
   if (reservation !== "reserved") throw new SelsynError(reservation === "limited" ? "RATE_LIMITED" : "DUPLICATE_REQUEST", reservation === "limited" ? "Limite interno de consultas atingido. Aguarde um minuto." : "Uma consulta já foi enviada. Aguarde sua conclusão.", reservation === "limited" ? 429 : 409);
   const started = Date.now();

@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { infinitePayState, methodStatus, pixState } from "../src/lib/payment-methods";
+import { inTestOrg } from "./test-org";
 
 process.env.ASAAS_ENCRYPTION_KEY = Buffer.alloc(32, 5).toString("base64");
 delete process.env.SUPABASE_SECRET_KEY; // auditoria vira no-op
@@ -45,7 +46,7 @@ const db = {
   },
 } as never;
 
-(async () => {
+inTestOrg(async () => {
   // ---------- Estados puros ----------
   assert.equal(methodStatus(true, true), "active");
   assert.equal(methodStatus(false, true), "inactive");
@@ -132,7 +133,7 @@ const db = {
   assert.ok(read("src/app/api/payments/methods/route.ts").includes("await requireStaff()"));
 
   console.log("✓ meios de pagamento ok\nASAAS | INFINITEPAY | PIX MANUAL | DISPONÍVEL PARA O CLIENTE\n" + report.join("\n"));
-})().catch((e) => {
+}).catch((e) => {
   console.error(e);
   process.exitCode = 1;
 });

@@ -61,7 +61,7 @@ export async function processEvent(db: SupabaseClient, id: string) {
     }
     const tx = await findTx(db, ev.payment);
     if (!tx) {
-      await finish("ignored", "Cobrança não pertence ao LOCAKAR.");
+      await finish("ignored", "Cobrança não pertence a esta locadora.");
       return "ignored";
     }
     const cfg = await loadAsaasConfig(db);

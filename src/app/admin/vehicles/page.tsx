@@ -21,6 +21,7 @@ import { numOrUndef, numToStr, strOrUndef, useCrud } from "@/hooks/use-crud";
 import { VEHICLE_STATUS, statusOptions } from "@/lib/constants";
 import { parseCrlvPdf } from "@/lib/crlv";
 import { getSupabase } from "@/lib/supabase/client";
+import { orgPath } from "@/lib/org-path";
 import { formatCurrency, formatDate, isValidPlate, maskPlate, newId } from "@/lib/utils";
 import type { FleetVehicle, VehicleStatus } from "@/types";
 
@@ -128,7 +129,7 @@ export default function VehiclesPage() {
 
       // Salva o documento no bucket privado 'documentos'
       const ext = file.name.split(".").pop() || "pdf";
-      const path = `crlv/${parsed.plate || "doc"}_${Date.now()}.${ext}`;
+      const path = await orgPath(`crlv/${parsed.plate || "doc"}_${Date.now()}.${ext}`);
       const { error: uploadError } = await getSupabase()
         .storage.from("documentos")
         .upload(path, file, { upsert: true });
@@ -150,7 +151,7 @@ export default function VehiclesPage() {
     setUploadingCrlv(true);
     try {
       const ext = file.name.split(".").pop() || "pdf";
-      const path = `crlv/${draft.plate || "doc"}_${Date.now()}.${ext}`;
+      const path = await orgPath(`crlv/${draft.plate || "doc"}_${Date.now()}.${ext}`);
       const { error } = await getSupabase().storage.from("documentos").upload(path, file, { upsert: true });
       if (error) throw error;
       set("crlvUrl", path);
@@ -171,7 +172,7 @@ export default function VehiclesPage() {
       const newUrls: string[] = [];
       for (const file of files) {
         const ext = file.name.split(".").pop() || "jpg";
-        const path = `${draft.plate || "veiculo"}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`;
+        const path = await orgPath(`${draft.plate || "veiculo"}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`);
         const { error } = await getSupabase().storage.from("veiculos").upload(path, file, { upsert: true });
         if (error) throw error;
         const { data: pub } = getSupabase().storage.from("veiculos").getPublicUrl(path);

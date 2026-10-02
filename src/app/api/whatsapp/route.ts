@@ -1,5 +1,6 @@
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
-import { isWhatsAppEnabled, sendWhatsApp } from "@/lib/server/whatsapp";
+import { isWhatsAppEnabled, sendWhatsApp, whatsAppInstance } from "@/lib/server/whatsapp";
+import { brand, scoped } from "@/lib/server/org-context";
 
 /**
  * Conexão do WhatsApp da LOCAKAR (Evolution API), usada em Configurações. Somente equipe.
@@ -9,7 +10,7 @@ import { isWhatsAppEnabled, sendWhatsApp } from "@/lib/server/whatsapp";
  */
 export const dynamic = "force-dynamic";
 
-const instance = () => process.env.EVOLUTION_INSTANCE || "locakar";
+const instance = () => whatsAppInstance();
 
 async function evo(path: string, init?: RequestInit) {
   const base = process.env.EVOLUTION_API_URL!.replace(/\/+$/, "");
@@ -36,7 +37,7 @@ async function ensureInstance() {
   return created.json.instance;
 }
 
-export async function GET() {
+export const GET = scoped(async function GET() {
   try {
     await requireStaff();
     if (!isWhatsAppEnabled()) return Response.json({ configured: false });
@@ -65,9 +66,9 @@ export async function GET() {
     if ((e as Error).name === "TimeoutError") return Response.json({ error: "Servidor do WhatsApp não respondeu." }, { status: 504 });
     return errorResponse(e);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     const { supabase } = await requireStaff();
     if (!isWhatsAppEnabled()) throw new HttpError(409, "WhatsApp não configurado no servidor.");
@@ -85,7 +86,7 @@ export async function POST(request: Request) {
       const result = await sendWhatsApp(supabase, {
         kind: "alert_digest",
         phone: body.phone,
-        text: "✅ *Teste de WhatsApp — LOCAKAR*\n\nSe você recebeu esta mensagem, as notificações automáticas estão funcionando.",
+        text: `✅ *Teste de WhatsApp — ${brand().name}*\n\nSe você recebeu esta mensagem, as notificações automáticas estão funcionando.`,
       });
       if (!result.ok) throw new HttpError(422, result.error ?? "Falha no envio.");
       return Response.json({ ok: true });
@@ -94,4 +95,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});

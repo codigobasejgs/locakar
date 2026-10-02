@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
+import { currentOrg, globalDb, loadOrg, scoped, setOrg } from "./org-context";
 import { serviceDb } from "./push";
 import { HttpError, errorResponse } from "./supabase";
 
@@ -8,13 +9,15 @@ export interface Tenant {
   db: SupabaseClient;
   userId: string;
   clientId: string;
+  orgId: string;
   ip: string | null;
 }
 
 /**
  * Autenticação do App do Locatário: o app envia o token do Supabase em `Authorization: Bearer`.
- * O cliente vem do banco (clients.user_id = usuário do token), nunca de um id enviado pelo app.
- * As consultas usam a sessão do próprio locatário: o RLS do banco limita tudo aos dados dele.
+ * O cliente e a locadora vêm do banco (clients.user_id + locadora ativa), nunca de um id enviado pelo app.
+ * Header opcional `x-org`: slug da locadora em que o usuário quer se vincular/entrar (o banco valida).
+ * As consultas usam a sessão do próprio locatário: o RLS limita tudo aos dados dele.
  */
 export async function requireTenant(request: Request): Promise<Tenant> {
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
@@ -25,17 +28,18 @@ export async function requireTenant(request: Request): Promise<Tenant> {
   });
   const { data, error } = await db.auth.getUser(token);
   if (error || !data.user) throw new HttpError(401, "Sessão expirada. Entre novamente.");
-  // Garante que o usuário autenticado tenha um cliente vinculado (ou auto-cadastrado no primeiro acesso).
-  let { data: clientId } = await db.rpc("ensure_client_for_current_user");
-  if (!clientId) {
-    const fallback = await db.rpc("link_current_user_to_client");
-    clientId = fallback.data;
-  }
+  const slug = request.headers.get("x-org")?.trim().toLowerCase() || null;
+  // Garante cliente vinculado (ou auto-cadastrado no primeiro acesso) na locadora pedida/ativa.
+  const { data: clientId } = await db.rpc("ensure_client_for_current_user", { p_org_slug: slug && /^[a-z0-9-]{3,40}$/.test(slug) ? slug : null });
   if (!clientId) {
     const confirmed = Boolean(data.user.email_confirmed_at);
     throw new HttpError(403, confirmed ? "Sua conta ainda não está vinculada a um cadastro. Fale com a locadora." : "Confirme seu e-mail pelo link que enviamos para liberar o acesso.");
   }
-  return { db, userId: data.user.id, clientId: clientId as string, ip: clientIp(request) };
+  const { data: row } = await globalDb().from("clients").select("organization_id").eq("id", clientId).eq("user_id", data.user.id).maybeSingle();
+  const org = row ? await loadOrg(row.organization_id as string) : null;
+  if (!org) throw new HttpError(403, "Locadora indisponível.");
+  if (!currentOrg()) setOrg({ org, userId: data.user.id });
+  return { db, userId: data.user.id, clientId: clientId as string, orgId: org.id, ip: clientIp(request) };
 }
 
 /** IP real de quem chamou (Vercel preenche x-forwarded-for). Nunca vem do corpo da requisição. */
@@ -51,7 +55,7 @@ export function corsHeaders(request: Request): Record<string, string> {
   if (!origin || !allowed) return {};
   return {
     "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Headers": "authorization, content-type",
+    "Access-Control-Allow-Headers": "authorization, content-type, x-org",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     Vary: "Origin",
   };
@@ -61,7 +65,7 @@ export const tenantOptions = (request: Request) => new Response(null, { status: 
 
 /** Rota do app: autentica o locatário, responde JSON com CORS e padroniza erros. */
 export function tenantRoute(handler: (request: Request, tenant: Tenant) => Promise<unknown>) {
-  return async (request: Request) => {
+  return scoped(async (request: Request) => {
     const headers = corsHeaders(request);
     try {
       const out = await handler(request, await requireTenant(request));
@@ -71,7 +75,7 @@ export function tenantRoute(handler: (request: Request, tenant: Tenant) => Promi
       Object.entries(headers).forEach(([k, v]) => res.headers.set(k, v));
       return res;
     }
-  };
+  });
 }
 
 export async function readBody(request: Request): Promise<Record<string, unknown>> {
@@ -125,7 +129,7 @@ export async function audit(entry: {
   details?: Record<string, unknown>;
   ip?: string | null;
 }) {
-  if (!process.env.SUPABASE_SECRET_KEY) return;
+  if (!process.env.SUPABASE_SECRET_KEY || !currentOrg()) return;
   const { error } = await serviceDb()
     .from("audit_log")
     .insert({

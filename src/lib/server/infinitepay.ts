@@ -2,10 +2,10 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { billingOf, lateCharges } from "@/lib/billing";
-import { COMPANY } from "@/lib/company";
 import { HttpError } from "@/lib/server/supabase";
 import { INFINITEPAY_API, checkoutPayload, decideCheckout, isValidOrderId, methodLabel, toCents, type CheckoutWebhook, type PaymentCheck, type TransactionFlow } from "@/lib/infinitepay";
 import { emailLayout, sendEmail } from "@/lib/server/email";
+import { brand, siteUrl } from "@/lib/server/org-context";
 import { notifyStaff, sendPushToClient } from "@/lib/server/push";
 import { audit } from "@/lib/server/tenant";
 import { formatCurrency, formatDate, todaySP } from "@/lib/utils";
@@ -169,7 +169,7 @@ export async function confirmPaid(
           kind: "receipt",
           to: client.email,
           rentalId: tx.rental_id,
-          subject: `Pagamento confirmado — ${formatCurrency(amount)} — LOCAKAR`,
+          subject: `Pagamento confirmado — ${formatCurrency(amount)} — ${brand().name}`,
           html: emailLayout({
             title: "Pagamento confirmado",
             intro: `Olá, ${client.name}! Confirmamos o pagamento abaixo.`,
@@ -218,7 +218,6 @@ export async function reconcileCheckout(
   return decision;
 }
 
-const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || COMPANY.siteUrl).replace(/\/+$/, "");
 
 /** Parcela em aberto + valor atualizado em centavos, calculados aqui (nunca vindos do navegador/app). */
 export async function openReceipt(db: SupabaseClient, rentalId: unknown, receiptId: unknown) {

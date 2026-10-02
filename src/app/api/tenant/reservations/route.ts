@@ -3,6 +3,7 @@ import { notifyClientSubmission, notifyStaff, serviceDb } from "@/lib/server/pus
 import { HttpError } from "@/lib/server/supabase";
 import { audit, readBody, tenantOptions, tenantRoute } from "@/lib/server/tenant";
 import { isIsoDate } from "@/lib/tenant";
+import { brand } from "@/lib/server/org-context";
 
 /**
  * Pedidos de reserva pelo app.
@@ -85,14 +86,14 @@ export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
   if (!isIsoDate(startDate) || !isIsoDate(endDate)) throw new HttpError(422, "Informe as datas de retirada e devolução.");
   if (startDate < today) throw new HttpError(422, "A retirada não pode ser no passado.");
   if (endDate < startDate) throw new HttpError(422, "A devolução precisa ser depois da retirada.");
-  if (startDate > addDays(today, 365) || endDate > addDays(startDate, 365)) throw new HttpError(422, "Período muito longo. Fale com a LOCAKAR.");
+  if (startDate > addDays(today, 365) || endDate > addDays(startDate, 365)) throw new HttpError(422, `Período muito longo. Fale com a ${brand().name}.`);
 
   const { data: vehicle } = await db.from("tenant_fleet").select("id,name").eq("id", vehicleId).maybeSingle();
   if (!vehicle) throw new HttpError(404, "Veículo não encontrado.");
 
   // Limite anti-spam: até 3 pedidos em aberto por cliente.
   const { count } = await admin.from("reservations").select("id", { count: "exact", head: true }).eq("client_id", clientId).eq("status", "pending");
-  if ((count ?? 0) >= 3) throw new HttpError(429, "Você já tem 3 pedidos aguardando resposta. Aguarde a LOCAKAR confirmar.");
+  if ((count ?? 0) >= 3) throw new HttpError(429, `Você já tem 3 pedidos aguardando resposta. Aguarde a ${brand().name} confirmar.`);
 
   // Conflito com locação em andamento nesse período (o banco cobre reservas sobrepostas).
   const { data: busy } = await admin

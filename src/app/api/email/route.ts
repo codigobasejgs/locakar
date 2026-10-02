@@ -11,6 +11,7 @@ import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { formatCurrency, formatDate, formatNumber, todaySP } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
 import type { Client, Contract, EmailKind, Fine, FleetVehicle, Inspection, Maintenance, Rental, Reservation } from "@/types";
+import { brand, scoped } from "@/lib/server/org-context";
 
 /**
  * Notificações ao cliente pelo painel (somente equipe): e-mail (Resend) + WhatsApp (Evolution API).
@@ -68,7 +69,7 @@ async function deliver(db: SupabaseClient, m: Message, replyTo?: string) {
 
   // Web Push no celular do cliente (se ele ativou na página do contrato). Clique abre o contrato dele.
   const push = await sendPushToClient(m.client.id, {
-    title: m.subject.replace(/ — LOCAKAR$/, ""),
+    title: m.subject.replace(/ — [^—]+$/, ""),
     body: plainText(m.whatsapp),
     url: m.clientUrl ?? "/",
     severity: m.kind === "fine" ? "warning" : "info",
@@ -80,7 +81,7 @@ async function deliver(db: SupabaseClient, m: Message, replyTo?: string) {
   return { to: sent.join(" e "), warnings: errors };
 }
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     const { supabase } = await requireStaff();
     const body = (await request.json()) as Body;
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
       if (error || !data) throw new HttpError(404, "Registro não encontrado.");
       return fromRow<T>(data);
     };
-    const settings = await supabase.from("settings").select("data").eq("id", 1).maybeSingle();
+    const settings = await supabase.from("settings").select("data").maybeSingle();
     const replyTo: string | undefined = settings.data?.data?.company?.email || undefined;
     const contractUrl = async (rentalId?: string) => {
       if (!rentalId) return undefined;
@@ -108,10 +109,10 @@ export async function POST(request: Request) {
         kind: "alert_digest",
         to,
         replyTo,
-        subject: "Teste de e-mail — LOCAKAR",
+        subject: `Teste de e-mail — ${brand().name}`,
         html: emailLayout({
           title: "Teste de e-mail",
-          intro: "Se você recebeu esta mensagem, o envio de e-mails da LOCAKAR está funcionando.",
+          intro: `Se você recebeu esta mensagem, o envio de e-mails da ${brand().name} está funcionando.`,
           rows: [["Enviado em", new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" })]],
         }),
       });
@@ -131,12 +132,12 @@ export async function POST(request: Request) {
         clientUrl: `/assinar/${contract.token}`,
         contractId: contract.id,
         rentalId: contract.rentalId,
-        subject: "Contrato de locação LOCAKAR — assinatura pendente",
+        subject: `Contrato de locação ${brand().name} — assinatura pendente`,
         html: emailLayout({
           title: "Seu contrato está pronto para assinatura",
           intro: `Olá, ${contract.clientName}! Revise o contrato de locação e assine digitalmente pelo botão abaixo. Você vai confirmar seu CPF e tirar uma selfie.`,
           cta: { label: "Revisar e assinar contrato", url },
-          footerNote: `Link pessoal e intransferível, válido até ${until}. Se não reconhece esta locação, fale com a LOCAKAR pelo WhatsApp.`,
+          footerNote: `Link pessoal e intransferível, válido até ${until}. Se não reconhece esta locação, fale com a ${brand().name} pelo WhatsApp.`,
         }),
         whatsapp: `Olá, ${first(contract.clientName)}! 👋\n\nSeu *contrato de locação* está pronto para assinatura.\n\n📝 Assine pelo link (vai pedir CPF e uma selfie):\n${url}\n\nLink pessoal, válido até ${until}.`,
       });
@@ -169,12 +170,12 @@ export async function POST(request: Request) {
         client,
         rentalId: rental.id,
         attachments,
-        subject: delivery ? `Entrega do veículo ${vehicle.plate} — LOCAKAR` : `Devolução do veículo ${vehicle.plate} — LOCAKAR`,
+        subject: delivery ? `Entrega do veículo ${vehicle.plate} — ${brand().name}` : `Devolução do veículo ${vehicle.plate} — ${brand().name}`,
         html: emailLayout({
           title: delivery ? "Veículo entregue" : "Veículo devolvido",
           intro: delivery
             ? `Olá, ${client.name}! Registramos a entrega do veículo. Em anexo estão o termo de vistoria${attachments.length > 1 ? " e o contrato assinado" : ""}. Boa viagem!`
-            : `Olá, ${client.name}! Registramos a devolução do veículo. O termo de vistoria segue em anexo. Obrigado por escolher a LOCAKAR!`,
+            : `Olá, ${client.name}! Registramos a devolução do veículo. O termo de vistoria segue em anexo. Obrigado por escolher a ${brand().name}!`,
           rows: [
             ["Veículo", `${vehicle.name} · ${vehicle.plate}`],
             ["Data e hora", at],
@@ -193,7 +194,7 @@ export async function POST(request: Request) {
           damages ? `• Avarias registradas: ${damages}${inspection.damages ? ` (${inspection.damages})` : ""}` : "• Sem avarias registradas",
           ...(inspection.extraCharges ? [`• Valores adicionais: ${formatCurrency(inspection.extraCharges)}`] : []),
           "",
-          delivery ? `Devolução prevista: ${formatDate(rental.endDate)}${rental.endTime ? ` às ${rental.endTime}` : ""}. Boa viagem! 🙌` : "Obrigado por escolher a LOCAKAR! 💜",
+          delivery ? `Devolução prevista: ${formatDate(rental.endDate)}${rental.endTime ? ` às ${rental.endTime}` : ""}. Boa viagem! 🙌` : `Obrigado por escolher a ${brand().name}! 💜`,
           "Segue o termo de vistoria em PDF.",
         ]
           .filter((l, i, a) => l !== "" || a[i - 1] !== "")
@@ -233,7 +234,7 @@ export async function POST(request: Request) {
         kind: "receipt",
         client,
         rentalId: rental.id,
-        subject: `Comprovante de pagamento — semana ${week} — LOCAKAR`,
+        subject: `Comprovante de pagamento — semana ${week} — ${brand().name}`,
         html: emailLayout({
           title: "Comprovante de pagamento",
           intro: `Olá, ${client.name}! Confirmamos o recebimento do pagamento abaixo.`,
@@ -258,7 +259,7 @@ export async function POST(request: Request) {
         kind: "fine",
         client,
         fineId: fine.id,
-        subject: `Notificação de multa — ${vehicle.plate} — LOCAKAR`,
+        subject: `Notificação de multa — ${vehicle.plate} — ${brand().name}`,
         html: emailLayout({
           title: "Notificação de infração de trânsito",
           intro: `Olá, ${client.name}! Recebemos uma autuação referente ao período em que o veículo estava sob sua responsabilidade.`,
@@ -272,7 +273,7 @@ export async function POST(request: Request) {
             ...(fine.discountDeadline ? ([["Pagamento com desconto até", formatDate(fine.discountDeadline)]] as [string, string][]) : []),
             ["Vencimento", formatDate(fine.dueDate)],
           ],
-          footerNote: "Entre em contato com a LOCAKAR pelo WhatsApp para a identificação do condutor ou para combinar o pagamento.",
+          footerNote: `Entre em contato com a ${brand().name} pelo WhatsApp para a identificação do condutor ou para combinar o pagamento.`,
         }),
         whatsapp: [
           `⚠️ *Notificação de multa* — ${vehicle.plate}`,
@@ -299,7 +300,7 @@ export async function POST(request: Request) {
       return respond({
         kind: "reservation",
         client,
-        subject: `Reserva ${statusLabel} — ${vehicle.name} — LOCAKAR`,
+        subject: `Reserva ${statusLabel} — ${vehicle.name} — ${brand().name}`,
         html: emailLayout({
           title: `Reserva ${statusLabel}`,
           intro: `Olá, ${client.name}! Segue o resumo da sua reserva.`,
@@ -327,7 +328,7 @@ export async function POST(request: Request) {
         kind: "maintenance",
         client,
         rentalId: rental.id,
-        subject: `Manutenção agendada — ${vehicle.plate} — LOCAKAR`,
+        subject: `Manutenção agendada — ${vehicle.plate} — ${brand().name}`,
         html: emailLayout({
           title: "Manutenção do veículo",
           intro: `Olá, ${client.name}! O veículo que está com você tem uma manutenção programada.`,
@@ -337,7 +338,7 @@ export async function POST(request: Request) {
             ["Data", formatDate(maintenance.date)],
             ...(maintenance.supplier ? ([["Local", maintenance.supplier]] as [string, string][]) : []),
           ],
-          footerNote: "Fale com a LOCAKAR pelo WhatsApp para combinar o horário.",
+          footerNote: `Fale com a ${brand().name} pelo WhatsApp para combinar o horário.`,
         }),
         whatsapp: `🔧 *Manutenção programada* — ${vehicle.plate}\n\nOlá, ${first(client.name)}! O veículo que está com você tem manutenção marcada:\n• Serviço: ${maintenance.description}\n• Data: ${formatDate(maintenance.date)}${maintenance.supplier ? `\n• Local: ${maintenance.supplier}` : ""}\n\nResponda aqui para combinarmos o horário.`,
       });
@@ -347,4 +348,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});

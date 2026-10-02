@@ -1,9 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import { after } from "next/server";
-import { parseWebhook } from "@/lib/infinitepay";
+import { isValidOrderId, parseWebhook } from "@/lib/infinitepay";
 import { reconcileCheckout } from "@/lib/server/infinitepay";
 import { serviceDb } from "@/lib/server/push";
 import { audit, clientIp } from "@/lib/server/tenant";
+import { globalDb, loadOrg, scoped, setOrg } from "@/lib/server/org-context";
 
 /**
  * Webhook do Checkout Integrado InfinitePay (pagamento aprovado).
@@ -18,18 +19,25 @@ export const maxDuration = 30;
 
 const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   const url = new URL(request.url);
   const payload = parseWebhook(await request.json().catch(() => null));
   if (!payload) return Response.json({ ok: false, error: "payload inválido" }, { status: 400 });
 
-  const db = serviceDb();
-  const { data: tx } = await db.from("payment_transactions").select("*").eq("id", payload.order_nsu).eq("flow", "checkout").maybeSingle();
+  // Locadora: a do pedido interno (order_nsu é o id da tentativa, gerado por nós). Nada vem do corpo como autoridade.
+  const { data: owner } = isValidOrderId(payload.order_nsu)
+    ? await globalDb().from("payment_transactions").select("organization_id").eq("id", payload.order_nsu).eq("flow", "checkout").maybeSingle()
+    : { data: null };
+  const org = owner ? await loadOrg(owner.organization_id as string) : null;
   // Pedido que não é nosso: 200 para não gerar reenvios infinitos.
-  if (!tx) {
+  if (!org) {
     console.warn("[infinitepay] webhook com order_nsu desconhecido");
     return Response.json({ ok: true });
   }
+  setOrg({ org });
+  const db = serviceDb();
+  const { data: tx } = await db.from("payment_transactions").select("*").eq("id", payload.order_nsu).eq("flow", "checkout").maybeSingle();
+  if (!tx) return Response.json({ ok: true });
 
   const tokenOk = url.searchParams.get("o") === tx.id && !!tx.webhook_token && same(url.searchParams.get("t") ?? "", tx.webhook_token);
   await audit({ actorType: "system", action: "infinitepay_webhook_received", entity: "payment_transactions", entityId: tx.id, details: { tokenOk, transactionNsu: payload.transaction_nsu, amount: payload.amount, captureMethod: payload.capture_method }, ip: clientIp(request) });
@@ -68,4 +76,4 @@ export async function POST(request: Request) {
   });
 
   return Response.json({ ok: true });
-}
+});

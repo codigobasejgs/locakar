@@ -7,6 +7,7 @@ import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { audit, clientIp } from "@/lib/server/tenant";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { brand, scoped } from "@/lib/server/org-context";
 
 /**
  * Cobranças Asaas no painel (somente equipe). Valor/vencimento sempre do servidor.
@@ -22,7 +23,7 @@ async function staff() {
   return data!.claims.sub as string;
 }
 
-export async function GET(request: Request) {
+export const GET = scoped(async function GET(request: Request) {
   try {
     await staff();
     const db = serviceDb();
@@ -43,9 +44,9 @@ export async function GET(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     const operator = await staff();
     const ip = clientIp(request);
@@ -87,12 +88,12 @@ export async function POST(request: Request) {
       const rows: [string, string][] = [["Veículo", vehicle?.plate ?? "—"], ["Valor", formatCurrency(tx.amount_cents / 100)], ["Vencimento", tx.due_date ? formatDate(tx.due_date) : "—"], ["Forma", BILLING_LABEL[tx.billing_type ?? ""] ?? "Fatura"]];
       if (body.action === "whatsapp") {
         if (!client?.phone) throw new HttpError(422, "Cliente sem WhatsApp cadastrado.");
-        const text = [`Olá, ${first}!`, "", "Sua cobrança LOCAKAR está disponível.", "", ...rows.map(([k, v]) => `${k}: ${v}`), "", "Pague pelo link:", tx.invoice_url, "", "LOCAKAR — Locadora de Veículos"].join("\n");
+        const text = [`Olá, ${first}!`, "", `Sua cobrança ${brand().name} está disponível.`, "", ...rows.map(([k, v]) => `${k}: ${v}`), "", "Pague pelo link:", tx.invoice_url, "", `${brand().name} — Locadora de Veículos`].join("\n");
         const sent = await sendWhatsApp(db, { kind: "charge", phone: client.phone, text, rentalId: tx.rental_id });
         if (!sent.ok) throw new HttpError(502, sent.error ?? "Não foi possível enviar pelo WhatsApp.");
       } else {
         if (!client?.email) throw new HttpError(422, "Cliente sem e-mail cadastrado.");
-        await sendEmail(db, { kind: "charge", to: client.email, rentalId: tx.rental_id, subject: `Cobrança LOCAKAR — ${formatCurrency(tx.amount_cents / 100)}`, html: emailLayout({ title: "Sua cobrança está disponível", intro: `Olá, ${first}! Segue a cobrança da sua locação.`, rows, cta: { label: "Pagar agora", url: tx.invoice_url } }) });
+        await sendEmail(db, { kind: "charge", to: client.email, rentalId: tx.rental_id, subject: `Cobrança ${brand().name} — ${formatCurrency(tx.amount_cents / 100)}`, html: emailLayout({ title: "Sua cobrança está disponível", intro: `Olá, ${first}! Segue a cobrança da sua locação.`, rows, cta: { label: "Pagar agora", url: tx.invoice_url } }) });
       }
       await audit({ actorType: "staff", actorId: operator, action: `asaas_charge_sent_${body.action}`, entity: "payment_transactions", entityId: tx.id, details: {}, ip });
       return Response.json({ ok: true });
@@ -111,4 +112,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});

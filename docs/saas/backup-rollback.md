@@ -1,39 +1,42 @@
-# Backup e rollback — migração multiempresa
+# Backup, ordem de deploy e rollback — multiempresa
 
-## Antes de rodar qualquer migration `saas_*`
-1. Supabase → **Database → Backups**: confirme que há backup diário recente (plano Pro tem PITR; no Free, faça o dump abaixo).
-2. Dump lógico local (opcional, recomendado):
+## 0. Antes de tudo: backup
+1. Supabase → **Database → Backups**: confirme backup diário recente (Pro tem PITR). No plano Free, faça o dump:
    ```bash
    npx supabase db dump --db-url "$SUPABASE_DB_URL" -f backup-schema.sql
    npx supabase db dump --db-url "$SUPABASE_DB_URL" --data-only -f backup-data.sql
    ```
-   `SUPABASE_DB_URL` = Project Settings → Database → Connection string (URI). Nunca commitar esses arquivos.
-3. Contagens de referência (SQL Editor) — guarde o resultado:
+   `SUPABASE_DB_URL` = Project Settings → Database → Connection string (URI). **Nunca** commitar esses arquivos.
+2. Guarde as contagens atuais (SQL Editor):
    ```sql
-   select 'vehicles' t, count(*) from vehicles union all
-   select 'clients', count(*) from clients union all
-   select 'rentals', count(*) from rentals union all
-   select 'reservations', count(*) from reservations union all
-   select 'expenses', count(*) from expenses union all
-   select 'maintenance', count(*) from maintenance union all
-   select 'fines', count(*) from fines union all
-   select 'contracts', count(*) from contracts union all
-   select 'payment_receipts', count(*) from payment_receipts union all
-   select 'payment_transactions', count(*) from payment_transactions;
+   select 'vehicles' t, count(*) from vehicles union all select 'clients', count(*) from clients
+   union all select 'rentals', count(*) from rentals union all select 'contracts', count(*) from contracts
+   union all select 'payment_transactions', count(*) from payment_transactions;
    ```
 
-## Ordem segura
-| Passo | Arquivo | Reversível? |
-|---|---|---|
-| 0 | `20261012100000_fix_client_link_takeover.sql` | sim (só função) |
-| 1 | `20261013000000_saas_core.sql` | sim — tabelas novas, nada existente muda |
-| 2 | `20261013000100_saas_backfill.sql` | sim — colunas nulas + update; aborta sozinho se contagens divergirem |
-| — | deploy do código tenant-aware | rollback = redeploy anterior na Vercel |
-| 3 | `20261013000200_saas_rls.sql` | parcial — ver abaixo |
+## Ordem segura (cada passo é uma transação: se falhar, nada fica pela metade)
+| # | O quê | Onde | Observação |
+|---|---|---|---|
+| 1 | `20261012100000_fix_client_link_takeover.sql` | SQL Editor | correção de segurança; pode ir já |
+| 2 | `20261013000000_saas_core.sql` | SQL Editor | cria a locadora LOCAKAR e migra a equipe (`staff`) como dona e Super Admin |
+| 3 | `20261013000100_saas_tenancy.sql` | SQL Editor | backfill + RLS + Storage. **Aborta sozinho** se alguma contagem divergir |
+| 4 | Deploy do código (push na `main`) | Vercel | o app antigo continua funcionando entre 3 e 4 (registros sem locadora caem na LOCAKAR) |
+| 5 | Testar: login, dashboard, criar/editar veículo, cobrança, app do locatário | — | |
+| 6 | `20261013000200_saas_strict.sql` | SQL Editor | só depois do passo 5: desliga o fallback LOCAKAR (gravação sem locadora passa a falhar) |
 
-Cada migration roda em transação: se falhar, nada fica pela metade.
+Conferir o backfill após o passo 3:
+```sql
+select * from saas_migration_counts order by table_name;  -- before_count = after_count, null_count = 0
+```
+
+## Variáveis na Vercel
+Nenhuma nova obrigatória. Opcional: `NEXT_PUBLIC_SITE_URL` (links em e-mails/webhooks; padrão `https://www.locakar.com.br`).
+
+## Asaas após o deploy
+A URL do webhook passa a levar `?o=<id-da-locadora>`. O webhook atual (sem `?o=`) continua funcionando para a LOCAKAR. Ao clicar **Testar conexão** em Configurações → Pagamentos → Asaas, o webhook é atualizado automaticamente.
 
 ## Rollback
-- **Passos 1–2:** `docs/saas/down.sql` remove colunas `organization_id` e tabelas novas (dados originais intactos, nunca foram movidos).
-- **Passo 3:** restaurar policies `equipe_total` (seção "down" no fim de `20261013000200_saas_rls.sql`). Se houver dados de outra locadora já criados, **não** rodar down: restaurar backup.
-- Arquivos do Storage nunca são movidos: caminhos antigos continuam válidos.
+- **Código**: Vercel → Deployments → "Promote" do deploy anterior.
+- **Passo 6**: `update platform_config set legacy_fallback = true where id = 1;`
+- **Passos 2–3** (só se **nenhuma** outra locadora tiver sido criada): restaurar o backup do passo 0. Se já houver outra locadora, **não** reverter: corrigir para frente.
+- Arquivos do Storage nunca foram movidos.

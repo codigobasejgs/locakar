@@ -3,12 +3,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as a from "../src/lib/asaas";
+import { inTestOrg } from "./test-org";
 
 const root = join(__dirname, "..");
 const read = (p: string) => readFileSync(join(root, p), "utf8");
 process.env.ASAAS_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString("base64");
 
-(async () => {
+inTestOrg(async () => {
   const fakeKey = "$aact_hmlg_" + "x".repeat(40) + "TEST";
 
   // ---------- Chave e ambientes (prefixos oficiais) ----------
@@ -96,7 +97,7 @@ process.env.ASAAS_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString("base64");
   assert.ok(!calls[0].url.includes(fakeKey));
   const h = calls[0].init.headers as Record<string, string>;
   assert.equal(h.access_token, fakeKey);
-  assert.equal(h["User-Agent"], "LOCAKAR");
+  assert.equal(h["User-Agent"], "LOCAKAR-SaaS");
   assert.equal(calls[0].init.redirect, "error");
   await server.asaasFetch("production", fakeKey, "POST", "/payments", { a: 1 }, ok({ id: "pay_1" }) as typeof fetch);
   assert.equal(calls[1].url, "https://api.asaas.com/v3/payments");
@@ -148,7 +149,7 @@ process.env.ASAAS_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString("base64");
   assert.ok(!/key_enc|webhook_hash/.test(sql.slice(sql.indexOf("grant select"), sql.indexOf("-- ---------- Configuração"))), "colunas secretas nunca liberadas ao authenticated");
 
   console.log("✓ asaas offline check ok (sem chamadas reais)");
-})().catch((e) => {
+}).catch((e) => {
   console.error(e);
   process.exitCode = 1;
 });

@@ -16,8 +16,8 @@ import {
   type AsaasEnvironment,
   type PaymentSnapshot,
 } from "@/lib/asaas";
-import { COMPANY } from "@/lib/company";
 import { decryptSecret, hasMasterKey } from "@/lib/server/asaas-crypto";
+import { brand, requireOrg, siteUrl } from "@/lib/server/org-context";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { openReceipt } from "@/lib/server/infinitepay";
 import { notifyStaff, sendPushToClient } from "@/lib/server/push";
@@ -33,8 +33,9 @@ import type { Rental } from "@/types";
  */
 
 const log = (event: string, extra: Record<string, unknown> = {}) => console.info(`[asaas] ${event}`, redact(extra));
-export const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || COMPANY.siteUrl).replace(/\/+$/, "");
-export const webhookUrl = () => `${siteUrl()}/api/webhooks/asaas`;
+export { siteUrl };
+/** URL do webhook DA locadora atual: o ?o= escolhe a configuração; o token do header autentica. */
+export const webhookUrl = () => `${siteUrl()}/api/webhooks/asaas?o=${requireOrg().org.id}`;
 
 export interface AsaasConfigRow {
   enabled: boolean;
@@ -63,7 +64,7 @@ export interface AsaasConfigRow {
 }
 
 export async function loadAsaasConfig(db: SupabaseClient): Promise<AsaasConfigRow | null> {
-  const { data, error } = await db.from("asaas_config").select("*").eq("id", 1).maybeSingle();
+  const { data, error } = await db.from("asaas_config").select("*").maybeSingle();
   if (error) return null; // migration ainda não aplicada → integração indisponível, resto do sistema segue
   return data as AsaasConfigRow | null;
 }
@@ -138,7 +139,7 @@ export async function asaasFetch<T = Record<string, unknown>>(
   try {
     res = await send(`${ASAAS_BASE[env]}${path}`, {
       method,
-      headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": "LOCAKAR", access_token: key },
+      headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": "LOCAKAR-SaaS", access_token: key },
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(20_000),
       redirect: "error",
@@ -290,7 +291,7 @@ export async function createCharge(
       billingType,
       cents,
       dueDate,
-      description: `LOCAKAR · ${vehicle?.plate ?? "Locação"} · ${receipt.description || `Parcela ${index + 1}`} · venc. ${formatDate(receipt.dueDate)}`.replace(/\s+/g, " "),
+      description: `${brand().name} · ${vehicle?.plate ?? "Locação"} · ${receipt.description || `Parcela ${index + 1}`} · venc. ${formatDate(receipt.dueDate)}`.replace(/\s+/g, " "),
       externalReference: ref,
       // Após o vencimento da parcela os encargos já entraram no valor; regras do Asaas só valem para parcelas em dia.
       rules: receipt.dueDate < today ? {} : { finePercent: cfg.fine_percent, interestPercent: cfg.interest_percent, discountPercent: cfg.discount_percent, discountDays: cfg.discount_days },
@@ -417,7 +418,7 @@ async function settleReceipt(db: SupabaseClient, tx: AsaasTx, p: PaymentSnapshot
           kind: "receipt",
           to: client.email,
           rentalId: tx.rental_id,
-          subject: `Pagamento confirmado — ${formatCurrency(amount)} — LOCAKAR`,
+          subject: `Pagamento confirmado — ${formatCurrency(amount)} — ${brand().name}`,
           html: emailLayout({
             title: "Pagamento confirmado",
             intro: `Olá, ${client.name}! Confirmamos o pagamento abaixo.`,

@@ -16,6 +16,7 @@ import { rentalReceived } from "@/lib/analytics";
 import { fetchAddressByCep } from "@/lib/cep";
 import { RENTAL_STATUS } from "@/lib/constants";
 import { getSupabase } from "@/lib/supabase/client";
+import { orgPath } from "@/lib/org-path";
 import {
   addDays,
   formatCurrency,
@@ -157,7 +158,7 @@ export default function ClientsPage() {
     try {
       const cleanDoc = draft.cpf.replace(/\D/g, "") || "doc";
       const ext = file.name.split(".").pop() || "pdf";
-      const path = `${cleanDoc}/cnh_digital_${Date.now()}.${ext}`;
+      const path = await orgPath(`clientes/${cleanDoc}/cnh_digital_${Date.now()}.${ext}`);
       const { error } = await getSupabase().storage.from("documentos").upload(path, file, { upsert: true });
       if (error) throw error;
       set("cnhPdfUrl", path);

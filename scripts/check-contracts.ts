@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import { CONTRACT_VARIABLES, type FieldMapping } from "../src/lib/contract-variables";
 import { renderContractContent, resolveContractVariables } from "../src/lib/server/contract-resolver";
 import type { Client, CompanyProfile, FleetVehicle, Rental } from "../src/types";
+import { inTestOrg } from "./test-org";
 
-(async () => {
+inTestOrg(async () => {
   // 1. Catálogo e formatadores
   const cpfDef = CONTRACT_VARIABLES["client.cpf"];
   assert.ok(cpfDef);
@@ -124,7 +125,7 @@ import type { Client, CompanyProfile, FleetVehicle, Rental } from "../src/types"
   assert.throws(() => docxText(new Uint8Array([1, 2, 3])));
 
   console.log("✓ Motor de contratos: variáveis, formatadores, resolução determinística e substituição ok");
-})().catch((e) => {
+}).catch((e) => {
   console.error(e);
   process.exitCode = 1;
 });

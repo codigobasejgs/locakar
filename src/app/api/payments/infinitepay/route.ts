@@ -14,6 +14,7 @@ import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { audit, clientIp } from "@/lib/server/tenant";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { brand, scoped } from "@/lib/server/org-context";
 
 /**
  * InfinitePay no painel (somente equipe). O valor sempre sai do servidor (parcela + multa/juros);
@@ -48,7 +49,7 @@ async function loadTx(db: ReturnType<typeof serviceDb>, id: unknown) {
   return data;
 }
 
-export async function GET(request: Request) {
+export const GET = scoped(async function GET(request: Request) {
   try {
     await staff();
     const { db, ip, handle } = await config();
@@ -80,9 +81,9 @@ export async function GET(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = scoped(async function POST(request: Request) {
   try {
     const operator = await staff();
     const ip = clientIp(request);
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
         installments,
         orderId: tx.id,
         resultUrl: `${siteUrl()}/admin/pagamentos/infinitepay`,
-        referrer: "LOCAKAR",
+        referrer: brand().name.slice(0, 40),
         ...(cfg.ip.tapCheckAccount ? { handle: cfg.handle || undefined, docNumber: cfg.ip.docNumber || undefined } : {}),
         ios: body.ios === true,
       });
@@ -203,7 +204,7 @@ export async function POST(request: Request) {
         "Link:",
         tx.checkout_url,
         "",
-        "LOCAKAR — Locadora de Veículos",
+        `${brand().name} — Locadora de Veículos`,
       ].join("\n");
       const sent = await sendWhatsApp(db, { kind: "charge", phone: client.phone, text, rentalId: tx.rental_id });
       if (!sent.ok) throw new HttpError(502, sent.error ?? "Não foi possível enviar pelo WhatsApp.");
@@ -222,5 +223,5 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
+});
 

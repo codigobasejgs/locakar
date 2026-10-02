@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { getSupabase } from "@/lib/supabase/client";
+import { orgPath } from "@/lib/org-path";
 import { formatCurrency, formatDate, todayISO } from "@/lib/utils";
 import type { UnifiedPaymentItem } from "./payment-actions-sheet";
 
@@ -50,7 +51,7 @@ export function PaymentSettleDialog({ payment, onClose, onSuccess }: PaymentSett
     setUploading(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
-      const path = `${payment.clientId}/${payment.rentalId}_${payment.id}_baixa_${Date.now()}.${ext}`;
+      const path = await orgPath(`baixas/${payment.rentalId}_${payment.id}_${Date.now()}.${ext}`);
       const { error } = await getSupabase().storage.from("comprovantes").upload(path, file, { upsert: true });
       if (error) throw error;
       setProofUrl(path);

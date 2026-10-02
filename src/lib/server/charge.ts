@@ -8,6 +8,7 @@ import { sendPushToClient } from "@/lib/server/push";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Client, CompanySettings, FleetVehicle, Receipt, Rental } from "@/types";
+import { brand } from "@/lib/server/org-context";
 
 /**
  * Cobrança de uma parcela: valor atualizado (multa/juros), PIX copia e cola + QR Code,
@@ -49,7 +50,7 @@ export async function sendCharge(
         kind: "charge",
         to: client.email,
         replyTo: args.replyTo,
-        subject: `${title} — LOCAKAR`,
+        subject: `${title} — ${brand().name}`,
         rentalId: rental.id,
         html: emailLayout({
           title,
@@ -60,7 +61,7 @@ export async function sendCharge(
           extraHtml: `<p style="margin:0 0 8px;text-align:center"><img src="cid:pix-qr" alt="QR Code PIX" width="220" height="220" style="display:inline-block"></p>
 <p style="margin:0 0 6px;font-size:12px;color:#71717a;text-align:center">PIX copia e cola:</p>
 <p style="margin:0 0 18px;padding:10px;background:#f4f4f5;border-radius:8px;font-family:monospace;font-size:11px;word-break:break-all;color:#18181b">${code}</p>`,
-          footerNote: "Depois de pagar, envie o comprovante pelo WhatsApp da LOCAKAR. Se já pagou, desconsidere.",
+          footerNote: `Depois de pagar, envie o comprovante pelo WhatsApp da ${brand().name}. Se já pagou, desconsidere.`,
         }),
         attachments: [{ filename: "pix-qrcode.png", content: png, contentId: "pix-qr" }],
       });
@@ -71,7 +72,7 @@ export async function sendCharge(
   }
 
   const waText = [
-    late ? `⚠️ *Pagamento em atraso* — ${label}` : `💳 *Cobrança LOCAKAR* — ${label}`,
+    late ? `⚠️ *Pagamento em atraso* — ${label}` : `💳 *Cobrança ${brand().name}* — ${label}`,
     "",
     `Olá, ${first}!`,
     `• Vencimento: ${formatDate(receipt.dueDate)}`,

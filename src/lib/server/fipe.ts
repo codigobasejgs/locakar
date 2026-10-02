@@ -2,13 +2,14 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { FIPE_BASE, FIPE_TYPES, FipeError, fipeMonth, fipePath, mapFipe, type FipeDetail, type FipeInput, type FipeLink, type FipeOperation, type FipeReference } from "@/lib/fipe";
 import { decrypt, hasSecretKey } from "./secret";
+import { globalDb, loadOrg, runWithOrg } from "./org-context";
 import { serviceDb } from "./push";
 import { HttpError } from "./supabase";
 import { audit } from "./tenant";
 
 export interface FipeConfig { enabled: boolean; auto_update: boolean; key_enc: string | null; key_last4: string | null; verified_at: string | null; generation: string; last_error: string | null; cooldown_until: string | null; last_auto_at: string | null }
 export async function loadFipeConfig(): Promise<FipeConfig | null> {
-  const { data, error } = await serviceDb().from("fipe_config").select("*").eq("id", 1).maybeSingle();
+  const { data, error } = await globalDb().from("fipe_config").select("*").eq("id", 1).maybeSingle();
   if (error) return null;
   return data;
 }
@@ -52,7 +53,7 @@ export async function queryFipe(operation: FipeOperation, input: FipeInput, opti
   const cfg = await loadFipeConfig();
   if (!cfg) throw new FipeError("FIPE_NOT_CONFIGURED", "Aplique a migration FIPE no Supabase.", 503);
   if (!options.test && (!cfg.enabled || !cfg.verified_at)) throw new FipeError("FIPE_DISABLED", "Integração FIPE desativada. Preencha manualmente ou ative em Configurações.", 409);
-  const path = fipePath(operation, input), db = serviceDb();
+  const path = fipePath(operation, input), db = globalDb();
   let token: string | undefined;
   try { token = cfg.key_enc ? decrypt(cfg.key_enc, "FIPE_CONFIG_ENCRYPTION_KEY") : undefined; }
   catch { throw new FipeError("FIPE_NOT_CONFIGURED", "Chave mestra FIPE indisponível. Confira FIPE_CONFIG_ENCRYPTION_KEY.", 503); }
@@ -105,17 +106,19 @@ export async function saveFipeVehicle(vehicleId: string, input: FipeInput, actor
 /** Atualização mensal limitada pelo orçamento restante do cron existente; nenhuma consulta massiva. */
 export async function updateFipeBatch(deadline: number) {
   const cfg = await loadFipeConfig(); if (!cfg?.enabled || !cfg.auto_update || Date.now() + 3000 >= deadline) return { skipped: true };
-  const db = serviceDb(), now = new Date().toISOString();
+  const db = globalDb(), now = new Date().toISOString();
   const { data: lock } = await db.from("fipe_config").update({ batch_locked_until: new Date(Date.now() + 60000).toISOString() }).eq("id", 1).or(`batch_locked_until.is.null,batch_locked_until.lt.${now}`).select("id").maybeSingle();
   if (!lock) return { skipped: true };
   let updated = 0, failed = 0;
   try {
     const refs = await queryFipe("references", {}, { timeout: Math.min(5000, deadline - Date.now()) }) as FipeReference[];
     const month = refs.map(r => fipeMonth(r.month)).sort().at(-1);
-    const { data: vehicles } = await db.from("vehicles").select("id,fipe,fipe_reference_month").not("fipe", "is", null).neq("status", "sold").or(`fipe_reference_month.is.null,fipe_reference_month.neq.${month}`).limit(3);
+    const { data: vehicles } = await db.from("vehicles").select("id,organization_id,fipe,fipe_reference_month").not("fipe", "is", null).neq("status", "sold").or(`fipe_reference_month.is.null,fipe_reference_month.neq.${month}`).limit(3);
     for (const v of vehicles ?? []) {
       if (Date.now() + 12000 >= deadline) break;
-      try { await saveFipeVehicle(v.id, { type: v.fipe.type, code: v.fipe.code, yearId: v.fipe.yearId }, null, false, Math.min(5000, deadline - Date.now())); updated++; }
+      const org = await loadOrg(v.organization_id);
+      if (!org) continue;
+      try { await runWithOrg({ org }, () => saveFipeVehicle(v.id, { type: v.fipe.type, code: v.fipe.code, yearId: v.fipe.yearId }, null, false, Math.min(5000, deadline - Date.now()))); updated++; }
       catch { failed++; break; }
     }
   } catch { failed++; }
