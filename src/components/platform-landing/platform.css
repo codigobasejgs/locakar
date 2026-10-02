@@ -1,0 +1,176 @@
+/* Landing comercial da plataforma (/plataforma). Identidade própria: grafite + azul-petróleo.
+   Tokens no wrapper .pl; tema = sistema, ou escolha explícita em .pl[data-theme]. */
+.pl {
+  --pl-bg: #f2f5f7;
+  --pl-bg-2: #e8eef2;
+  --pl-surface: #ffffff;
+  --pl-surface-2: #f6f9fb;
+  --pl-text: #0b1218;
+  --pl-text-2: #253341;
+  --pl-muted: #536273;
+  --pl-line: rgb(11 18 24 / 0.1);
+  --pl-line-strong: rgb(11 18 24 / 0.18);
+  --pl-accent: #0a6c7c;
+  --pl-accent-strong: #08515d;
+  --pl-accent-soft: rgb(10 108 124 / 0.1);
+  --pl-on-accent: #ffffff;
+  --pl-signal: #b45309;
+  --pl-ok: #047857;
+  --pl-glow: rgb(10 108 124 / 0.16);
+  --pl-grid: rgb(11 18 24 / 0.05);
+  --pl-glass: rgb(255 255 255 / 0.78);
+  --pl-shadow: 0 30px 60px -30px rgb(11 18 24 / 0.35);
+  color-scheme: light;
+  background: var(--pl-bg);
+  color: var(--pl-text);
+  min-height: 100dvh;
+}
+
+@media (prefers-color-scheme: dark) {
+  .pl:not([data-theme="light"]) {
+    --pl-bg: #07090c;
+    --pl-bg-2: #0b1015;
+    --pl-surface: #0f151b;
+    --pl-surface-2: #131b22;
+    --pl-text: #e8eef3;
+    --pl-text-2: #c4cfd9;
+    --pl-muted: #8796a6;
+    --pl-line: rgb(148 170 190 / 0.12);
+    --pl-line-strong: rgb(148 170 190 / 0.22);
+    --pl-accent: #3cc6d4;
+    --pl-accent-strong: #7fdde6;
+    --pl-accent-soft: rgb(60 198 212 / 0.12);
+    --pl-on-accent: #04191c;
+    --pl-signal: #f2b35a;
+    --pl-ok: #4ade9b;
+    --pl-glow: rgb(60 198 212 / 0.18);
+    --pl-grid: rgb(148 170 190 / 0.06);
+    --pl-glass: rgb(15 21 27 / 0.72);
+    --pl-shadow: 0 40px 80px -30px rgb(0 0 0 / 0.75);
+    color-scheme: dark;
+  }
+}
+
+.pl[data-theme="dark"] {
+  --pl-bg: #07090c;
+  --pl-bg-2: #0b1015;
+  --pl-surface: #0f151b;
+  --pl-surface-2: #131b22;
+  --pl-text: #e8eef3;
+  --pl-text-2: #c4cfd9;
+  --pl-muted: #8796a6;
+  --pl-line: rgb(148 170 190 / 0.12);
+  --pl-line-strong: rgb(148 170 190 / 0.22);
+  --pl-accent: #3cc6d4;
+  --pl-accent-strong: #7fdde6;
+  --pl-accent-soft: rgb(60 198 212 / 0.12);
+  --pl-on-accent: #04191c;
+  --pl-signal: #f2b35a;
+  --pl-ok: #4ade9b;
+  --pl-glow: rgb(60 198 212 / 0.18);
+  --pl-grid: rgb(148 170 190 / 0.06);
+  --pl-glass: rgb(15 21 27 / 0.72);
+  --pl-shadow: 0 40px 80px -30px rgb(0 0 0 / 0.75);
+  color-scheme: dark;
+}
+
+/* Imagens por tema: a oculta não é baixada (next/image usa loading="lazy"). */
+.pl .pl-dark-only { display: none; }
+@media (prefers-color-scheme: dark) {
+  .pl:not([data-theme="light"]) .pl-dark-only { display: block; }
+  .pl:not([data-theme="light"]) .pl-light-only { display: none; }
+}
+.pl[data-theme="dark"] .pl-dark-only { display: block; }
+.pl[data-theme="dark"] .pl-light-only { display: none; }
+
+.pl ::selection { background: var(--pl-accent); color: var(--pl-on-accent); }
+.pl :focus-visible { outline: 2px solid var(--pl-accent); outline-offset: 3px; }
+
+/* Classes na camada components: utilitários do Tailwind (hidden, sm:inline-flex...) continuam valendo por cima. */
+@layer components {
+.pl-surface { background: var(--pl-surface); }
+.pl-surface-2 { background: var(--pl-surface-2); }
+.pl-bg-2 { background: var(--pl-bg-2); }
+.pl-text { color: var(--pl-text); }
+.pl-text-2 { color: var(--pl-text-2); }
+.pl-muted { color: var(--pl-muted); }
+.pl-accent { color: var(--pl-accent); }
+.pl-signal { color: var(--pl-signal); }
+.pl-ok { color: var(--pl-ok); }
+.pl-line { border-color: var(--pl-line); }
+.pl-line-strong { border-color: var(--pl-line-strong); }
+.pl-chip { background: var(--pl-accent-soft); color: var(--pl-accent); }
+.pl-glass {
+  background: var(--pl-glass);
+  border: 1px solid var(--pl-line);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+.pl-shadow { box-shadow: var(--pl-shadow); }
+
+.pl-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  min-height: 2.875rem; padding: 0 1.25rem; border-radius: 0.75rem;
+  font-weight: 600; font-size: 0.9375rem; line-height: 1.1; text-align: center;
+  transition: background-color 0.2s, border-color 0.2s, transform 0.2s, color 0.2s;
+}
+.pl-btn-primary { background: var(--pl-accent); color: var(--pl-on-accent); }
+.pl-btn-primary:hover { background: var(--pl-accent-strong); }
+.pl-btn-ghost { border: 1px solid var(--pl-line-strong); color: var(--pl-text); }
+.pl-btn-ghost:hover { border-color: var(--pl-accent); color: var(--pl-accent); }
+.pl-link { color: var(--pl-accent); font-weight: 600; text-underline-offset: 4px; }
+.pl-link:hover { text-decoration: underline; }
+
+.pl-eyebrow {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--pl-accent);
+}
+
+/* Fundo técnico: grade fina + brilho difuso */
+.pl-grid-bg {
+  background-image:
+    linear-gradient(var(--pl-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pl-grid) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 40%, transparent 100%);
+}
+.pl-glow { background: radial-gradient(closest-side, var(--pl-glow), transparent); filter: blur(10px); }
+
+/* Molduras de dispositivo */
+.pl-laptop-screen {
+  border: 1px solid var(--pl-line-strong);
+  border-radius: 0.9rem 0.9rem 0.25rem 0.25rem;
+  padding: 0.45rem;
+  background: linear-gradient(180deg, #1b232b, #0c1116);
+}
+.pl-laptop-base {
+  height: 0.7rem; margin: 0 -4%;
+  border-radius: 0 0 1rem 1rem;
+  background: linear-gradient(180deg, #a9b4be, #6d7883);
+}
+.pl-phone {
+  border-radius: 2rem; padding: 0.45rem;
+  background: linear-gradient(160deg, #26303a, #0c1116);
+  border: 1px solid var(--pl-line-strong);
+}
+.pl-phone > div { border-radius: 1.6rem; overflow: hidden; }
+}
+
+/* Movimento discreto, só para quem não pediu menos movimento */
+@media (prefers-reduced-motion: no-preference) {
+  .pl-float { animation: pl-float 7s ease-in-out infinite; }
+  .pl-float-delay { animation: pl-float 7s ease-in-out 1.8s infinite; }
+  .pl-lift { transition: transform 0.25s ease, border-color 0.25s ease; }
+  .pl-lift:hover { transform: translateY(-3px); border-color: var(--pl-line-strong); }
+}
+@keyframes pl-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Comparação claro/escuro */
+.pl-compare input[type="range"] { accent-color: var(--pl-accent); }
+
+.pl details > summary { list-style: none; cursor: pointer; }
+.pl details > summary::-webkit-details-marker { display: none; }
+.pl details[open] .pl-faq-icon { transform: rotate(45deg); }
