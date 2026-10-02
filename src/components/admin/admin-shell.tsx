@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Check, ExternalLink, LogOut, Menu, Moon, Sun, X } from "lucide-react";
+import { Bell, Check, ExternalLink, LogOut, Menu, Moon, ShieldCheck, Sun, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,6 +16,7 @@ import { OrgBrandLogo, OrgStatusBanner, OrgSwitcher } from "./org-ui";
 import { buildAlerts } from "@/lib/analytics";
 import { authService } from "@/lib/auth";
 import { CATEGORY_LABEL, unreadCount } from "@/lib/push-events";
+import { getSupabase } from "@/lib/supabase/client";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { ROUTES } from "@/lib/constants";
 import { cn, todayISO } from "@/lib/utils";
@@ -55,9 +56,20 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function SidebarFooter() {
+  // Link só para Super Admin (o acesso real é conferido de novo pela API).
+  const [superAdmin, setSuperAdmin] = useState(false);
+  useEffect(() => {
+    if (!isSupabaseEnabled) return;
+    getSupabase().rpc("is_platform_admin").then(({ data }) => setSuperAdmin(data === true));
+  }, []);
   return (
     <div className="space-y-1 border-t border-line p-3">
       <InstallButton appName="LOCAKAR Gestão" size="sm" variant="ghost" label="Instalar app de gestão" className="w-full justify-start px-3 sm:hidden" />
+      {superAdmin && (
+        <Link href="/plataforma/admin" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-blue-300 hover:bg-white/[0.04] hover:text-white">
+          <ShieldCheck className="size-4" aria-hidden /> Super Admin
+        </Link>
+      )}
       <Link
         href={ROUTES.home}
         className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-white"
