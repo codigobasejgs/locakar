@@ -27,6 +27,14 @@ export const POST = scoped(async function POST(request: Request) {
       throw new HttpError(400, "O endereço da locadora deve ter entre 3 e 40 letras minúsculas, números e hífens.");
     }
 
+    // Quem já é da equipe de uma locadora (ex.: dono da LOCAKAR logado no mesmo navegador) não cria
+    // outra sem confirmar: a nova locadora passaria a ser a ativa e o painel aberto gravaria nela.
+    const { data: existing } = await db.from("memberships").select("organizations(name)").eq("user_id", userId).limit(1);
+    if (existing?.length && body.confirmExisting !== true) {
+      const current = (existing[0] as unknown as { organizations: { name: string } | null }).organizations?.name ?? "outra locadora";
+      return Response.json({ needsConfirm: true, current }, { status: 409 });
+    }
+
     const { data: orgId, error } = await db.rpc("create_organization", { p_user: userId, p_name: name, p_slug: slug, p_phone: phone });
     if (error) {
       if (error.code === "23505") throw new HttpError(409, "Este endereço já está em uso. Escolha outro.");

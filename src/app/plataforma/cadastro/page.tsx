@@ -17,6 +17,7 @@ export default function CadastroPlataformaPage() {
   const [password, setPassword] = useState("");
   const [step, setStep] = useState<"form" | "confirm_email">("form");
   const [loading, setLoading] = useState(false);
+  const [existingOrg, setExistingOrg] = useState<string | null>(null);
 
   const handleNameChange = (v: string) => {
     setName(v);
@@ -33,8 +34,8 @@ export default function CadastroPlataformaPage() {
     }
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (e: React.FormEvent | null, confirmExisting = false) => {
+    e?.preventDefault();
     setLoading(true);
     try {
       const sb = getSupabase();
@@ -58,9 +59,13 @@ export default function CadastroPlataformaPage() {
       const res = await fetch("/api/platform/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, slug, phone }),
+        body: JSON.stringify({ name, slug, phone, confirmExisting }),
       });
       const json = await res.json();
+      if (json.needsConfirm) {
+        setExistingOrg(json.current);
+        return;
+      }
       if (!res.ok) throw new Error(json.error || "Não foi possível criar a locadora.");
       toast.success("Locadora criada com 30 dias de teste grátis! O painel agora abre nela; use o seletor no topo para trocar de locadora.");
       // Navegação completa: recarrega a sessão e a locadora ativa do zero.
@@ -89,7 +94,29 @@ export default function CadastroPlataformaPage() {
           </p>
         </div>
 
-        {step === "confirm_email" ? (
+        {existingOrg ? (
+          <div className="mt-8 space-y-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
+            <h2 className="font-display text-lg font-semibold">Você já está logado como equipe da {existingOrg}</h2>
+            <p className="text-sm text-zinc-300">
+              Uma nova locadora deve ter o <strong>login do próprio dono</strong>. Saia desta conta e cadastre com outro e-mail.
+              Se você também é dono da nova locadora, pode criá-la nesta conta: o painel passa a abrir nela e você alterna pelo seletor no topo.
+            </p>
+            <div className="grid gap-2">
+              <Button
+                onClick={async () => {
+                  await getSupabase().auth.signOut();
+                  setExistingOrg(null);
+                  toast.success("Conta desconectada. Cadastre a nova locadora com o e-mail do dono dela.");
+                }}
+              >
+                Sair e cadastrar com outro e-mail
+              </Button>
+              <Button variant="outline" disabled={loading} onClick={() => submit(null, true)}>
+                Também sou dono: criar nesta conta
+              </Button>
+            </div>
+          </div>
+        ) : step === "confirm_email" ? (
           <div className="mt-8 rounded-2xl border border-line bg-surface p-6 text-center">
             <CheckCircle2 className="mx-auto size-12 text-emerald-400" />
             <h2 className="mt-4 font-display text-lg font-semibold">Confirme seu e-mail</h2>
