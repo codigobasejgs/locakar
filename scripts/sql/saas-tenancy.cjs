@@ -17,6 +17,10 @@ const one = async (q) => (await q).rows[0];
     insert into rentals(id,client_id,vehicle_id,contract_type,start_date,end_date,weekly_rate) values ('r0','c0','v0','Semanal','2026-10-01','2026-10-08',700);
     insert into contracts(id,rental_id,content,client_name,client_cpf,token) values ('k0','r0','Contrato','Cliente Legado','52998224725', repeat('a',48));
     insert into payment_receipts(id,rental_id,receipt_id,client_id,amount,proof_url) values ('p0','r0','x','c0',700,'c0/p.jpg');`);
+  // Contrato JÁ ASSINADO (contracts_guard bloqueia update): o backfill precisa passar sem alterar o conteúdo
+  await db.exec(`insert into contracts(id,rental_id,content,client_name,client_cpf,token) values ('k1','r0','Assinado','Cliente Legado','52998224725', repeat('b',48));
+    update contracts set status='signed', signed_at=now(), updated_at='2026-01-01' where id='k1';`);
+  const signedBefore = (await db.query(`select content_hash, updated_at, signed_at from contracts where id='k1'`)).rows[0];
   const before = await one(db.query(`select (select count(*) from vehicles)::int v, (select count(*) from clients)::int c, (select count(*) from rentals)::int r, (select count(*) from contracts)::int k`));
 
   // ---------- 2. Migração SaaS (2x: idempotente) ----------
@@ -27,6 +31,11 @@ const one = async (q) => (await q).rows[0];
   }
   const after = await one(db.query(`select (select count(*) from vehicles)::int v, (select count(*) from clients)::int c, (select count(*) from rentals)::int r, (select count(*) from contracts)::int k`));
   assert.deepEqual(after, before, 'contagens preservadas');
+  const signedAfter = (await db.query(`select content_hash, updated_at, signed_at, status, organization_id is not null has_org from contracts where id='k1'`)).rows[0];
+  assert.equal(signedAfter.status, "signed"); assert.ok(signedAfter.has_org);
+  assert.equal(signedAfter.content_hash, signedBefore.content_hash, "hash do contrato assinado intacto");
+  assert.deepEqual(signedAfter.updated_at, signedBefore.updated_at, "updated_at não muda no backfill");
+  await assert.rejects(db.query(`update contracts set content='x' where id='k1'`), /assinado/, "guard religado após backfill");
   const loca = (await one(db.query(`select id, name, legal_name, document from organizations where slug='locakar'`)));
   assert.equal(loca.legal_name, 'LOCAKAR LTDA'); assert.equal(loca.document, '00000000000191');
   assert.equal((await one(db.query(`select count(*)::int n from vehicles where organization_id <> $1 or organization_id is null`, [loca.id]))).n, 0);

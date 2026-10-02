@@ -35,7 +35,11 @@ begin
     'notifications','client_push_subscriptions','vehicle_fipe_history','audit_log','selsyn_requests','settings'] loop
     execute format('select count(*) from public.%I', t) into b;
     execute format('alter table public.%I add column if not exists organization_id uuid references public.organizations(id) on delete restrict', t);
+    -- Triggers do usuário desligados só durante o backfill: contracts_guard bloqueia qualquer UPDATE em
+    -- contrato assinado e set_updated_at mudaria a data de todos os registros. Religados logo em seguida.
+    execute format('alter table public.%I disable trigger user', t);
     execute format('update public.%I set organization_id = $1 where organization_id is null', t) using v_org;
+    execute format('alter table public.%I enable trigger user', t);
     execute format('select count(*), count(*) filter (where organization_id is null) from public.%I', t) into a, n;
     if a <> b or n > 0 then
       raise exception 'Backfill de % falhou: antes=% depois=% sem_org=%', t, b, a, n;
