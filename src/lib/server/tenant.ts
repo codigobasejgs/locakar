@@ -31,7 +31,10 @@ export async function requireTenant(request: Request): Promise<Tenant> {
     const fallback = await db.rpc("link_current_user_to_client");
     clientId = fallback.data;
   }
-  if (!clientId) throw new HttpError(403, "Sua conta ainda não está vinculada a um cadastro da LOCAKAR.");
+  if (!clientId) {
+    const confirmed = Boolean(data.user.email_confirmed_at);
+    throw new HttpError(403, confirmed ? "Sua conta ainda não está vinculada a um cadastro. Fale com a locadora." : "Confirme seu e-mail pelo link que enviamos para liberar o acesso.");
+  }
   return { db, userId: data.user.id, clientId: clientId as string, ip: clientIp(request) };
 }
 
