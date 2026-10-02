@@ -21,9 +21,8 @@ export const POST = tenantRoute(async (request, { clientId, ip }) => {
   const settings = await loadSettings(db);
   const cfg = settings.infinitepay;
   const handle = normalizeHandle(cfg?.handle ?? "");
-  if (!cfg?.enabled || cfg.mode === "tap" || !handle) throw new HttpError(409, "Pagamento com cartão pela InfinitePay indisponível no momento. Use o PIX.");
-
   if (body.action === "checkout") {
+    if (!cfg?.enabled || cfg.mode === "tap" || !handle) throw new HttpError(409, "Pagamento com cartão pela InfinitePay indisponível no momento.");
     const r = await createReceiptCheckout(db, { handle, rentalId: body.rentalId, receiptId: body.installmentId, clientId, actor: { type: "client", id: clientId, ip } });
     return { id: r.id, url: r.url, amountCents: r.amountCents };
   }

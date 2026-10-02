@@ -12,7 +12,7 @@ import { useAdminData, useLookups } from "@/hooks/use-admin-data";
 import { sendEmailRequest } from "@/lib/api";
 import { authService } from "@/lib/auth";
 import { CONTRACT_STATUS, ROUTES } from "@/lib/constants";
-import { buildContractText, missingClientFields, missingCompanyFields } from "@/lib/contract";
+import { missingClientFields, missingCompanyFields } from "@/lib/contract";
 import { contractDocument } from "@/lib/documents";
 import { newId } from "@/lib/utils";
 import type { Contract, Rental } from "@/types";
@@ -51,22 +51,45 @@ export function ContractPanel({ rental }: { rental: Rental }) {
     const missingClient = missingClientFields(client);
     if (missingClient.length) return void toast.error(`Complete o cadastro do cliente: ${missingClient.join(", ")}.`);
     setBusy(true);
-    const staff = await authService.getSession();
-    const contract: Contract = {
-      id: newId(),
-      rentalId: rental.id,
-      status: "pending",
-      token: Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join(""),
-      content: buildContractText({ rental, client, vehicle, company: settings.company, issuedAt: new Date() }),
-      clientName: client.name,
-      clientCpf: client.cpf,
-      clientEmail: client.email,
-      companySigner: settings.company.signerName,
-      companySignature: settings.company.signerSignature,
-      companyEmail: settings.company.email || staff?.email,
-    };
-    if (await create("contracts", contract)) toast.success("Contrato gerado.");
-    setBusy(false);
+
+    try {
+      // 1. Resolve o contrato pelo motor determinístico
+      const resolveRes = await fetch("/api/contracts/resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rentalId: rental.id }),
+      });
+      const resolved = await resolveRes.json();
+      if (!resolveRes.ok) throw new Error(resolved.error || "Falha ao resolver contrato.");
+
+      if (resolved.missingRequired && resolved.missingRequired.length > 0) {
+        setBusy(false);
+        return void toast.error(`Dados obrigatórios pendentes: ${resolved.missingRequired.join(", ")}. Atualize antes de emitir.`);
+      }
+
+      const staff = await authService.getSession();
+      const contract: Contract = {
+        id: newId(),
+        rentalId: rental.id,
+        status: "pending",
+        token: Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join(""),
+        content: resolved.content,
+        clientName: client.name,
+        clientCpf: client.cpf,
+        clientEmail: client.email,
+        companySigner: settings.company.signerName,
+        companySignature: settings.company.signerSignature,
+        companyEmail: settings.company.email || staff?.email,
+      };
+
+      if (await create("contracts", contract)) {
+        toast.success(resolved.hasTemplate ? `Contrato gerado usando modelo "${resolved.templateName}" (v${resolved.templateVersion}).` : "Contrato gerado usando modelo padrão.");
+      }
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const send = async (c: Contract) => {

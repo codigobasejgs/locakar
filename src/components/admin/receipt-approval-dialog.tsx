@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Dialog } from "@/components/ui/dialog";
+import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/form";
 import { useAdminData } from "@/hooks/use-admin-data";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
@@ -30,6 +30,7 @@ export function ReceiptApprovalSection() {
   const [reason, setReason] = useState("");
   const [rejecting, setRejecting] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [confirmApproval, setConfirmApproval] = useState(false);
 
   const fetchPending = useCallback(async (): Promise<PendingProof[] | null> => {
     if (!isSupabaseEnabled) return null;
@@ -51,6 +52,7 @@ export function ReceiptApprovalSection() {
   }, [fetchPending]);
 
   const close = () => {
+    setConfirmApproval(false);
     setOpen(null);
     setRejecting(false);
     setReason("");
@@ -82,6 +84,7 @@ export function ReceiptApprovalSection() {
 
   return (
     <>
+      <ConfirmDialog open={confirmApproval} onOpenChange={setConfirmApproval} title="Aprovar este pagamento?" description="Confirme que o valor entrou na conta cadastrada. A aprovação dá baixa na parcela e avisa o cliente." confirmLabel="Aprovar pagamento" onConfirm={() => act("approve")} />
       <Card className="mb-6 border-amber-400/30">
         <CardHeader
           title={`Comprovantes para conferir (${items.length})`}
@@ -127,7 +130,7 @@ export function ReceiptApprovalSection() {
               <Button variant="outline" onClick={() => setRejecting(true)} disabled={busy}>
                 <XCircle /> Rejeitar
               </Button>
-              <Button onClick={() => act("approve")} disabled={busy}>
+              <Button onClick={() => setConfirmApproval(true)} disabled={busy}>
                 <CheckCircle2 /> {busy ? "Aprovando..." : "Aprovar pagamento"}
               </Button>
             </>

@@ -81,12 +81,12 @@ export default function ReportsPage() {
       case "fleet": {
         const list = d.vehicles.filter((v) => (!vehicle || v.id === vehicle) && byStatus(v));
         return {
-          header: ["Placa", "Veículo", "Ano/modelo", "Status", "IPVA", "Licenciamento", "Valor de compra"],
+          header: ["Placa", "Veículo", "Ano/modelo", "Status", "IPVA", "Licenciamento", "Valor de compra", "Código FIPE", "Valor FIPE", "Referência FIPE", "Consulta FIPE"],
           rows: list.map<Row>((v) => ({
             id: v.id,
             amount: v.purchaseValue,
-            cells: [v.plate, v.name, v.yearModel ?? v.year, <StatusBadge key="s" map={VEHICLE_STATUS} value={v.status} />, v.ipvaStatus === "paid" ? "Pago" : "Pendente", `${v.licensingMonth ?? "—"} · ${v.licensingStatus === "paid" ? "Pago" : "Pendente"}`, formatCurrency(v.purchaseValue)],
-            csv: [v.plate, v.name, v.yearModel, VEHICLE_STATUS[v.status].label, v.ipvaStatus, v.licensingStatus, v.purchaseValue],
+            cells: [v.plate, v.name, v.yearModel ?? v.year, <StatusBadge key="s" map={VEHICLE_STATUS} value={v.status} />, v.ipvaStatus === "paid" ? "Pago" : "Pendente", `${v.licensingMonth ?? "—"} · ${v.licensingStatus === "paid" ? "Pago" : "Pendente"}`, formatCurrency(v.purchaseValue), v.fipe?.code ?? "—", v.fipePrice ? formatCurrency(v.fipePrice) : "—", v.fipeReferenceMonth ?? "—", v.fipeCheckedAt ? new Date(v.fipeCheckedAt).toLocaleString("pt-BR") : "—"],
+            csv: [v.plate, v.name, v.yearModel, VEHICLE_STATUS[v.status].label, v.ipvaStatus, v.licensingStatus, v.purchaseValue, v.fipe?.code, v.fipePrice, v.fipeReferenceMonth, v.fipeCheckedAt],
           })),
           chart: { type: "donut" as const, data: countBy(list, (v) => v.status, VEHICLE_STATUS), label: "veículos" },
           totalLabel: "Patrimônio (valor de compra)",

@@ -211,8 +211,10 @@ export async function POST(request: Request) {
       const client = await one<Client>("clients", rental.clientId);
       const vehicle = await one<FleetVehicle>("vehicles", rental.vehicleId).catch(() => undefined);
       const today = todaySP();
+      const chargeSettings = await loadSettings(supabase);
+      if (chargeSettings.pix.enabled === false) throw new HttpError(409, "PIX QR Code está desativado em Configurações → Meios de pagamento.");
       try {
-        const r = await sendCharge(supabase, { rental, receipt, client, vehicle, settings: await loadSettings(supabase), today, replyTo, clientUrl: await contractUrl(rental.id) });
+        const r = await sendCharge(supabase, { rental, receipt, client, vehicle, settings: chargeSettings, today, replyTo, clientUrl: await contractUrl(rental.id) });
         return Response.json({ ok: true, ...r });
       } catch (e) {
         throw new HttpError(422, (e as Error).message);

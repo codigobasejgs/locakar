@@ -17,6 +17,7 @@ import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
+import { VehicleFipePanel } from "./vehicle-fipe-panel";
 import { vehicle360, type DateRange } from "@/lib/analytics";
 import { FUEL_LABEL } from "@/lib/contract";
 import { FINE_STATUS, MAINTENANCE_STATUS, RENTAL_STATUS, ROUTES, VEHICLE_STATUS } from "@/lib/constants";
@@ -134,6 +135,8 @@ export function Vehicle360Dialog({ vehicle, data, today, dashboardRange, onClose
             hint={info.purchaseValue > 0 ? "sobre o valor de compra" : "cadastre o valor pago"}
           />
         </div>
+
+        <VehicleFipePanel vehicleId={vehicle.id} />
 
         {/* Card Especial: Troca de Óleo e Revisões Mecânicas */}
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-gradient-to-r from-amber-500/10 via-panel to-panel p-4">

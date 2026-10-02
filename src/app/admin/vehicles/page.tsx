@@ -5,6 +5,10 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DeleteDialog, FormDialog } from "@/components/admin/crud-dialogs";
+import { FipePicker, fipeApi } from "@/components/admin/fipe-picker";
+import { VehicleFipePanel } from "@/components/admin/vehicle-fipe-panel";
+import { FIPE_TYPES, type FipeInput, type FipeDetail } from "@/lib/fipe";
+import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { VehicleTrackingPanel } from "@/components/admin/vehicle-tracking-panel";
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { DetailList, PageHeader } from "@/components/admin/page-header";
@@ -21,25 +25,6 @@ import { formatCurrency, formatDate, isValidPlate, maskPlate, newId } from "@/li
 import type { FleetVehicle, VehicleStatus } from "@/types";
 
 const VEHICLE_TYPES = ["Carro", "Moto"] as const;
-
-const COMMON_BRANDS = [
-  "Fiat",
-  "Renault",
-  "Volkswagen",
-  "Chevrolet",
-  "Toyota",
-  "Honda",
-  "Hyundai",
-  "Jeep",
-  "Nissan",
-  "Ford",
-  "Yamaha",
-  "Peugeot",
-  "Citroën",
-  "Mitsubishi",
-  "BMW",
-  "Caoa Chery",
-];
 
 const COMMON_COLORS = [
   "Branco",
@@ -60,6 +45,9 @@ type Draft = {
   brand: string;
   model: string;
   year: string;
+  yearModel: string;
+  fuel: string;
+  fipeSelection?: { detail: FipeDetail; parameters: FipeInput };
   renavam: string;
   chassis: string;
   odometer: string;
@@ -78,6 +66,8 @@ const empty = (): Draft => ({
   brand: "",
   model: "",
   year: String(new Date().getFullYear()),
+  yearModel: "",
+  fuel: "Flex",
   renavam: "",
   chassis: "",
   odometer: "0",
@@ -96,6 +86,8 @@ const toDraft = (v: FleetVehicle): Draft => ({
   brand: v.brand || "",
   model: v.model || "",
   year: String(v.year || new Date().getFullYear()),
+  yearModel: v.yearModel ?? "",
+  fuel: v.fuel,
   renavam: v.renavam ?? "",
   chassis: v.chassis ?? "",
   odometer: v.odometer != null ? String(v.odometer) : "0",
@@ -109,11 +101,12 @@ const toDraft = (v: FleetVehicle): Draft => ({
 });
 
 export default function VehiclesPage() {
-  const { data } = useAdminData();
+  const { data, reload } = useAdminData();
   const crud = useCrud("vehicles", { empty, toDraft, noun: "Veículo" });
   const { draft, bind, set } = crud;
   const vehicles = data!.vehicles;
 
+  const [showFipe, setShowFipe] = useState(false);
   const [readingPdf, setReadingPdf] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [uploadingCrlv, setUploadingCrlv] = useState(false);
@@ -128,6 +121,7 @@ export default function VehiclesPage() {
       if (parsed.plate) set("plate", maskPlate(parsed.plate));
       if (parsed.renavam) set("renavam", parsed.renavam);
       if (parsed.year) set("year", String(parsed.year));
+      if (parsed.yearModel) set("yearModel", parsed.yearModel);
       if (parsed.brand) set("brand", parsed.brand);
       if (parsed.model) set("model", parsed.model);
       if (parsed.vehicleType) set("vehicleType", parsed.vehicleType);
@@ -205,7 +199,7 @@ export default function VehiclesPage() {
   };
 
   // Validação e Submit
-  const submit = () => {
+  const submit = async () => {
     const normalizedPlate = draft.plate.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
     if (!normalizedPlate) return void toast.error("Informe a placa do veículo.");
     if (!isValidPlate(normalizedPlate)) return void toast.error("Placa inválida. Utilize o formato ABC1234 ou ABC1D23.");
@@ -243,14 +237,18 @@ export default function VehiclesPage() {
     const brandName = draft.brand.trim();
     const modelName = draft.model.trim();
     const fullName = `${brandName} ${modelName}`;
+    if (draft.fipeSelection && (brandName !== draft.fipeSelection.detail.brand || draft.yearModel !== String(draft.fipeSelection.detail.modelYear) && draft.fipeSelection.detail.modelYear !== 32000 || draft.vehicleType !== FIPE_TYPES[draft.fipeSelection.detail.type].label || draft.fuel !== draft.fipeSelection.detail.fuel)) { toast.error("Os dados mudaram após a seleção FIPE. Selecione a versão novamente ou preencha manualmente."); return; }
     const mainImage = draft.photos[0] || crud.editing?.image || "/logos/locakar-circular.png";
 
-    crud.save({
-      id: crud.editing?.id ?? newId(),
+    if (crud.editing?.fipe && [draft.brand.trim() !== crud.editing.brand, draft.model.trim() !== crud.editing.model, yearNum !== crud.editing.year, draft.yearModel !== (crud.editing.yearModel ?? ""), draft.vehicleType !== crud.editing.vehicleType, draft.fuel !== crud.editing.fuel].some(Boolean) && !confirm("A identidade do veículo mudou. O vínculo FIPE atual será removido; o histórico ficará preservado. Continuar?")) return;
+    const id = crud.editing?.id ?? newId();
+    const saved = await crud.save({
+      id,
       name: fullName,
       brand: brandName,
       model: modelName,
       year: yearNum,
+      yearModel: strOrUndef(draft.yearModel),
       plate: normalizedPlate,
       vehicleType: draft.vehicleType,
       chassis: strOrUndef(cleanChassis),
@@ -266,13 +264,17 @@ export default function VehiclesPage() {
       // Campos compatíveis do banco preservados com valores consistentes
       category: draft.vehicleType === "Moto" ? "Moto" : "Carro",
       transmission: crud.editing?.transmission || "Manual",
-      fuel: crud.editing?.fuel || "Flex",
+      fuel: draft.fuel,
       seats: crud.editing?.seats || (draft.vehicleType === "Moto" ? 2 : 5),
       airConditioning: crud.editing?.airConditioning != null ? crud.editing.airConditioning : draft.vehicleType !== "Moto",
       renavam: strOrUndef(draft.renavam),
       ipvaStatus: crud.editing?.ipvaStatus || "open",
       licensingStatus: crud.editing?.licensingStatus || "open",
     });
+    if (saved && draft.fipeSelection && isSupabaseEnabled) {
+      try { await fipeApi("vehicles", { action: "link", vehicleId: id, parameters: draft.fipeSelection.parameters }); await reload("vehicles", id); toast.success("FIPE vinculada ao veículo."); }
+      catch(e) { toast.error(`Veículo salvo, mas a FIPE não foi vinculada: ${(e as Error).message}`); }
+    }
   };
 
   const columns: Column<FleetVehicle>[] = [
@@ -295,6 +297,7 @@ export default function VehiclesPage() {
             <p className="font-semibold text-white">{v.name}</p>
             <p className="text-xs text-muted">
               {v.vehicleType} · {v.color || "Sem cor"} · {v.year}
+              {v.fipePrice ? <span className="block text-xs">FIPE {formatCurrency(v.fipePrice)} · {v.fipeReferenceMonth}</span> : null}
             </p>
           </div>
         </div>
@@ -358,7 +361,7 @@ export default function VehiclesPage() {
         title="Veículos"
         description="Gestão completa da frota: cadastro, documentos, fotos e manutenção."
         actions={
-          <Button onClick={crud.openNew}>
+          <Button onClick={() => { setShowFipe(false); crud.openNew(); }}>
             <Plus /> Novo veículo
           </Button>
         }
@@ -388,7 +391,7 @@ export default function VehiclesPage() {
         onDelete={crud.setDeleting}
       />
 
-      {/* Formulário com EXATAMENTE os 14 campos solicitados */}
+      {/* Cadastro simplificado: 14 campos, assistência FIPE opcional. */}
       <FormDialog
         open={crud.formOpen}
         onOpenChange={crud.setFormOpen}
@@ -431,11 +434,15 @@ export default function VehiclesPage() {
           />
         </Field>
 
+        <div className="grid gap-2 sm:col-span-2"><Button type="button" variant="outline" onClick={() => { toast.message("Consulta por placa não configurada. Localize o veículo pela Tabela FIPE ou preencha manualmente."); setShowFipe(true); }}>Consultar veículo</Button><Button type="button" variant="ghost" onClick={() => { setShowFipe(!showFipe); if(showFipe) set("fipeSelection", undefined); }}>{showFipe ? "Preencher manualmente" : "Buscar na FIPE"}</Button></div>
+        {showFipe && <FipePicker initialType={draft.vehicleType === "Moto" ? "motorcycles" : "cars"} onUse={(d,p) => { set("vehicleType", FIPE_TYPES[d.type].label); set("brand", d.brand); if (!draft.model.trim()) set("model", d.model); if(d.modelYear !== 32000) set("yearModel", String(d.modelYear)); set("fuel", d.fuel); set("fipeSelection", { detail: d, parameters: p }); toast.success("Versão selecionada. Fabricação, Renavam, chassi e compra continuam manuais."); }} />}
+        {draft.fipeSelection && <p className="text-xs text-muted sm:col-span-2">Versão FIPE: {draft.fipeSelection.detail.model} · código {draft.fipeSelection.detail.code}. Ano modelo: {draft.yearModel || "Zero KM"}; fabricação é o campo 5.</p>}
+
         {/* 2. TIPO DE VEÍCULO */}
         <Field label="2. Tipo de Veículo" htmlFor="f-vehicleType" required>
           <Select
             {...bind("vehicleType")}
-            options={VEHICLE_TYPES.map((t) => ({ value: t, label: t }))}
+            options={[...VEHICLE_TYPES, "Caminhão"].map((t) => ({ value: t, label: t }))}
             required
           />
         </Field>
@@ -448,14 +455,9 @@ export default function VehiclesPage() {
             value={draft.brand}
             onChange={(e) => set("brand", e.target.value)}
             placeholder="Ex.: Fiat, Honda, Toyota..."
-            list="brand-suggestions"
             required
           />
-          <datalist id="brand-suggestions">
-            {COMMON_BRANDS.map((b) => (
-              <option key={b} value={b} />
-            ))}
-          </datalist>
+
         </Field>
 
         {/* 4. MODELO */}
@@ -472,6 +474,7 @@ export default function VehiclesPage() {
 
         {/* 5. ANO */}
         <Field label="5. Ano de Fabricação" htmlFor="f-year" required hint="Ano do veículo (1950 até atual + 2)">
+          {draft.yearModel && <p className="text-xs text-muted">Ano modelo selecionado: {draft.yearModel} (diferente da fabricação).</p>}
           <Input
             {...bind("year")}
             type="number"
@@ -481,6 +484,9 @@ export default function VehiclesPage() {
             required
           />
         </Field>
+
+        {crud.editing?.fipe && <p className="text-xs text-muted sm:col-span-2">Vínculo FIPE atual: {crud.editing.fipe.version} · ano modelo {crud.editing.fipe.modelYear}. Alterar marca, modelo, fabricação, ano modelo, tipo ou combustível invalida o vínculo e preserva o histórico.</p>}
+        <div className="grid grid-cols-2 gap-3 sm:col-span-2"><Field label="Ano modelo (opcional)" htmlFor="f-yearModel" hint="FIPE utiliza ano modelo, não fabricação."><Input {...bind("yearModel")} inputMode="numeric" /></Field><Field label="Combustível" htmlFor="f-fuel"><Input {...bind("fuel")} /></Field></div>
 
         {/* 6. RENAVAM */}
         <Field label="6. Renavam" htmlFor="f-renavam" hint="Código Renavam (apenas números)">
@@ -705,6 +711,7 @@ export default function VehiclesPage() {
               ]}
             />
 
+            <VehicleFipePanel key={`fipe-${v.id}`} vehicleId={v.id} onChanged={() => reload("vehicles", v.id)} />
             <VehicleTrackingPanel key={v.id} vehicle={v} />
 
             {/* Documento CRLV */}

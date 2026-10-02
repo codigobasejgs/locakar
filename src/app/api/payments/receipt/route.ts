@@ -92,7 +92,7 @@ export async function POST(request: Request) {
 
     if (body.action === "approve") {
       if (rental && index >= 0) {
-        const receipts = rental.receipts.map((r) => (r.id === proof.receipt_id ? { ...r, paid: true, paidAt: todaySP(), amountPaid: amount } : r));
+        const receipts = rental.receipts.map((r) => (r.id === proof.receipt_id ? { ...r, paid: true, paidAt: todaySP(), amountPaid: amount, paymentMethod: "Pix · comprovante aprovado (LOCAKAR)", settledBy: "Pix manual" } : r));
         await db.from("rentals").update({ receipts, updated_at: now }).eq("id", rental.id);
         await releaseChargeIfSettled(db, rental.id, proof.receipt_id, { type: "staff", id: reviewer }, "comprovante aprovado");
       }

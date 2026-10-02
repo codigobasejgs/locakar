@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/dialog";
 import { Checkbox, Field, Input } from "@/components/ui/form";
 import { BILLING_LABEL, type AsaasEnvironment } from "@/lib/asaas";
 import type { AsaasPublicConfig } from "@/lib/server/asaas";
@@ -41,16 +40,20 @@ export function AsaasSettings() {
   const [apiKey, setApiKey] = useState("");
   const [editingKey, setEditingKey] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
-  const [confirmOff, setConfirmOff] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
-    api()
-      .then((c) => alive && (setCfg(c), setDraft(toDraft(c))))
-      .catch((e) => alive && setError((e as Error).message));
+    const load = () =>
+      api()
+        .then((c) => alive && (setCfg(c), setDraft((d) => d ?? toDraft(c))))
+        .catch((e) => alive && setError((e as Error).message));
+    load();
+    // Switch em Meios de pagamento muda o "Ativo" daqui também.
+    window.addEventListener("locakar:payment-methods", load);
     return () => {
       alive = false;
+      window.removeEventListener("locakar:payment-methods", load);
     };
   }, []);
 
@@ -66,6 +69,7 @@ export function AsaasSettings() {
       const c = await api(body);
       setCfg(c);
       setDraft((d) => ({ ...toDraft(c), environment: d?.environment ?? c.environment }));
+      window.dispatchEvent(new Event("locakar:payment-methods"));
       if (c.message) toast[c.message.startsWith("Conexão OK, mas") ? "warning" : "success"](c.message);
       else if (ok) toast.success(ok);
       return true;
@@ -230,30 +234,10 @@ export function AsaasSettings() {
       </div>
       {cfg.lastError && <p className="text-xs text-red-400 sm:col-span-2">Último erro: {cfg.lastError}</p>}
 
-      {/* Ações */}
-      <div className="flex flex-wrap gap-2 sm:col-span-2">
-        {cfg.enabled ? (
-          <>
-            <Button disabled={!!busy} onClick={() => run("save", prefs(true), "Configuração salva.")}>{busy === "save" ? "Salvando…" : "Salvar configuração"}</Button>
-            <Button variant="outline" disabled={!!busy} onClick={() => setConfirmOff(true)}>Desativar integração</Button>
-          </>
-        ) : (
-          <>
-            <Button disabled={!!busy || !envReady} onClick={() => run("save", prefs(true), "Asaas ativado.")}>{busy === "save" ? "Ativando…" : "Ativar integração"}</Button>
-            <Button variant="outline" disabled={!!busy} onClick={() => run("prefs", prefs(false), "Preferências salvas.")}>Salvar sem ativar</Button>
-          </>
-        )}
+      <div className="grid gap-2 sm:col-span-2">
+        <Button disabled={!!busy} className="justify-self-start" onClick={() => run("save", prefs(cfg.enabled), "Configuração salva.")}>{busy === "save" ? "Salvando…" : "Salvar configuração"}</Button>
+        <p className="text-xs text-muted">Ative ou desative no switch Asaas em Meios de pagamento. Salvar esta seção não muda a disponibilidade.</p>
       </div>
-      {!cfg.enabled && !envReady && <p className="text-xs text-muted sm:col-span-2">Para ativar: salve a API Key do ambiente escolhido e clique em “Testar conexão”.</p>}
-
-      <ConfirmDialog
-        open={confirmOff}
-        onOpenChange={setConfirmOff}
-        title="Desativar integração Asaas?"
-        description="Novas cobranças não serão geradas pelo Asaas. Cobranças já existentes continuarão registradas no histórico e pagamentos delas continuarão sendo baixados automaticamente."
-        confirmLabel="Desativar"
-        onConfirm={() => run("disable", { action: "disable" }, "Integração desativada.")}
-      />
     </>
   );
 }

@@ -18,7 +18,7 @@ import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
 import { api, type Installment } from "../../services/api";
-import { pickProofImage, sendPaymentProof } from "../../services/paymentProof";
+import { pickProofImage, pickProofFile, sendPaymentProof } from "../../services/paymentProof";
 
 type Step = "pix" | "proof" | "sent";
 
@@ -42,6 +42,10 @@ export default function PagamentosScreen() {
   // Asaas: métodos habilitados pela LOCAKAR; parcela com cobrança Asaas aberta sempre mostra o pagamento online.
   const asaasMethods = summary?.asaas ? [...summary.asaas.methods, ...(summary.asaas.allowUndefined ? ["UNDEFINED"] : [])] : [];
   const asaasFor = (i: Installment) => Boolean(i.asaas) || asaasMethods.length > 0;
+  // PIX QR Code (comprovante) só quando ativo; comprovante recusado sempre pode ser reenviado.
+  const pixFor = (i: Installment) => Boolean(i.pixCode) || i.proofStatus === "rejected";
+  const ipFor = (i: Installment) => cardEnabled || Boolean(i.infinitepay);
+  const anyMethod = (i: Installment) => asaasFor(i) || ipFor(i) || pixFor(i);
 
   const installments = activeRental?.installments ?? [];
   const insets = useSafeAreaInsets();
@@ -51,6 +55,7 @@ export default function PagamentosScreen() {
 
   const openInstallment = (i: Installment) => {
     setOpen(i);
+    if (i.infinitepay) setCard({ id: i.infinitepay.id, installmentId: i.id });
     setCardPaid(false);
     setStep("pix");
     setImage(null);
@@ -92,7 +97,7 @@ export default function PagamentosScreen() {
     setMessage(null);
     setCardBusy(true);
     try {
-      const r = await api<{ id: string; url: string }>("/api/tenant/infinitepay", { method: "POST", body: { action: "checkout", rentalId: activeRental.id, installmentId: open.id } });
+      const r = open.infinitepay ?? await api<{ id: string; url: string }>("/api/tenant/infinitepay", { method: "POST", body: { action: "checkout", rentalId: activeRental.id, installmentId: open.id } });
       setCard({ id: r.id, installmentId: open.id });
       await Linking.openURL(r.url);
     } catch (e) {
@@ -118,6 +123,12 @@ export default function PagamentosScreen() {
     } catch (e) {
       setMessage((e as Error).message);
     }
+  };
+
+  const pickFile = async () => {
+    setMessage(null);
+    try { const uri = await pickProofFile(); if (uri) { setImage(uri); setStep("proof"); } }
+    catch (e) { setMessage((e as Error).message); }
   };
 
   const send = async () => {
@@ -160,7 +171,11 @@ export default function PagamentosScreen() {
               </View>
               {i.proofStatus === "rejected" && !i.paid && i.rejectionReason && <Text style={styles.rejected}>Motivo da recusa: {i.rejectionReason}</Text>}
               {!i.paid && i.proofStatus !== "pending_review" && (
-                <Button label={i.proofStatus === "rejected" ? "Pagar ou reenviar comprovante" : asaasFor(i) ? "Pagar agora" : cardEnabled ? "Pagar" : "Pagar com PIX"} size="sm" onPress={() => openInstallment(i)} />
+                anyMethod(i) ? (
+                  <Button label={i.proofStatus === "rejected" ? "Pagar ou reenviar comprovante" : asaasFor(i) || cardEnabled ? "Pagar agora" : "Pagar com PIX"} size="sm" onPress={() => openInstallment(i)} />
+                ) : (
+                  <Text style={styles.muted}>Não há meios de pagamento online disponíveis no momento.</Text>
+                )
               )}
             </Card>
           ))}
@@ -172,7 +187,7 @@ export default function PagamentosScreen() {
         <View style={styles.overlay}>
           <View style={[styles.sheet, { paddingBottom: insets.bottom + Spacing.lg }, wide && styles.sheetWide]}>
             <View style={styles.rowBetween}>
-              <Text style={styles.sheetTitle}>{cardPaid ? "Pagamento confirmado" : step === "sent" ? "Comprovante enviado" : step === "proof" ? "Confira o comprovante" : cardEnabled ? "Pagar parcela" : "Pagar com PIX"}</Text>
+              <Text style={styles.sheetTitle}>{cardPaid ? "Pagamento confirmado" : step === "sent" ? "Comprovante enviado" : step === "proof" ? "Confira o comprovante" : "Escolha como pagar"}</Text>
               <TouchableOpacity onPress={close} disabled={sending} accessibilityRole="button" accessibilityLabel="Fechar">
                 <X color={Colors.textMuted} size={24} />
               </TouchableOpacity>
@@ -207,9 +222,9 @@ export default function PagamentosScreen() {
                   {asaasFor(open) && activeRental && (
                     <AsaasPay installment={open} rentalId={activeRental.id} methods={asaasMethods} onPaid={() => { setCardPaid(true); refresh(); }} />
                   )}
-                  {asaasFor(open) && <Text style={styles.or}>{cardEnabled ? "ou" : "ou pague com o PIX da LOCAKAR"}</Text>}
+                  {asaasFor(open) && (ipFor(open) || pixFor(open)) && <Text style={styles.or}>ou</Text>}
 
-                  {cardEnabled && (
+                  {ipFor(open) && (
                     <View style={styles.cardBox}>
                       <Text style={styles.cardTitle}>Cartão de crédito ou débito</Text>
                       <Text style={styles.muted}>Pague com cartão em até 12x ou Pix pela InfinitePay. A confirmação é automática, sem enviar comprovante.</Text>
@@ -220,8 +235,14 @@ export default function PagamentosScreen() {
                     </View>
                   )}
 
-                  {cardEnabled && <Text style={styles.or}>ou pague com PIX</Text>}
+                  {ipFor(open) && pixFor(open) && <Text style={styles.or}>ou</Text>}
 
+                  {!anyMethod(open) && <Text style={styles.body}>Não há meios de pagamento online disponíveis no momento. Fale com a LOCAKAR.</Text>}
+
+                  {pixFor(open) && (
+                  <>
+                  <Text style={styles.cardTitle}>Pix direto · envio de comprovante</Text>
+                  <Text style={styles.muted}>O valor cai na conta da LOCAKAR. Depois de pagar, envie o comprovante: a parcela é baixada após a conferência.</Text>
                   {open.pixCode ? (
                     <>
                       <View style={styles.qr} accessibilityLabel={`QR Code PIX de ${money(open.total)}`}>
@@ -235,9 +256,7 @@ export default function PagamentosScreen() {
                       </Text>
                       <Button label={copied ? "Código copiado" : "Copiar código PIX"} icon={copied ? <Check color={Colors.text} size={18} /> : <Copy color={Colors.text} size={18} />} onPress={copy} />
                     </>
-                  ) : (
-                    <Text style={styles.rejected}>O PIX ainda não está configurado pela LOCAKAR. Fale com o suporte para pagar esta parcela.</Text>
-                  )}
+                  ) : null}
 
                   <View style={styles.divider} />
                   <Text style={styles.cardTitle}>Já pagou?</Text>
@@ -246,12 +265,15 @@ export default function PagamentosScreen() {
                     <Button label="Tirar foto" variant="outline" size="sm" icon={<Camera color={Colors.text} size={16} />} onPress={() => pick("camera")} style={{ flex: 1 }} />
                     <Button label="Galeria" variant="outline" size="sm" icon={<ImageIcon color={Colors.text} size={16} />} onPress={() => pick("gallery")} style={{ flex: 1 }} />
                   </View>
+                  <Button label="Anexar arquivo (PDF, JPG ou PNG)" variant="outline" size="sm" onPress={pickFile} />
+                  </>
+                  )}
                 </>
               )}
 
               {open && step === "proof" && image && (
                 <>
-                  <Image source={{ uri: image }} style={styles.preview} accessibilityLabel="Prévia do comprovante" />
+                  {image.startsWith("pdf:") ? <Text style={styles.body}>Comprovante PDF anexado.</Text> : <Image source={{ uri: image }} style={styles.preview} accessibilityLabel="Prévia do comprovante" />}
                   <Text style={[styles.muted, { textAlign: "center" }]}>Valor, data e recebedor precisam estar legíveis.</Text>
                   <Button label={sending ? "Enviando..." : `Enviar comprovante de ${money(open.total)}`} loading={sending} onPress={send} />
                   <Button label="Escolher outra imagem" variant="ghost" disabled={sending} onPress={() => setStep("pix")} />

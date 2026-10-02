@@ -1,3 +1,4 @@
+import type { FipeLink } from "../lib/fipe";
 import type { InfinitePaySettings } from "../lib/infinitepay";
 /**
  * Modelos de domínio da LOCAKAR.
@@ -40,6 +41,10 @@ export interface FleetVehicle extends Vehicle {
   purchaseValue?: number;
   photos?: string[];
   crlvUrl?: string;
+  fipe?: FipeLink;
+  fipePrice?: number;
+  fipeReferenceMonth?: string;
+  fipeCheckedAt?: string;
   selsynRastreavelId?: string;
   selsynIdentificador?: string;
   selsynLinkedAt?: string;
@@ -357,6 +362,8 @@ export interface PixSettings {
   /** Nome do recebedor (como no banco) e cidade: exigidos pelo padrão do Banco Central. */
   name: string;
   city: string;
+  /** Meio "PIX QR Code" (comprovante + aprovação manual) oferecido aos clientes. Ausente = ligado. */
+  enabled?: boolean;
 }
 
 /** Para onde vão os alertas da empresa por e-mail e WhatsApp (vazio = padrão do servidor). */

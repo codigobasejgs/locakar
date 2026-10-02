@@ -1,3 +1,4 @@
+import { infinitePayState } from "@/lib/payment-methods";
 import { COMPANY } from "@/lib/company";
 import {
   buildTapDeeplink,
@@ -88,7 +89,9 @@ export async function POST(request: Request) {
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const cfg = await config();
     const { db } = cfg;
-    if (!cfg.ip.enabled) throw new HttpError(409, "Ative a InfinitePay em Configurações → InfinitePay.");
+    // Desativada: bloqueia só operações novas (tap.start/checkout.create); confirmar/consultar/cancelar existentes continua.
+    const newOperation = body.action === "tap.start" || body.action === "checkout.create" || body.action === "checkout.whatsapp";
+    if (newOperation && !infinitePayState(cfg.ip).enabled) throw new HttpError(409, "InfinitePay está desativada em Configurações → Meios de pagamento.");
     const actor = { type: "staff" as const, id: operator, ip };
 
     // ---------- InfiniteTap: gera o deeplink (sem API key) ----------

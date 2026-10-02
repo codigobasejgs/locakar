@@ -19,6 +19,8 @@ import { PaymentSettleDialog } from "@/components/admin/payment-settle-dialog";
 import { InfinitePayDialog } from "@/components/admin/infinitepay-dialog";
 import { AsaasChargeDialog, asaasApi, releaseAsaasCharge, type AsaasCharge, type AsaasPanelConfig } from "@/components/admin/asaas-charge-dialog";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
+import { ChargeMethodDialog } from "@/components/admin/charge-method-dialog";
+import type { PaymentMethodId, PaymentMethodState } from "@/lib/payment-methods";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Card, EmptyState, StatCard } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/form";
@@ -59,6 +61,22 @@ export default function PagamentosPage() {
       .catch(() => {});
   }, []);
   useEffect(loadAsaas, [loadAsaas]);
+  // Meios ativos (fonte de verdade no servidor). Modo demonstração (sem Supabase): PIX + InfinitePay locais.
+  const [methodStates, setMethodStates] = useState<PaymentMethodState[] | null>(null);
+  useEffect(() => {
+    if (!isSupabaseEnabled) return;
+    const load = () => fetch("/api/payments/methods", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => j && setMethodStates(j.methods))
+      .catch(() => {});
+    load();
+    window.addEventListener("focus", load);
+    return () => window.removeEventListener("focus", load);
+  }, []);
+  const activeMethods: PaymentMethodId[] = methodStates
+    ? methodStates.filter((m) => m.enabled && m.configured).map((m) => m.id)
+    : isSupabaseEnabled ? [] : ([settings.pix.enabled !== false && settings.pix.key ? "pix_manual" : null, infinitePay?.enabled ? "infinitepay" : null].filter(Boolean) as PaymentMethodId[]);
+  const [chargeTarget, setChargeTarget] = useState<UnifiedPaymentItem | null>(null);
   const asaasOn = Boolean(asaas?.config.ready);
   const asaasOpen = (p: UnifiedPaymentItem) => p.asaas?.status === "link_created" || p.asaas?.status === "started";
   const releaseAsaas = async (p: UnifiedPaymentItem, reason: string) => {
@@ -279,10 +297,17 @@ export default function PagamentosPage() {
     }
   };
 
-  // Ação: Cobrar — Asaas ativo (ou parcela com cobrança Asaas aberta) abre o modal; senão mantém o WhatsApp atual.
-  const handleCharge = (p: UnifiedPaymentItem) => {
-    if (asaasOn || p.asaas?.status === "link_created") setAsaasTarget(p);
+  // Ação: Cobrar — cobrança Asaas aberta vai direto aos detalhes; senão escolhe entre os meios ativos (1 ativo = direto).
+  const pickMethod = (p: UnifiedPaymentItem, m: PaymentMethodId) => {
+    setChargeTarget(null);
+    if (m === "asaas") setAsaasTarget(p);
+    else if (m === "infinitepay") setInfinitePayTarget(p);
     else handleChargeWhatsApp(p);
+  };
+  const handleCharge = (p: UnifiedPaymentItem) => {
+    if (p.asaas?.status === "link_created") return setAsaasTarget(p);
+    if (activeMethods.length === 1) return pickMethod(p, activeMethods[0]);
+    setChargeTarget(p);
   };
   const asaasInvoice = (p: UnifiedPaymentItem) => {
     const url = p.asaas?.invoiceUrl;
@@ -310,7 +335,7 @@ export default function PagamentosPage() {
     }
 
     const expectedAmount = p.lateCharges?.total ?? p.amount;
-    const chargeInfo = settings?.pix.key ? chargeFor(p.rental, p.id, settings.pix, today) : null;
+    const chargeInfo = settings?.pix.key && activeMethods.includes("pix_manual") ? chargeFor(p.rental, p.id, settings.pix, today) : null;
 
     const lines = [
       `Olá, ${p.clientName.split(" ")[0]}.`,
@@ -330,6 +355,8 @@ export default function PagamentosPage() {
       lines.push("");
       lines.push("PIX Copia e Cola:");
       lines.push(chargeInfo.code);
+      lines.push("");
+      lines.push("Depois de pagar, envie o comprovante pela Área do Cliente LOCAKAR (Pagamentos → Já pagou?).");
     }
 
     const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(lines.join("\n"))}`;
@@ -557,11 +584,14 @@ export default function PagamentosPage() {
         onCancel={(p) => setCancellingTarget(p)}
         onDelete={(p) => setDeletingTarget(p)}
         onViewDetails={(p) => setDetailsTarget(p)}
-        onInfinitePay={infinitePay?.enabled ? (p) => setInfinitePayTarget(p) : undefined}
+        onInfinitePay={activeMethods.includes("infinitepay") ? (p) => setInfinitePayTarget(p) : undefined}
         onAsaas={asaas && (asaasOn || Object.keys(asaas.charges).length) ? (p) => setAsaasTarget(p) : undefined}
         onAsaasInvoice={asaasInvoice}
         onAsaasReconcile={asaasReconcile}
       />
+
+      {/* Cobrar: escolha entre os meios ativos */}
+      {chargeTarget && <ChargeMethodDialog payment={chargeTarget} methods={activeMethods} onClose={() => setChargeTarget(null)} onPick={(m) => pickMethod(chargeTarget, m)} />}
 
       {/* Cobrança Asaas (modal Cobrar / detalhes) */}
       {asaas && asaasTarget && (

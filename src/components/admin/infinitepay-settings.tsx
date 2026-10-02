@@ -55,8 +55,6 @@ export function InfinitePaySettingsFields({ value, onChange }: { value: Infinite
         <span className="text-xs text-muted">{status?.handle ? `Conta: $${status.handle}` : "Salve para aplicar"}</span>
       </div>
 
-      <Checkbox label="Ativar InfinitePay nos Pagamentos" checked={value.enabled} onChange={(e) => set("enabled", e.target.checked)} className="sm:col-span-2" />
-
       <Field label="InfiniteTag (handle)" htmlFor="ip-handle" hint={handleOk ? "Seu usuário no app InfinitePay, sem o $" : "InfiniteTag inválida"}>
         <Input id="ip-handle" value={value.handle} onChange={(e) => set("handle", e.target.value)} placeholder="locakar" autoComplete="off" />
       </Field>

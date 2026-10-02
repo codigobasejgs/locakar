@@ -117,7 +117,7 @@ export async function POST(request: Request) {
       const c = envCols(env);
       const methods = Array.isArray(body.methods) ? body.methods.filter((m): m is (typeof ASAAS_METHODS)[number] => ASAAS_METHODS.includes(m as never)) : [];
       const allowUndefined = body.allowUndefined === true;
-      const enabled = body.enabled === true;
+      const enabled = cfg.enabled; // Disponibilidade só pelo switch central (/api/payments/methods).
       if (!methods.length && !allowUndefined) throw new HttpError(422, "Selecione ao menos uma forma de pagamento.");
       if (enabled && !(cfg[c.keyEnc] && cfg[c.verified] && cfg[c.webhookHash])) {
         throw new HttpError(409, `Antes de ativar em ${env === "sandbox" ? "Sandbox" : "Produção"}: salve a API Key e clique em “Testar conexão” (registra o webhook).`);

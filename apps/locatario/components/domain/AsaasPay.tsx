@@ -8,7 +8,7 @@ import { useTheme } from "../../context/ThemeProvider";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { api, type Installment } from "../../services/api";
 
-const LABEL: Record<string, string> = { PIX: "Pix", BOLETO: "Boleto", CREDIT_CARD: "Cartão de crédito", UNDEFINED: "Escolher na fatura" };
+const LABEL: Record<string, string> = { PIX: "Pix · confirmação automática", BOLETO: "Boleto", CREDIT_CARD: "Cartão de crédito", UNDEFINED: "Escolher na fatura" };
 
 interface Charge {
   id: string;
@@ -81,7 +81,7 @@ export function AsaasPay({ installment, rentalId, methods, onPaid }: { installme
 
   return (
     <View style={styles.box}>
-      <Text style={styles.title}>Pagar online</Text>
+      <Text style={styles.title}>Pagamento online · confirmação automática</Text>
       {!charge ? (
         <>
           <Text style={styles.muted}>Escolha a forma de pagamento. A confirmação é automática, sem enviar comprovante.</Text>

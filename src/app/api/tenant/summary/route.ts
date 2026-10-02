@@ -4,8 +4,7 @@ import { COMPANY } from "@/lib/company";
 import { loadSettings, serviceDb } from "@/lib/server/push";
 import { errorResponse } from "@/lib/server/supabase";
 import { corsHeaders, requireTenant, tenantOptions } from "@/lib/server/tenant";
-import { normalizeHandle } from "@/lib/infinitepay";
-import { loadAsaasConfig, readyForCharges } from "@/lib/server/asaas";
+import { getPaymentMethods, usable } from "@/lib/server/payment-methods";
 import { todaySP } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
 import type { Rental } from "@/types";
@@ -38,16 +37,22 @@ export async function GET(request: Request) {
 
     // Configurações só pelo servidor (settings é restrito à equipe): usa a chave de serviço.
     const settings = process.env.SUPABASE_SECRET_KEY ? await loadSettings(serviceDb()) : null;
-    // Asaas: opcional. Desligado/sem migration = null e o app segue com o PIX atual.
-    const asaasCfg = process.env.SUPABASE_SECRET_KEY ? await loadAsaasConfig(serviceDb()) : null;
-    const asaasOn = readyForCharges(asaasCfg);
-    const { data: asaasTx } = process.env.SUPABASE_SECRET_KEY
-      ? await serviceDb().from("payment_transactions").select("id,rental_id,receipt_id,status,billing_type,invoice_url,amount_cents,created_at").eq("provider", "asaas").in("rental_id", (rentals.data ?? []).map((r) => r.id)).order("created_at", { ascending: false })
+    const availability = settings ? await getPaymentMethods(serviceDb(), settings) : null;
+    const pixOn = Boolean(availability?.methods.some((m) => m.id === "pix_manual" && usable(m)));
+    const asaasCfg = availability?.asaasConfig;
+    const asaasOn = Boolean(availability?.methods.some((m) => m.id === "asaas" && usable(m)));
+    const ipOn = Boolean(availability?.infinitepay.checkout);
+    const rentalIds = (rentals.data ?? []).map((r) => r.id);
+    const { data: transactions } = process.env.SUPABASE_SECRET_KEY && rentalIds.length
+      ? await serviceDb().from("payment_transactions").select("id,provider,rental_id,receipt_id,status,billing_type,invoice_url,checkout_url,amount_cents,created_at")
+        .in("rental_id", rentalIds).in("status", ["link_created"]).order("created_at", { ascending: false })
       : { data: [] };
-    const asaasByReceipt = new Map<string, { id: string; status: string; billingType: string | null; invoiceUrl: string | null }>();
-    for (const t of asaasTx ?? []) {
+    const asaasByReceipt = new Map<string, { id: string; billingType: string | null; invoiceUrl: string | null }>();
+    const ipByReceipt = new Map<string, { id: string; url: string }>();
+    for (const t of transactions ?? []) {
       const k = `${t.rental_id}:${t.receipt_id}`;
-      if (!asaasByReceipt.has(k)) asaasByReceipt.set(k, { id: t.id, status: t.status, billingType: t.billing_type, invoiceUrl: t.invoice_url });
+      if (t.provider === "asaas" && !asaasByReceipt.has(k)) asaasByReceipt.set(k, { id: t.id, billingType: t.billing_type, invoiceUrl: t.invoice_url });
+      if (t.provider === "infinitepay" && t.checkout_url && !ipByReceipt.has(k)) ipByReceipt.set(k, { id: t.id, url: t.checkout_url });
     }
 
     const vehicleById = new Map((vehicles.data ?? []).map((v) => [v.id, fromRow<Record<string, unknown>>(v)]));
@@ -87,13 +92,14 @@ export async function GET(request: Request) {
             fee: c?.fee ?? 0,
             interest: c?.interest ?? 0,
             total: c?.total ?? x.amount,
-            pixCode: x.paid ? null : (c?.code ?? null),
+            pixCode: x.paid || !pixOn ? null : (c?.code ?? null),
             proofStatus: proof?.status ?? null,
             rejectionReason: proof?.status === "rejected" ? (proof.rejectionReason ?? null) : null,
+            infinitepay: !x.paid ? ipByReceipt.get(`${r.id}:${x.id}`) ?? null : null,
             // Cobrança Asaas em aberto desta parcela (o app mostra Pagar agora / fatura).
             asaas: (() => {
               const t = asaasByReceipt.get(`${r.id}:${x.id}`);
-              return t && !x.paid && t.status === "link_created" ? { id: t.id, billingType: t.billingType, invoiceUrl: t.invoiceUrl } : null;
+              return t && !x.paid ? t : null;
             })(),
           };
         }),
@@ -138,16 +144,17 @@ export async function GET(request: Request) {
           weeklyRate: v.weekly_rate,
         })),
         pendingRequest,
-        pix: settings?.pix.name ? { name: settings.pix.name } : null,
-        // Cartão/Pix pela InfinitePay (Checkout): só aparece no app quando a equipe ativou e informou a InfiniteTag.
+        pix: pixOn && settings?.pix.name ? { name: settings.pix.name } : null,
+        // Meios ativos (Configurações → Meios de pagamento). O app só mostra o que vier aqui.
+        paymentMethods: availability?.methods.filter((m) => usable(m) && (m.id !== "infinitepay" || ipOn)).map((m) => m.id) ?? [],
         asaas: asaasOn && asaasCfg ? { methods: asaasCfg.methods, allowUndefined: asaasCfg.allow_undefined, sandbox: asaasCfg.environment === "sandbox" } : null,
-        infinitepay: settings?.infinitepay?.enabled && settings.infinitepay.mode !== "tap" && normalizeHandle(settings.infinitepay.handle) ? { checkout: true } : null,
+        infinitepay: ipOn ? { checkout: true } : null,
         support: { whatsapp: COMPANY.whatsapp.e164, display: COMPANY.whatsapp.display },
         today,
         privacyVersion: PRIVACY_VERSION,
         consent: consent.data?.policy_version === PRIVACY_VERSION ? { scopes: consent.data.scopes as string[], at: consent.data.consented_at } : null,
       },
-      { headers },
+      { headers: { ...headers, "Cache-Control": "private, no-store" } },
     );
   } catch (e) {
     const res = errorResponse(e);

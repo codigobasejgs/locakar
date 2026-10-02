@@ -60,7 +60,7 @@ export class SupabaseSettingsRepository implements SettingsRepository {
   }
 
   async save(settings: CompanySettings) {
-    check(await getSupabase().from("settings").upsert({ id: 1, data: settings }));
-    return settings;
+    const saved = check(await getSupabase().from("settings").upsert({ id: 1, data: settings }).select("data").single());
+    return mergeSettings(this.defaults, saved?.data as Partial<CompanySettings>);
   }
 }

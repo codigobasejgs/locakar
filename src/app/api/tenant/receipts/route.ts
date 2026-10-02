@@ -50,10 +50,23 @@ export async function POST(request: Request) {
     if (!files?.some((f) => f.name === name)) throw new HttpError(422, "O arquivo do comprovante não foi encontrado. Envie novamente.");
     // Impressão digital da imagem: a mesma usada em outro pagamento vira sinal na Central de Segurança.
     const { data: blob } = await admin.storage.from("comprovantes").download(proofPath);
-    const sha = blob ? createHash("sha256").update(Buffer.from(await blob.arrayBuffer())).digest("hex") : null;
+    if (!blob) throw new HttpError(422, "Não foi possível ler o comprovante.");
+    const bytes = Buffer.from(await blob.arrayBuffer());
+    const pdf = bytes.subarray(0, 5).toString() === "%PDF-";
+    const jpg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+    const png = bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+    if (bytes.length > 7 * 1024 * 1024 || !(pdf || jpg || png)) throw new HttpError(422, "Envie um comprovante PDF, JPG ou PNG de até 7 MB.");
+    const sha = createHash("sha256").update(bytes).digest("hex");
 
     const today = todaySP();
     const settings = await loadSettings(admin);
+    if (settings.pix.enabled === false) {
+      // Reenvio de comprovante antigo recusado continua disponível: não é uma nova escolha de pagamento.
+      const { data: previous, error } = await admin.from("payment_receipts").select("status")
+        .eq("client_id", clientId).eq("rental_id", rentalId).eq("receipt_id", receiptId)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (error || previous?.status !== "rejected") throw new HttpError(409, "Pagamento por Pix com comprovante está desativado no momento.");
+    }
     const charge = chargeFor(rental, receiptId, settings.pix, today);
     const amount = charge?.total ?? installment.amount;
 

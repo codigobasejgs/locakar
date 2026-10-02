@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import QRCode from "qrcode";
+import { pixState } from "@/lib/payment-methods";
 import { chargeFor, isPixReady } from "@/lib/billing";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { sendPushToClient } from "@/lib/server/push";
@@ -18,6 +19,7 @@ export async function sendCharge(
   args: { rental: Rental; receipt: Receipt; client: Client; vehicle?: FleetVehicle; settings: CompanySettings; today: string; replyTo?: string; clientUrl?: string },
 ) {
   const { rental, receipt, client, vehicle, settings, today } = args;
+  if (!pixState(settings.pix).enabled) throw new Error("PIX QR Code está desativado em Configurações → Meios de pagamento.");
   if (!isPixReady(settings.pix)) throw new Error("Cadastre a chave PIX em Configurações → PIX para cobranças.");
   const charge = chargeFor(rental, receipt.id, settings.pix, today);
   if (!charge?.code) throw new Error("Parcela não encontrada.");

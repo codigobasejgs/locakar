@@ -1,4 +1,5 @@
 "use client";
+import { fipeFleet } from "@/lib/fipe";
 
 import {
   CalendarDays,
@@ -93,6 +94,7 @@ export default function DashboardPage() {
         description={`Visão geral da operação · ${new Date().toLocaleDateString("pt-BR", { dateStyle: "full" })}`}
       />
 
+      {data && <div className="mb-4 rounded-xl border border-line bg-panel p-4 text-sm"><p className="font-semibold">Valor FIPE da frota: {formatCurrency(fipeFleet(data.vehicles).total)}</p><p className="text-xs text-muted">Cobertura: {fipeFleet(data.vehicles).linked} de {fipeFleet(data.vehicles).applicable} veículos não vendidos. Referências mensais por veículo; não representa receita ou lucro.</p></div>}
       {/* Filtro flexível por qualquer data e período */}
       <DateRangeFilter range={range} today={today} onChange={setRange} />
 

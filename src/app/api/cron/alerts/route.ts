@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { updateFipeBatch } from "@/lib/server/fipe";
 import { createClient } from "@supabase/supabase-js";
 import { COMPANY } from "@/lib/company";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
@@ -43,10 +45,13 @@ export async function GET(request: Request) {
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return Response.json({ error: "Não autorizado." }, { status: 401 });
   }
+  const deadline = Date.now() + 50000;
   const serviceKey = process.env.SUPABASE_SECRET_KEY;
   if (!serviceKey) return Response.json({ error: "SUPABASE_SECRET_KEY não configurada." }, { status: 500 });
 
   const db = createClient(SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+  // Notificações primeiro; FIPE usa só o orçamento restante após responder, sem atrasar o fluxo atual.
+  after(async () => { if (Date.now() + 3000 < deadline) await updateFipeBatch(deadline); });
   const today = todaySP();
   const since = new Date(Date.now() - REMIND_DAYS * 86_400_000).toISOString();
 
@@ -185,7 +190,7 @@ export async function GET(request: Request) {
 
   // ---------- Cobranças com PIX (parcelas com envio automático) ----------
   const charges = { sent: 0, failed: [] as string[] };
-  if (isPixReady(settings.pix)) {
+  if (isPixReady(settings.pix) && settings.pix.enabled !== false) {
     for (const rental of data.rentals) {
       const client = data.clients.find((c) => c.id === rental.clientId) as Client | undefined;
       if (!client) continue;

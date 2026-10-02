@@ -54,6 +54,7 @@ export interface Installment {
   rejectionReason: string | null;
   /** Cobrança Asaas em aberto desta parcela (null = fluxo PIX/manual). */
   asaas?: { id: string; billingType: string | null; invoiceUrl: string | null } | null;
+  infinitepay?: { id: string; url: string } | null;
 }
 
 export interface TenantVehicle {
@@ -125,6 +126,8 @@ export interface TenantSummary {
   infinitepay?: { checkout: boolean } | null;
   /** Asaas ativo: formas de pagamento online habilitadas pela LOCAKAR. */
   asaas?: { methods: string[]; allowUndefined: boolean; sandbox: boolean } | null;
+  /** Meios ativos definidos pela LOCAKAR (Configurações → Meios de pagamento). */
+  paymentMethods?: ("asaas" | "infinitepay" | "pix_manual")[];
   support: { whatsapp: string; display: string };
   today: string;
   privacyVersion: string;
