@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, ConfirmDialog } from "@/components/ui/dialog";
 import { Field, Input, Select } from "@/components/ui/form";
 import { CONTRACT_VARIABLES, type FieldMapping, type ManualField } from "@/lib/contract-variables";
-import { getSupabase } from "@/lib/supabase/client";
 
 interface Template {
   id: string;
@@ -76,24 +75,14 @@ export function ContractTemplatesManager() {
 
     setUploading(true);
     try {
-      const path = `templates/${Date.now()}_${file.name}`;
-      const { error: upErr } = await getSupabase().storage.from("documentos").upload(path, file, { upsert: true });
-      if (upErr) throw upErr;
+      if (file.size > 4 * 1024 * 1024) throw new Error("Arquivo acima de 4 MB.");
+      const form = new FormData();
+      form.append("file", file);
+      form.append("name", name.trim());
+      form.append("rentalType", rentalType);
+      const res = await fetch("/api/contracts/templates", { method: "POST", body: form });
 
-      const res = await fetch("/api/contracts/templates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "create",
-          name: name.trim() || file.name.replace(/\.[^/.]+$/, ""),
-          rentalType,
-          fileName: file.name,
-          filePath: path,
-          fileType: ext,
-        }),
-      });
-
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || "Falha ao salvar modelo.");
 
       toast.success("Modelo anexado com sucesso!");

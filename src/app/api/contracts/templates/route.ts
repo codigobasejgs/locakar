@@ -27,46 +27,65 @@ export async function GET() {
   }
 }
 
+const MAX_TEMPLATE_BYTES = 4 * 1024 * 1024; // ponytail: limite de corpo da Vercel (~4,5 MB); acima disso, usar signed upload URL
+const TEMPLATE_MIME = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" } as const;
+
+/** Upload feito pelo servidor: a RLS do bucket "documentos" só libera escrita do locatário na própria pasta. */
+async function createTemplate(form: FormData, db: ReturnType<typeof serviceDb>) {
+  const file = form.get("file");
+  const name = String(form.get("name") || "").trim();
+  const rentalType = String(form.get("rentalType") || "Semanal");
+  if (!(file instanceof File) || !file.size) throw new HttpError(400, "Selecione o arquivo do contrato.");
+  if (file.size > MAX_TEMPLATE_BYTES) throw new HttpError(413, "Arquivo acima de 4 MB.");
+
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  // Assinatura binária: PDF começa com "%PDF", DOCX é ZIP ("PK")
+  const isPdf = ext === "pdf" && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
+  const isDocx = ext === "docx" && bytes[0] === 0x50 && bytes[1] === 0x4b;
+  if (!isPdf && !isDocx) throw new HttpError(400, "Formato inválido. Apenas PDF e DOCX são suportados.");
+  const fileType = isPdf ? "pdf" : "docx";
+
+  // Limite rígido de 5 modelos ativos por empresa
+  const { count } = await db.from("contract_templates").select("id", { count: "exact", head: true });
+  if ((count ?? 0) >= 5) throw new HttpError(409, "Limite atingido: você já possui 5 modelos de contrato cadastrados.");
+
+  const filePath = `templates/${crypto.randomUUID()}.${fileType}`;
+  const { error: upErr } = await db.storage.from("documentos").upload(filePath, bytes, { contentType: TEMPLATE_MIME[fileType] });
+  if (upErr) throw new HttpError(500, `Falha ao salvar arquivo: ${upErr.message}`);
+
+  const { data: created, error } = await db
+    .from("contract_templates")
+    .insert({
+      name: name || file.name.replace(/\.[^/.]+$/, ""),
+      rental_type: rentalType,
+      file_name: file.name.slice(0, 200),
+      file_path: filePath,
+      file_type: fileType,
+      file_hash: createHash("sha256").update(bytes).digest("hex"),
+      status: "uploaded",
+    })
+    .select()
+    .single();
+
+  if (error) {
+    await db.storage.from("documentos").remove([filePath]);
+    throw new HttpError(500, error.message);
+  }
+  return Response.json({ template: created });
+}
+
 export async function POST(request: Request) {
   try {
     await requireStaff();
-    const body = await request.json();
     const db = serviceDb();
 
-    // 1. Criar novo template a partir de upload
-    if (body.action === "create") {
-      const { name, rentalType, fileName, filePath, fileType } = body;
-      if (!name || !filePath || !fileType) throw new HttpError(400, "Dados do template incompletos.");
-
-      // Limite rígido de 5 modelos ativos por empresa
-      const { count } = await db.from("contract_templates").select("id", { count: "exact", head: true });
-      if ((count ?? 0) >= 5) {
-        throw new HttpError(409, "Limite atingido: você já possui 5 modelos de contrato cadastrados.");
-      }
-
-      // Baixa arquivo para calcular hash SHA-256 e extrair conteúdo inicial
-      const { data: fileBlob } = await db.storage.from("documentos").download(filePath);
-      if (!fileBlob) throw new HttpError(404, "Arquivo não encontrado no armazenamento.");
-      const bytes = new Uint8Array(await fileBlob.arrayBuffer());
-      const fileHash = createHash("sha256").update(bytes).digest("hex");
-
-      const { data: created, error } = await db
-        .from("contract_templates")
-        .insert({
-          name: name.trim(),
-          rental_type: rentalType || "Semanal",
-          file_name: fileName || "contrato",
-          file_path: filePath,
-          file_type: fileType,
-          file_hash: fileHash,
-          status: "uploaded",
-        })
-        .select()
-        .single();
-
-      if (error) throw new HttpError(500, error.message);
-      return Response.json({ template: created });
+    // 1. Criar novo template a partir de upload (multipart)
+    if (request.headers.get("content-type")?.includes("multipart/form-data")) {
+      return await createTemplate(await request.formData(), db);
     }
+
+    const body = await request.json();
 
     // 2. Analisar documento com IA UMA ÚNICA VEZ
     if (body.action === "analyze") {
