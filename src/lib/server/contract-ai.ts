@@ -1,5 +1,6 @@
 import "server-only";
 import { CONTRACT_VARIABLES, type FieldMapping, type ManualField } from "@/lib/contract-variables";
+import { docxText } from "./docx";
 import { decrypt, hasSecretKey } from "./secret";
 import { serviceDb } from "./push";
 
@@ -46,7 +47,6 @@ export async function analyzeContractDocument(
   key: string,
   model = "gemini-3.8-flash"
 ): Promise<AIAnalysisResult> {
-  const base64Data = Buffer.from(fileBytes).toString("base64");
   const variableKeys = Object.keys(CONTRACT_VARIABLES);
 
   const systemInstruction = `Você é um analisador técnico de modelos de contrato de locação de veículos.
@@ -89,11 +89,10 @@ ${variableKeys.join(", ")}
     system_instruction: systemInstruction,
     store: false,
     input: [
-      {
-        type: "document",
-        data: base64Data,
-        mime_type: mimeType === "application/pdf" ? "application/pdf" : "application/pdf"
-      },
+      // DOCX não é aceito como documento pelo Gemini: envia o texto extraído
+      mimeType === "application/pdf"
+        ? { type: "document", data: Buffer.from(fileBytes).toString("base64"), mime_type: "application/pdf" }
+        : { type: "text", text: `MODELO DE CONTRATO (texto extraído do DOCX):\n\n${docxText(fileBytes)}` },
       {
         type: "text",
         text: "Analise o modelo de contrato anexo e liste todos os campos variáveis a serem preenchidos conforme o schema."

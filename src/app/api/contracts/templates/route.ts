@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       try {
         const analysis = await analyzeContractDocument(
           bytes,
-          template.file_type === "pdf" ? "application/pdf" : "application/pdf",
+          template.file_type === "pdf" ? "application/pdf" : TEMPLATE_MIME.docx,
           apiKey,
           aiCfg?.model_name || "gemini-3.8-flash"
         );

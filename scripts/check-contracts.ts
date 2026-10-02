@@ -109,6 +109,20 @@ import type { Client, CompanyProfile, FleetVehicle, Rental } from "../src/types"
   assert.ok(rendered.includes("sob a apólice AP-998877"));
   assert.ok(!rendered.includes("{{"));
 
+  // 4. Extração de texto de DOCX (ZIP mínimo com word/document.xml comprimido)
+  const { deflateRawSync } = await import("node:zlib");
+  const { docxText } = await import("../src/lib/server/docx");
+  const xml = Buffer.from('<w:document><w:body><w:p><w:r><w:t>Locatário: {{NOME}}</w:t></w:r></w:p><w:p><w:r><w:t>Placa &amp; CPF</w:t></w:r></w:p></w:body></w:document>');
+  const comp = deflateRawSync(xml);
+  const fname = Buffer.from("word/document.xml");
+  const localH = Buffer.alloc(30); localH.writeUInt32LE(0x04034b50, 0); localH.writeUInt16LE(8, 8); localH.writeUInt32LE(comp.length, 18); localH.writeUInt32LE(xml.length, 22); localH.writeUInt16LE(fname.length, 26);
+  const central = Buffer.alloc(46); central.writeUInt32LE(0x02014b50, 0); central.writeUInt16LE(8, 10); central.writeUInt32LE(comp.length, 20); central.writeUInt32LE(xml.length, 24); central.writeUInt16LE(fname.length, 28); central.writeUInt32LE(0, 42);
+  const cdOffset = 30 + fname.length + comp.length;
+  const eocd = Buffer.alloc(22); eocd.writeUInt32LE(0x06054b50, 0); eocd.writeUInt16LE(1, 8); eocd.writeUInt16LE(1, 10); eocd.writeUInt32LE(46 + fname.length, 12); eocd.writeUInt32LE(cdOffset, 16);
+  const zip = Buffer.concat([localH, fname, comp, central, fname, eocd]);
+  assert.equal(docxText(new Uint8Array(zip)), "Locatário: {{NOME}}\nPlaca & CPF");
+  assert.throws(() => docxText(new Uint8Array([1, 2, 3])));
+
   console.log("✓ Motor de contratos: variáveis, formatadores, resolução determinística e substituição ok");
 })().catch((e) => {
   console.error(e);
