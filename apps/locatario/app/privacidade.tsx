@@ -10,18 +10,20 @@ import { useTheme } from "../context/ThemeProvider";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useLocatario } from "../hooks/useLocatario";
 import { acceptPrivacy } from "../services/device";
+import { useBrandName } from "../context/OrgProvider";
 
 /** O que o app coleta e por quê (LGPD). Mesmo texto do aceite gravado em tenant_consents. */
-const SECTIONS: [string, string][] = [
+const sections = (brandName: string): [string, string][] => [
   ["Seus dados da locação", "Cadastro, locações, pagamentos, vistorias, ocorrências e documentos que você envia. Usamos para prestar o serviço de locação e cobrar o que foi contratado."],
-  ["Fotos e documentos", "Comprovantes, fotos da vistoria, de ocorrências e dos seus documentos ficam em armazenamento privado. Só você e a equipe da LOCAKAR veem, por links que expiram em minutos."],
+  ["Fotos e documentos", `Comprovantes, fotos da vistoria, de ocorrências e dos seus documentos ficam em armazenamento privado. Só você e a equipe da ${brandName} veem, por links que expiram em minutos.`],
   ["Segurança do aparelho", "Para proteger sua conta contra fraude registramos: modelo e sistema do celular, versão do app, se é um emulador, a verificação de integridade do app (Google Play) e o endereço IP das conexões. Nada disso bloqueia sua conta automaticamente: uma pessoa da equipe sempre analisa."],
   ["O que NÃO coletamos", "Localização, contatos, outros aplicativos, arquivos do celular, microfone ou câmera fora do momento em que você tira uma foto."],
   ["Por quanto tempo", "Sinais de segurança: 180 dias. Registros da locação e comprovantes: pelo prazo exigido em lei (fiscal e contratual). Aparelhos desconectados: 1 ano."],
-  ["Seus direitos", "Você pode pedir acesso, correção ou exclusão dos seus dados e revogar as notificações a qualquer momento, pelo WhatsApp da LOCAKAR."],
+  ["Seus direitos", `Você pode pedir acesso, correção ou exclusão dos seus dados e revogar as notificações a qualquer momento, pelo WhatsApp da ${brandName}.`],
 ];
 
 export default function PrivacidadeScreen() {
+  const brandName = useBrandName();
   const styles = useThemedStyles(makeStyles);
   const { summary, refresh } = useLocatario();
   const [push, setPush] = useState(true);
@@ -49,7 +51,7 @@ export default function PrivacidadeScreen() {
         <Text style={styles.muted}>Política versão {summary?.privacyVersion ?? "—"}. Leia antes de continuar.</Text>
       </View>
 
-      {SECTIONS.map(([title, text]) => (
+      {sections(brandName).map(([title, text]) => (
         <Card key={title} style={{ gap: 4 }}>
           <Text style={styles.cardTitle}>{title}</Text>
           <Text style={styles.body}>{text}</Text>
@@ -65,7 +67,7 @@ export default function PrivacidadeScreen() {
         </Card>
       ) : (
         <>
-          <Toggle checked={push} onPress={() => setPush(!push)} label="Quero receber notificações no celular (cobranças, aprovações, respostas da LOCAKAR). Opcional." />
+          <Toggle checked={push} onPress={() => setPush(!push)} label={`Quero receber notificações no celular (cobranças, aprovações, respostas da ${brandName}). Opcional.`} />
           <Toggle checked={agree} onPress={() => setAgree(!agree)} label="Li e concordo com o uso dos meus dados descrito acima, inclusive os sinais de segurança do aparelho." />
           {error && (
             <Text style={styles.error} accessibilityRole="alert">

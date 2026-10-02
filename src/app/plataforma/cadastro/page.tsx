@@ -62,7 +62,7 @@ export default function CadastroPlataformaPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Não foi possível criar a locadora.");
-      toast.success("Locadora criada com 30 dias de teste grátis!");
+      toast.success("Locadora criada com 30 dias de teste grátis! O painel agora abre nela; use o seletor no topo para trocar de locadora.");
       // Navegação completa: recarrega a sessão e a locadora ativa do zero.
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign("/admin");

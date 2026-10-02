@@ -29,6 +29,7 @@ import { OrgBrandingForm } from "@/components/admin/org-branding-form";
 import { OrgCompanyForm } from "@/components/admin/org-company-form";
 import { OrgTeamManager } from "@/components/admin/org-team-manager";
 import { OrgTextsForm } from "@/components/admin/org-texts-form";
+import { OrgShareLink } from "@/components/admin/org-share-link";
 import { PageHeader } from "@/components/admin/page-header";
 import { PaymentMethodsSettings } from "@/components/admin/payment-methods-settings";
 import { PixSettingsFields } from "@/components/admin/pix-settings";
@@ -181,9 +182,12 @@ export default function SettingsPage() {
       <div className="space-y-4">
         {/* ABA: EMPRESA */}
         {tab === "empresa" && (
-          <Card className="p-5 sm:p-6">
-            <OrgCompanyForm />
-          </Card>
+          <div className="space-y-4">
+            <OrgShareLink />
+            <Card className="p-5 sm:p-6">
+              <OrgCompanyForm />
+            </Card>
+          </div>
         )}
 
         {/* ABA: APARÊNCIA */}

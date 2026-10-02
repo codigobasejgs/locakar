@@ -16,6 +16,7 @@ import { useLocatario } from "../hooks/useLocatario";
 import { api } from "../services/api";
 import { readCache, removeCache, writeCache } from "../services/cache";
 import { newId, uploadImage } from "../services/upload";
+import { useBrandName } from "../context/OrgProvider";
 
 /** Rascunho salvo no aparelho a cada passo: sem internet no pátio, nada se perde. */
 interface Draft {
@@ -51,6 +52,7 @@ function emptyDraft(rentalId: string, kind: string): Draft {
 }
 
 export default function VistoriaScreen() {
+  const brandName = useBrandName();
   const { colors: Colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
@@ -91,7 +93,7 @@ export default function VistoriaScreen() {
             <Check color={Colors.success} size={32} />
           </View>
           <Text style={styles.title}>Vistoria enviada</Text>
-          <Text style={[styles.body, { textAlign: "center" }]}>A LOCAKAR vai conferir as fotos. Você recebe um aviso quando for conferida.</Text>
+          <Text style={[styles.body, { textAlign: "center" }]}>A {brandName} vai conferir as fotos. Você recebe um aviso quando for conferida.</Text>
           <Button label="Voltar" onPress={() => router.back()} style={{ alignSelf: "stretch" }} />
         </Card>
       </Screen>
@@ -244,7 +246,7 @@ export default function VistoriaScreen() {
           {draft.damagePhotos.length < MAX_DAMAGE_PHOTOS && (
             <PhotoPicker label="Adicionar foto de avaria" hint="De perto, com boa luz." uri={null} onError={setMessage} onChange={(u) => u && update({ damagePhotos: [...draft.damagePhotos, u] })} />
           )}
-          <Input label="Observações" placeholder="Algo mais que a LOCAKAR precisa saber?" value={draft.notes} onChangeText={(notes) => update({ notes })} multiline maxLength={1000} />
+          <Input label="Observações" placeholder={`Algo mais que a ${brandName} precisa saber?`} value={draft.notes} onChangeText={(notes) => update({ notes })} multiline maxLength={1000} />
         </>
       )}
 

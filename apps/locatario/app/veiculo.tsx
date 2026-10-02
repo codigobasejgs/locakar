@@ -13,9 +13,11 @@ import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useApi } from "../hooks/useApi";
 import { useLocatario } from "../hooks/useLocatario";
 import { API_URL, type AppInspection, type Maintenance } from "../services/api";
+import { useBrandName } from "../context/OrgProvider";
 
 /** Meu veículo: dados do carro, quilometragem, manutenções (sem custos) e vistorias feitas pelo app. */
 export default function VeiculoScreen() {
+  const brandName = useBrandName();
   const { colors: Colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
@@ -26,7 +28,7 @@ export default function VeiculoScreen() {
   const mine = (inspections.data?.inspections ?? []).filter((i) => i.rentalId === r?.id);
   const current = r && ["active", "late", "pending"].includes(r.status);
 
-  if (!r || !v) return <Screen><Empty icon={<ClipboardCheck color={Colors.textMuted} size={40} />} title="Nenhum veículo" text="Quando a LOCAKAR registrar sua locação, o carro aparece aqui." /></Screen>;
+  if (!r || !v) return <Screen><Empty icon={<ClipboardCheck color={Colors.textMuted} size={40} />} title="Nenhum veículo" text={`Quando a ${brandName} registrar sua locação, o carro aparece aqui.`} /></Screen>;
 
   const image = v.image ? (v.image.startsWith("http") ? v.image : `${API_URL}${v.image}`) : null;
   const specs: [string, string][] = [
@@ -62,7 +64,7 @@ export default function VeiculoScreen() {
         <Card accent style={{ gap: Spacing.sm }}>
           <Text style={styles.cardTitle}>Vistoria pelo app</Text>
           <Text style={styles.muted}>
-            Registre o estado do carro com fotos na retirada, na devolução ou quando a LOCAKAR pedir. Fica guardado como prova para você e para a locadora.
+            Registre o estado do carro com fotos na retirada, na devolução ou quando a {brandName} pedir. Fica guardado como prova para você e para a locadora.
           </Text>
           <View style={{ flexDirection: "row", gap: Spacing.sm, flexWrap: "wrap" }}>
             {!mine.some((i) => i.kind === "delivery") && <Button label="Retirada" size="sm" onPress={() => router.push({ pathname: "/vistoria", params: { kind: "delivery" } })} style={{ flexGrow: 1 }} />}
@@ -82,7 +84,7 @@ export default function VeiculoScreen() {
           <Text style={styles.muted}>
             {i.km.toLocaleString("pt-BR")} km · combustível {fuelLabel(i.fuel)} · {i.items.filter((x) => !x.ok).length} item(ns) com problema
           </Text>
-          {i.adminNotes && <Text style={styles.note}>LOCAKAR: {i.adminNotes}</Text>}
+          {i.adminNotes && <Text style={styles.note}>{brandName}: {i.adminNotes}</Text>}
           <View style={styles.thumbs}>
             {i.photos.slice(0, 6).map((p, n) => (p.url ? <Image key={n} source={{ uri: p.url }} style={styles.thumb} accessibilityLabel={`Foto ${n + 1}`} /> : null))}
           </View>

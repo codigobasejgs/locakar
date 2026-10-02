@@ -5,6 +5,7 @@ import { ActivityIndicator, Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBanner } from "../components/domain/ScreenState";
 import { LocatarioProvider } from "../context/LocatarioProvider";
+import { OrgProvider } from "../context/OrgProvider";
 import { ThemeProvider, useTheme } from "../context/ThemeProvider";
 import { useLocatario } from "../hooks/useLocatario";
 import { clearNotificationResponse, useNotificationResponse } from "../hooks/useNotificationResponse";
@@ -98,11 +99,13 @@ function Gate() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <LocatarioProvider>
-          <Gate />
-        </LocatarioProvider>
-      </ThemeProvider>
+      <OrgProvider>
+        <ThemeProvider>
+          <LocatarioProvider>
+            <Gate />
+          </LocatarioProvider>
+        </ThemeProvider>
+      </OrgProvider>
     </SafeAreaProvider>
   );
 }

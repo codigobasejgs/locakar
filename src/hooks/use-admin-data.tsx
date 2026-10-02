@@ -6,6 +6,7 @@ import { authService } from "@/lib/auth";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 import { detectEvents } from "@/lib/push-events";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
+import { pinOrg } from "@/lib/org-path";
 import { storage } from "@/lib/storage";
 import { repositories, settingsRepository } from "@/repositories";
 import type { CollectionKey, Collections, EntityFor, Repository } from "@/repositories/types";
@@ -32,6 +33,7 @@ const repo = <K extends CollectionKey>(key: K) => repositories[key] as unknown a
 
 async function loadAll(): Promise<Collections> {
   await authService.assertAccess();
+  await pinOrg(); // antes de ler: os dados e as gravações desta aba ficam presos a esta locadora
   const lists = await Promise.all(KEYS.map((key) => repositories[key].getAll()));
   return Object.fromEntries(KEYS.map((key, i) => [key, lists[i]])) as Collections;
 }

@@ -7,6 +7,7 @@ import { Radius, Spacing, Type } from "../../constants/theme";
 import { useTheme } from "../../context/ThemeProvider";
 import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
+import { useBrandName } from "../../context/OrgProvider";
 
 /**
  * Página das abas: header (logo no celular, título no desktop), rolagem natural,
@@ -66,6 +67,7 @@ export function TenantPage({
 }
 
 function MobileHeader({ gutter }: { gutter: number }) {
+  const brandName = useBrandName();
   const router = useRouter();
   const { summary } = useLocatario();
   const { colors, isDark, toggleTheme, logoSource } = useTheme();
@@ -88,7 +90,7 @@ function MobileHeader({ gutter }: { gutter: number }) {
         },
       ]}
     >
-      <Image source={logoSource} style={styles.logo} resizeMode="contain" accessibilityLabel="LOCAKAR" />
+      <Image source={logoSource} style={styles.logo} resizeMode="contain" accessibilityLabel={`${brandName}`} />
 
       <View style={styles.headerRight}>
         <Pressable

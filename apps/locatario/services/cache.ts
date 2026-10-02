@@ -29,7 +29,9 @@ export async function removeCache(key: string) {
 
 export async function clearCache() {
   try {
-    const keys = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith(PREFIX) && k !== `${PREFIX}installation`);
+    // Mantém a instalação e a locadora escolhida (o link de divulgação continua valendo após sair).
+    const keep = [`${PREFIX}installation`, `${PREFIX}org_slug`];
+    const keys = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith(PREFIX) && !keep.includes(k) && !k.startsWith(`${PREFIX}org_brand:`));
     await AsyncStorage.multiRemove(keys);
   } catch {
     /* idem */

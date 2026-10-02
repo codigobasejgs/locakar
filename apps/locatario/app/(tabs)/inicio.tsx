@@ -16,6 +16,7 @@ import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
 import { API_URL } from "../../services/api";
+import { useBrandName } from "../../context/OrgProvider";
 
 const REQUEST_STATUS = {
   pending: { label: "Em análise", tone: "info" as const },
@@ -27,6 +28,7 @@ const REQUEST_STATUS = {
 const imageUrl = (img?: string | null) => (img ? (img.startsWith("http") ? img : `${API_URL}${img}`) : null);
 
 export default function InicioScreen() {
+  const brandName = useBrandName();
   const { colors: Colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
@@ -47,12 +49,12 @@ export default function InicioScreen() {
   const status = activeRental ? RENTAL_STATUS[activeRental.status] : null;
   const request = !activeRental && summary.pendingRequest && summary.pendingRequest.status !== "approved" ? summary.pendingRequest : null;
   const vehicle = activeRental?.vehicle ?? null;
-  const support = () => Linking.openURL(whatsappUrl(summary.support.whatsapp, "Olá, LOCAKAR! Preciso de ajuda com minha locação."));
+  const support = () => Linking.openURL(whatsappUrl(summary.support.whatsapp, `Olá, ${brandName}! Preciso de ajuda com minha locação.`));
 
   const alerts: { tone: "danger" | "warning" | "info"; text: string; action?: () => void }[] = [
     ...(overdue.length ? [{ tone: "danger" as const, text: `${overdue.length} pagamento(s) vencido(s): ${money(overdue.reduce((a, i) => a + i.total, 0))} com multa e juros.`, action: () => router.push("/(tabs)/pagamentos") }] : []),
     ...rejected.map((i) => ({ tone: "danger" as const, text: `Comprovante da parcela ${i.label || ""} recusado${i.rejectionReason ? `: ${i.rejectionReason}` : ""}. Envie de novo.`, action: () => router.push("/(tabs)/pagamentos") })),
-    ...(inReview ? [{ tone: "info" as const, text: `${inReview} comprovante(s) em análise pela LOCAKAR.` }] : []),
+    ...(inReview ? [{ tone: "info" as const, text: `${inReview} comprovante(s) em análise pela ${brandName}.` }] : []),
     ...(cnhDays != null && cnhDays <= 30 ? [{ tone: cnhDays < 0 ? ("danger" as const) : ("warning" as const), text: cnhDays < 0 ? `Sua CNH venceu em ${date(summary.client.cnhExpiry)}. Toque para enviar a nova.` : `Sua CNH vence em ${date(summary.client.cnhExpiry)}. Toque para enviar a nova.`, action: () => router.push("/documentos") }] : []),
   ];
 
@@ -62,7 +64,7 @@ export default function InicioScreen() {
     { icon: FileText, label: "Documentos", detail: "CNH e comprovantes", onPress: () => router.push("/documentos") },
     { icon: BadgeAlert, label: "Multas", onPress: () => router.push("/multas") },
     { icon: CalendarDays, label: "Reservas", onPress: () => router.push("/reservas") },
-    { icon: MessageCircle, label: "Suporte", detail: summary.support.display, onPress: support },
+    { icon: MessageCircle, label: "Suporte", detail: summary.support.display ?? undefined, onPress: support },
   ];
   const actionBasis = isDesktop ? "31%" : isTablet ? "31%" : "46%";
 
@@ -100,7 +102,7 @@ export default function InicioScreen() {
     >
       {request.status === "correction_requested" ? (
         <>
-          <StatusNote title="Ajuste solicitado" tone="warning" text={`A LOCAKAR pediu um ajuste na sua documentação: ${request.correctionNotes ?? ""}`} />
+          <StatusNote title="Ajuste solicitado" tone="warning" text={`A ${brandName} pediu um ajuste na sua documentação: ${request.correctionNotes ?? ""}`} />
           <Button label="Corrigir solicitação" onPress={() => router.push("/solicitar")} />
         </>
       ) : request.status === "rejected" ? (
@@ -147,7 +149,7 @@ export default function InicioScreen() {
         <Text style={[styles.greeting, isDesktop && styles.greetingDesktop]} accessibilityRole="header">
           Olá, {first}
         </Text>
-        <Text style={styles.greetingSub}>Sua locação na LOCAKAR</Text>
+        <Text style={styles.greetingSub}>Sua locação na {brandName}</Text>
       </View>
 
       {error && <ErrorBanner message={offline ? "Sem internet: mostrando os dados salvos no celular." : error} onRetry={refresh} />}

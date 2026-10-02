@@ -81,8 +81,16 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     let alive = true;
     load().then(() => alive);
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel("locakar-org");
+      channel.onmessage = () => window.location.reload();
+    } catch {
+      channel = null;
+    }
     return () => {
       alive = false;
+      channel?.close();
     };
   }, [load]);
 
@@ -90,7 +98,12 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     async (orgId: string) => {
       if (!isSupabaseEnabled) return;
       await getSupabase().rpc("set_active_organization", { p_org: orgId });
-      // Recarrega do banco e força remount dos repositórios
+      // Outras abas abertas do painel recarregam na nova locadora (nunca gravam na antiga).
+      try {
+        new BroadcastChannel("locakar-org").postMessage(orgId);
+      } catch {
+        /* navegador sem BroadcastChannel: a conferência antes de gravar continua protegendo */
+      }
       window.location.reload();
     },
     [],

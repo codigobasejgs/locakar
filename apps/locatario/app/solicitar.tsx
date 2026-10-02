@@ -16,6 +16,7 @@ import { API_URL, api, type FleetVehicle } from "../services/api";
 import { readCache, removeCache, writeCache } from "../services/cache";
 import { fetchAddressByCep } from "../services/cep";
 import { newId, uploadImage } from "../services/upload";
+import { useBrandName } from "../context/OrgProvider";
 
 function toIso(v: string) {
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);
@@ -58,6 +59,7 @@ const STEPS = ["Veículo e período", "Uso e endereço", "Habilitação (CNH)", 
 const CATEGORIES = ["B", "AB", "A", "C", "D", "E"] as const;
 
 export default function SolicitarLocacaoScreen() {
+  const brandName = useBrandName();
   const { colors: Colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
@@ -445,7 +447,7 @@ export default function SolicitarLocacaoScreen() {
           <Row label="Documentos anexados" value="4 de 4 anexados ✓" />
           <View style={styles.divider} />
           <Text style={styles.terms}>
-            Ao tocar em &quot;Enviar solicitação&quot;, você declara que os documentos enviados são autênticos e autoriza a LOCAKAR a analisar seu perfil para emissão do contrato de locação.
+            Ao tocar em &quot;Enviar solicitação&quot;, você declara que os documentos enviados são autênticos e autoriza a {brandName} a analisar seu perfil para emissão do contrato de locação.
           </Text>
         </Card>
       )}

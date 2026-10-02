@@ -23,6 +23,7 @@ import { Radius, SIDEBAR_WIDTH, Spacing, TAB_BAR_HEIGHT, Type } from "../../cons
 import { useTheme } from "../../context/ThemeProvider";
 import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
+import { useBrandName } from "../../context/OrgProvider";
 
 /** Abas do navegador (mesmos nomes de arquivo em app/(tabs)). */
 const TABS: Record<string, { label: string; short: string; icon: LucideIcon }> = {
@@ -133,6 +134,7 @@ function NavItem({
 }
 
 function Sidebar({ state, navigation }: BottomTabBarProps) {
+  const brandName = useBrandName();
   const router = useRouter();
   const { summary, signOut } = useLocatario();
   const { colors, isDark, toggleTheme, logoSource } = useTheme();
@@ -150,7 +152,7 @@ function Sidebar({ state, navigation }: BottomTabBarProps) {
         },
       ]}
     >
-      <Image source={logoSource} style={styles.sideLogo} resizeMode="contain" accessibilityLabel="LOCAKAR" />
+      <Image source={logoSource} style={styles.sideLogo} resizeMode="contain" accessibilityLabel={`${brandName}`} />
       <View style={styles.navGroup} accessibilityRole="menu">
         {state.routes.map((route, index) => {
           const tab = TABS[route.name];
@@ -164,7 +166,7 @@ function Sidebar({ state, navigation }: BottomTabBarProps) {
         <NavItem
           label="Suporte"
           icon={MessageCircle}
-          onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, "Olá, LOCAKAR! Preciso de ajuda com minha locação."))}
+          onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, `Olá, ${brandName}! Preciso de ajuda com minha locação.`))}
         />
       </View>
       <View style={{ flex: 1 }} />
@@ -186,7 +188,7 @@ function Sidebar({ state, navigation }: BottomTabBarProps) {
           ) : null,
         )}
         <NavItem label="Sair" icon={LogOut} onPress={signOut} />
-        <Text style={[styles.brandLine, { color: colors.textSubtle }]}>LOCAKAR · Locadora de veículos</Text>
+        <Text style={[styles.brandLine, { color: colors.textSubtle }]}>{brandName} · Locadora de veículos</Text>
       </View>
     </View>
   );

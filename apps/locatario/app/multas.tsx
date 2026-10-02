@@ -13,9 +13,11 @@ import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useApi } from "../hooks/useApi";
 import { useLocatario } from "../hooks/useLocatario";
 import type { Fine } from "../services/api";
+import { useBrandName } from "../context/OrgProvider";
 
 /** Multas do período em que o carro estava com o cliente, com prazos de indicação de condutor e desconto. */
 export default function MultasScreen() {
+  const brandName = useBrandName();
   const { colors: Colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { summary } = useLocatario();
@@ -50,7 +52,7 @@ export default function MultasScreen() {
                   size="sm"
                   variant="outline"
                   icon={<MessageCircle color={Colors.text} size={16} />}
-                  onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, `Olá, LOCAKAR! Sobre a multa ${f.noticeNumber} de ${date(f.infractionDate)}.`))}
+                  onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, `Olá, ${brandName}! Sobre a multa ${f.noticeNumber} de ${date(f.infractionDate)}.`))}
                 />
               )}
             </Card>

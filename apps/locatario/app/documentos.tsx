@@ -13,9 +13,11 @@ import { useApi } from "../hooks/useApi";
 import { useLocatario } from "../hooks/useLocatario";
 import { api, type TenantDocument } from "../services/api";
 import { newId, uploadImage } from "../services/upload";
+import { useBrandName } from "../context/OrgProvider";
 
 /** CNH e comprovante de endereço: envio para conferência da LOCAKAR, com status de cada um. */
 export default function DocumentosScreen() {
+  const brandName = useBrandName();
   const styles = useThemedStyles(makeStyles);
   const { summary } = useLocatario();
   const { data, error, reload } = useApi<{ documents: TenantDocument[] }>("/api/tenant/documents");
@@ -41,7 +43,7 @@ export default function DocumentosScreen() {
 
   return (
     <Screen error={error} onRefresh={reload}>
-      <Text style={styles.intro}>Os documentos ficam guardados de forma privada e só a equipe da LOCAKAR tem acesso.</Text>
+      <Text style={styles.intro}>Os documentos ficam guardados de forma privada e só a equipe da {brandName} tem acesso.</Text>
       {Object.entries(DOCUMENT_KIND).map(([kind, info]) => {
         const doc = data?.documents.find((d) => d.kind === kind);
         const pending = doc?.status === "pending_review";

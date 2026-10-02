@@ -1,6 +1,7 @@
 import type React from "react";
 import { useRouter, type Href } from "expo-router";
 import {
+  Building2,
   CalendarDays,
   ChevronRight,
   FileText,
@@ -24,6 +25,7 @@ import { date } from "../../constants/format";
 import { Radius, Spacing, Type } from "../../constants/theme";
 import { useTheme } from "../../context/ThemeProvider";
 import { useLocatario } from "../../hooks/useLocatario";
+import { useBrandName, useOrg } from "../../context/OrgProvider";
 
 /** CNH: só os 4 últimos dígitos. */
 const hideCnh = (n: string) => {
@@ -48,10 +50,13 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 export default function PerfilScreen() {
+  const brandName = useBrandName();
   const router = useRouter();
-  const { summary, signOut } = useLocatario();
+  const { summary, signOut, refresh } = useLocatario();
   const { colors, mode, setMode } = useTheme();
+  const { switchOrg } = useOrg();
   const [confirmExit, setConfirmExit] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const c = summary?.client;
   const initials = (c?.name ?? "").split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "•";
 
@@ -82,7 +87,7 @@ export default function PerfilScreen() {
         {c?.cnhNumber ? <Row label="CNH" value={hideCnh(c.cnhNumber)} /> : null}
         <Row label="Validade da CNH" value={date(c?.cnhExpiry)} />
         <Text style={[styles.muted, { color: colors.textMuted }]}>
-          Para alterar seus dados, fale com a LOCAKAR. A CNH nova você envia em Meus documentos.
+          Para alterar seus dados, fale com a {brandName}. A CNH nova você envia em Meus documentos.
         </Text>
       </Card>
 
@@ -156,11 +161,40 @@ export default function PerfilScreen() {
         ))}
       </Card>
 
+      {(summary?.organizations?.length ?? 0) > 1 && (
+        <>
+          <SectionHeader title="Suas locadoras" />
+          <Card style={{ gap: Spacing.xs }}>
+            {summary!.organizations!.map((o) => (
+              <Pressable
+                key={o.id}
+                disabled={o.active || switching}
+                onPress={async () => {
+                  setSwitching(true);
+                  await switchOrg(o.slug);
+                  await refresh();
+                  setSwitching(false);
+                }}
+                style={({ pressed }) => [styles.menu, pressed && { backgroundColor: colors.surfaceHover }]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: o.active }}
+              >
+                <View style={[styles.menuIcon, { backgroundColor: colors.surfaceElevated }]}>
+                  <Building2 color={o.active ? colors.brandSoft : colors.textMuted} size={18} />
+                </View>
+                <Text style={[styles.menuText, { color: colors.text }]}>{o.name}</Text>
+                {o.active ? <Badge label="Atual" tone="success" /> : <ChevronRight color={colors.textSubtle} size={18} />}
+              </Pressable>
+            ))}
+          </Card>
+        </>
+      )}
+
       <Button
         label={`Suporte no WhatsApp ${summary?.support.display ?? ""}`.trim()}
         variant="outline"
         icon={<HelpCircle color={colors.text} size={18} />}
-        onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, "Olá, LOCAKAR! Preciso de ajuda com minha conta no app."))}
+        onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, `Olá, ${brandName}! Preciso de ajuda com minha conta no app.`))}
       />
 
       {confirmExit ? (
@@ -175,7 +209,7 @@ export default function PerfilScreen() {
         <Button label="Sair da conta" variant="ghost" icon={<LogOut color={colors.danger} size={18} />} onPress={() => setConfirmExit(true)} />
       )}
 
-      <Text style={[styles.version, { color: colors.textSubtle }]}>LOCAKAR · app do locatário 1.0.0</Text>
+      <Text style={[styles.version, { color: colors.textSubtle }]}>{brandName} · app do locatário 1.0.0</Text>
     </TenantPage>
   );
 }

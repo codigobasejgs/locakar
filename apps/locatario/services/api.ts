@@ -1,3 +1,4 @@
+import { currentOrgSlug } from "./org";
 import { supabase } from "./supabase";
 
 /** Servidor da LOCAKAR. Em desenvolvimento aponte para o seu computador: EXPO_PUBLIC_API_URL=http://192.168.x.x:3000 */
@@ -21,7 +22,7 @@ export async function api<T>(path: string, init: { method?: "GET" | "POST"; body
   try {
     res = await fetch(`${API_URL}${path}`, {
       method: init.method ?? "GET",
-      headers: { Authorization: `Bearer ${token}`, ...(init.body ? { "Content-Type": "application/json" } : {}) },
+      headers: { Authorization: `Bearer ${token}`, "x-org": currentOrgSlug(), ...(init.body ? { "Content-Type": "application/json" } : {}) },
       body: init.body ? JSON.stringify(init.body) : undefined,
     });
   } catch {
@@ -128,7 +129,11 @@ export interface TenantSummary {
   asaas?: { methods: string[]; allowUndefined: boolean; sandbox: boolean } | null;
   /** Meios ativos definidos pela LOCAKAR (Configurações → Meios de pagamento). */
   paymentMethods?: ("asaas" | "infinitepay" | "pix_manual")[];
-  support: { whatsapp: string; display: string };
+  support: { whatsapp: string | null; display: string | null; email?: string | null; text?: string | null };
+  /** Marca da locadora (white label). */
+  brand?: { slug: string; name: string; logo: string | null; logoLight: string | null; logoCompact: string | null; primary: string | null; secondary: string | null; accent: string | null; welcome: string | null };
+  /** Locadoras em que o cliente tem cadastro (seletor quando houver mais de uma). */
+  organizations?: { id: string; slug: string; name: string; logo: string | null; primary: string | null; active: boolean }[];
   today: string;
   privacyVersion: string;
   /** Aceite da política atual; null = o app mostra a tela de privacidade antes de tudo. */

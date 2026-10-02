@@ -14,6 +14,7 @@ import { useTheme } from "../../context/ThemeProvider";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
+import { useBrandName } from "../../context/OrgProvider";
 
 const PERIOD: Record<string, string> = { daily: "Diária", weekly: "Semanal", biweekly: "Quinzenal", monthly: "Mensal", quarterly: "Trimestral", semiannual: "Semestral", annual: "Anual" };
 
@@ -28,6 +29,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export default function LocacaoScreen() {
+  const brandName = useBrandName();
   const { colors: Colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
@@ -92,10 +94,10 @@ export default function LocacaoScreen() {
             <Button label="Meu veículo e vistorias" icon={<ClipboardCheck color={Colors.text} size={18} />} onPress={() => router.push("/veiculo")} />
             <Button label="Relatar um problema com o veículo" variant="outline" icon={<AlertTriangle color={Colors.text} size={18} />} onPress={() => router.push("/ocorrencias")} />
             <Button
-              label="Falar com a LOCAKAR"
+              label={`Falar com a ${brandName}`}
               variant="ghost"
               icon={<MessageCircle color={Colors.text} size={18} />}
-              onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, `Olá, LOCAKAR! Sobre a locação do veículo ${r.vehicle?.plate ?? ""}.`))}
+              onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, `Olá, ${brandName}! Sobre a locação do veículo ${r.vehicle?.plate ?? ""}.`))}
             />
           </>
         )}

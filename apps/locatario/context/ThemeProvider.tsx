@@ -3,12 +3,15 @@ import { Appearance, ColorSchemeName, Platform, View } from "react-native";
 import {
   DarkPalette,
   LightPalette,
+  brandedPalette,
+  setActiveBrand,
   setActiveTheme,
   type ThemeColors,
   type ThemeMode,
   type ThemeName,
 } from "../constants/theme";
 import { readCache, writeCache } from "../services/cache";
+import { useOrg } from "./OrgProvider";
 
 interface ThemeContextValue {
   theme: ThemeName;
@@ -17,7 +20,10 @@ interface ThemeContextValue {
   colors: ThemeColors;
   setMode: (mode: ThemeMode) => Promise<void>;
   toggleTheme: () => Promise<void>;
-  logoSource: number;
+  /** Logo da locadora (URL) ou o logo padrão empacotado. */
+  logoSource: number | { uri: string };
+  /** Nome exibido da locadora. */
+  brandName: string;
 }
 
 const THEME_CACHE_KEY = "theme_mode";
@@ -58,9 +64,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const { brand } = useOrg();
   const theme: ThemeName = useMemo(() => resolveTheme(mode, systemScheme), [mode, systemScheme]);
   // Antes do render dos filhos: quem ainda lê `Colors` direto já pega a paleta certa.
   setActiveTheme(theme);
+  setActiveBrand(brand);
 
   useEffect(() => {
     // Na Web, aplica data-theme e classes no documentElement para CSS externo e scrollbar
@@ -87,8 +95,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     await setMode(next);
   };
 
-  const colors = theme === "light" ? LightPalette : DarkPalette;
-  const logoSource = theme === "light" ? LOGO_DARK : LOGO_LIGHT;
+  const colors = useMemo(() => brandedPalette(theme === "light" ? LightPalette : DarkPalette, theme, brand), [theme, brand]);
+  // Logo da locadora: no tema claro prefere a versão para fundo claro (logoLight é "para fundo claro").
+  const remote = theme === "light" ? brand?.logoLight || brand?.logo : brand?.logo || brand?.logoLight;
+  const logoSource = useMemo(() => (remote ? { uri: remote } : theme === "light" ? LOGO_DARK : LOGO_LIGHT), [remote, theme]);
+  const brandName = brand?.name || "LOCAKAR";
 
   const value = useMemo(
     () => ({
@@ -99,8 +110,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setMode,
       toggleTheme,
       logoSource,
+      brandName,
     }),
-    [theme, mode, colors, logoSource],
+    [theme, mode, colors, logoSource, brandName],
   );
 
   // Sem flash: nada é desenhado até ler a preferência salva (leitura local, milissegundos).
@@ -120,6 +132,7 @@ export function useTheme() {
       setMode: async () => {},
       toggleTheme: async () => {},
       logoSource: LOGO_LIGHT,
+      brandName: "LOCAKAR",
     };
   }
   return ctx;

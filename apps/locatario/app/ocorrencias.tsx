@@ -17,9 +17,11 @@ import { useApi } from "../hooks/useApi";
 import { useLocatario } from "../hooks/useLocatario";
 import { api, type Incident } from "../services/api";
 import { newId, uploadImage } from "../services/upload";
+import { useBrandName } from "../context/OrgProvider";
 
 /** Reportar problema no veículo (com fotos) e acompanhar a resposta da LOCAKAR. */
 export default function OcorrenciasScreen() {
+  const brandName = useBrandName();
   const { colors: Colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { activeRental: r, summary } = useLocatario();
@@ -68,13 +70,13 @@ export default function OcorrenciasScreen() {
       <Card style={styles.urgent}>
         <AlertTriangle color={Colors.warning} size={20} />
         <View style={{ flex: 1, gap: 6 }}>
-          <Text style={styles.body}>Acidente ou carro parado na via? Ligue 190/193 se houver feridos e fale com a LOCAKAR agora.</Text>
+          <Text style={styles.body}>Acidente ou carro parado na via? Ligue 190/193 se houver feridos e fale com a {brandName} agora.</Text>
           <Button
-            label="WhatsApp da LOCAKAR"
+            label={`WhatsApp da ${brandName}`}
             size="sm"
             variant="outline"
             icon={<MessageCircle color={Colors.text} size={16} />}
-            onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, `Olá, LOCAKAR! Urgente: problema com o veículo ${r?.vehicle?.plate ?? ""}.`))}
+            onPress={() => Linking.openURL(whatsappUrl(summary?.support.whatsapp, `Olá, ${brandName}! Urgente: problema com o veículo ${r?.vehicle?.plate ?? ""}.`))}
           />
         </View>
       </Card>
@@ -95,7 +97,7 @@ export default function OcorrenciasScreen() {
           {photos.map((uri, n) => (
             <PhotoPicker key={uri} label={`Foto ${n + 1}`} uri={uri} onError={setMessage} onChange={(u) => setPhotos(u ? photos.map((x, i) => (i === n ? u : x)) : photos.filter((_, i) => i !== n))} />
           ))}
-          {photos.length < 6 && <PhotoPicker label="Adicionar foto" hint="Opcional, ajuda a LOCAKAR a entender o problema." uri={null} onError={setMessage} onChange={(u) => u && setPhotos([...photos, u])} />}
+          {photos.length < 6 && <PhotoPicker label="Adicionar foto" hint={`Opcional, ajuda a ${brandName} a entender o problema.`} uri={null} onError={setMessage} onChange={(u) => u && setPhotos([...photos, u])} />}
           {message && (
             <Text style={styles.error} accessibilityRole="alert">
               {message}
@@ -112,7 +114,7 @@ export default function OcorrenciasScreen() {
 
       <SectionTitle>Meus relatos</SectionTitle>
       {!data?.incidents.length ? (
-        <Empty icon={<AlertTriangle color={Colors.textMuted} size={32} />} title="Nenhum relato" text="Os problemas que você relatar aparecem aqui com a resposta da LOCAKAR." />
+        <Empty icon={<AlertTriangle color={Colors.textMuted} size={32} />} title="Nenhum relato" text={`Os problemas que você relatar aparecem aqui com a resposta da ${brandName}.`} />
       ) : (
         data.incidents.map((i) => (
           <Card key={i.id} style={{ gap: Spacing.sm }}>
@@ -122,7 +124,7 @@ export default function OcorrenciasScreen() {
             </View>
             <Text style={styles.muted}>{date(i.createdAt)}</Text>
             <Text style={styles.body}>{i.description}</Text>
-            {i.adminNotes && <Text style={styles.reply}>LOCAKAR: {i.adminNotes}</Text>}
+            {i.adminNotes && <Text style={styles.reply}>{brandName}: {i.adminNotes}</Text>}
             {i.photos.length > 0 && (
               <View style={styles.thumbs}>
                 {i.photos.map((src, n) => (

@@ -98,11 +98,35 @@ async function deliver(db: SupabaseClient, payload: PushPayload, owners?: string
 
 export const sendPushToUser = (db: SupabaseClient, userId: string, payload: PushPayload) => deliver(db, payload, [userId]);
 
-/** Equipe da locadora atual (memberships). Dispositivos de quem está em outra locadora não recebem. */
-export async function sendPushToTeam(db: SupabaseClient, payload: PushPayload) {
-  const { data, error } = await globalDb().from("memberships").select("user_id").eq("organization_id", requireOrg().org.id);
+/**
+ * Membros da locadora que estão COM ELA ATIVA (quem participa de várias só recebe os avisos da
+ * locadora em que está trabalhando; os demais ficam na central dela, ao trocar de locadora).
+ * Locadora ativa = user_preferences (se ainda for membro) ou a primeira em que entrou — igual a current_org_id().
+ */
+export async function teamForPush(orgId: string): Promise<string[]> {
+  const g = globalDb();
+  const { data: members, error } = await g.from("memberships").select("user_id").eq("organization_id", orgId);
   if (error) throw new Error(`memberships: ${error.message}`);
-  const users = (data ?? []).map((r) => r.user_id as string);
+  const users = (members ?? []).map((r) => r.user_id as string);
+  if (!users.length) return [];
+  const [{ data: prefs }, { data: all }] = await Promise.all([
+    g.from("user_preferences").select("user_id,active_organization_id").in("user_id", users),
+    g.from("memberships").select("user_id,organization_id,created_at").in("user_id", users).order("created_at"),
+  ]);
+  const memberOf = new Map<string, string[]>();
+  for (const m of all ?? []) memberOf.set(m.user_id as string, [...(memberOf.get(m.user_id as string) ?? []), m.organization_id as string]);
+  const pref = new Map((prefs ?? []).map((p) => [p.user_id as string, p.active_organization_id as string | null]));
+  return users.filter((u) => {
+    const orgs = memberOf.get(u) ?? [];
+    const chosen = pref.get(u);
+    const active = chosen && orgs.includes(chosen) ? chosen : orgs[0];
+    return active === orgId;
+  });
+}
+
+/** Equipe da locadora atual (só quem está com ela ativa). */
+export async function sendPushToTeam(db: SupabaseClient, payload: PushPayload) {
+  const users = await teamForPush(requireOrg().org.id);
   return users.length ? deliver(db, payload, users) : { sent: 0, failed: 0, expired: 0 };
 }
 

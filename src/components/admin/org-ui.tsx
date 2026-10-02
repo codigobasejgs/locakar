@@ -21,11 +21,19 @@ export function OrgBrandLogo({ className = "w-28", variant = "light" }: { classN
   return <Logo className={className} variant={variant} />;
 }
 
-/** Seletor de locadora quando a pessoa tem mais de um vínculo (owner/admin/operador). */
+/** Locadora em que você está (sempre visível); com mais de uma, vira seletor. */
 export function OrgSwitcher() {
   const { org, memberships, switchOrg } = useOrganization();
   const [open, setOpen] = useState(false);
-  if (!org || memberships.length <= 1) return null;
+  if (!org) return null;
+  if (memberships.length <= 1) {
+    return (
+      <span className="hidden items-center gap-2 rounded-xl border border-line bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-white sm:inline-flex" title="Locadora atual">
+        <Building2 className="size-3.5 shrink-0 text-brand-soft" />
+        <span className="max-w-40 truncate">{org.branding?.displayName || org.name}</span>
+      </span>
+    );
+  }
 
   return (
     <div className="relative">

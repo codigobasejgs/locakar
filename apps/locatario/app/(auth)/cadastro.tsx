@@ -8,6 +8,7 @@ import { Spacing, type ThemeColors } from "../../constants/theme";
 import { useTheme } from "../../context/ThemeProvider";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { supabase } from "../../services/supabase";
+import { currentOrgSlug } from "../../services/org";
 
 // Mesma regra de src/lib/utils.ts (dígitos verificadores do CPF).
 const maskCPF = (v: string) =>
@@ -59,8 +60,8 @@ export default function CadastroScreen() {
     setLoading(true);
     const redirectUrl =
       Platform.OS === "web" && typeof window !== "undefined"
-        ? `${window.location.origin}/locatario`
-        : "https://www.locakar.com.br/locatario";
+        ? `${window.location.origin}/locatario?org=${currentOrgSlug()}`
+        : `https://www.locakar.com.br/locatario?org=${currentOrgSlug()}`;
 
     const { data: signUpData, error: err } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),

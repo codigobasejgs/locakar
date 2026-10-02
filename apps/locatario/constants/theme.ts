@@ -148,6 +148,58 @@ export const LightPalette: ThemeColors = {
   tabBarActiveBg: "rgba(139, 0, 139, 0.08)",
 };
 
+/* ---------- White label: cores da locadora sobre a paleta base ---------- */
+const HEX = /^#[0-9a-f]{6}$/i;
+const rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const lum = (h: string) => {
+  const [r, g, b] = rgb(h).map((c) => { const s = c / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const ratio = (a: string, b: string) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+const mix = (h: string, t: number) => {
+  const target = t > 0 ? 255 : 0, k = Math.abs(t);
+  return "#" + rgb(h).map((c) => Math.round(c + (target - c) * k).toString(16).padStart(2, "0")).join("");
+};
+const alpha = (h: string, a: number) => { const [r, g, b] = rgb(h); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+/** Tom do destaque com contraste 4.5:1 sobre o fundo (mesma regra de src/lib/contrast.ts). */
+const readable = (fg: string, bg: string) => {
+  if (ratio(fg, bg) >= 4.5) return fg;
+  const lighten = lum(bg) < 0.5;
+  for (let t = 0.05; t <= 1; t += 0.05) { const c = mix(fg, lighten ? t : -t); if (ratio(c, bg) >= 4.5) return c; }
+  return lighten ? "#ffffff" : "#000000";
+};
+
+export interface BrandColors { primary?: string | null; secondary?: string | null; accent?: string | null }
+
+/** Paleta da locadora: cores inválidas são ignoradas (fica a paleta padrão). */
+export function brandedPalette(base: ThemeColors, theme: ThemeName, b?: BrandColors | null): ThemeColors {
+  if (!b?.primary || !HEX.test(b.primary)) return base;
+  const primary = b.primary;
+  const deep = b.secondary && HEX.test(b.secondary) ? b.secondary : mix(primary, -0.3);
+  const accent = b.accent && HEX.test(b.accent) ? b.accent : mix(primary, 0.15);
+  const soft = readable(theme === "dark" ? mix(accent, 0.35) : accent, base.surface);
+  return {
+    ...base,
+    brand: primary,
+    brandDeep: deep,
+    magenta: accent,
+    brandSoft: soft,
+    brandTint: alpha(accent, theme === "dark" ? 0.14 : 0.08),
+    brandBorder: alpha(soft, theme === "dark" ? 0.32 : 0.25),
+    brandGlow: alpha(accent, theme === "dark" ? 0.35 : 0.2),
+    inputBorderFocus: soft,
+    tabBarActiveBg: alpha(accent, theme === "dark" ? 0.14 : 0.08),
+  };
+}
+
+/** Texto legível sobre a cor principal (botões). */
+export const onBrand = (hex: string) => (HEX.test(hex) && ratio(hex, "#ffffff") < ratio(hex, "#0f172a") ? "#0f172a" : "#ffffff");
+
+let activeBrand: BrandColors | null = null;
+export const setActiveBrand = (b: BrandColors | null) => {
+  activeBrand = b;
+};
+
 /** Variável mutável em tempo de execução sincronizada pelo ThemeProvider para consumo imediato. */
 let activeTheme: ThemeName = "dark";
 export const getActiveTheme = (): ThemeName => activeTheme;
@@ -156,13 +208,12 @@ export const setActiveTheme = (name: ThemeName) => {
 };
 
 export const getThemeColors = (theme: ThemeName = activeTheme): ThemeColors =>
-  theme === "light" ? LightPalette : DarkPalette;
+  brandedPalette(theme === "light" ? LightPalette : DarkPalette, theme, activeBrand);
 
 /** Proxy retrocompatível: `Colors.background` retorna dinamicamente a cor do tema ativo. */
 export const Colors: ThemeColors = new Proxy(DarkPalette, {
   get(_target, prop: keyof ThemeColors) {
-    const palette = activeTheme === "light" ? LightPalette : DarkPalette;
-    return palette[prop];
+    return getThemeColors()[prop];
   },
 });
 

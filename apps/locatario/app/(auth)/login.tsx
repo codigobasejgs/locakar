@@ -8,9 +8,12 @@ import { Spacing, type ThemeColors } from "../../constants/theme";
 import { useTheme } from "../../context/ThemeProvider";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { supabase } from "../../services/supabase";
+import { currentOrgSlug } from "../../services/org";
+import { useBrandName } from "../../context/OrgProvider";
 
 export default function LoginScreen() {
-  const { colors: Colors } = useTheme();
+  const brandName = useBrandName();
+  const { colors: Colors, logoSource } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,8 +38,8 @@ export default function LoginScreen() {
     if (!email.trim()) return setMessage({ tone: "error", text: "Digite seu e-mail acima e toque em \"Esqueci minha senha\" de novo." });
     const redirectUrl =
       Platform.OS === "web" && typeof window !== "undefined"
-        ? `${window.location.origin}/locatario`
-        : "https://www.locakar.com.br/locatario";
+        ? `${window.location.origin}/locatario?org=${currentOrgSlug()}`
+        : `https://www.locakar.com.br/locatario?org=${currentOrgSlug()}`;
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
       redirectTo: redirectUrl,
     });
@@ -48,7 +51,7 @@ export default function LoginScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <Image source={require("../../assets/logo-light.png")} style={styles.logo} resizeMode="contain" accessibilityLabel="LOCAKAR" />
+            <Image source={logoSource} style={styles.logo} resizeMode="contain" accessibilityLabel={brandName} />
             <Text style={styles.title}>Entrar</Text>
             <Text style={styles.subtitle}>Acompanhe sua locação, pague com PIX e envie comprovantes.</Text>
           </View>
@@ -68,7 +71,7 @@ export default function LoginScreen() {
           <View style={styles.footer}>
             <Text style={styles.muted}>Primeiro acesso?</Text>
             <Link href="/(auth)/cadastro" style={styles.link}>
-              Criar conta com o e-mail cadastrado na LOCAKAR
+              Criar conta com o e-mail cadastrado na {brandName}
             </Link>
           </View>
         </ScrollView>

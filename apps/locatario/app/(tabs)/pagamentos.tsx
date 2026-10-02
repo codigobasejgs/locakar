@@ -19,10 +19,12 @@ import { useLayout } from "../../hooks/useLayout";
 import { useLocatario } from "../../hooks/useLocatario";
 import { api, type Installment } from "../../services/api";
 import { pickProofImage, pickProofFile, sendPaymentProof } from "../../services/paymentProof";
+import { useBrandName } from "../../context/OrgProvider";
 
 type Step = "pix" | "proof" | "sent";
 
 export default function PagamentosScreen() {
+  const brandName = useBrandName();
   const { colors: Colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { summary, activeRental, error, refreshing, refresh } = useLocatario();
@@ -75,7 +77,7 @@ export default function PagamentosScreen() {
         setCard(null);
         refresh();
       } else if (!silent) {
-        setMessage(r.status === "amount_mismatch" ? "O valor pago é diferente do cobrado. Fale com a LOCAKAR." : "Ainda não recebemos a confirmação da InfinitePay. Se você já pagou, aguarde alguns segundos e toque de novo.");
+        setMessage(r.status === "amount_mismatch" ? `O valor pago é diferente do cobrado. Fale com a ${brandName}.` : "Ainda não recebemos a confirmação da InfinitePay. Se você já pagou, aguarde alguns segundos e toque de novo.");
       }
     } catch (e) {
       if (!silent) setMessage((e as Error).message);
@@ -237,12 +239,12 @@ export default function PagamentosScreen() {
 
                   {ipFor(open) && pixFor(open) && <Text style={styles.or}>ou</Text>}
 
-                  {!anyMethod(open) && <Text style={styles.body}>Não há meios de pagamento online disponíveis no momento. Fale com a LOCAKAR.</Text>}
+                  {!anyMethod(open) && <Text style={styles.body}>Não há meios de pagamento online disponíveis no momento. Fale com a {brandName}.</Text>}
 
                   {pixFor(open) && (
                   <>
                   <Text style={styles.cardTitle}>Pix direto · envio de comprovante</Text>
-                  <Text style={styles.muted}>O valor cai na conta da LOCAKAR. Depois de pagar, envie o comprovante: a parcela é baixada após a conferência.</Text>
+                  <Text style={styles.muted}>O valor cai na conta da {brandName}. Depois de pagar, envie o comprovante: a parcela é baixada após a conferência.</Text>
                   {open.pixCode ? (
                     <>
                       <View style={styles.qr} accessibilityLabel={`QR Code PIX de ${money(open.total)}`}>
@@ -260,7 +262,7 @@ export default function PagamentosScreen() {
 
                   <View style={styles.divider} />
                   <Text style={styles.cardTitle}>Já pagou?</Text>
-                  <Text style={styles.muted}>Envie o comprovante. A parcela fica "Em análise" até a LOCAKAR confirmar.</Text>
+                  <Text style={styles.muted}>Envie o comprovante. A parcela fica "Em análise" até a {brandName} confirmar.</Text>
                   <View style={{ flexDirection: "row", gap: Spacing.sm }}>
                     <Button label="Tirar foto" variant="outline" size="sm" icon={<Camera color={Colors.text} size={16} />} onPress={() => pick("camera")} style={{ flex: 1 }} />
                     <Button label="Galeria" variant="outline" size="sm" icon={<ImageIcon color={Colors.text} size={16} />} onPress={() => pick("gallery")} style={{ flex: 1 }} />
@@ -282,7 +284,7 @@ export default function PagamentosScreen() {
 
               {step === "sent" && (
                 <>
-                  <Text style={styles.body}>A LOCAKAR vai conferir e você será avisado quando o pagamento for confirmado.</Text>
+                  <Text style={styles.body}>A {brandName} vai conferir e você será avisado quando o pagamento for confirmado.</Text>
                   <Button label="Concluir" onPress={() => setOpen(null)} />
                 </>
               )}

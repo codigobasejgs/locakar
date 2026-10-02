@@ -13,6 +13,7 @@ import { useTheme } from "../context/ThemeProvider";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { useApi } from "../hooks/useApi";
 import { API_URL, api, type FleetVehicle, type Reservation } from "../services/api";
+import { useBrandName } from "../context/OrgProvider";
 
 /** "DD/MM/AAAA" → "AAAA-MM-DD" (inválida → null). */
 function toIso(v: string) {
@@ -26,6 +27,7 @@ const maskDate = (v: string) => v.replace(/\D/g, "").slice(0, 8).replace(/(\d{2}
 
 /** Pedir uma nova reserva (a LOCAKAR confirma) e acompanhar/cancelar as suas. */
 export default function ReservasScreen() {
+  const brandName = useBrandName();
   const { colors: Colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { data, error, reload } = useApi<{ reservations: Reservation[]; fleet: FleetVehicle[] }>("/api/tenant/reservations");
@@ -45,7 +47,7 @@ export default function ReservasScreen() {
     setBusy("create");
     try {
       await api("/api/tenant/reservations", { method: "POST", body: { action: "create", vehicleId, startDate, endDate } });
-      setMessage({ tone: "ok", text: "Pedido enviado! A LOCAKAR vai confirmar e você recebe um aviso." });
+      setMessage({ tone: "ok", text: `Pedido enviado! A ${brandName} vai confirmar e você recebe um aviso.` });
       setVehicleId(null);
       setStart("");
       setEnd("");
@@ -104,7 +106,7 @@ export default function ReservasScreen() {
         </Text>
       )}
       <Button label="Enviar pedido" loading={busy === "create"} onPress={request} />
-      <Text style={styles.muted}>O pedido não garante a reserva: a LOCAKAR confirma a disponibilidade e as condições.</Text>
+      <Text style={styles.muted}>O pedido não garante a reserva: a {brandName} confirma a disponibilidade e as condições.</Text>
 
       <SectionTitle>Minhas reservas</SectionTitle>
       {!reservations.length ? (

@@ -21,8 +21,11 @@ export function useNotifications() {
     const { data: claims } = await db.auth.getClaims();
     const userId = claims?.claims?.sub;
     if (!userId) return;
+    // Defesa extra além do RLS: só a locadora ativa (quem participa de várias não mistura avisos).
+    const { data: orgId } = await db.rpc("current_org_id");
+    if (!orgId) return setItems([]);
     const [{ data: rows }, { data: reads }] = await Promise.all([
-      db.from("notifications").select("id,type,category,severity,title,body,url,created_at").order("created_at", { ascending: false }).limit(LIMIT),
+      db.from("notifications").select("id,type,category,severity,title,body,url,created_at").eq("organization_id", orgId).order("created_at", { ascending: false }).limit(LIMIT),
       db.from("notification_reads").select("notification_id,read_at").eq("user_id", userId),
     ]);
     const readAt = new Map((reads ?? []).map((r) => [r.notification_id as string, r.read_at as string]));
@@ -47,11 +50,19 @@ export function useNotifications() {
     const tick = () => alive && load().catch(() => {});
     tick();
     const id = setInterval(tick, 60_000);
+    // Trocou de conta (login/logout) sem recarregar: limpa e busca a lista da nova sessão.
+    const { data: sub } = getSupabase().auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        setItems([]);
+        tick();
+      }
+    });
     const onVisible = () => document.visibilityState === "visible" && tick();
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       alive = false;
       clearInterval(id);
+      sub.subscription.unsubscribe();
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [load]);

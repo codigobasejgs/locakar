@@ -5,6 +5,8 @@ import { clearCache, readCache, writeCache } from "../services/cache";
 import { registerDevice, unregisterDevice } from "../services/device";
 import { supabase } from "../services/supabase";
 import { LocatarioContext, type TenantState } from "../hooks/useLocatario";
+import { setOrgSlug } from "../services/org";
+import { useOrg } from "./OrgProvider";
 
 /** Tabelas que a equipe altera e o app mostra: mudou, a tela recarrega sozinha (Supabase Realtime + RLS). */
 const LIVE_TABLES = ["payment_receipts", "vehicle_incidents", "tenant_documents", "tenant_inspections"];
@@ -19,11 +21,17 @@ export function LocatarioProvider({ children }: { children: React.ReactNode }) {
   // Aumenta a cada evento em tempo real: telas com dados próprios (useApi) recarregam.
   const [version, setVersion] = useState(0);
   const registered = useRef(false);
+  const { applyBrand } = useOrg();
 
   const load = useCallback(async () => {
     try {
       const data = await api<TenantSummary>("/api/tenant/summary");
       setSummary(data);
+      // O servidor confirma a locadora do cliente: marca e endereço passam a ser os dela.
+      if (data.brand) {
+        applyBrand({ ...data.brand, whatsapp: data.support.whatsapp, email: data.support.email ?? null, support: data.support.text ?? null, active: true });
+        await setOrgSlug(data.brand.slug);
+      }
       setError(null);
       setOffline(false);
       setState("ready");
@@ -42,7 +50,7 @@ export function LocatarioProvider({ children }: { children: React.ReactNode }) {
       setError((e as Error).message);
       setState((s) => (s === "loading" && cached ? "ready" : s === "loading" ? "error" : s));
     }
-  }, []);
+  }, [applyBrand]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
