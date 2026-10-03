@@ -1,0 +1,98 @@
+[
+  {
+    "slug": "por-que-nao-consigo",
+    "title": "Por que não consigo...? Mensagens de erro e o que fazer",
+    "description": "As mensagens que o sistema mostra quando algo é bloqueado (excluir, salvar, aprovar, gerar PIX) e como resolver cada uma.",
+    "category": "problemas",
+    "audience": "admin",
+    "permission": "read",
+    "difficulty": "Iniciante",
+    "keywords": ["erro", "nao consigo", "bloqueado", "problema", "nao salva", "nao exclui", "mensagem", "permissao"],
+    "aliases": [
+      "por que não consigo excluir um cliente",
+      "por que não consigo excluir um veículo",
+      "registro duplicado",
+      "sem permissão",
+      "limite do plano atingido",
+      "locadora suspensa",
+      "pix não aparece",
+      "não consigo salvar"
+    ],
+    "routes": ["/admin"],
+    "sources": ["src/repositories/mapping.ts", "src/lib/server/supabase.ts", "src/lib/permissions.ts", "src/lib/payment-methods.ts", "src/app/api/payments/receipt/route.ts", "supabase/migrations/20260925000000_init.sql", "supabase/migrations/20261013000100_saas_tenancy.sql"],
+    "minutes": 4,
+    "updated": "2026-10-03",
+    "version": 1,
+    "prerequisites": ["Anote a mensagem exata que apareceu na tela: ela indica a causa."],
+    "steps": [
+      {
+        "title": "Leia a mensagem que apareceu",
+        "text": "Quando o sistema bloqueia uma ação, mostra um aviso no canto da tela explicando o motivo. Procure a mensagem nas perguntas abaixo: cada uma traz a causa e o que fazer."
+      },
+      {
+        "title": "Confira o seu perfil de acesso",
+        "text": "Cada pessoa da equipe tem um perfil. Operador cadastra e opera locações, mas não mexe no financeiro; Financeiro vê e baixa pagamentos, mas não cadastra veículos; Somente leitura apenas consulta. Configurações, equipe e integrações são exclusivas de Proprietário e Administrador. Se a ação não é do seu perfil, peça a quem tem acesso."
+      },
+      {
+        "title": "Ainda bloqueado? Fale com o suporte",
+        "text": "Envie a mensagem exata e em qual tela estava. Isso permite achar a causa rapidamente."
+      }
+    ],
+    "tips": ["A busca da Central entende a mensagem: copie o texto do aviso e cole no campo de pesquisa."],
+    "warnings": [],
+    "problems": [
+      {
+        "question": "\"Este registro está vinculado a outros (locações, reservas ou multas) e não pode ser excluído.\"",
+        "answer": "Clientes e veículos que já têm locação, reserva ou multa não podem ser apagados, para não perder o histórico financeiro. O cadastro continua na lista com o histórico; não é preciso excluir para deixar de usar."
+      },
+      {
+        "question": "\"Registro duplicado: placa, CPF, código ou nº do auto já cadastrado.\"",
+        "answer": "Já existe um cadastro com essa placa, CPF ou número de auto de infração nesta locadora. Pesquise na lista antes de cadastrar e edite o registro existente."
+      },
+      {
+        "question": "\"Conflito de período: o veículo já tem uma reserva nessas datas.\"",
+        "answer": "O veículo está reservado em parte do período escolhido. Escolha outras datas ou outro veículo, ou ajuste a reserva existente em Reservas."
+      },
+      {
+        "question": "\"Algum valor está fora do permitido (verifique datas, valores e placa).\"",
+        "answer": "Algum campo tem valor inválido: data final antes da inicial, valor negativo ou placa fora do padrão. Revise os campos e salve de novo."
+      },
+      {
+        "question": "\"Sem permissão\" ou \"Seu perfil não tem permissão para esta ação.\"",
+        "answer": "A ação não faz parte do seu perfil, ou a sua sessão expirou. Entre novamente; se continuar, peça ao Proprietário ou Administrador para ajustar seu perfil em Configurações → Equipe."
+      },
+      {
+        "question": "\"Limite do plano atingido (...). Fale com o suporte para ampliar.\"",
+        "answer": "O plano da locadora tem limite de veículos, usuários ou modelos de contrato e ele foi alcançado. Fale com o suporte para mudar de plano."
+      },
+      {
+        "question": "\"Locadora suspensa. Regularize a assinatura para voltar a operar.\"",
+        "answer": "Com a assinatura suspensa ou cancelada, o painel fica só para consulta: nada pode ser gravado. Regularize a assinatura com o suporte."
+      },
+      {
+        "question": "Por que o PIX não aparece para o cliente?",
+        "answer": "O PIX manual precisa estar ativo e com chave PIX, nome e cidade do recebedor preenchidos em Configurações → Pagamentos. Sem esses dados o QR Code não é gerado."
+      },
+      {
+        "question": "Por que não consigo recusar um comprovante?",
+        "answer": "Para recusar é obrigatório escrever o motivo. O locatário vê esse motivo no aplicativo e pode enviar outro comprovante."
+      },
+      {
+        "question": "\"Imagem muito grande (máximo 1 MB).\" ao trocar o logo",
+        "answer": "O logo precisa ter no máximo 1 MB e estar em PNG, JPG ou WebP. Reduza a imagem e envie de novo."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Por que não consigo excluir um cliente?",
+        "answer": "Porque ele tem locação, reserva ou multa registrada. O histórico é preservado; o cliente pode continuar cadastrado."
+      },
+      {
+        "question": "Por que não consigo excluir um veículo?",
+        "answer": "Veículo com locação, reserva ou multa não pode ser excluído, para preservar o histórico de locações e multas."
+      }
+    ],
+    "related": ["gerenciar-equipe-permissoes", "editar-excluir-veiculo", "configurar-meios-pagamento", "aprovar-comprovante-pix"],
+    "result": "Com a causa identificada, você corrige o dado, pede a permissão certa ou aciona o suporte com a mensagem exata."
+  }
+]

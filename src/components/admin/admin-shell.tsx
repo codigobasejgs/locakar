@@ -23,6 +23,7 @@ import { cn, todayISO } from "@/lib/utils";
 import { ADMIN_NAV, findNavItem } from "./nav";
 import { ContextualHelpButton } from "@/help/components/contextual";
 import { AdminHelpProvider } from "@/help/components/context";
+import { HelpPalette } from "@/help/components/palette";
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -379,6 +380,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <BrandingStyle theme={theme} />
       <AdminDataProvider>
         <AdminHelpProvider>
+          <HelpPalette />
           <div className="min-h-dvh bg-ink text-white admin-shell">
           <OrgStatusBanner />
           {/* Sidebar desktop */}

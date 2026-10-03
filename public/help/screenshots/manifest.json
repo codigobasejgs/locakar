@@ -135,6 +135,42 @@
     "file": "public/help/screenshots/fines/list.webp"
   },
   {
+    "id": "help/contextual",
+    "route": "/admin/pagamentos",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "[aria-label='Abrir ajuda sobre esta página']",
+    "capturedAt": "2026-10-03T17:01:24.935Z",
+    "file": "public/help/screenshots/help/contextual.webp"
+  },
+  {
+    "id": "help/glossary",
+    "route": "/admin/ajuda/glossario",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-03T17:01:37.034Z",
+    "file": "public/help/screenshots/help/glossary.webp"
+  },
+  {
+    "id": "help/home",
+    "route": "/admin/ajuda",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-03T17:01:13.772Z",
+    "file": "public/help/screenshots/help/home.webp"
+  },
+  {
+    "id": "help/search",
+    "route": "/admin/ajuda",
+    "viewport": "1440x900",
+    "theme": "dark",
+    "state": "tela",
+    "capturedAt": "2026-10-03T17:01:31.991Z",
+    "file": "public/help/screenshots/help/search.webp"
+  },
+  {
     "id": "incidents/overview",
     "route": "/admin/incidents",
     "viewport": "1440x900",

@@ -20,6 +20,7 @@ import { useMemo, useState } from "react";
 import { DonutChart, MoneyAreaChart, SimpleBarChart } from "@/components/admin/charts";
 import { DateRangeFilter } from "@/components/admin/date-range-filter";
 import { OnboardingCard } from "@/components/admin/onboarding-card";
+import { WelcomeTour } from "@/help/components/tour";
 import { PageHeader } from "@/components/admin/page-header";
 import { Vehicle360Dialog } from "@/components/admin/vehicle-360-dialog";
 import { Badge, StatusBadge } from "@/components/ui/badge";
@@ -95,6 +96,7 @@ export default function DashboardPage() {
         description={`Visão geral da operação · ${new Date().toLocaleDateString("pt-BR", { dateStyle: "full" })}`}
       />
 
+      <WelcomeTour />
       <OnboardingCard />
 
       {data && <div className="mb-4 rounded-xl border border-line bg-panel p-4 text-sm"><p className="font-semibold">Valor FIPE da frota: {formatCurrency(fipeFleet(data.vehicles).total)}</p><p className="text-xs text-muted">Cobertura: {fipeFleet(data.vehicles).linked} de {fipeFleet(data.vehicles).applicable} veículos não vendidos. Referências mensais por veículo; não representa receita ou lucro.</p></div>}

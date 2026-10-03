@@ -1,6 +1,10 @@
 // Testes da Central de Ajuda: busca, sinônimos, perfis, rotas e progresso. `npm run help:validate`.
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { articles } from "../src/help";
+import { articleContext } from "../src/help/assistant";
+import { glossary, glossaryFor, statusGroups } from "../src/help/glossary";
 import { canReadArticle, contextualArticles, routeMatches } from "../src/help/access";
 import { emptyProgress, progressKey, readProgress, saveProgress } from "../src/help/progress";
 import { searchArticles, tokens } from "../src/help/search";
@@ -57,4 +61,44 @@ saveProgress(store, progressKey("u1", "orgA"), { ...emptyProgress(), completed: 
 assert.deepEqual(readProgress(store, progressKey("u1", "orgA")).completed, ["cadastrar-veiculo"]);
 assert.deepEqual(readProgress(store, progressKey("u1", "orgB")).completed, [], "outra locadora não herda progresso");
 
-console.log(`OK ajuda: ${articles.length} artigos, busca, sinônimos, perfis, rotas e progresso`);
+// Buscas do usuário comum (prompt de aceite): o artigo certo aparece entre os 3 primeiros.
+const top3 = (q: string) => searchArticles(articles.filter((a) => canReadArticle(a, owner)), q).slice(0, 3).map((r) => r.article.slug);
+const expected: [string, string][] = [
+  ["novo veículo", "cadastrar-veiculo"],
+  ["fazer aluguel", "criar-locacao-contrato"],
+  ["nova locação", "criar-locacao-contrato"],
+  ["cobrar cliente", "cobrar-whatsapp-pix"],
+  ["pix", "aprovar-comprovante-pix"],
+  ["comprovante", "aprovar-comprovante-pix"],
+  ["contrato", "gerar-assinar-contrato"],
+  ["manutenção", "cadastrar-manutencao"],
+  ["como cadastrar moto", "cadastrar-veiculo"],
+  ["por que não consigo excluir cliente", "por-que-nao-consigo"],
+  ["registro duplicado", "por-que-nao-consigo"],
+  ["apagar veiculo", "editar-excluir-veiculo"],
+];
+for (const [q, slug] of expected) assert.ok(top3(q).includes(slug), `"${q}" deve trazer ${slug} (veio ${top3(q).join(", ")})`);
+
+// Screenshots: todo arquivo citado existe e está no manifest; marcadores dentro da imagem.
+const manifest = JSON.parse(readFileSync(resolve(__dirname, "../public/help/screenshots/manifest.json"), "utf8")) as { file: string }[];
+const inManifest = new Set(manifest.map((m) => "/" + m.file.replace(/^public\//, "")));
+for (const a of articles) for (const s of a.steps) {
+  if (s.image) {
+    assert.ok(existsSync(resolve(__dirname, "../public" + s.image)), `${a.slug}: imagem ausente ${s.image}`);
+    assert.ok(inManifest.has(s.image), `${a.slug}: ${s.image} fora do manifest (não pode ser recapturada)`);
+  }
+  for (const m of s.markers ?? []) assert.ok(s.image && m.x >= 0 && m.x <= 100 && m.y >= 0 && m.y <= 100 && m.label, `${a.slug}: marcador inválido`);
+  // Nada de credencial em texto de artigo.
+  assert.ok(!/sk_live|sk_test|\$aact_|AIza[0-9A-Za-z_-]{20}|eyJhbGci/.test(JSON.stringify(s)), `${a.slug}: possível segredo no texto`);
+}
+
+// Glossário só aponta para artigos que existem; locatário não vê termos da equipe.
+for (const t of glossary) if (t.article) assert.ok(articles.some((a) => a.slug === t.article), `glossário: ${t.term} → ${t.article} inexistente`);
+assert.ok(glossaryFor("tenant").every((t) => t.audience !== "admin"));
+for (const g of statusGroups) assert.ok(g.items.length > 0 && g.items.every((i) => i.label), `status ${g.title} vazio`);
+
+// Sem IA: o contexto do assistente é montado só com artigos legíveis, e a busca funciona sozinha.
+assert.ok(articleContext(art("aprovar-comprovante-pix")).includes("<doc"), "contexto RAG");
+assert.equal(searchArticles(articles, "como faço xyzzy").length, 0);
+
+console.log(`OK ajuda: ${articles.length} artigos, busca, sinônimos, perfis, rotas, progresso, screenshots e glossário`);

@@ -166,6 +166,10 @@ const SHOTS = [
   { file: "settings/whatsapp", path: "/admin/settings#integracoes", scroll: 900 },
   { file: "settings/push", path: "/admin/settings#preferencias", scroll: 500 },
   { file: "platform/overview", path: "/plataforma/admin" },
+  { file: "help/home", path: "/admin/ajuda" },
+  { file: "help/contextual", path: "/admin/pagamentos", click: "[aria-label='Abrir ajuda sobre esta página']" },
+  { file: "help/search", path: "/admin/ajuda", fill: ["input[type=search]", "cliente mandou comprovante pix"] },
+  { file: "help/glossary", path: "/admin/ajuda/glossario" },
 ];
 
 async function waitForServer(url, ms = 180000) {
@@ -197,7 +201,8 @@ async function save(png, file) {
     await waitForServer(`${BASE}/admin/login`);
     browser = await chromium.launch({ executablePath: CHROME });
     const ctx = await browser.newContext({ viewport: { width: D.w, height: D.h }, deviceScaleFactor: 1 });
-    await ctx.addInitScript(() => { try { localStorage.setItem("locakar-admin-theme", "dark"); } catch { /* ok */ } });
+    // Tema fixo e boas-vindas já dispensadas: o convite do tour não aparece por cima das telas capturadas.
+    await ctx.addInitScript(({ user, org }) => { try { localStorage.setItem("locakar-admin-theme", "dark"); localStorage.setItem(`locakar:help:v1:${user}:${org}:welcome`, "1"); } catch { /* ok */ } }, { user: USER.id, org: ORG });
     await ctx.route("**/*", (route) => {
       const u = new URL(route.request().url());
       if (u.hostname !== "localhost") return route.abort(); // nada externo
@@ -220,6 +225,7 @@ async function save(png, file) {
       await page.evaluate(() => document.fonts?.ready);
       await page.waitForTimeout(1500);
       if (s.click) { await page.locator(s.click).first().click({ timeout: 8000 }).catch(() => console.warn(`  (sem ${s.click})`)); await page.waitForTimeout(900); }
+      if (s.fill) { await page.locator(s.fill[0]).first().fill(s.fill[1]).catch(() => console.warn(`  (sem ${s.fill[0]})`)); await page.waitForTimeout(700); }
       if (s.scroll) { await page.mouse.wheel(0, s.scroll); await page.waitForTimeout(500); }
       const target = s.clip ? page.locator(s.clip).first() : null;
       const png = target && (await target.count()) ? await target.screenshot() : await page.screenshot();

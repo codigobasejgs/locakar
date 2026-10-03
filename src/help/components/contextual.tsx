@@ -22,6 +22,9 @@ export function ContextualHelpButton() {
     return contextualArticles(articles, pathname, access);
   }, [pathname, access]);
 
+  // FAQ só dos artigos desta tela (no máximo 4), sem repetir pergunta.
+  const faq = [...new Map(matches.flatMap((a) => a.faq).map((f) => [f.question, f])).values()].slice(0, 4);
+
   if (inHelp) return null;
 
   return (
@@ -30,12 +33,12 @@ export function ContextualHelpButton() {
         variant="ghost"
         size="sm"
         onClick={() => setOpen(true)}
-        className="hidden md:inline-flex items-center gap-1.5 text-xs text-brand-soft hover:bg-magenta/10 hover:text-white border border-transparent hover:border-magenta/25"
+        className="inline-flex items-center gap-1.5 text-xs text-brand-soft hover:bg-magenta/10 hover:text-white border border-transparent hover:border-magenta/25"
         title="Ajuda sobre esta página"
         aria-label="Abrir ajuda sobre esta página"
       >
         <HelpCircle className="size-4" />
-        <span>Ajuda</span>
+        <span className="hidden md:inline">Ajuda</span>
       </Button>
 
       <Dialog
@@ -84,6 +87,20 @@ export function ContextualHelpButton() {
                   </Link>
                 );
               })}
+            </div>
+          )}
+
+          {faq.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-white">Dúvidas frequentes desta tela</p>
+              <div className="divide-y divide-line rounded-xl border border-line bg-surface text-xs">
+                {faq.map((f, i) => (
+                  <details key={i} className="group p-3">
+                    <summary className="cursor-pointer font-medium text-zinc-200 group-open:text-white">{f.question}</summary>
+                    <p className="mt-1.5 text-muted leading-relaxed">{f.answer}</p>
+                  </details>
+                ))}
+              </div>
             </div>
           )}
 

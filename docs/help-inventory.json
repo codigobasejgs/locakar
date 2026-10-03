@@ -1,6 +1,6 @@
 {
   "appVersion": "0.1.0",
-  "generatedAt": "2026-10-02T21:27:14.830Z",
+  "generatedAt": "2026-10-03T17:29:38.610Z",
   "note": "Inventário estrutural. Campos calculados, permissões e efeitos precisam de auditoria humana. Cobertura por rota não comprova cobertura de cada ação.",
   "pages": [
     {
@@ -93,7 +93,8 @@
       "articles": [
         "visao-360-veiculo",
         "primeiros-passos-visao-geral",
-        "onboarding-checklist-locadora"
+        "onboarding-checklist-locadora",
+        "por-que-nao-consigo"
       ]
     },
     {
@@ -383,6 +384,14 @@
       "route": "/api/fipe/vehicles"
     },
     {
+      "file": "src/app/api/help/ask/route.ts",
+      "route": "/api/help/ask"
+    },
+    {
+      "file": "src/app/api/help/route.ts",
+      "route": "/api/help"
+    },
+    {
       "file": "src/app/api/org/route.ts",
       "route": "/api/org"
     },
@@ -536,7 +545,7 @@
       "file": "src/app/admin/ajuda/faq/page.tsx",
       "kind": "page",
       "route": "/admin/ajuda/faq",
-      "hash": "7de1f02127db9a9c8db54a06c32c2c2b6da6ae417fe01a69294ba2a87ee14631",
+      "hash": "4448f5b31496352aa51d75cfbc89987d5dd0ae76fb55358370a5dbee17ccc978",
       "labels": [
         "Filtrar perguntas (ex.: placa, comprovante, pix, contrato)...",
         "Filtrar perguntas frequentes"
@@ -544,10 +553,26 @@
       "messages": []
     },
     {
+      "file": "src/app/admin/ajuda/glossario/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/glossario",
+      "hash": "63576a1789de082ce61197196ec1064c5f4bb80473b48fd99d9d478a5991d7bd",
+      "labels": [],
+      "messages": []
+    },
+    {
       "file": "src/app/admin/ajuda/layout.tsx",
       "kind": "component",
       "route": null,
       "hash": "e2f56981eb1e3a66ba68b6d66a158c08d1b1c8715cb3cb7e7bbf7eee776159da",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/ajuda/manual/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/manual",
+      "hash": "1fe084adf9845e69b816084b3ee0a8141de756d052050e779da9992a35c36a26",
       "labels": [],
       "messages": []
     },
@@ -563,7 +588,7 @@
       "file": "src/app/admin/ajuda/treinamentos/page.tsx",
       "kind": "page",
       "route": "/admin/ajuda/treinamentos",
-      "hash": "3f2ae820496f3a66cc86d0554bc1e0cae28568d393583ac8696f43c9da7bc36e",
+      "hash": "338ccbe28078f32b110e2baa762f6b3fd7d8ef8148ce9168abc918af567a88b7",
       "labels": [],
       "messages": []
     },
@@ -571,7 +596,7 @@
       "file": "src/app/admin/ajuda/treinamentos/[slug]/page.tsx",
       "kind": "page",
       "route": "/admin/ajuda/treinamentos/[slug]",
-      "hash": "439d1446d5081b76a36b5841854f766f9b3d0d82c890fd18fb59d65a88380aea",
+      "hash": "5323ffc451ef27fae0ff1ab19eb1c17b2230e1eb288955169ae5062677d3c978",
       "labels": [],
       "messages": []
     },
@@ -629,7 +654,7 @@
       "file": "src/app/admin/expenses/page.tsx",
       "kind": "page",
       "route": "/admin/expenses",
-      "hash": "20b9184b2de4cd3e935e0dcfd0363ca458e63787cc8e02c89e62bc6a40bd31e9",
+      "hash": "d66b54e44b1b68f46fac7e0d1959b5e1fb18fb0ff305ee4a842148d4343bae8d",
       "labels": [
         "Despesas",
         "Despesas recorrentes e diversas da operação.",
@@ -655,7 +680,7 @@
       "file": "src/app/admin/finance/page.tsx",
       "kind": "page",
       "route": "/admin/finance",
-      "hash": "feab4df1dd96e0fe8ec21dffbc8869e1853569e73edf3e28cc411a4138950161",
+      "hash": "c22e48a99f239a17eb3a98026221529e8740b5ab7a90929ba5029cfe4c8a7189",
       "labels": [
         "Financeiro",
         "Receitas de locações, despesas operacionais e saldo.",
@@ -677,7 +702,7 @@
       "file": "src/app/admin/fines/page.tsx",
       "kind": "page",
       "route": "/admin/fines",
-      "hash": "7f8d90416b5deb939b09d3ed19d1f8a2e988cb92afcde798cdbb12cb69c7ae11",
+      "hash": "cc417f3dd838232992b816a32592398a5fc70ca5391bb0dc8ca7ae8ec898320c",
       "labels": [
         "Multas",
         "Autuações, prazos de identificação do condutor e pagamentos.",
@@ -731,7 +756,7 @@
       "file": "src/app/admin/layout.tsx",
       "kind": "component",
       "route": null,
-      "hash": "64901523ea204fccd9b0eac90f97e0fa6346943f154af5311c20500dfa0c4868",
+      "hash": "b013690b2c7ecff7fd0022fd3a480cb2645e605f7c1a02ca809d0f2b478ae9ec",
       "labels": [],
       "messages": []
     },
@@ -751,7 +776,7 @@
       "file": "src/app/admin/maintenance/page.tsx",
       "kind": "page",
       "route": "/admin/maintenance",
-      "hash": "1268d5caa78d271286d8cea0a85b0027270a758ecd161000fae75fc452f53790",
+      "hash": "0d957462afab09adf496ccc934f4ea9f1b93710cc00f41c69db83125eaacf898",
       "labels": [
         "Avisar cliente com o veículo",
         "Manutenção",
@@ -778,7 +803,7 @@
       "file": "src/app/admin/manifest.webmanifest/route.ts",
       "kind": "api",
       "route": "/admin/manifest.webmanifest",
-      "hash": "ef7ae6ef3a1233e5cef3d6fd762252cb3cd2536defb9ef20a40efb874551d7f4",
+      "hash": "a22d12028772740e7b13215d2720eb82a1274b51192b59fa553e7eb3d0b34a98",
       "labels": [],
       "messages": []
     },
@@ -786,7 +811,7 @@
       "file": "src/app/admin/monitoring/page.tsx",
       "kind": "page",
       "route": "/admin/monitoring",
-      "hash": "92e51b23a88cc8f3b3ababc948c080aac08dc13e1b7a6ee9a5e0b2e4282f63a9",
+      "hash": "a4140d23dba4dd1680bb2b9b07651b22e8ed40bb37f7fc21b167e097e918da17",
       "labels": [
         "Monitoramento da frota",
         "Rastreamento Selsyn: consultas administrativas, sem comandos sobre os veículos.",
@@ -808,7 +833,7 @@
       "file": "src/app/admin/notes/page.tsx",
       "kind": "page",
       "route": "/admin/notes",
-      "hash": "6ccaa54c82d8f81538ac0b823e8778971a5ae092113c0fb2df08cf7c7eb5c625",
+      "hash": "fd7d2549b1c47fc773d38de21112522f89125ed19651a3654a0f6abc99b32450",
       "labels": [
         "Anotações",
         "Registro cronológico de ocorrências e combinados.",
@@ -843,7 +868,7 @@
       "file": "src/app/admin/pagamentos/page.tsx",
       "kind": "page",
       "route": "/admin/pagamentos",
-      "hash": "4d1dcd756b1f9f18f979f680f4ba47b70bd7385e7895d6a8a3e94872adf16411",
+      "hash": "0fe9715468183adc3cce0e23c18e97ba85c680e1ccc1c2771856b64ef7fc823a",
       "labels": [
         "Pagamentos",
         "Controle de cobranças e recebimentos das locações.",
@@ -872,7 +897,7 @@
       "file": "src/app/admin/page.tsx",
       "kind": "page",
       "route": "/admin",
-      "hash": "424d59000e112c1e2f5ff4e5f1bbd672ac1e1cdba168191d005981ce672641fb",
+      "hash": "a0bef720167a82e35fd5c8cd4ccf5e2fe68efa8b02fea4e4a8a25030379e4cd0",
       "labels": [
         "Dashboard",
         "Total investido",
@@ -903,7 +928,7 @@
       "file": "src/app/admin/rentals/page.tsx",
       "kind": "page",
       "route": "/admin/rentals",
-      "hash": "759f8e21211f8a04dc6425b9758c6caa81831340cfa0a20abd26a7e0bcb76899",
+      "hash": "17ede780eef706195ea8e25c0ddefa57c9b5ec0c45b93b5565c2e8714445621e",
       "labels": [
         "Locações",
         "Contratos, recebimentos semanais e quilometragem.",
@@ -918,7 +943,7 @@
       "file": "src/app/admin/rentals/[id]/page.tsx",
       "kind": "page",
       "route": "/admin/rentals/[id]",
-      "hash": "7cc41bd33943c17fdef7c942324ac2ad33d083df9db0be83cfc79b81f6d51a99",
+      "hash": "86c95090f47f12dd4745e07190cc41886d35d6b9e13b3b6c0e57401fbb457810",
       "labels": [
         "Locação não encontrada",
         "Ela pode ter sido excluída.",
@@ -937,7 +962,7 @@
       "file": "src/app/admin/reports/page.tsx",
       "kind": "page",
       "route": "/admin/reports",
-      "hash": "cfae3a44ecc2cbdab0371d1d807eb7579deb80fbd1c833d2773f274aec827723",
+      "hash": "441ff3d6e7710583d1ad54aa94a6ad1d8c25bfd076283c051d8ddb37ba7f044d",
       "labels": [
         "Relatórios",
         "Relatórios visuais com filtros por mês, período, veículo e status.",
@@ -986,7 +1011,7 @@
       "file": "src/app/admin/reservations/page.tsx",
       "kind": "page",
       "route": "/admin/reservations",
-      "hash": "73cca48cff019b10c91751e554e14b841ba001293d23e6f935e71dda08f33958",
+      "hash": "7152cc476b0c8c5ea9639f2fb894725c798a033e065b166caca8cca7a644067b",
       "labels": [
         "Mês anterior",
         "Próximo mês",
@@ -1096,7 +1121,7 @@
       "file": "src/app/admin/vehicles/page.tsx",
       "kind": "page",
       "route": "/admin/vehicles",
-      "hash": "a2d3512945de0a7246be1b41006c3be5e35381319f717a0a5291b551bd984ef8",
+      "hash": "32fa58ce6d851a491f849c35aa9978b374ec523c9d8317146e621ec334fccd56",
       "labels": [
         "Veículos",
         "Gestão completa da frota: cadastro, documentos, fotos e manutenção.",
@@ -1171,10 +1196,26 @@
       "messages": []
     },
     {
+      "file": "src/app/ajuda/glossario/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/glossario",
+      "hash": "63576a1789de082ce61197196ec1064c5f4bb80473b48fd99d9d478a5991d7bd",
+      "labels": [],
+      "messages": []
+    },
+    {
       "file": "src/app/ajuda/layout.tsx",
       "kind": "component",
       "route": null,
       "hash": "0af5ec8462187754ef58f9447a5a52507d6b8cfc69c4bd82dcd81972c404f29e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/manual/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/manual",
+      "hash": "1fe084adf9845e69b816084b3ee0a8141de756d052050e779da9992a35c36a26",
       "labels": [],
       "messages": []
     },
@@ -1214,7 +1255,7 @@
       "file": "src/app/api/asaas/charges/route.ts",
       "kind": "api",
       "route": "/api/asaas/charges",
-      "hash": "209a7f451a38e572ef23866f5f8f8a7d3574affbbcc73f7b23c6c3f103067918",
+      "hash": "b2297ddab767a35559326cd72c171451e9e8bbbe434b05adea6c9b1e5fa271af",
       "labels": [],
       "messages": []
     },
@@ -1222,7 +1263,7 @@
       "file": "src/app/api/asaas/config/route.ts",
       "kind": "api",
       "route": "/api/asaas/config",
-      "hash": "e2c8d2f27b4ff38a512ab22084cd1e86551a933c82ffd421d0e05ccf42d6e8f2",
+      "hash": "8879c93515c50275b7c98b1173a13292b1a5959e1711ebf35f48627666daf738",
       "labels": [],
       "messages": []
     },
@@ -1230,7 +1271,7 @@
       "file": "src/app/api/contracts/resolve/route.ts",
       "kind": "api",
       "route": "/api/contracts/resolve",
-      "hash": "1f6e94655d697fc81973e1f9c34221861e8dfd6a8ac9b2d90849f92cc352ee09",
+      "hash": "1847ba8a06a8cda7e572282c00b11c0f04a2b8c82f9aac8ffaad822e880ef659",
       "labels": [],
       "messages": []
     },
@@ -1270,7 +1311,7 @@
       "file": "src/app/api/fipe/query/route.ts",
       "kind": "api",
       "route": "/api/fipe/query",
-      "hash": "0279c53ffc765ef493dd3050194a0af8d76a1a285027babbe772cc0111f78548",
+      "hash": "912322c2244ebcdf6161b3d0af1dc37d752e3ee1779a6c56ca9d8c33667935a7",
       "labels": [],
       "messages": []
     },
@@ -1278,7 +1319,23 @@
       "file": "src/app/api/fipe/vehicles/route.ts",
       "kind": "api",
       "route": "/api/fipe/vehicles",
-      "hash": "299365ba76993e3a7a2562312bb3e94649cbe73a2e32bceca2dd03cf181a5c25",
+      "hash": "6f6b036b7fbb95edb5a4d9b49b8dcb28f1bccfd17bda687eeba16704ee91c21f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/help/ask/route.ts",
+      "kind": "api",
+      "route": "/api/help/ask",
+      "hash": "457d8d8073aef09bb6e4c47d5dd2ab6741e82720f92211af0bc130bff6d0ca37",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/help/route.ts",
+      "kind": "api",
+      "route": "/api/help",
+      "hash": "f96046c87d76361d5ed3a97bffd70f1a02f27973b6a28fffe53086c09c3e887e",
       "labels": [],
       "messages": []
     },
@@ -1302,7 +1359,7 @@
       "file": "src/app/api/payments/methods/route.ts",
       "kind": "api",
       "route": "/api/payments/methods",
-      "hash": "f6f6428923297b66f13e0a7112e1b56a99863fbf11322b9edb04b2b609daa4cb",
+      "hash": "e26e4eddaabf0103b6023bd18673a71775593b469e6230928eb6e1eb8b28763e",
       "labels": [],
       "messages": []
     },
@@ -1310,7 +1367,7 @@
       "file": "src/app/api/payments/receipt/route.ts",
       "kind": "api",
       "route": "/api/payments/receipt",
-      "hash": "d58ae9d1c9ad48609397f95a7c3480847829768538cb5fed73b1e8bd7e6c4b63",
+      "hash": "901fa1245982e88503d4c9cf26612d19f6bf155014e585836752f2ce1333581d",
       "labels": [],
       "messages": []
     },
@@ -1318,7 +1375,7 @@
       "file": "src/app/api/platform/admin/route.ts",
       "kind": "api",
       "route": "/api/platform/admin",
-      "hash": "05ce075a5c01a382927dd2d5c6ef2b101ed82cd33d35058cdb54f777d11dddf8",
+      "hash": "e7dbcdcd393ba88cdf943d3399be7100b5a7a35baa5644a6237f74c45a119180",
       "labels": [],
       "messages": []
     },
@@ -1350,7 +1407,7 @@
       "file": "src/app/api/push/client/route.ts",
       "kind": "api",
       "route": "/api/push/client",
-      "hash": "14acacb00a59e93fc8b45a59a4d8a9389b8fcf57e23c68d6e764cc17503164f8",
+      "hash": "46467ca61327770d2631376b396cc1b4d6b584890f09e8992f76982d72ee2714",
       "labels": [],
       "messages": []
     },
@@ -1358,7 +1415,7 @@
       "file": "src/app/api/push/route.ts",
       "kind": "api",
       "route": "/api/push",
-      "hash": "eb520c9691ba41f6a0fa9903fae5145f65a92d12acfb14cefbae86ed3a2ae1e6",
+      "hash": "1d7f276689316c6119e2c680970f5f3b12eeb716cb5c51314c1c9b4c986769fa",
       "labels": [],
       "messages": []
     },
@@ -1366,7 +1423,7 @@
       "file": "src/app/api/selsyn/diagnostic/route.ts",
       "kind": "api",
       "route": "/api/selsyn/diagnostic",
-      "hash": "910cb7fc4f73ef546cbb93e0c255dbe24137c12bd831e8f60d4b87ac722bd517",
+      "hash": "2cde6971159e4d2c1bf70e10de840a79793342ef633d19123c902d1aaff0c576",
       "labels": [],
       "messages": []
     },
@@ -1374,7 +1431,7 @@
       "file": "src/app/api/selsyn/fleet/route.ts",
       "kind": "api",
       "route": "/api/selsyn/fleet",
-      "hash": "49b336f9794eec6be445ba8f8ee22b3142096f43b26d503ca44fdc6ac04c8223",
+      "hash": "c884c7f74ae9c4d1dac5b4b37ef0bb7c2999aa9d73cd128bf84a6c007eed1717",
       "labels": [],
       "messages": []
     },
@@ -1382,7 +1439,7 @@
       "file": "src/app/api/selsyn/link/route.ts",
       "kind": "api",
       "route": "/api/selsyn/link",
-      "hash": "8573be2bda58d44d37a117aef16c65c2233145961033044403952dc3571fbf8e",
+      "hash": "d6d5c7d88b88aebadfd1bd17ad28501dde7c0a306286a5066381996410379d19",
       "labels": [],
       "messages": []
     },
@@ -1390,7 +1447,7 @@
       "file": "src/app/api/selsyn/query/[operationId]/route.ts",
       "kind": "api",
       "route": "/api/selsyn/query/[operationId]",
-      "hash": "8ec45baf13a5dea95390b7c35475f80f9a4fdd59794b1fbdcdcde475b3e82037",
+      "hash": "55353ac584eb7eed7ac7ffdeb99a606488d28e1c1faf36598b1402456f2b1304",
       "labels": [],
       "messages": []
     },
@@ -1398,7 +1455,7 @@
       "file": "src/app/api/selsyn/status/route.ts",
       "kind": "api",
       "route": "/api/selsyn/status",
-      "hash": "62031f060ba07a6875b068bc1009fe0281a809a275a4eee9321c5b7425ff0f04",
+      "hash": "97ac3f428f0ebe8be555b26832593b060aa9abfa9bb393b708e2e8f8eb9d834c",
       "labels": [],
       "messages": []
     },
@@ -1406,7 +1463,7 @@
       "file": "src/app/api/sign/route.ts",
       "kind": "api",
       "route": "/api/sign",
-      "hash": "eefe38deb553d6f3b3236733ad23df3690417150af56324a944df2e585d853ee",
+      "hash": "64fd817a6557d2a5eced445f8f6cdd4449d8bf46e87c8f879a16e3539cc29380",
       "labels": [],
       "messages": []
     },
@@ -1446,7 +1503,7 @@
       "file": "src/app/api/tenant/infinitepay/route.ts",
       "kind": "api",
       "route": "/api/tenant/infinitepay",
-      "hash": "c887152ed70daefea3955931ece877894194a4be9b7d70a4abc562c25c04b7de",
+      "hash": "44932e120befec8e15158b7850f6583b7e4badc23b9dac3f0b6b8ba284cf71bc",
       "labels": [],
       "messages": []
     },
@@ -1462,7 +1519,7 @@
       "file": "src/app/api/tenant/receipts/route.ts",
       "kind": "api",
       "route": "/api/tenant/receipts",
-      "hash": "2db594aec9a9ed4e77b64b1dd89dd27fc0f6562d94e2c62a0c843424a4fbdf4d",
+      "hash": "ac767291498dbd168dd28aae08373fb57c7548cf8fdf5a44b4b6cc0e09543f00",
       "labels": [],
       "messages": []
     },
@@ -1470,7 +1527,7 @@
       "file": "src/app/api/tenant/requests/route.ts",
       "kind": "api",
       "route": "/api/tenant/requests",
-      "hash": "a63e9f78ac459946f25b5398236e3725b211f4921a53c7ecf2403e21efb7c5de",
+      "hash": "a21d339563a6053c4115e639250b7c5a7250aeacee71335db4ab81a03e01289d",
       "labels": [],
       "messages": []
     },
@@ -1478,7 +1535,7 @@
       "file": "src/app/api/tenant/reservations/route.ts",
       "kind": "api",
       "route": "/api/tenant/reservations",
-      "hash": "8599266c3ca64bddb51559771f991aa4230dc9d824f84ed53d6f916e101162ba",
+      "hash": "abf1a5fb4dde8c869230f63a051dc9a1c3cdcabfda2e8f35e80d2578316c7215",
       "labels": [],
       "messages": []
     },
@@ -1486,7 +1543,7 @@
       "file": "src/app/api/tenant/summary/route.ts",
       "kind": "api",
       "route": "/api/tenant/summary",
-      "hash": "144f07d03ecaa3e192ec49aafb1208c20865c0e81d4e954592a44e6596a4653e",
+      "hash": "3d41bca9839500689f333698538de9357323f8de5261aec81ac097b962f1f79d",
       "labels": [],
       "messages": []
     },
@@ -1502,7 +1559,7 @@
       "file": "src/app/api/tenant-admin/route.ts",
       "kind": "api",
       "route": "/api/tenant-admin",
-      "hash": "f9dce3bc64b3347f217acb0bcb60f15caee741c0ec0ab1f209734c0c2ddf5ff4",
+      "hash": "cfdf4662b742e64108f3a53749137d54ee457c8e0ba55f6c976fdcef7ca87652",
       "labels": [],
       "messages": []
     },
@@ -1510,7 +1567,7 @@
       "file": "src/app/api/webhooks/asaas/route.ts",
       "kind": "api",
       "route": "/api/webhooks/asaas",
-      "hash": "1c4c09ffafa50d3aef11fbd79a19bac3032216794283616349e9cfa95cb8e0b8",
+      "hash": "efeca0a43d571ef694d10b318deb1a943d6ded0ab05015e5febf7096f3f74d9f",
       "labels": [],
       "messages": []
     },
@@ -1518,7 +1575,7 @@
       "file": "src/app/api/webhooks/infinitepay/route.ts",
       "kind": "api",
       "route": "/api/webhooks/infinitepay",
-      "hash": "af4855f9d59228a7ef6c0238c40b8c2f3bee6b1efdcaad3cd93821d9653f5aa6",
+      "hash": "ec4236872b028d9b7ee6ab67ac0322849f272398d8ed502097432c27687e5925",
       "labels": [],
       "messages": []
     },
@@ -1595,7 +1652,7 @@
       "file": "src/app/manifest.webmanifest/route.ts",
       "kind": "api",
       "route": "/manifest.webmanifest",
-      "hash": "27209966cabc3fe336d369358d634b0221fa4b69baea032d19df053be5756e50",
+      "hash": "5c6250b9b2615706266ea7cb809d7d7211b20d8fcb5a196c0fd43597193982e6",
       "labels": [],
       "messages": []
     },
@@ -1603,7 +1660,7 @@
       "file": "src/app/not-found.tsx",
       "kind": "component",
       "route": null,
-      "hash": "b496378d2950589e061a8a941bdde8e813431e4cea17db7dc59cd206cbabd67d",
+      "hash": "f3ea9283cfa654310a928a85aa2c0852a87fded60c00f39e85f024be3524681c",
       "labels": [],
       "messages": []
     },
@@ -1619,7 +1676,7 @@
       "file": "src/app/pagamento/infinitepay/page.tsx",
       "kind": "page",
       "route": "/pagamento/infinitepay",
-      "hash": "8027b26246252c1c2f884fda3d0995722a8e523b845c7395f7b662dbaac4491d",
+      "hash": "b5790c58df8d5d340122c229cac57a8102ce691ade2f3ce1c802c8452bc3f68a",
       "labels": [],
       "messages": []
     },
@@ -1627,7 +1684,7 @@
       "file": "src/app/page.tsx",
       "kind": "page",
       "route": "/",
-      "hash": "49d64a3ef6095ecc09ed5eacfc8802e6f172e0081d66e7d73dc0ce89d5f4b93e",
+      "hash": "be436703d43fa854c8efb854612c0585e759578cfae03182994271b2161cca32",
       "labels": [],
       "messages": []
     },
@@ -1635,7 +1692,7 @@
       "file": "src/app/plataforma/admin/page.tsx",
       "kind": "page",
       "route": "/plataforma/admin",
-      "hash": "2486cf003258fc35410e44d191988fd82f1f2fbad55de720643b71e1e9aabcae",
+      "hash": "0f3dd8756ee5bacf9b2add2ba4cef59c104dd7d2a0ce8d329c56092a5855e783",
       "labels": [
         "Buscar por nome, endereço, e-mail ou CNPJ",
         "Buscar locadora",
@@ -1745,7 +1802,7 @@
       "file": "src/components/admin/admin-shell.tsx",
       "kind": "component",
       "route": null,
-      "hash": "81fd7a4c9c63a528995d2fb3f069b82917f92c8b25453826351c9a65eed839ae",
+      "hash": "4535794578a069f3f4522b75ba94053fec22a564c89593af3627296ba3b10c31",
       "labels": [
         "Administração",
         "Instalar app de gestão",
@@ -1765,7 +1822,7 @@
       "file": "src/components/admin/asaas-charge-dialog.tsx",
       "kind": "component",
       "route": null,
-      "hash": "3db155abf8e0fa9524865f1529868b5b7964a6e690e9033ed3977b0b2b402cc4",
+      "hash": "cc26321e8b4b0fa03d8c1f5671b3b20e60a382e7e88fba741b3cc989512b39ae",
       "labels": [
         "Cobrança pelo Asaas (Pix, boleto, cartão ou fatura).",
         "Forma de pagamento",
@@ -1788,7 +1845,7 @@
       "file": "src/components/admin/asaas-settings.tsx",
       "kind": "component",
       "route": null,
-      "hash": "60bf1cc514cbc33a1fb3f6fd82ebcf922369aa6c277d9e1700324374e7a30eea",
+      "hash": "1b6a3981708166c5883591b66eb49b7ab33cd375c095340728aa060d2326da64",
       "labels": [
         "Ambiente Asaas",
         "••••••••••••••••",
@@ -1832,7 +1889,7 @@
       "file": "src/components/admin/contract-panel.tsx",
       "kind": "component",
       "route": null,
-      "hash": "7ee9bc23f948af2a93cbc47d0ad7b801cb67ff1cef9fb7b77c2034a3c772fcb0",
+      "hash": "46ee35e47f552c0b9e8595ace195447eac304992fe3967e0a598c65a2f5b9b14",
       "labels": [
         "Contrato e assinatura",
         "Contrato",
@@ -1850,7 +1907,7 @@
       "file": "src/components/admin/contract-templates-manager.tsx",
       "kind": "component",
       "route": null,
-      "hash": "9990c6bc4d6a8bc96c230ba0aa9a1308b96decc9b4fef884b3d97d3c064bbb4a",
+      "hash": "2166af4f2dc7c18e5769f20ad163fd701dbcfcac60e41b7c691da711831109d9",
       "labels": [
         "Reanalisar com IA",
         "Excluir",
@@ -1876,7 +1933,7 @@
       "file": "src/components/admin/crud-dialogs.tsx",
       "kind": "component",
       "route": null,
-      "hash": "e798d1b2c181beb0974bf0f47c2af6a0c884517529844bf07edaf14a9de1d433",
+      "hash": "5a4f46a62736ad818caedc3aaa50889406a2912e039c6b19e554c3777598f1bf",
       "labels": [
         "Confirmar exclusão"
       ],
@@ -1886,7 +1943,7 @@
       "file": "src/components/admin/data-table.tsx",
       "kind": "component",
       "route": null,
-      "hash": "ca5a83732a66e911e3f63d33b24e5098b6459fb97d6cfdf02dea2cc519ee6878",
+      "hash": "cdb29d918d33326608f616e639ac09f9a9f39cb92578c8426142d3e154914a67",
       "labels": [
         "Visualizar",
         "Editar",
@@ -1911,7 +1968,7 @@
       "file": "src/components/admin/email-history.tsx",
       "kind": "component",
       "route": null,
-      "hash": "0dfd680fd4a2db0629f093aab6c2a4cfbf02d007f73b8e542400f687af484627",
+      "hash": "2235e39b5becea1087011d08f8e313c42c6193e3b96436fcb741e6e20a354b1b",
       "labels": [
         "E-mail (Resend) e WhatsApp, com o resultado de cada envio."
       ],
@@ -1921,7 +1978,7 @@
       "file": "src/components/admin/fipe-picker.tsx",
       "kind": "component",
       "route": null,
-      "hash": "f23afa79f03f290676e8a0dc82c072072f76d29be25f5513d2bdccbfb592ebe1",
+      "hash": "75ab697fe0be588a69604ba5d96865ca6343389d4cfc5c6b64f7d14c48277433",
       "labels": [
         "Tipo FIPE",
         "Marca",
@@ -1969,7 +2026,7 @@
       "file": "src/components/admin/infinitepay-settings.tsx",
       "kind": "component",
       "route": null,
-      "hash": "b56ec591d7ebd2d21943876ea673e9c704e648631bd59377101cebb75a59a7fb",
+      "hash": "8378b19da2b1c00be272fa463b78e0e701b92c461b2b3070fac843c23226177f",
       "labels": [
         "InfiniteTag (handle)",
         "locakar",
@@ -1987,7 +2044,7 @@
       "file": "src/components/admin/inspection-panel.tsx",
       "kind": "component",
       "route": null,
-      "hash": "584fdf52853eca9991fa3bf7643aee02dc21f412fcbe87b59d512391f18f2a17",
+      "hash": "7476de3b04c438b7cca1780e8a6161570adad503c604a64c216011c3f3c042ec",
       "labels": [
         "Vistorias",
         "Checklist e assinatura do cliente na entrega e na devolução.",
@@ -2010,7 +2067,7 @@
       "file": "src/components/admin/nav.ts",
       "kind": "component",
       "route": null,
-      "hash": "f8d3db16930709a56fb4adcca35f1f3a22dfa2a15b489ae96927d64e99b36a13",
+      "hash": "6a147c6746154cd362f7743f26f94f5ed1962dbb4315b976f15ab98f6e713fb3",
       "labels": [],
       "messages": []
     },
@@ -2026,7 +2083,7 @@
       "file": "src/components/admin/onboarding-card.tsx",
       "kind": "component",
       "route": null,
-      "hash": "fed1b027e960422ca3a0abefae2785f773d4f749d5129de09a85ec1c43cacda1",
+      "hash": "0e961036c38696b4cf081318e5944f86d4f1afe960e1b81cb859f76d7824b1e4",
       "labels": [],
       "messages": []
     },
@@ -2146,7 +2203,7 @@
       "file": "src/components/admin/page-header.tsx",
       "kind": "component",
       "route": null,
-      "hash": "648bf10951195f336c69dfd1bb353de8d9e0541e177843f8705b99a03fd12dcb",
+      "hash": "7ff204c4a3f25742d841d3cbac52756a3b53686152cc5e7df300d45dc366a4e2",
       "labels": [],
       "messages": []
     },
@@ -2154,7 +2211,7 @@
       "file": "src/components/admin/payment-actions-sheet.tsx",
       "kind": "component",
       "route": null,
-      "hash": "cfa4946f53a46a917d49078fe989502dff2a90a3f6ff612bdd5bba3e597b961a",
+      "hash": "90449ae4e6f85eac6f9ae29d038db28af2580b219bd576a4b7daf57c113b8340",
       "labels": [
         "Fechar"
       ],
@@ -2164,7 +2221,7 @@
       "file": "src/components/admin/payment-card.tsx",
       "kind": "component",
       "route": null,
-      "hash": "ee41b4097c83bebefa938eb79c3b01da3dfb5e5e545cfde2ed27c36ecc6c7519",
+      "hash": "6c68e7327dcc2fe8235cfba9f35b965ec05bdb2197ba557d101520bd34282bae",
       "labels": [],
       "messages": []
     },
@@ -2261,7 +2318,7 @@
       "file": "src/components/admin/receipt-approval-dialog.tsx",
       "kind": "component",
       "route": null,
-      "hash": "9174e9b62a02064e169041f43ac0e283f2b5b49b64d86f0e94dd81063cc58391",
+      "hash": "200fa091cec9176c92d7be9356c671cb323331e6a60bb32ea69d7936a77b694b",
       "labels": [
         "Aprovar este pagamento?",
         "Confirme que o valor entrou na conta cadastrada. A aprovação dá baixa na parcela e avisa o cliente.",
@@ -2276,7 +2333,7 @@
       "file": "src/components/admin/rental-form.tsx",
       "kind": "component",
       "route": null,
-      "hash": "d176313ffc31096b09a150bb8b9dec8be0813add987bfc87051663a23758b8e4",
+      "hash": "2c340be968ac95e0921a47d6d2b1c58333c05d00e268740b643473c889051f9e",
       "labels": [
         "Locatário",
         "Selecione",
@@ -2314,7 +2371,7 @@
       "file": "src/components/admin/selsyn-result.tsx",
       "kind": "component",
       "route": null,
-      "hash": "6251efd9f9ef0308898c278c4c01236ace07a927c6aee9ad92b15ee7ce1f620c",
+      "hash": "e023f10038c3b81ca84e51af479ad0e4ad416f23b30c2787180152185f97a279",
       "labels": [],
       "messages": []
     },
@@ -2322,7 +2379,7 @@
       "file": "src/components/admin/selsyn-settings.tsx",
       "kind": "component",
       "route": null,
-      "hash": "433dab908f4669946f017b8e26fcba45dc54d99369567a2026cf733fe38b9e3f",
+      "hash": "71f7797de8c7be2619dcd9895983f3fc3210467910e6e8e28841b61580423a8a",
       "labels": [],
       "messages": []
     },
@@ -2359,7 +2416,7 @@
       "file": "src/components/admin/vehicle-360-dialog.tsx",
       "kind": "component",
       "route": null,
-      "hash": "f5a222cba957388d97ce677896fe74234d73b4a38947fab77a3aa75a09e4d72a",
+      "hash": "115df0f04f86b7d6b4bb1eb2a3b53ed7dc4b4ed1be05fe713b764fc82b821fe6",
       "labels": [
         "Raio-X completo: lucratividade, custos, manutenções, vistorias e multas.",
         "Faturamento",
@@ -2373,7 +2430,7 @@
       "file": "src/components/admin/vehicle-fipe-panel.tsx",
       "kind": "component",
       "route": null,
-      "hash": "fb19ca5bbc66bad1a25d3ae9eaabac5da7314daa607369aafe8e44a23ba733b0",
+      "hash": "9fe1ccdc5e174e70fa9a4925a9420fb644c63465d0159e9414968c7c3b87dd2d",
       "labels": [
         "Desvincular FIPE?",
         "O preço atual será removido. Leituras históricas permanecerão registradas."
@@ -2384,7 +2441,7 @@
       "file": "src/components/admin/vehicle-tracking-panel.tsx",
       "kind": "component",
       "route": null,
-      "hash": "42df5d16c6725e73382321a7bd71852701c5b4a2e153893bb1bb0096dd68460d",
+      "hash": "57fb58516aa0478dbc0195a42e83c28e8714929bf5dda7c32b132f079e5f1001",
       "labels": [],
       "messages": []
     },
@@ -2408,7 +2465,7 @@
       "file": "src/components/landing/fleet-section.tsx",
       "kind": "component",
       "route": null,
-      "hash": "eaf767c6851e3515026889351deb2849cef80a82a91a36b3437c8e9ef8b37ba2",
+      "hash": "c3a1bf6c5499290b47642ceb10b6e1164943c0f35ea1645a84884cc397583c49",
       "labels": [
         "Veículos prontos para o seu caminho.",
         "Modelos econômicos e práticos para o dia a dia. Consulte a disponibilidade diretamente com a nossa equipe."
@@ -2419,7 +2476,7 @@
       "file": "src/components/landing/floating-whatsapp.tsx",
       "kind": "component",
       "route": null,
-      "hash": "16b8c6506f19400d97156e1a7f41c7c31fb921e0ba1c03c6bb499e2d0c8fcd64",
+      "hash": "5e31150be613247211cf57e4bd2a8ebf4e8c9f101d96830f0d4469499859edc5",
       "labels": [
         "Fale com a LOCAKAR pelo WhatsApp"
       ],
@@ -2429,7 +2486,7 @@
       "file": "src/components/landing/footer.tsx",
       "kind": "component",
       "route": null,
-      "hash": "5f4a37412f45d3ddcdb76eb6f23eda800e392b2c06a1c283dff5ab9172975847",
+      "hash": "0cf4b7fe467922c7503ab435b4c7fa856cbe8ebb30e9ec32982dd95fcbff6d42",
       "labels": [
         "Instalar o app",
         "Rodapé"
@@ -2464,7 +2521,7 @@
       "file": "src/components/landing/reveal.tsx",
       "kind": "component",
       "route": null,
-      "hash": "dc4ab82b57a25a078118eab8c9a568272d96c7d943341b9ec6aa6761d1c0e9c7",
+      "hash": "e0408e233bcc31fb0bd41359682d0ce9af6784f54d9c6c3eadc0dc023a5f3e07",
       "labels": [],
       "messages": []
     },
@@ -2484,7 +2541,7 @@
       "file": "src/components/landing/video-background.tsx",
       "kind": "component",
       "route": null,
-      "hash": "cbb6266324586758d70f2ce1de70d596507e6814b13381cba0094e787b69cbdc",
+      "hash": "1615872432ad93753c6fb0db8fadd9da567c0f1306400b8135e57b1b0b4bd3a2",
       "labels": [],
       "messages": []
     },
@@ -2492,7 +2549,7 @@
       "file": "src/components/layout/motion-provider.tsx",
       "kind": "component",
       "route": null,
-      "hash": "ab87091cd09c7a038235cc07c9604e233a338f9e23e3c2e00f65c4ee30e7705f",
+      "hash": "b9278c898e3c5837214cbe96c15832eaee9272b35e759f21259405fe1687eeb2",
       "labels": [],
       "messages": []
     },
@@ -2597,7 +2654,7 @@
       "file": "src/components/ui/badge.tsx",
       "kind": "component",
       "route": null,
-      "hash": "1a38ae350f92c458d8270ad0589ae845a1cad59ee5f019753411e1ad351f6775",
+      "hash": "75a1c9e26acb4c0a49ce596d6268e2dacab399f72500210b410215377b535eeb",
       "labels": [],
       "messages": []
     },
@@ -2605,7 +2662,7 @@
       "file": "src/components/ui/button.tsx",
       "kind": "component",
       "route": null,
-      "hash": "3d8b2f0cac3393504d279a6a91176021df0f37bf881c325851e5e1bb621770a2",
+      "hash": "160c40e6dd582f18104b5358041d0446f5bfc56f2b8c608ecf8e99d6014c5b7b",
       "labels": [],
       "messages": []
     },
@@ -2613,7 +2670,7 @@
       "file": "src/components/ui/card.tsx",
       "kind": "component",
       "route": null,
-      "hash": "5013407f982e7d33b12eb1d86d5ca6af9977a9eb227ce2db956bdaf74f1e9432",
+      "hash": "eec8bc92ba702ee52e58079bbc744deb3ba079088cd95b60145944f02190fb8c",
       "labels": [],
       "messages": []
     },
@@ -2629,7 +2686,7 @@
       "file": "src/components/ui/dialog.tsx",
       "kind": "component",
       "route": null,
-      "hash": "b525b354ed6378e6d146425401681c5174d9659b8da946684cb75746e6ca5909",
+      "hash": "bc1cf0ec2ab3f220ebc54bee48810ff1a7fb1d722d504a5dc7c9c034ad97e6e2",
       "labels": [
         "Fechar"
       ],
@@ -2639,7 +2696,7 @@
       "file": "src/components/ui/form.tsx",
       "kind": "component",
       "route": null,
-      "hash": "176959480f6b62b946292660c8a1cdc7c3457a89cc4e2a291968305bf0fec00a",
+      "hash": "3baa55ef2d1a863e07d2813cafe20c2dc05f06f1a217ae036b1127b7ac96dfaa",
       "labels": [],
       "messages": []
     },
@@ -2655,7 +2712,7 @@
       "file": "src/components/ui/logo.tsx",
       "kind": "component",
       "route": null,
-      "hash": "6d4e339fe3896286114fcca87b36c1a95cb775534aae3bb9874afce1dcd6e5ae",
+      "hash": "40fc151b3600585a7ef8404641fe85a782ec6be90541ca652c75e7f6c6638799",
       "labels": [],
       "messages": []
     },
@@ -2695,7 +2752,7 @@
       "file": "src/data/fleet.ts",
       "kind": "component",
       "route": null,
-      "hash": "d1c8f2f9052f98f2f9ba7ed2599b1fe9a30362788e73549db302b8ff0fd5b936",
+      "hash": "be32e4c1fe1fb9618af10545b54023e989ca7cf4f18250fce2e531edf83f0b98",
       "labels": [],
       "messages": []
     },
@@ -2703,7 +2760,7 @@
       "file": "src/data/mock/index.ts",
       "kind": "component",
       "route": null,
-      "hash": "df4fdda82c84a266a37f9d15b546c17dfcdb8ced13bca48a77ca6e7f253cda28",
+      "hash": "0c14ea10cc47f8195981e80502d2825e7199ee6470d7eb7daead81f8cc706677",
       "labels": [],
       "messages": []
     },
@@ -2716,10 +2773,18 @@
       "messages": []
     },
     {
+      "file": "src/help/assistant.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "d90176c68f8d9b58a4e0ac823486582d6967f14f0c46b69382ed67c17b16a227",
+      "labels": [],
+      "messages": []
+    },
+    {
       "file": "src/help/components/article.tsx",
       "kind": "component",
       "route": null,
-      "hash": "3b0a7859c83d93123c19efd59dfea1968da944e5afa9e19589c84f92746e9cd4",
+      "hash": "ccacb251205dfbfdfb6da17126f27a790508c6ea67f10ae5a95e8df0a0bcedc7",
       "labels": [
         "Antes de começar",
         "Passo a passo",
@@ -2731,10 +2796,22 @@
       "messages": []
     },
     {
+      "file": "src/help/components/assistant.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "1f9501ec05868557fa304a9054be3414cc11db2d5adf4f91fd66098b2399a892",
+      "labels": [
+        "Assistente",
+        "Ex.: meu cliente pagou e mandou comprovante, o que faço?",
+        "Pergunta para o assistente"
+      ],
+      "messages": []
+    },
+    {
       "file": "src/help/components/context.tsx",
       "kind": "component",
       "route": null,
-      "hash": "983c5f31a39e9a8944946b5ae0ad3ac51539e8791b26481c936f7f5a50074ce7",
+      "hash": "0b04eee1208f6d975e0376bb096f7a4e2ee0e3575b52e1549fe5f9736813502d",
       "labels": [],
       "messages": []
     },
@@ -2742,7 +2819,7 @@
       "file": "src/help/components/contextual.tsx",
       "kind": "component",
       "route": null,
-      "hash": "26bdaffb684aa594498c0d92c34222bbd9fa959ba170f499e0dd7507bc92f1e2",
+      "hash": "ed3c83ef78d8e24a342fe2aef615643b6b432052b2f0b81fa467f2110c51ec93",
       "labels": [
         "Ajuda sobre esta página",
         "Abrir ajuda sobre esta página",
@@ -2751,14 +2828,59 @@
       "messages": []
     },
     {
+      "file": "src/help/components/glossary.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "4f1796c6eacd7745cf2a0b2c6f431430a91449382e44908c11e1678d3009717d",
+      "labels": [
+        "Filtrar termos (ex.: caução, baixa, FIPE)...",
+        "Filtrar glossário"
+      ],
+      "messages": []
+    },
+    {
       "file": "src/help/components/home.tsx",
       "kind": "component",
       "route": null,
-      "hash": "1314f40c22104bdbdfd920924477fa9b98116311f4a49a2a6e45123d1d460fd7",
+      "hash": "987cc31dd6ae3cf88c3a26ca5c9310fdeb479102588266a99a76e9c5444c9ea5",
       "labels": [
-        "Pesquise sua dúvida (ex.: como cadastrar veículo, cobrar PIX, contrato)...",
         "Pesquisar na Central de Ajuda",
-        "Resultados da pesquisa"
+        "Resultados da pesquisa",
+        "Tutoriais concluídos"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/manual.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "d902beeff9a9b5b5493efae7001d452ad0ddc2308a5b7a79ace58a991c03930a",
+      "labels": [
+        "Índice"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/palette.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "f42628c9f301f611d0c432eb36d4831c6dfc2c8f8015caaf19d56464d1e9477a",
+      "labels": [
+        "Pesquisar na ajuda",
+        "Digite sua dúvida. Enter abre o tutorial.",
+        "Ex.: como aprovar comprovante PIX"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/tour.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "bacd7e013a610f776e98780e8d3baea9fdf2700eeb8d544f4ff0cbb82deb026b",
+      "labels": [
+        "Abrir ajuda sobre esta página",
+        "Bem-vindo",
+        "Fechar tour"
       ],
       "messages": []
     },
@@ -2766,19 +2888,28 @@
       "file": "src/help/components/ui.tsx",
       "kind": "component",
       "route": null,
-      "hash": "5acdebc3a2376e0d5917fe86e2eac02a029fe910983f76f81448db882b43d089",
+      "hash": "6ce1270115da3bd04de94dea1fdee22d1ea355e85d2c1921931717868727e6fc",
       "labels": [
         "Navegação da Ajuda",
         "Obrigatório",
+        "Ainda precisa de ajuda?",
         "O que faltou ou ficou confuso neste tutorial?"
       ],
+      "messages": []
+    },
+    {
+      "file": "src/help/glossary.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "4300317fb4bfe1f9b6a59f609db3ba0589d8294daba952d249e63de2a40809f4",
+      "labels": [],
       "messages": []
     },
     {
       "file": "src/help/index.ts",
       "kind": "component",
       "route": null,
-      "hash": "2518caadedb4b4e1195e5374f2c10351c12ada20d017acda6710a06396129bdf",
+      "hash": "999925caf5720c7b4508490c249e2123a277bda3f83c9eac667955301cc411db",
       "labels": [],
       "messages": []
     },
@@ -2794,7 +2925,15 @@
       "file": "src/help/search.ts",
       "kind": "component",
       "route": null,
-      "hash": "81e18691e11c0949d8bbedcb45cfb7001186c4681d076aae98423a29128a98ce",
+      "hash": "84813b118341cd4b7e5f3e8799aedebb629fc5dc3a3f9884f684dfb6c36b23f9",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/track.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "a50ffc44685756f653c16afc39b5f9ea54388c12143ab68a3496b7118416748d",
       "labels": [],
       "messages": []
     },
@@ -2802,7 +2941,7 @@
       "file": "src/help/types.ts",
       "kind": "component",
       "route": null,
-      "hash": "8a6776891fd9829e06e02ae47899e28adaf5f30bbee0be8bf2199102a65b7d88",
+      "hash": "9d1f278e79029c56f59ec8ea3e7a46910b8f7be0bfa60a4aedaee33bf656785f",
       "labels": [],
       "messages": []
     },
@@ -2818,7 +2957,7 @@
       "file": "src/hooks/use-crud.ts",
       "kind": "component",
       "route": null,
-      "hash": "791e144cb1ea6fea39c525ab44b5cc9094d8daca5b4f85302e103706b0c1c511",
+      "hash": "cca28841903a1e5e49ae7ef32053ecfa211f74852ddb4981d9a4dbc2b47fdd17",
       "labels": [],
       "messages": []
     },
@@ -2858,7 +2997,7 @@
       "file": "src/lib/analytics.ts",
       "kind": "component",
       "route": null,
-      "hash": "94a75bd283a7f4754aa6a12f355ae46f6653d470a53baf0c765029a2e69a82ae",
+      "hash": "e26df1f71996540092e95edecc72503672c52448768039043bf7e22b3cd63386",
       "labels": [],
       "messages": []
     },
@@ -2874,7 +3013,7 @@
       "file": "src/lib/api.ts",
       "kind": "component",
       "route": null,
-      "hash": "27b0b78cd4246d3249d40f1d9cebe5be1a81d19e6f6e61b498a5a7188864c70a",
+      "hash": "020b55bc213ac62071200a3205e73c0b49b5bbc5c78ecae0648ae716bd21e756",
       "labels": [],
       "messages": []
     },
@@ -2898,7 +3037,7 @@
       "file": "src/lib/billing.ts",
       "kind": "component",
       "route": null,
-      "hash": "58ca9cdcc3f8d1f3dd73999c22ece3e689938b770a686166e12a7ca77d7137c6",
+      "hash": "0454d3d86f79c882da6219631dee3f9ca076f25fdbd3bb6f28f6d8ff1dcf5f4e",
       "labels": [],
       "messages": []
     },
@@ -2914,7 +3053,7 @@
       "file": "src/lib/company.ts",
       "kind": "component",
       "route": null,
-      "hash": "621e8aaafd699e4723bbb0ece3c863e7a186be306dff95b644fd6eefe3cf737d",
+      "hash": "83cf9becf3244c06b997fc11b1b9454707baefb8ff7d5bf7a0e0669abe990ecc",
       "labels": [],
       "messages": []
     },
@@ -2922,7 +3061,7 @@
       "file": "src/lib/constants.ts",
       "kind": "component",
       "route": null,
-      "hash": "556ae25891e844248fc3b37c25cc13a15016178db7d0000526e4fe77d4f4c023",
+      "hash": "7af04a914563015e63fb3cd42a0b2d0a448e20b50f9a18233da67188e82540b3",
       "labels": [],
       "messages": []
     },
@@ -2938,7 +3077,7 @@
       "file": "src/lib/contract.ts",
       "kind": "component",
       "route": null,
-      "hash": "9767c0d55cad5b40a78dc03bc12a184eca62d5bcfba7a530f485d164c97dda55",
+      "hash": "13e760f1e64820aaa16e43a79e1b05fd62f670170e569730f37650e23fd02c97",
       "labels": [],
       "messages": []
     },
@@ -2962,7 +3101,7 @@
       "file": "src/lib/documents.ts",
       "kind": "component",
       "route": null,
-      "hash": "610c140d601770289786431e9fdd3610fbea2703f709c0d0b103d51c5fc648e1",
+      "hash": "1475dfd66d4895061a67e28332e0073650275bba303670f0e6e9049320b05dcd",
       "labels": [],
       "messages": []
     },
@@ -2970,7 +3109,7 @@
       "file": "src/lib/fipe.ts",
       "kind": "component",
       "route": null,
-      "hash": "479de51b62352a6ce8d454a8e6315303fb580624ccd94ed1df0b8796d625cb49",
+      "hash": "c9d03a6d7cfc054faf76a292cc3248a6c95699937ad427a3f21b3fe41395adec",
       "labels": [],
       "messages": []
     },
@@ -2986,7 +3125,7 @@
       "file": "src/lib/notifications.ts",
       "kind": "component",
       "route": null,
-      "hash": "16a1eda1e926574105477e8d1edaa75239b8f718e4eab293a125c00022005793",
+      "hash": "cc99674d67eaec81a82c95f3e10b0e1dc07af06bed4d989479bb036c8c37dbc8",
       "labels": [],
       "messages": []
     },
@@ -3002,7 +3141,7 @@
       "file": "src/lib/payment-methods.ts",
       "kind": "component",
       "route": null,
-      "hash": "0698ba24ee41aa964d275a05e74675627764e61bfbe73650c36cf1fb37487a1f",
+      "hash": "b14345a28156915fd544a8345b94aacf48b75477344c7bbc5111b1541f77d4c4",
       "labels": [],
       "messages": []
     },
@@ -3034,7 +3173,7 @@
       "file": "src/lib/push-events.ts",
       "kind": "component",
       "route": null,
-      "hash": "d15285f71b6640ff5f7e876a8cba15ac2bfc394d1343ea2867081372ee32a254",
+      "hash": "f4eaf6d5d9426cc68330912cd3eb4017c82d2c5434f8cedc2a7d6b7175ca7a49",
       "labels": [],
       "messages": []
     },
@@ -3042,7 +3181,7 @@
       "file": "src/lib/pwa.ts",
       "kind": "component",
       "route": null,
-      "hash": "3917ba2a1293beb5f24843867d3f40217f3f7cf797517c13055691b7319350c8",
+      "hash": "6c621f4132cada210a7117c19060a11d097a3eae0437c8d9c81572f8401b9bc5",
       "labels": [],
       "messages": []
     },
@@ -3050,7 +3189,7 @@
       "file": "src/lib/reservations.ts",
       "kind": "component",
       "route": null,
-      "hash": "030cf32999e775d468cd8fdb58dc9fba61009464fe41065c2ecedab34387100d",
+      "hash": "45a3e65f1bdbd6e043b672860316498779f3f1d263596043f3e3b6e89d12a774",
       "labels": [],
       "messages": []
     },
@@ -3058,7 +3197,7 @@
       "file": "src/lib/selsyn.ts",
       "kind": "component",
       "route": null,
-      "hash": "b13427605d1f36a54a2b1d9a9a6bc4bde6abe0aadf62c75ec17b64d2d5e70361",
+      "hash": "be58051fa1769d12dfa5ec942bde1699c758bebb34f99bbf1bc80d42c2be3e8a",
       "labels": [],
       "messages": []
     },
@@ -3066,7 +3205,7 @@
       "file": "src/lib/server/asaas-crypto.ts",
       "kind": "component",
       "route": null,
-      "hash": "90b65ad4ff5aab0042ffdccffa71bb7441758fa64620240a301fef298472cff4",
+      "hash": "de48069252701a515f26391d0b803d33351433f5341844a728df0c189f208e55",
       "labels": [],
       "messages": []
     },
@@ -3074,7 +3213,7 @@
       "file": "src/lib/server/asaas-webhook.ts",
       "kind": "component",
       "route": null,
-      "hash": "6a9b9c29b552abbced1c7c37950928bc9f9e0b7b82c19261951573ad438e54d2",
+      "hash": "2c953bc32e8ba702ebff83dd0c16c1fa3d0d36369fde0c4b58ad29f85644d360",
       "labels": [],
       "messages": []
     },
@@ -3082,7 +3221,7 @@
       "file": "src/lib/server/asaas.ts",
       "kind": "component",
       "route": null,
-      "hash": "b373302945ae5e7eeb9be57165a2c15e0bcc87dc6a1da77175ad78d7b5fd6ac3",
+      "hash": "d523f5d48a8ff3c384457d9a6d346439d2928cd3307b25a9ebe4e5911153916a",
       "labels": [],
       "messages": []
     },
@@ -3090,7 +3229,7 @@
       "file": "src/lib/server/charge.ts",
       "kind": "component",
       "route": null,
-      "hash": "a8677a10a82e918939c96a534847c3bab2f55e06bd453763555bb9300b8a8792",
+      "hash": "406a380aba4c7d6de0fbbfd9e69c2caa224c7220dddc9f4788fe15a4d2c18d67",
       "labels": [],
       "messages": []
     },
@@ -3106,7 +3245,7 @@
       "file": "src/lib/server/contract-resolver.ts",
       "kind": "component",
       "route": null,
-      "hash": "ca83524f85e2ca663761f6a73e2000d5868ec332b383cf6502402098360ee2f1",
+      "hash": "dae19b684f829abfe9e6ed9f92e660d459068e9e9fae631b5ade423d0cbcf75f",
       "labels": [],
       "messages": []
     },
@@ -3122,7 +3261,7 @@
       "file": "src/lib/server/email.ts",
       "kind": "component",
       "route": null,
-      "hash": "a29b4f9aecb0101272cca3256d224c60f616e779616e1815df35df0c06ee9fbb",
+      "hash": "e60189f6d2f647a8f7ed808d23b093771e43a31e00ffd1b5703237c8f60ceab0",
       "labels": [],
       "messages": []
     },
@@ -3138,7 +3277,7 @@
       "file": "src/lib/server/infinitepay.ts",
       "kind": "component",
       "route": null,
-      "hash": "53580406bbcca485d4edfc67c916743edb4141adf5a140564eb7122810b96b95",
+      "hash": "d5aef8f6833ffc79499474e7e35c1029211b0cc6a1e12a15a6fa57b79b6e87cc",
       "labels": [],
       "messages": []
     },
@@ -3194,7 +3333,7 @@
       "file": "src/lib/server/selsyn-transport.ts",
       "kind": "component",
       "route": null,
-      "hash": "ce4ff721bf512e9423dd00a77cfb6a98750152252296d1d1177636c40a131bdf",
+      "hash": "691b6e815aa3c4c7e7ad4794016e45b2ba5920b6e874a92068a8db289047eab3",
       "labels": [],
       "messages": []
     },
@@ -3210,7 +3349,7 @@
       "file": "src/lib/server/subscription.ts",
       "kind": "component",
       "route": null,
-      "hash": "2381f019a3fea140f5ce9173a82fc1b3e1187da084865b531f370690ac66abc5",
+      "hash": "9a5b6efe25bcc8ee81adfd64ddaf20aeac5f2bb2e6f0a772631b62c127d4a4a0",
       "labels": [],
       "messages": []
     },
@@ -3226,7 +3365,7 @@
       "file": "src/lib/server/tenant.ts",
       "kind": "component",
       "route": null,
-      "hash": "c89601984370e2d24ecf9846dee120e010fd397352547d94c65660d391be305d",
+      "hash": "08448530f8f0480fdc2f5799d2dd92a3cc9e37b8adf5bc5ccbf10827d64db147",
       "labels": [],
       "messages": []
     },
@@ -3234,7 +3373,7 @@
       "file": "src/lib/server/whatsapp.ts",
       "kind": "component",
       "route": null,
-      "hash": "81448d8dc9a95dc732a6dd26e2c37b4d0bacf8146dfd657c6753bb8ab8beda3a",
+      "hash": "ff2e58eb8be36ab75924d4b2ee209a6256719181383bf9e02d74d75e56b04d87",
       "labels": [],
       "messages": []
     },
@@ -3242,7 +3381,7 @@
       "file": "src/lib/storage.ts",
       "kind": "component",
       "route": null,
-      "hash": "bc814828e4973ad668f144f4437b4f6003534368c236c10cbae957d51d1e834b",
+      "hash": "20f18fc47db046544aa177b701a47d0559c7feec73891ab1d0ab45c49a1d0963",
       "labels": [],
       "messages": []
     },
@@ -3282,7 +3421,7 @@
       "file": "src/lib/utils.ts",
       "kind": "component",
       "route": null,
-      "hash": "6be0f5edaf96827a0bd2ec7ead7f6cd7f9eaffe9a3643c553711aa08bd232e82",
+      "hash": "1868d093b14f4ac544244ce76318339a7e1b58f68ee306cfa489452521576991",
       "labels": [],
       "messages": []
     },
@@ -3306,7 +3445,7 @@
       "file": "src/lib/whatsapp.ts",
       "kind": "component",
       "route": null,
-      "hash": "a998c8fe9421c89bef15db68ee8ec9212f3a05bbf6557a5efed528b149eaf1c8",
+      "hash": "b271f996948b2b0ad2cca9498fb088592869e3369be8396fe6c075de0c316413",
       "labels": [],
       "messages": []
     },
@@ -3322,7 +3461,7 @@
       "file": "src/repositories/index.ts",
       "kind": "component",
       "route": null,
-      "hash": "09dec079eacb6b4a046428c35d5b459e7f5aa0cf19e9aea2c76dfa583e40869e",
+      "hash": "1eddeb19fd8ef24a02cb8c06e692eba73d1d766152bb364a9984ab797b2185a8",
       "labels": [],
       "messages": []
     },
@@ -3330,7 +3469,7 @@
       "file": "src/repositories/local-storage.ts",
       "kind": "component",
       "route": null,
-      "hash": "37a9eff15b9dd66625c83f75726ad871a973fcae554cea85a2108e6fcd377aed",
+      "hash": "eb529ae73771e90e773fc881214b863e6603f2901690f8a73ad21116de58debe",
       "labels": [],
       "messages": []
     },
@@ -3338,7 +3477,7 @@
       "file": "src/repositories/mapping.ts",
       "kind": "component",
       "route": null,
-      "hash": "3c1c060a8e359704086fdceaca4e35ddcf30c474eba56cd6cd59ac5e03dad634",
+      "hash": "8c389bdce45df34d439129f29f63f20c95aa4f5a2ed56971c601cd9e750e5a02",
       "labels": [],
       "messages": []
     },
@@ -3362,7 +3501,7 @@
       "file": "src/types/index.ts",
       "kind": "component",
       "route": null,
-      "hash": "2b61c5f5fabba58396c89f7cc76d26ebca3907c03da1e704dbb1a55301487052",
+      "hash": "aa7362c38f63302f38848f8d44c6eef26667837e4fbf55b54b2b296aa34b59d0",
       "labels": [],
       "messages": []
     },
@@ -3416,7 +3555,7 @@
       "file": "apps/locatario/app/(auth)/_layout.tsx",
       "kind": "component",
       "route": null,
-      "hash": "a3e6a1a0006da5aab1193262a62270e4b682f7e57d4e269d5f1c5939a1e24ee7",
+      "hash": "64b43ce41293e9f829ef2a624ee990ee291d908fe600c9fedf2f8ecfd4ae01b0",
       "labels": [],
       "messages": []
     },
@@ -3512,7 +3651,7 @@
       "file": "apps/locatario/app/(tabs)/_layout.tsx",
       "kind": "component",
       "route": null,
-      "hash": "1de0c10ef94192f08880868539607ac71564246d4bd302378ced7a414185ba38",
+      "hash": "2a45901af406e597eed55e101a80693eb1634bc913c0f89afb8025569decc0db",
       "labels": [],
       "messages": []
     },
@@ -3530,7 +3669,7 @@
       "file": "apps/locatario/app/index.tsx",
       "kind": "tenant-page",
       "route": "/locatario",
-      "hash": "dbcae4a68533bdb525e7b5785c06b2a356041f5f471611971ef2f1df8c2de1f1",
+      "hash": "2edcd0ef3da50b679826e72461dc635c21f2e284787343bd72410312e88e014c",
       "labels": [],
       "messages": []
     },

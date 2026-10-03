@@ -39,12 +39,14 @@ export const GET = scoped(async function GET(request: Request) {
       return Response.json({ members: members ?? [] });
     }
 
-    const [overview, plans, admins, config, audit] = await Promise.all([
+    const [overview, plans, admins, config, audit, help] = await Promise.all([
       db.rpc("platform_overview"),
       db.from("plans").select("id, name, active, entitlements").order("name"),
       db.rpc("platform_admin_list"),
       db.from("platform_config").select("trial_days, grace_days").eq("id", 1).maybeSingle(),
       db.from("platform_audit").select("id, actor_id, action, organization_id, details, created_at").order("created_at", { ascending: false }).limit(50),
+      // Opcional: se a migração da ajuda ainda não rodou, o painel segue funcionando sem este bloco.
+      db.rpc("help_report", { p_days: 30 }),
     ]);
     fail(overview.error);
     return Response.json({
@@ -54,6 +56,7 @@ export const GET = scoped(async function GET(request: Request) {
       admins: admins.data ?? [],
       config: config.data ?? { trial_days: 30, grace_days: 7 },
       audit: audit.data ?? [],
+      help: help.error ? null : help.data,
     });
   } catch (e) {
     return errorResponse(e);

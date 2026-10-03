@@ -1,32 +1,55 @@
 "use client";
 
-import { AlertTriangle, Clock, HelpCircle, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertTriangle, Clock, HelpCircle, Lock, ShieldAlert, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useHelp } from "@/help/components/context";
-import { ArticleActions, Breadcrumb, NoticeBox, StepItem } from "@/help/components/ui";
+import { ArticleActions, Breadcrumb, NoticeBox, StepItem, SupportCard } from "@/help/components/ui";
 import { articles, categoryName, relatedArticles } from "@/help";
 import { canReadArticle, featureAvailable } from "@/help/access";
+import { trackHelp } from "@/help/track";
 
 export default function ArticleDetail({ slug }: { slug: string }) {
   const { access, base, setProgress } = useHelp();
   const article = useMemo(() => articles.find((a) => a.slug === slug), [slug]);
+  const readable = Boolean(article && canReadArticle(article, access));
+  const tracked = useRef<string | null>(null);
 
   useEffect(() => {
-    if (article) {
-      setProgress((p) => ({ ...p, recent: [article.slug, ...p.recent.filter((s) => s !== article.slug)].slice(0, 10) }));
+    if (!article || !readable) return;
+    setProgress((p) => ({ ...p, recent: [article.slug, ...p.recent.filter((s) => s !== article.slug)].slice(0, 10) }));
+    if (tracked.current !== article.slug) {
+      tracked.current = article.slug;
+      trackHelp(access.audience, { kind: "view", article: article.slug });
     }
-  }, [article, setProgress]);
+  }, [article, readable, access.audience, setProgress]);
 
-  if (!article || !canReadArticle(article, access) || !featureAvailable(article, access)) {
+  // "Continue de onde parou": guarda o último passo que apareceu na tela.
+  useEffect(() => {
+    if (!article || !readable || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const step = Number((e.target as HTMLElement).dataset.step);
+          setProgress((p) => (p.lessonSteps[article.slug] >= step ? p : { ...p, lessonSteps: { ...p.lessonSteps, [article.slug]: step } }));
+        }
+      },
+      { rootMargin: "0px 0px -40% 0px" },
+    );
+    document.querySelectorAll("[data-step]").forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [article, readable, setProgress]);
+
+  if (!article || !readable) {
     return (
       <Card className="p-8 text-center space-y-3">
         <ShieldAlert className="size-8 text-amber-400 mx-auto" />
         <h2 className="font-semibold text-white">Artigo não encontrado ou restrito</h2>
         <p className="text-xs text-muted max-w-md mx-auto">
-          Este tutorial pode ter sido movido ou exige permissões de acesso que seu perfil não possui.
+          Este tutorial pode ter sido movido ou exige uma permissão que seu perfil não possui. Peça ao proprietário ou administrador da locadora.
         </p>
         <Link href={base} className="text-xs font-semibold text-brand-soft hover:underline">
           Voltar para a Central de Ajuda
@@ -35,10 +58,18 @@ export default function ArticleDetail({ slug }: { slug: string }) {
     );
   }
 
+  const inPlan = featureAvailable(article, access);
   const related = relatedArticles(article, articles.filter((a) => canReadArticle(a, access) && featureAvailable(a, access)));
+  const gallery = article.steps.filter((s) => s.image).map((s) => ({ src: s.image!, caption: s.caption ?? s.title, markers: s.markers }));
+  const toc = [
+    // Vários títulos já trazem "Passo N —" no conteúdo; não repete.
+    ...article.steps.map((s, i) => ({ id: `passo-${i + 1}`, label: /^passo\s+\d/i.test(s.title) ? s.title : `Passo ${i + 1} — ${s.title}` })),
+    ...(article.problems.length ? [{ id: "problemas", label: "Problemas comuns" }] : []),
+    ...(article.faq.length ? [{ id: "faq", label: "Perguntas frequentes" }] : []),
+  ];
 
   return (
-    <article className="max-w-4xl mx-auto space-y-8">
+    <article className="max-w-4xl mx-auto space-y-8 help-article">
       <Breadcrumb
         items={[
           { label: "Ajuda", href: base },
@@ -47,7 +78,6 @@ export default function ArticleDetail({ slug }: { slug: string }) {
         ]}
       />
 
-      {/* Cabeçalho do artigo */}
       <header className="space-y-3 border-b border-line pb-6">
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone={article.difficulty === "Iniciante" ? "success" : "brand"}>{article.difficulty ?? "Tutorial"}</Badge>
@@ -58,7 +88,26 @@ export default function ArticleDetail({ slug }: { slug: string }) {
         <p className="text-sm leading-relaxed text-zinc-300">{article.description}</p>
       </header>
 
-      {/* Pré-requisitos */}
+      {!inPlan && (
+        <aside className="flex gap-3 rounded-xl border border-line bg-surface p-4 text-xs text-zinc-300">
+          <Lock className="size-4 shrink-0 text-muted mt-0.5" />
+          <p>Recurso não disponível no plano atual da sua locadora. O tutorial fica aqui para consulta; para ativar, fale com o suporte.</p>
+        </aside>
+      )}
+
+      {toc.length > 3 && (
+        <details className="no-print rounded-2xl border border-line bg-surface p-4 text-xs lg:open:block" open>
+          <summary className="cursor-pointer font-semibold text-white">Neste artigo</summary>
+          <ol className="mt-2 grid gap-1 sm:grid-cols-2">
+            {toc.map((t) => (
+              <li key={t.id}>
+                <a href={`#${t.id}`} className="text-muted hover:text-white">{t.label}</a>
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+
       {article.prerequisites.length > 0 && (
         <section aria-label="Antes de começar" className="rounded-2xl border border-line bg-surface p-4 text-xs space-y-2">
           <p className="font-semibold text-white flex items-center gap-1.5">
@@ -72,17 +121,15 @@ export default function ArticleDetail({ slug }: { slug: string }) {
         </section>
       )}
 
-      {/* Passos do tutorial */}
       <section aria-label="Passo a passo" className="space-y-4">
         <h2 className="font-display text-lg font-bold text-white">Passo a passo</h2>
-        <ol className="space-y-6 before:border-l before:border-line">
+        <ol className="space-y-6">
           {article.steps.map((step, idx) => (
-            <StepItem key={idx} step={step} index={idx} />
+            <StepItem key={idx} step={step} index={idx} gallery={gallery} />
           ))}
         </ol>
       </section>
 
-      {/* Resultado */}
       {article.result && (
         <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-xs text-emerald-200 space-y-1">
           <p className="font-semibold text-emerald-300">✓ O que acontece depois?</p>
@@ -90,7 +137,6 @@ export default function ArticleDetail({ slug }: { slug: string }) {
         </section>
       )}
 
-      {/* Dicas e Avisos */}
       <div className="grid gap-3 sm:grid-cols-2">
         {article.tips.map((t, i) => (
           <NoticeBox key={i} type="tip" title="Dica útil" text={t} />
@@ -100,9 +146,8 @@ export default function ArticleDetail({ slug }: { slug: string }) {
         ))}
       </div>
 
-      {/* Resolução de problemas comuns */}
       {article.problems.length > 0 && (
-        <section aria-label="Problemas comuns" className="space-y-3 rounded-2xl border border-line bg-surface p-5">
+        <section id="problemas" aria-label="Problemas comuns" className="scroll-mt-24 space-y-3 rounded-2xl border border-line bg-surface p-5">
           <h2 className="font-display text-base font-semibold text-white flex items-center gap-2">
             <AlertTriangle className="size-4 text-amber-400" /> Problemas comuns e soluções
           </h2>
@@ -117,9 +162,8 @@ export default function ArticleDetail({ slug }: { slug: string }) {
         </section>
       )}
 
-      {/* Dúvidas frequentes do módulo */}
       {article.faq.length > 0 && (
-        <section aria-label="Dúvidas frequentes" className="space-y-3 rounded-2xl border border-line bg-surface p-5">
+        <section id="faq" aria-label="Dúvidas frequentes" className="scroll-mt-24 space-y-3 rounded-2xl border border-line bg-surface p-5">
           <h2 className="font-display text-base font-semibold text-white flex items-center gap-2">
             <HelpCircle className="size-4 text-brand-soft" /> Perguntas frequentes relacionadas
           </h2>
@@ -134,10 +178,8 @@ export default function ArticleDetail({ slug }: { slug: string }) {
         </section>
       )}
 
-      {/* Ações, conclusão e feedback */}
       <ArticleActions article={article} />
 
-      {/* Artigos relacionados */}
       {related.length > 0 && (
         <section className="no-print space-y-3 pt-4 border-t border-line">
           <h2 className="font-display text-sm font-semibold text-white">Veja também</h2>
@@ -155,6 +197,8 @@ export default function ArticleDetail({ slug }: { slug: string }) {
           </div>
         </section>
       )}
+
+      <SupportCard compact />
     </article>
   );
 }
