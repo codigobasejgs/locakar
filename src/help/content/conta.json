@@ -1,0 +1,59 @@
+[
+  {
+    "slug": "entrar-no-painel-e-criar-locadora",
+    "title": "Como entrar no painel e criar uma nova locadora",
+    "description": "Login da equipe, cadastro de locadora com 30 dias grátis, link público da vitrine e o que fazer se o acesso falhar.",
+    "category": "conta", "audience": "admin", "permission": "read", "difficulty": "Iniciante",
+    "keywords": ["login", "entrar", "senha", "acesso", "cadastro", "teste gratis", "vitrine", "link publico"],
+    "aliases": ["como entrar no sistema", "esqueci minha senha do painel", "criar minha locadora", "cadastrar locadora", "link da vitrine"],
+    "routes": ["/admin/login", "/plataforma/cadastro", "/l/[slug]"],
+    "sources": ["src/app/admin/login/page.tsx", "src/lib/auth.ts", "src/app/plataforma/cadastro/page.tsx", "src/app/l/[slug]/page.tsx"],
+    "minutes": 3, "updated": "2026-10-02", "version": 1,
+    "prerequisites": ["E-mail válido que você acessa."],
+    "steps": [
+      { "title": "Entrar no painel", "text": "Acesse /admin/login, informe e-mail e senha e toque em Entrar. O painel abre na locadora ativa da sua conta." },
+      { "title": "Criar uma locadora nova", "text": "Em /plataforma/cadastro preencha os dados e toque para criar. A locadora começa em teste grátis de 30 dias.", "fields": [
+        { "name": "Nome da sua locadora", "required": true, "description": "Nome exibido no painel e no app.", "example": "Locadora Exemplo" },
+        { "name": "Endereço exclusivo no sistema", "required": true, "description": "Parte do link público (/l/endereco) e do app; letras minúsculas, números e hífen.", "example": "locadora-exemplo" },
+        { "name": "WhatsApp de contato", "required": false, "description": "Telefone de atendimento." },
+        { "name": "Seu e-mail de acesso e senha", "required": true, "description": "Conta do dono (senha com no mínimo 6 caracteres). Confirme o e-mail pelo link recebido." } ] },
+      { "title": "Já é de outra locadora?", "text": "Se o e-mail já pertence à equipe de outra locadora, o sistema pergunta se você quer sair e cadastrar com outro e-mail ou criar a nova locadora na mesma conta. Com mais de uma locadora, troque pelo seletor no topo do painel." },
+      { "title": "Vitrine pública", "text": "Cada locadora tem a página /l/endereco com marca, frota e botões \"Alugar pelo app\" e WhatsApp. Divulgue o link ou o QR Code de Configurações > Empresa." }
+    ],
+    "tips": ["Use o mesmo e-mail do convite para entrar quando foi convidado para uma equipe."],
+    "warnings": ["Locadora suspensa ou com teste vencido continua acessível só para leitura até regularizar."],
+    "problems": [
+      { "question": "\"E-mail ou senha incorretos\"", "answer": "Confira o e-mail e a senha. Se não lembrar a senha, peça ao administrador da locadora ou ao suporte da plataforma para redefinir." },
+      { "question": "\"E-mail ainda não confirmado\"", "answer": "Abra o link de confirmação enviado ao seu e-mail e tente de novo." },
+      { "question": "\"Seu usuário ainda não pertence a nenhuma locadora\"", "answer": "Aceite o convite recebido ou crie sua locadora em /plataforma/cadastro." },
+      { "question": "\"Este endereço já está em uso\"", "answer": "Outro cadastro usa esse endereço; escolha outro." }
+    ],
+    "faq": [{ "question": "O painel tem botão de esqueci minha senha?", "answer": "Não na tela de login do painel. A recuperação é feita com o administrador ou o suporte da plataforma." }],
+    "related": ["onboarding-checklist-locadora", "gerenciar-equipe-permissoes"],
+    "result": "Você entra no painel certo ou começa uma locadora nova em teste grátis."
+  },
+  {
+    "slug": "infinitepay-retorno-aproximacao",
+    "title": "Receber por aproximação com InfiniteTap e conferir o retorno",
+    "description": "Como cobrar uma parcela no balcão pelo celular com InfinitePay e onde conferir se o pagamento foi aprovado.",
+    "category": "pagamentos", "audience": "admin", "permission": "finance", "difficulty": "Intermediário",
+    "keywords": ["infinitepay", "infinitetap", "aproximacao", "maquininha", "cartao", "retorno"],
+    "aliases": ["receber no celular por aproximacao", "tap to pay", "resultado infinitepay"],
+    "routes": ["/admin/pagamentos/infinitepay", "/admin/pagamentos"],
+    "sources": ["src/app/admin/pagamentos/infinitepay/page.tsx", "src/components/admin/infinitepay-dialog.tsx"],
+    "minutes": 3, "updated": "2026-10-02", "version": 1,
+    "prerequisites": ["InfinitePay configurada e ativa em Configurações > Pagamentos.", "App InfinitePay instalado e logado no celular do operador."],
+    "steps": [
+      { "title": "Abra a cobrança", "text": "Em Pagamentos, toque em Cobrar (ou no menu da parcela) e escolha InfinitePay." },
+      { "title": "Escolha aproximação ou link", "text": "Com o modo \"Ambos\" você pode cobrar por aproximação no celular (InfiniteTap) ou gerar link de pagamento Pix/cartão para o cliente." },
+      { "title": "Conclua no app InfinitePay", "text": "Na aproximação, o app InfinitePay abre com o valor; o cliente aproxima o cartão." },
+      { "title": "Retorno do InfinitePay", "text": "Ao terminar, o celular volta para a tela \"Retorno do InfinitePay\" com o resultado do pagamento por aproximação. Pagamento aprovado e confirmado dá baixa na parcela." }
+    ],
+    "tips": ["Ative \"Aproximação só na conta da empresa\" para o app conferir se o operador está logado na conta certa."],
+    "warnings": ["A aproximação exige o app InfinitePay no mesmo celular do operador."],
+    "problems": [{ "question": "A parcela não ficou paga após a aproximação", "answer": "Confira a tela de retorno e o status em Configurações > Pagamentos > InfinitePay (última transação e último webhook)." }],
+    "faq": [{ "question": "Preciso de chave de API?", "answer": "Não. A InfinitePay identifica a conta pela InfiniteTag." }],
+    "related": ["integracao-infinitepay", "visao-geral-pagamentos"],
+    "result": "Você recebe no balcão por aproximação e confere o resultado no sistema."
+  }
+]

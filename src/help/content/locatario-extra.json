@@ -1,0 +1,106 @@
+[
+  {
+    "slug": "app-locatario-inicio-minha-locacao",
+    "title": "Tela inicial e Minha locação: acompanhe seu aluguel",
+    "description": "Entenda os avisos da tela Início, a próxima parcela, o card do veículo e as condições do seu contrato.",
+    "category": "locatario", "audience": "tenant", "permission": "read", "difficulty": "Iniciante",
+    "keywords": ["inicio", "locacao", "contrato", "parcela", "veiculo", "avisos"],
+    "aliases": ["onde vejo minha locacao", "ver contrato no app", "proxima parcela"],
+    "routes": ["/locatario/inicio", "/locatario/locacao"],
+    "sources": ["apps/locatario/app/(tabs)/inicio.tsx", "apps/locatario/app/(tabs)/locacao.tsx"],
+    "minutes": 3, "updated": "2026-10-02", "version": 1,
+    "prerequisites": ["Conta criada e vinculada à locadora."],
+    "steps": [
+      { "title": "Avisos no topo do Início", "text": "O Início mostra alertas quando há pagamento vencido (com multa e juros), comprovante recusado, comprovante em análise ou CNH vencendo em até 30 dias. Toque no aviso para ir direto à tela certa." },
+      { "title": "Próxima parcela", "text": "O card mostra o valor de hoje (\"Vencido — valor hoje\" ou \"Próximo · data\"). O botão \"Pagar com PIX\" abre Pagamentos com os meios ativos da locadora.", "image": "/help/screenshots/app/pagamentos.webp", "caption": "Parcelas e status no app do locatário." },
+      { "title": "Minha locação", "text": "Na aba Locação você vê Veículo (modelo, placa, ano, combustível), Contrato (início, devolução prevista, tipo, caução, parcela, parcelas pagas, km) e as regras de atraso: multa, juros e carência." },
+      { "title": "Acesso rápido", "text": "Atalhos para Meu veículo, Relatar problema, Documentos, Multas, Reservas e Suporte pelo WhatsApp." }
+    ],
+    "tips": ["Puxe a tela para baixo para atualizar os dados.", "Sem internet, o app mostra os últimos dados salvos no celular com um aviso."],
+    "warnings": ["O contrato para assinar chega por WhatsApp ou e-mail e é assinado numa página própria; a aba Locação mostra o resumo das condições."],
+    "problems": [{ "question": "Aparece \"Nenhuma locação\"", "answer": "Sua locação ainda não foi aprovada ou cadastrada pela locadora. Você pode pedir uma em \"Solicitar locação\"." }],
+    "faq": [{ "question": "Posso ver locações antigas?", "answer": "Sim, na seção \"Outras locações\" da aba Locação, com veículo, placa, status e datas." }],
+    "related": ["app-locatario-pagar-pix-cartao", "app-locatario-solicitar-locacao"],
+    "result": "Você acompanha seu aluguel, a próxima parcela e as regras do contrato."
+  },
+  {
+    "slug": "app-locatario-solicitar-locacao",
+    "title": "Como solicitar uma locação pelo app",
+    "description": "Escolha o carro, o período e o plano, informe endereço e CNH, envie 4 fotos de documentos e acompanhe a análise.",
+    "category": "locatario", "audience": "tenant", "permission": "read", "difficulty": "Iniciante",
+    "keywords": ["solicitar", "alugar", "pedido", "documentos", "cnh", "selfie", "comprovante de residencia"],
+    "aliases": ["como alugar pelo app", "pedir carro", "fazer solicitacao de locacao"],
+    "routes": ["/locatario/solicitar"],
+    "sources": ["apps/locatario/app/solicitar.tsx", "src/app/api/tenant/requests/route.ts"],
+    "minutes": 6, "updated": "2026-10-02", "version": 1,
+    "prerequisites": ["Conta criada com e-mail confirmado.", "CNH válida e comprovante de endereço recente."],
+    "steps": [
+      { "title": "1. Veículo e período", "text": "Escolha o veículo, informe as datas de retirada e devolução (DD/MM/AAAA) e a periodicidade: Diária, Semanal, Mensal ou Anual.", "fields": [
+        { "name": "Data de retirada", "required": true, "description": "Não pode ser no passado nem passar de 90 dias." },
+        { "name": "Data de devolução", "required": true, "description": "Precisa ser depois da retirada." } ] },
+      { "title": "2. Uso e endereço", "text": "KM médio por dia e por mês, telefone de recado (opcional) e endereço. Ao digitar o CEP, rua, bairro, cidade e UF são preenchidos.", "fields": [
+        { "name": "CEP", "required": true, "description": "8 números." },
+        { "name": "Logradouro, Número, Cidade e UF", "required": true, "description": "Endereço atual." } ] },
+      { "title": "3. Habilitação", "text": "Número da CNH, categoria (B, AB, A, C, D ou E) e validade. CNH vencida não é aceita." },
+      { "title": "4. Documentos", "text": "Quatro fotos obrigatórias: CNH (frente), CNH (verso), comprovante de endereço dos últimos 3 meses e selfie segurando a CNH." },
+      { "title": "5. Revisão e envio", "text": "Confira o resumo (veículo, período, plano, valor previsto, caução, endereço e documentos) e toque em \"Enviar solicitação\"." }
+    ],
+    "tips": ["O rascunho fica salvo no celular: se fechar o app, os dados voltam ao reabrir."],
+    "warnings": ["O valor e a caução exibidos são previstos; a locadora confirma as condições na aprovação.", "Enviar não garante a locação: a equipe confere os documentos e pode aprovar, pedir ajuste ou recusar."],
+    "problems": [
+      { "question": "\"Você já possui uma solicitação em análise\"", "answer": "Aguarde a resposta da locadora antes de enviar outra." },
+      { "question": "\"Sua CNH está vencida\"", "answer": "Renove a CNH e informe a nova validade." }
+    ],
+    "faq": [{ "question": "Como sei se foi aprovada?", "answer": "O status aparece no Início (Em análise, Ajuste solicitado, Não aprovada). Aprovada, o link do contrato chega por WhatsApp ou e-mail." }],
+    "related": ["app-locatario-inicio-minha-locacao", "app-locatario-reservas"],
+    "result": "Sua solicitação chega para a locadora com tudo que ela precisa para analisar."
+  },
+  {
+    "slug": "app-locatario-reservas",
+    "title": "Como pedir e cancelar reservas pelo app",
+    "description": "Peça a reserva de um carro para datas futuras, acompanhe a confirmação e cancele se precisar.",
+    "category": "locatario", "audience": "tenant", "permission": "read", "difficulty": "Iniciante",
+    "keywords": ["reserva", "agendar", "datas", "cancelar reserva"],
+    "aliases": ["reservar carro pelo app", "cancelar reserva", "minhas reservas"],
+    "routes": ["/locatario/reservas"],
+    "sources": ["apps/locatario/app/reservas.tsx", "src/app/api/tenant/reservations/route.ts"],
+    "minutes": 2, "updated": "2026-10-02", "version": 1,
+    "prerequisites": ["Conta ativa na locadora."],
+    "steps": [
+      { "title": "Escolha o carro e as datas", "text": "Em \"Pedir reserva\", toque no veículo e informe Retirada e Devolução (DD/MM/AAAA). Toque em \"Enviar pedido\"." },
+      { "title": "Acompanhe", "text": "Em \"Minhas reservas\" o status aparece como Aguardando confirmação, Confirmada, Concluída ou Cancelada." },
+      { "title": "Cancelar", "text": "Em reservas pendentes ou confirmadas, toque em \"Cancelar\" e confirme em \"Cancelar reserva\"." }
+    ],
+    "tips": ["Você pode ter até 3 pedidos aguardando resposta ao mesmo tempo."],
+    "warnings": ["O pedido não garante a reserva: a locadora confirma a disponibilidade e as condições."],
+    "problems": [{ "question": "\"Este veículo não está disponível nessas datas\"", "answer": "O carro já está locado ou reservado no período. Escolha outras datas ou outro carro." }],
+    "faq": [{ "question": "Posso mudar as datas de uma reserva?", "answer": "Não pelo app. Cancele e peça de novo, ou fale com a locadora." }],
+    "related": ["app-locatario-solicitar-locacao"],
+    "result": "Sua reserva fica registrada e você acompanha a confirmação."
+  },
+  {
+    "slug": "app-locatario-multas-perfil",
+    "title": "Multas, perfil, tema e privacidade no app",
+    "description": "Veja multas com prazos, seus dados, troque o tema, escolha a locadora e entenda a política de privacidade.",
+    "category": "locatario", "audience": "tenant", "permission": "read", "difficulty": "Iniciante",
+    "keywords": ["multas", "perfil", "tema", "privacidade", "sair", "notificacoes", "locadoras"],
+    "aliases": ["onde vejo multas no app", "mudar tema do app", "sair do app", "alterar meus dados"],
+    "routes": ["/locatario/multas", "/locatario/perfil", "/locatario/privacidade"],
+    "sources": ["apps/locatario/app/multas.tsx", "apps/locatario/app/(tabs)/perfil.tsx", "apps/locatario/app/privacidade.tsx"],
+    "minutes": 3, "updated": "2026-10-02", "version": 1,
+    "prerequisites": ["Conta ativa."],
+    "steps": [
+      { "title": "Multas", "text": "Cada multa mostra valor, status (Pendente, Identificar condutor, Paga, Vencida, Contestada), número do auto, data da infração e vencimento, além do prazo para indicar condutor e do desconto. \"Falar sobre esta multa\" abre o WhatsApp da locadora." },
+      { "title": "Perfil", "text": "Mostra nome, CPF parcialmente oculto, telefone, e-mail e CNH (últimos 4 dígitos). Para alterar dados, fale com a locadora; a CNH nova você envia em Meus documentos." },
+      { "title": "Tema", "text": "Em Aparência escolha Escuro, Claro ou Sistema." },
+      { "title": "Suas locadoras", "text": "Se você tem cadastro em mais de uma locadora, escolha qual abrir nesta seção." },
+      { "title": "Privacidade", "text": "A política explica quais dados são usados, o que não é coletado e por quanto tempo. Pedidos de correção ou exclusão são feitos pelo WhatsApp da locadora." }
+    ],
+    "tips": ["O botão \"Central de Ajuda e Treinamento\" no Perfil abre estes tutoriais."],
+    "warnings": ["\"Sair da conta\" desconecta este aparelho e apaga os dados salvos nele."],
+    "problems": [{ "question": "Não recebo notificações no celular", "answer": "As notificações dependem de ter aceitado essa opção no primeiro acesso e da permissão do aparelho. Pelo navegador o app não envia notificações; nesse caso acompanhe pelo app e pelo WhatsApp." }],
+    "faq": [{ "question": "Posso pagar a multa pelo app?", "answer": "Não. O app mostra a multa e os prazos; para pagar ou indicar condutor, fale com a locadora pelo botão de WhatsApp." }],
+    "related": ["app-locatario-inicio-minha-locacao"],
+    "result": "Você acompanha multas e controla suas preferências no app."
+  }
+]

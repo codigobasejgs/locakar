@@ -1,0 +1,280 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Identidade LOCAKAR — preto domina, roxo assina, branco contrasta. */
+@theme {
+  --color-ink: var(--theme-ink);
+  --color-ink-2: var(--theme-ink-2);
+  --color-panel: var(--theme-panel);
+  --color-panel-2: var(--theme-panel-2);
+  --color-brand-deep: var(--theme-brand-deep);
+  --color-brand: var(--theme-brand);
+  --color-magenta: var(--theme-magenta);
+  --color-brand-soft: var(--theme-brand-soft);
+  --color-muted: var(--theme-muted);
+  --color-line: var(--theme-line);
+  --color-line-strong: var(--theme-line-strong);
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-heading), var(--font-body), ui-sans-serif, sans-serif;
+
+  --shadow-glow: 0 0 0 1px rgb(160 0 160 / 0.35), 0 10px 40px -10px rgb(160 0 160 / 0.55);
+  --shadow-glow-sm: 0 0 24px -6px rgb(160 0 160 / 0.6);
+}
+
+:root {
+  --theme-ink: #050505;
+  --theme-ink-2: #0b0b0d;
+  --theme-panel: #0d0d0f;
+  --theme-panel-2: #141417;
+  --theme-brand-deep: #600060;
+  --theme-brand: #8b008b;
+  --theme-magenta: #a000a0;
+  --theme-brand-soft: #d06fd0;
+  --theme-muted: #a1a1aa;
+  --theme-line: rgb(255 255 255 / 0.08);
+  --theme-line-strong: rgb(255 255 255 / 0.14);
+  --color-text: #ffffff;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"], .light {
+  --theme-ink: #f8fafc;
+  --theme-ink-2: #f1f5f9;
+  --theme-panel: #ffffff;
+  --theme-panel-2: #f8fafc;
+  --theme-brand-deep: #600060;
+  --theme-brand: #8b008b;
+  --theme-magenta: #a000a0;
+  --theme-brand-soft: #8b008b;
+  --theme-muted: #64748b;
+  --theme-line: rgb(0 0 0 / 0.09);
+  --theme-line-strong: rgb(0 0 0 / 0.16);
+  --color-text: #0f172a;
+  color-scheme: light;
+}
+
+/* Modo claro (Light theme): adaptação visual completa e de alto contraste */
+:root[data-theme="light"] * {
+  scrollbar-color: rgb(0 0 0 / 0.15) transparent;
+}
+
+:root[data-theme="light"] .text-white {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .text-zinc-100,
+:root[data-theme="light"] .text-zinc-200 {
+  color: #1e293b !important;
+}
+
+:root[data-theme="light"] .text-zinc-300,
+:root[data-theme="light"] .text-zinc-400 {
+  color: #475569 !important;
+}
+
+:root[data-theme="light"] .text-zinc-500 {
+  color: #64748b !important;
+}
+
+/* Textos de status claros (feitos para fundo escuro) ganham tom legível no tema claro. */
+:root[data-theme="light"] .text-amber-200,
+:root[data-theme="light"] .text-amber-300 {
+  color: #92400e !important;
+}
+:root[data-theme="light"] .text-emerald-300 {
+  color: #047857 !important;
+}
+:root[data-theme="light"] .text-red-300,
+:root[data-theme="light"] .text-red-400 {
+  color: #b91c1c !important;
+}
+:root[data-theme="light"] .text-sky-300 {
+  color: #0369a1 !important;
+}
+
+:root[data-theme="light"] .bg-\[\#070708\],
+:root[data-theme="light"] .bg-\[\#050505\],
+:root[data-theme="light"] .bg-ink {
+  background-color: #f8fafc !important;
+}
+
+:root[data-theme="light"] aside {
+  background-color: #ffffff !important;
+  border-right-color: rgb(0 0 0 / 0.08) !important;
+}
+
+:root[data-theme="light"] header {
+  background-color: rgb(255 255 255 / 0.88) !important;
+  border-bottom-color: rgb(0 0 0 / 0.08) !important;
+}
+
+:root[data-theme="light"] .bg-white\/\[0\.02\],
+:root[data-theme="light"] .bg-white\/\[0\.03\],
+:root[data-theme="light"] .bg-white\/\[0\.04\],
+:root[data-theme="light"] .bg-white\/5 {
+  background-color: rgb(0 0 0 / 0.03) !important;
+}
+
+:root[data-theme="light"] .hover\:bg-white\/\[0\.03\]:hover,
+:root[data-theme="light"] .hover\:bg-white\/\[0\.04\]:hover,
+:root[data-theme="light"] .hover\:bg-white\/5:hover,
+:root[data-theme="light"] .hover\:bg-white\/10:hover {
+  background-color: rgb(0 0 0 / 0.05) !important;
+}
+
+:root[data-theme="light"] .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: rgb(0 0 0 / 0.15) !important;
+  color-scheme: light !important;
+}
+
+:root[data-theme="light"] select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .border-line {
+  border-color: rgb(0 0 0 / 0.08) !important;
+}
+
+:root[data-theme="light"] .border-line-strong {
+  border-color: rgb(0 0 0 / 0.16) !important;
+}
+
+:root[data-theme="light"] .shadow-2xl {
+  box-shadow: 0 20px 40px -15px rgb(0 0 0 / 0.12) !important;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgb(160 0 160 / 0.55);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-soft);
+  outline-offset: 2px;
+}
+
+/* Barra de rolagem discreta (admin e tabelas) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.14) transparent;
+}
+
+/* ---------- Background cinematográfico da Landing ---------- */
+
+.video-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
+  z-index: 0;
+  object-fit: cover;
+}
+
+.video-overlay {
+  position: fixed;
+  inset: 0;
+  height: 100lvh;
+  z-index: 1;
+  pointer-events: none;
+  /* Contraste reforçado: o conteúdo permanece legível durante toda a rolagem, sem perder o clima cinematográfico. */
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 108%, rgb(160 0 160 / 0.22), transparent 70%),
+    radial-gradient(ellipse at center, transparent 35%, rgb(0 0 0 / 0.78) 100%),
+    linear-gradient(90deg, rgb(0 0 0 / 0.6), transparent 30%, transparent 70%, rgb(0 0 0 / 0.6)),
+    linear-gradient(180deg, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.8), rgb(0 0 0 / 0.96));
+}
+
+/* Leitura reforçada no mobile */
+@media (max-width: 767px) {
+  .video-overlay {
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 105%, rgb(160 0 160 / 0.2), transparent 70%),
+      linear-gradient(180deg, rgb(0 0 0 / 0.62), rgb(0 0 0 / 0.85), rgb(0 0 0 / 0.97));
+  }
+}
+
+/* Textura de grão bem sutil para dar acabamento cinematográfico */
+.film-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@utility glass {
+  background: rgb(5 5 5 / 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgb(255 255 255 / 0.12);
+}
+
+@utility text-gradient-brand {
+  background: linear-gradient(100deg, #fff 10%, #e9b3e9 55%, #c04dc0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility logo-glow {
+  filter: drop-shadow(0 0 18px rgb(160 0 160 / 0.45)) drop-shadow(0 0 2px rgb(255 255 255 / 0.15));
+}
+
+@keyframes scroll-cue {
+  0% { transform: translateY(0); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(14px); opacity: 0; }
+}
+
+@keyframes soft-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(37 211 102 / 0.45); }
+  50% { box-shadow: 0 0 0 12px rgb(37 211 102 / 0); }
+}
+
+.animate-scroll-cue { animation: scroll-cue 1.8s ease-in-out infinite; }
+.animate-soft-pulse { animation: soft-pulse 2.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .animate-scroll-cue, .animate-soft-pulse { animation: none; }
+}
+
+/* ---------- Impressão de relatórios ---------- */
+@media print {
+  body { background: #fff; color: #000; }
+  .no-print { display: none !important; }
+  .print-area { padding: 0 !important; margin: 0 !important; }
+
+  /* Central de Ajuda: artigo e manual legíveis em papel/PDF (texto escuro, sem cartões escuros). */
+  .admin-shell:has(.help-article, .help-manual) { background: #fff !important; }
+  .admin-shell:has(.help-article, .help-manual) > div { padding-left: 0 !important; }
+  .help-article, .help-manual { max-width: none !important; color: #111 !important; font-size: 11pt; }
+  .help-article *, .help-manual * { color: #111 !important; background: transparent !important; border-color: #ccc !important; box-shadow: none !important; }
+  .help-article .help-marker, .help-manual .help-marker { background: #c026d3 !important; color: #fff !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .help-article img, .help-manual img { max-height: 9cm !important; page-break-inside: avoid; }
+  .help-article a, .help-manual a { text-decoration: none; }
+  .break-after-page { break-after: page; }
+}

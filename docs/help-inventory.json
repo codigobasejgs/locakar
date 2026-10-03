@@ -1,0 +1,3828 @@
+{
+  "appVersion": "0.1.0",
+  "generatedAt": "2026-10-03T17:29:38.610Z",
+  "note": "Inventário estrutural. Campos calculados, permissões e efeitos precisam de auditoria humana. Cobertura por rota não comprova cobertura de cada ação.",
+  "pages": [
+    {
+      "file": "src/app/admin/clients/page.tsx",
+      "route": "/admin/clients",
+      "articles": [
+        "cadastrar-cliente"
+      ]
+    },
+    {
+      "file": "src/app/admin/expenses/page.tsx",
+      "route": "/admin/expenses",
+      "articles": [
+        "cadastrar-despesa"
+      ]
+    },
+    {
+      "file": "src/app/admin/finance/page.tsx",
+      "route": "/admin/finance",
+      "articles": [
+        "visao-geral-financeiro",
+        "aprovar-comprovante-pix"
+      ]
+    },
+    {
+      "file": "src/app/admin/fines/page.tsx",
+      "route": "/admin/fines",
+      "articles": [
+        "gerenciar-multas-transito"
+      ]
+    },
+    {
+      "file": "src/app/admin/incidents/page.tsx",
+      "route": "/admin/incidents",
+      "articles": [
+        "conferir-ocorrencias-documentos"
+      ]
+    },
+    {
+      "file": "src/app/admin/login/page.tsx",
+      "route": "/admin/login",
+      "articles": [
+        "entrar-no-painel-e-criar-locadora"
+      ]
+    },
+    {
+      "file": "src/app/admin/maintenance/page.tsx",
+      "route": "/admin/maintenance",
+      "articles": [
+        "cadastrar-manutencao"
+      ]
+    },
+    {
+      "file": "src/app/admin/monitoring/page.tsx",
+      "route": "/admin/monitoring",
+      "articles": [
+        "monitoramento-frota-selsyn"
+      ]
+    },
+    {
+      "file": "src/app/admin/notes/page.tsx",
+      "route": "/admin/notes",
+      "articles": [
+        "registro-anotacoes-ocorrencias"
+      ]
+    },
+    {
+      "file": "src/app/admin/pagamentos/infinitepay/page.tsx",
+      "route": "/admin/pagamentos/infinitepay",
+      "articles": [
+        "infinitepay-retorno-aproximacao"
+      ]
+    },
+    {
+      "file": "src/app/admin/pagamentos/page.tsx",
+      "route": "/admin/pagamentos",
+      "articles": [
+        "infinitepay-retorno-aproximacao",
+        "visao-geral-pagamentos",
+        "dar-baixa-pagamento",
+        "cobrar-whatsapp-pix",
+        "aprovar-comprovante-pix",
+        "integracao-asaas-cobrancas",
+        "integracao-infinitepay"
+      ]
+    },
+    {
+      "file": "src/app/admin/page.tsx",
+      "route": "/admin",
+      "articles": [
+        "visao-360-veiculo",
+        "primeiros-passos-visao-geral",
+        "onboarding-checklist-locadora",
+        "por-que-nao-consigo"
+      ]
+    },
+    {
+      "file": "src/app/admin/rentals/page.tsx",
+      "route": "/admin/rentals",
+      "articles": [
+        "criar-locacao-contrato",
+        "fluxo-completo-locacao"
+      ]
+    },
+    {
+      "file": "src/app/admin/rentals/[id]/page.tsx",
+      "route": "/admin/rentals/[id]",
+      "articles": [
+        "detalhes-locacao-gestao",
+        "gerar-assinar-contrato",
+        "vistoria-entrega-devolucao",
+        "dar-baixa-pagamento",
+        "fluxo-completo-locacao"
+      ]
+    },
+    {
+      "file": "src/app/admin/reports/page.tsx",
+      "route": "/admin/reports",
+      "articles": [
+        "relatorios-exportacao-csv"
+      ]
+    },
+    {
+      "file": "src/app/admin/requests/page.tsx",
+      "route": "/admin/requests",
+      "articles": [
+        "aprovar-solicitacao-locacao",
+        "fluxo-completo-locacao"
+      ]
+    },
+    {
+      "file": "src/app/admin/reservations/page.tsx",
+      "route": "/admin/reservations",
+      "articles": [
+        "criar-reserva"
+      ]
+    },
+    {
+      "file": "src/app/admin/security/page.tsx",
+      "route": "/admin/security",
+      "articles": [
+        "seguranca-antifraude-app"
+      ]
+    },
+    {
+      "file": "src/app/admin/settings/page.tsx",
+      "route": "/admin/settings",
+      "articles": [
+        "onboarding-checklist-locadora"
+      ]
+    },
+    {
+      "file": "src/app/admin/vehicles/page.tsx",
+      "route": "/admin/vehicles",
+      "articles": [
+        "configurar-tabela-fipe",
+        "cadastrar-veiculo",
+        "editar-excluir-veiculo",
+        "visao-360-veiculo"
+      ]
+    },
+    {
+      "file": "src/app/assinar/[token]/page.tsx",
+      "route": "/assinar/[token]",
+      "articles": [
+        "gerar-assinar-contrato"
+      ]
+    },
+    {
+      "file": "src/app/convite/[token]/page.tsx",
+      "route": "/convite/[token]",
+      "articles": [
+        "gerenciar-equipe-permissoes"
+      ]
+    },
+    {
+      "file": "src/app/l/[slug]/page.tsx",
+      "route": "/l/[slug]",
+      "articles": [
+        "entrar-no-painel-e-criar-locadora"
+      ]
+    },
+    {
+      "file": "src/app/offline/page.tsx",
+      "route": "/offline",
+      "articles": []
+    },
+    {
+      "file": "src/app/pagamento/infinitepay/page.tsx",
+      "route": "/pagamento/infinitepay",
+      "articles": [
+        "app-locatario-pagar-pix-cartao"
+      ]
+    },
+    {
+      "file": "src/app/page.tsx",
+      "route": "/",
+      "articles": []
+    },
+    {
+      "file": "src/app/plataforma/admin/page.tsx",
+      "route": "/plataforma/admin",
+      "articles": [
+        "super-admin-gestao-plataforma"
+      ]
+    },
+    {
+      "file": "src/app/plataforma/cadastro/page.tsx",
+      "route": "/plataforma/cadastro",
+      "articles": [
+        "entrar-no-painel-e-criar-locadora"
+      ]
+    },
+    {
+      "file": "src/app/plataforma/page.tsx",
+      "route": "/plataforma",
+      "articles": []
+    },
+    {
+      "file": "src/app/plataforma/privacidade/page.tsx",
+      "route": "/plataforma/privacidade",
+      "articles": []
+    },
+    {
+      "file": "src/app/plataforma/termos/page.tsx",
+      "route": "/plataforma/termos",
+      "articles": []
+    },
+    {
+      "file": "apps/locatario/app/(auth)/cadastro.tsx",
+      "route": "/locatario/cadastro",
+      "articles": [
+        "app-locatario-como-acessar-entrar"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/(auth)/login.tsx",
+      "route": "/locatario/login",
+      "articles": [
+        "app-locatario-como-acessar-entrar"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/(auth)/vincular.tsx",
+      "route": "/locatario/vincular",
+      "articles": [
+        "app-locatario-como-acessar-entrar"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/(tabs)/inicio.tsx",
+      "route": "/locatario/inicio",
+      "articles": [
+        "app-locatario-inicio-minha-locacao"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/(tabs)/locacao.tsx",
+      "route": "/locatario/locacao",
+      "articles": [
+        "app-locatario-inicio-minha-locacao"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/(tabs)/pagamentos.tsx",
+      "route": "/locatario/pagamentos",
+      "articles": [
+        "app-locatario-pagar-pix-cartao"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/(tabs)/perfil.tsx",
+      "route": "/locatario/perfil",
+      "articles": [
+        "app-locatario-multas-perfil"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/documentos.tsx",
+      "route": "/locatario/documentos",
+      "articles": [
+        "app-locatario-enviar-documentos-cnh"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/index.tsx",
+      "route": "/locatario",
+      "articles": [
+        "app-locatario-como-acessar-entrar"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/multas.tsx",
+      "route": "/locatario/multas",
+      "articles": [
+        "app-locatario-multas-perfil"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/ocorrencias.tsx",
+      "route": "/locatario/ocorrencias",
+      "articles": [
+        "app-locatario-relatar-problema"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/privacidade.tsx",
+      "route": "/locatario/privacidade",
+      "articles": [
+        "app-locatario-multas-perfil"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/reservas.tsx",
+      "route": "/locatario/reservas",
+      "articles": [
+        "app-locatario-reservas"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/solicitar.tsx",
+      "route": "/locatario/solicitar",
+      "articles": [
+        "app-locatario-solicitar-locacao"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/veiculo.tsx",
+      "route": "/locatario/veiculo",
+      "articles": [
+        "app-locatario-fazer-vistoria"
+      ]
+    },
+    {
+      "file": "apps/locatario/app/vistoria.tsx",
+      "route": "/locatario/vistoria",
+      "articles": [
+        "app-locatario-fazer-vistoria"
+      ]
+    }
+  ],
+  "apiRoutes": [
+    {
+      "file": "src/app/admin/manifest.webmanifest/route.ts",
+      "route": "/admin/manifest.webmanifest"
+    },
+    {
+      "file": "src/app/api/asaas/charges/route.ts",
+      "route": "/api/asaas/charges"
+    },
+    {
+      "file": "src/app/api/asaas/config/route.ts",
+      "route": "/api/asaas/config"
+    },
+    {
+      "file": "src/app/api/contracts/resolve/route.ts",
+      "route": "/api/contracts/resolve"
+    },
+    {
+      "file": "src/app/api/contracts/templates/route.ts",
+      "route": "/api/contracts/templates"
+    },
+    {
+      "file": "src/app/api/cron/alerts/route.ts",
+      "route": "/api/cron/alerts"
+    },
+    {
+      "file": "src/app/api/email/route.ts",
+      "route": "/api/email"
+    },
+    {
+      "file": "src/app/api/fipe/config/route.ts",
+      "route": "/api/fipe/config"
+    },
+    {
+      "file": "src/app/api/fipe/query/route.ts",
+      "route": "/api/fipe/query"
+    },
+    {
+      "file": "src/app/api/fipe/vehicles/route.ts",
+      "route": "/api/fipe/vehicles"
+    },
+    {
+      "file": "src/app/api/help/ask/route.ts",
+      "route": "/api/help/ask"
+    },
+    {
+      "file": "src/app/api/help/route.ts",
+      "route": "/api/help"
+    },
+    {
+      "file": "src/app/api/org/route.ts",
+      "route": "/api/org"
+    },
+    {
+      "file": "src/app/api/payments/infinitepay/route.ts",
+      "route": "/api/payments/infinitepay"
+    },
+    {
+      "file": "src/app/api/payments/methods/route.ts",
+      "route": "/api/payments/methods"
+    },
+    {
+      "file": "src/app/api/payments/receipt/route.ts",
+      "route": "/api/payments/receipt"
+    },
+    {
+      "file": "src/app/api/platform/admin/route.ts",
+      "route": "/api/platform/admin"
+    },
+    {
+      "file": "src/app/api/platform/invite/route.ts",
+      "route": "/api/platform/invite"
+    },
+    {
+      "file": "src/app/api/platform/register/route.ts",
+      "route": "/api/platform/register"
+    },
+    {
+      "file": "src/app/api/public/org/[slug]/route.ts",
+      "route": "/api/public/org/[slug]"
+    },
+    {
+      "file": "src/app/api/push/client/route.ts",
+      "route": "/api/push/client"
+    },
+    {
+      "file": "src/app/api/push/route.ts",
+      "route": "/api/push"
+    },
+    {
+      "file": "src/app/api/selsyn/diagnostic/route.ts",
+      "route": "/api/selsyn/diagnostic"
+    },
+    {
+      "file": "src/app/api/selsyn/fleet/route.ts",
+      "route": "/api/selsyn/fleet"
+    },
+    {
+      "file": "src/app/api/selsyn/link/route.ts",
+      "route": "/api/selsyn/link"
+    },
+    {
+      "file": "src/app/api/selsyn/query/[operationId]/route.ts",
+      "route": "/api/selsyn/query/[operationId]"
+    },
+    {
+      "file": "src/app/api/selsyn/status/route.ts",
+      "route": "/api/selsyn/status"
+    },
+    {
+      "file": "src/app/api/sign/route.ts",
+      "route": "/api/sign"
+    },
+    {
+      "file": "src/app/api/tenant/asaas/route.ts",
+      "route": "/api/tenant/asaas"
+    },
+    {
+      "file": "src/app/api/tenant/device/route.ts",
+      "route": "/api/tenant/device"
+    },
+    {
+      "file": "src/app/api/tenant/documents/route.ts",
+      "route": "/api/tenant/documents"
+    },
+    {
+      "file": "src/app/api/tenant/incidents/route.ts",
+      "route": "/api/tenant/incidents"
+    },
+    {
+      "file": "src/app/api/tenant/infinitepay/route.ts",
+      "route": "/api/tenant/infinitepay"
+    },
+    {
+      "file": "src/app/api/tenant/inspections/route.ts",
+      "route": "/api/tenant/inspections"
+    },
+    {
+      "file": "src/app/api/tenant/receipts/route.ts",
+      "route": "/api/tenant/receipts"
+    },
+    {
+      "file": "src/app/api/tenant/requests/route.ts",
+      "route": "/api/tenant/requests"
+    },
+    {
+      "file": "src/app/api/tenant/reservations/route.ts",
+      "route": "/api/tenant/reservations"
+    },
+    {
+      "file": "src/app/api/tenant/summary/route.ts",
+      "route": "/api/tenant/summary"
+    },
+    {
+      "file": "src/app/api/tenant/vehicle/route.ts",
+      "route": "/api/tenant/vehicle"
+    },
+    {
+      "file": "src/app/api/tenant-admin/route.ts",
+      "route": "/api/tenant-admin"
+    },
+    {
+      "file": "src/app/api/webhooks/asaas/route.ts",
+      "route": "/api/webhooks/asaas"
+    },
+    {
+      "file": "src/app/api/webhooks/infinitepay/route.ts",
+      "route": "/api/webhooks/infinitepay"
+    },
+    {
+      "file": "src/app/api/whatsapp/route.ts",
+      "route": "/api/whatsapp"
+    },
+    {
+      "file": "src/app/contato/route.ts",
+      "route": "/contato"
+    },
+    {
+      "file": "src/app/manifest.webmanifest/route.ts",
+      "route": "/manifest.webmanifest"
+    }
+  ],
+  "sources": [
+    {
+      "file": "src/app/admin/ajuda/artigo/[slug]/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/artigo/[slug]",
+      "hash": "41bce574f29eeef4e68318fcf9906b37228a368986f30b530f8bfa187fa13163",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/ajuda/categoria/[slug]/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/categoria/[slug]",
+      "hash": "c8030ea24ecaa89721b8997f631282f19f1fe78afa2e5e8bc0c4840144235c02",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/ajuda/faq/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/faq",
+      "hash": "4448f5b31496352aa51d75cfbc89987d5dd0ae76fb55358370a5dbee17ccc978",
+      "labels": [
+        "Filtrar perguntas (ex.: placa, comprovante, pix, contrato)...",
+        "Filtrar perguntas frequentes"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/ajuda/glossario/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/glossario",
+      "hash": "63576a1789de082ce61197196ec1064c5f4bb80473b48fd99d9d478a5991d7bd",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/ajuda/layout.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "e2f56981eb1e3a66ba68b6d66a158c08d1b1c8715cb3cb7e7bbf7eee776159da",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/ajuda/manual/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/manual",
+      "hash": "1fe084adf9845e69b816084b3ee0a8141de756d052050e779da9992a35c36a26",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/ajuda/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda",
+      "hash": "23e210c2258923f8d1b6ec15c35217b659cc3b1dde0df59dcf1a6300fb138b4e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/ajuda/treinamentos/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/treinamentos",
+      "hash": "338ccbe28078f32b110e2baa762f6b3fd7d8ef8148ce9168abc918af567a88b7",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/ajuda/treinamentos/[slug]/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/treinamentos/[slug]",
+      "hash": "5323ffc451ef27fae0ff1ab19eb1c17b2230e1eb288955169ae5062677d3c978",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/clients/page.tsx",
+      "kind": "page",
+      "route": "/admin/clients",
+      "hash": "6dccf39bedc13438e6e1662bafcba68708d9a322d6c10336f3857f0e20864380",
+      "labels": [
+        "Clientes",
+        "Cadastro completo de locatários e histórico de contratos.",
+        "Nome completo / Razão social",
+        "Nome do titular",
+        "RG / Órgão emissor",
+        "00.000.000-0 SSP/SP",
+        "Data de cadastro",
+        "Nº Registro CNH",
+        "00000000000",
+        "Categoria CNH",
+        "Vencimento CNH",
+        "1ª habilitação",
+        "KM Médio por dia",
+        "Ex.: 80",
+        "KM Médio por mês",
+        "Ex.: 2500",
+        "Telefone principal (WhatsApp)",
+        "(19) 90000-0000",
+        "Telefone reserva / recado",
+        "E-mail",
+        "cliente@exemplo.com",
+        "CEP",
+        "00000-000",
+        "Estado (UF)",
+        "SP",
+        "Cidade",
+        "Indaiatuba",
+        "Bairro",
+        "Centro",
+        "Logradouro / Rua",
+        "Rua / Avenida",
+        "Número",
+        "123",
+        "Complemento",
+        "Apto 12, Bloco B",
+        "Observações internas",
+        "Informações adicionais da locadora"
+      ],
+      "messages": [
+        "Endereço preenchido pelo CEP!",
+        "CNH Digital anexada com sucesso!",
+        "Não foi possível enviar a CNH. Tente novamente."
+      ]
+    },
+    {
+      "file": "src/app/admin/expenses/page.tsx",
+      "kind": "page",
+      "route": "/admin/expenses",
+      "hash": "d66b54e44b1b68f46fac7e0d1959b5e1fb18fb0ff305ee4a842148d4343bae8d",
+      "labels": [
+        "Despesas",
+        "Despesas recorrentes e diversas da operação.",
+        "Total recorrente",
+        "Total diversas",
+        "Total geral",
+        "A pagar",
+        "Descrição",
+        "Data",
+        "Valor (R$)",
+        "Categoria",
+        "Placa",
+        "Frota (geral)",
+        "Fornecedor",
+        "Meio de pagamento",
+        "Selecione",
+        "Pago",
+        "Observação"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/finance/page.tsx",
+      "kind": "page",
+      "route": "/admin/finance",
+      "hash": "c22e48a99f239a17eb3a98026221529e8740b5ab7a90929ba5029cfe4c8a7189",
+      "labels": [
+        "Financeiro",
+        "Receitas de locações, despesas operacionais e saldo.",
+        "Período",
+        "Receitas",
+        "Despesas",
+        "Saldo",
+        "Receb. pendentes",
+        "Despesas pendentes",
+        "Receitas x despesas",
+        "Comparativo mensal",
+        "Fluxo mensal",
+        "Saldo do mês e acumulado no período",
+        "Recebimentos pendentes"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/fines/page.tsx",
+      "kind": "page",
+      "route": "/admin/fines",
+      "hash": "cc417f3dd838232992b816a32592398a5fc70ca5391bb0dc8ca7ae8ec898320c",
+      "labels": [
+        "Multas",
+        "Autuações, prazos de identificação do condutor e pagamentos.",
+        "Em aberto",
+        "Valor em aberto",
+        "Identificar condutor",
+        "Vencem em 15 dias",
+        "Placa",
+        "Selecione",
+        "Nº do auto de infração",
+        "Locatário",
+        "Real infrator",
+        "Descrição da autuação",
+        "Data da autuação",
+        "Limite ident. condutor",
+        "Limite pagto. com desconto",
+        "Data de vencimento",
+        "Valor (R$)",
+        "Status",
+        "Data de pagamento",
+        "Valor pago (R$)",
+        "Observação",
+        "Notificações enviadas"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/incidents/page.tsx",
+      "kind": "page",
+      "route": "/admin/incidents",
+      "hash": "5419b11c027c919aaee7c421965fccbfa56775bd96a658db5c16eff321bccb34",
+      "labels": [
+        "App do locatário",
+        "Ocorrências e documentos enviados pelos clientes no aplicativo. Cada resposta avisa o cliente no celular.",
+        "Carregando...",
+        "Nenhuma ocorrência",
+        "Quando um cliente relatar um problema no app, aparece aqui.",
+        "Nenhum documento",
+        "CNH e comprovante de endereço enviados pelo app aparecem aqui.",
+        "Atualizar ocorrência",
+        "O cliente recebe o novo status e a sua resposta no celular.",
+        "Status",
+        "Resposta para o cliente",
+        "Confira se está legível e se os dados batem com o cadastro.",
+        "Motivo da recusa (vai para o cliente)",
+        "Ex.: foto desfocada, CNH vencida."
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/layout.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "b013690b2c7ecff7fd0022fd3a480cb2645e605f7c1a02ca809d0f2b478ae9ec",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/login/page.tsx",
+      "kind": "page",
+      "route": "/admin/login",
+      "hash": "c96e54dc174fe2851ac8644a1a70aa0979665fa1c8fcadc5284efdf46509bd5b",
+      "labels": [
+        "E-mail",
+        "voce@exemplo.com",
+        "Senha"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/maintenance/page.tsx",
+      "kind": "page",
+      "route": "/admin/maintenance",
+      "hash": "0d957462afab09adf496ccc934f4ea9f1b93710cc00f41c69db83125eaacf898",
+      "labels": [
+        "Avisar cliente com o veículo",
+        "Manutenção",
+        "Histórico e agenda de manutenções da frota.",
+        "Pendentes",
+        "Próximas",
+        "Realizadas",
+        "Custo total",
+        "Manutenções",
+        "Placa",
+        "Selecione",
+        "Data",
+        "Descrição",
+        "KM atual",
+        "Próxima KM",
+        "Fornecedor",
+        "Valor (R$)",
+        "Status",
+        "Observação"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/manifest.webmanifest/route.ts",
+      "kind": "api",
+      "route": "/admin/manifest.webmanifest",
+      "hash": "a22d12028772740e7b13215d2720eb82a1274b51192b59fa553e7eb3d0b34a98",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/monitoring/page.tsx",
+      "kind": "page",
+      "route": "/admin/monitoring",
+      "hash": "a4140d23dba4dd1680bb2b9b07651b22e8ed40bb37f7fc21b167e097e918da17",
+      "labels": [
+        "Monitoramento da frota",
+        "Rastreamento Selsyn: consultas administrativas, sem comandos sobre os veículos.",
+        "Rastreamento",
+        "Consultando Selsyn",
+        "Nenhuma consulta realizada",
+        "Sincronize a frota para descobrir os rastreáveis disponíveis. A consulta utiliza a API real e pode consumir limites da sua conta.",
+        "Rastreáveis retornados",
+        "Em movimento",
+        "Parados",
+        "Offline (fornecedor)",
+        "Sem velocidade",
+        "Rastreável selecionado",
+        "Consulta oficial"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/notes/page.tsx",
+      "kind": "page",
+      "route": "/admin/notes",
+      "hash": "fd7d2549b1c47fc773d38de21112522f89125ed19651a3654a0f6abc99b32450",
+      "labels": [
+        "Anotações",
+        "Registro cronológico de ocorrências e combinados.",
+        "Buscar anotações",
+        "Todos os locatários",
+        "Filtrar por locatário",
+        "Nenhuma anotação encontrada",
+        "Editar",
+        "Excluir",
+        "Data",
+        "Horário",
+        "Locatário",
+        "Nenhum (anotação geral)",
+        "Descrição"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/pagamentos/infinitepay/page.tsx",
+      "kind": "page",
+      "route": "/admin/pagamentos/infinitepay",
+      "hash": "6658802abfa91a111b7eceeefe81d47d6c166ec8670a4eacecb3dc0a3990d9a2",
+      "labels": [
+        "Retorno do InfinitePay",
+        "Resultado do pagamento por aproximação (InfiniteTap)."
+      ],
+      "messages": [
+        "Pagamento confirmado e parcela baixada."
+      ]
+    },
+    {
+      "file": "src/app/admin/pagamentos/page.tsx",
+      "kind": "page",
+      "route": "/admin/pagamentos",
+      "hash": "0fe9715468183adc3cce0e23c18e97ba85c680e1ccc1c2771856b64ef7fc823a",
+      "labels": [
+        "Pagamentos",
+        "Controle de cobranças e recebimentos das locações.",
+        "Em aberto",
+        "Recebido",
+        "Vencido",
+        "Total",
+        "Buscar por cliente, CPF, placa, contrato ou descrição...",
+        "Nenhum pagamento encontrado",
+        "Não encontramos cobranças para os filtros selecionados.",
+        "Cancelar pagamento?",
+        "Esta ação registrará o cancelamento lógico da parcela no histórico sem apagar a locação.",
+        "Excluir pagamento da locação?",
+        "A parcela será removida definitivamente da grade da locação. Esta ação não pode ser desfeita."
+      ],
+      "messages": [
+        "Pagamento baixado com sucesso!",
+        "Cobrança Asaas atualizada com o novo valor/vencimento.",
+        "Link da fatura copiado.",
+        "Status Asaas atualizado.",
+        "Pagamento cancelado.",
+        "Pagamento excluído da locação."
+      ]
+    },
+    {
+      "file": "src/app/admin/page.tsx",
+      "kind": "page",
+      "route": "/admin",
+      "hash": "a0bef720167a82e35fd5c8cd4ccf5e2fe68efa8b02fea4e4a8a25030379e4cd0",
+      "labels": [
+        "Dashboard",
+        "Total investido",
+        "Disponíveis",
+        "Alugados",
+        "Locações ativas",
+        "Reservas",
+        "Faturamento recebido",
+        "Locações a vencer",
+        "Valores em atraso",
+        "Multas no período",
+        "Lucro líquido",
+        "Desempenho por veículo (Visão 360°)",
+        "Receitas x despesas",
+        "Ocupação da frota",
+        "Status atual dos veículos",
+        "Locações por mês",
+        "Contratos iniciados",
+        "Despesas por categoria",
+        "Alertas",
+        "Vencimentos e pendências",
+        "Próximas reservas",
+        "Locações recentes"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/rentals/page.tsx",
+      "kind": "page",
+      "route": "/admin/rentals",
+      "hash": "17ede780eef706195ea8e25c0ddefa57c9b5ec0c45b93b5565c2e8714445621e",
+      "labels": [
+        "Locações",
+        "Contratos, recebimentos semanais e quilometragem.",
+        "Ativas",
+        "Atrasadas",
+        "Total recebido",
+        "Recebimentos em atraso"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/rentals/[id]/page.tsx",
+      "kind": "page",
+      "route": "/admin/rentals/[id]",
+      "hash": "86c95090f47f12dd4745e07190cc41886d35d6b9e13b3b6c0e57401fbb457810",
+      "labels": [
+        "Locação não encontrada",
+        "Ela pode ter sido excluída.",
+        "Status",
+        "Total recebido",
+        "Em atraso",
+        "KM rodado",
+        "Enviar comprovante",
+        "Enviar cobrança com PIX"
+      ],
+      "messages": [
+        "Parcela atualizada."
+      ]
+    },
+    {
+      "file": "src/app/admin/reports/page.tsx",
+      "kind": "page",
+      "route": "/admin/reports",
+      "hash": "441ff3d6e7710583d1ad54aa94a6ad1d8c25bfd076283c051d8ddb37ba7f044d",
+      "labels": [
+        "Relatórios",
+        "Relatórios visuais com filtros por mês, período, veículo e status.",
+        "Tipo de relatório",
+        "Mês",
+        "Período personalizado",
+        "De",
+        "Até",
+        "Veículo",
+        "Todos",
+        "Status"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/requests/page.tsx",
+      "kind": "page",
+      "route": "/admin/requests",
+      "hash": "2eff37fdf2023ce94da35fb239542960bc1c9babd5ff0e636213e2ef9127269d",
+      "labels": [
+        "Solicitações de Locação",
+        "Novos cadastros e pedidos de aluguel feitos pelo aplicativo. Analise os documentos e aprove em 1 clique.",
+        "Aguardando análise",
+        "Locações aprovadas",
+        "Não aprovadas",
+        "Total recebidas",
+        "Carregando solicitações...",
+        "Nenhuma solicitação encontrada",
+        "Valor da parcela",
+        "650.00",
+        "Valor da caução",
+        "1000.00",
+        "Modelo de contrato a emitir",
+        "Ex.: CNH com menos de 2 anos, reprovação de crédito, etc. Esta mensagem é enviada ao cliente.",
+        "Ex.: A foto da CNH verso ficou desfocada. Por favor, envie uma foto legível."
+      ],
+      "messages": [
+        "Locação aprovada com sucesso! Contrato gerado e enviado por WhatsApp e e-mail.",
+        "Informe o motivo da recusa.",
+        "Solicitação recusada. O cliente foi avisado por push e WhatsApp.",
+        "Informe as orientações para o cliente.",
+        "Pedido de correção enviado ao cliente."
+      ]
+    },
+    {
+      "file": "src/app/admin/reservations/page.tsx",
+      "kind": "page",
+      "route": "/admin/reservations",
+      "hash": "7152cc476b0c8c5ea9639f2fb894725c798a033e065b166caca8cca7a644067b",
+      "labels": [
+        "Mês anterior",
+        "Próximo mês",
+        "Reservas",
+        "Agenda de reservas com verificação de conflito por veículo.",
+        "Visualização",
+        "Nome do locatário",
+        "Selecione",
+        "Placa",
+        "Data inicial",
+        "Data final",
+        "Status",
+        "Modelo de contrato",
+        "Observação"
+      ],
+      "messages": [
+        "A data final deve ser posterior à inicial."
+      ]
+    },
+    {
+      "file": "src/app/admin/security/page.tsx",
+      "kind": "page",
+      "route": "/admin/security",
+      "hash": "1a0b726ecc3ff6e22bbd915647612f05f9738859b8cc1c5cd3f028d331724eb2",
+      "labels": [
+        "Segurança",
+        "Sinais do app do locatário nos últimos 30 dias. O score orienta a conferência: nenhum cliente é bloqueado automaticamente.",
+        "Clientes monitorados",
+        "Atenção ou mais",
+        "Críticos",
+        "Aparelhos ativos",
+        "Clientes por risco",
+        "0–29 baixo · 30–59 atenção · 60–79 elevado · 80–100 crítico. Toque para ver as evidências.",
+        "Carregando...",
+        "Sem leituras ainda",
+        "Aparecem quando os clientes abrem o app e aceitam a política de privacidade.",
+        "Aparelhos",
+        "Registrados pelo app. Push = recebe notificações no celular.",
+        "Auditoria",
+        "Últimas ações feitas pelo app e pela equipe, com IP."
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/settings/page.tsx",
+      "kind": "page",
+      "route": "/admin/settings",
+      "hash": "e694acfd60fe997e5520d08f3026a688198cb78c0220ab034c6f0cd8a8a2a3c2",
+      "labels": [
+        "Enviar e-mail de teste para",
+        "nome@exemplo.com",
+        "Configurações",
+        "Tema do Painel",
+        "Escolha como o painel administrativo será exibido para você neste navegador.",
+        "Tabelas compactas",
+        "Modelos de Contrato Inteligentes",
+        "Cadastre os modelos em PDF ou DOCX da sua locadora. A IA detecta os campos variáveis para preenchimento determinístico nas locações.",
+        "Representante e Cláusulas Gerais",
+        "Dados do assinante pela locadora e cláusulas padrão para emissão.",
+        "Razão social (como sairá nos contratos)",
+        "CNPJ",
+        "00.000.000/0000-00",
+        "Endereço",
+        "Representante (quem assina)",
+        "Cidade / foro",
+        "Ex.: Campinas/SP",
+        "E-mail da empresa",
+        "Assinatura do representante (vai em todos os contratos)",
+        "Cláusulas gerais (modelo estático)",
+        "Meios de pagamento ativos",
+        "Escolha quais formas de pagamento estarão disponíveis para seus clientes. Vale na hora para o painel e o App Locatário.",
+        "PIX QR Code (comprovante manual)",
+        "Chave usada no QR Code e no copia e cola. O Pix cai direto na sua conta; o cliente envia o comprovante e a equipe aprova.",
+        "InfinitePay",
+        "Receber parcelas por aproximação no celular (InfiniteTap) ou link de pagamento Pix / cartão (Checkout Integrado).",
+        "Asaas (Cobranças automáticas)",
+        "Cobranças Pix, boleto, cartão e fatura com baixa automática por webhook. Opcional: desligado, o PIX e a baixa manual continuam iguais.",
+        "Tabela FIPE",
+        "Valores mensais e histórico da frota comercial.",
+        "Selsyn — Rastreamento",
+        "Posições, sensores e relatórios da frota. Credencial somente no backend.",
+        "WhatsApp das notificações",
+        "Número que envia contratos, termos, comprovantes, multas e alertas automáticos aos clientes.",
+        "E-mails",
+        "Envio pelo Resend: contratos, termos de entrega/devolução, comprovantes e multas.",
+        "Alertas para a locadora",
+        "E-mail e WhatsApp que recebem os avisos importantes da operação, além do Web Push da equipe.",
+        "E-mail que recebe os alertas",
+        "seu-email@locadora.com",
+        "WhatsApp que recebe os alertas",
+        "(11) 99999-9999",
+        "Na hora: contrato assinado, nova locação ou reserva, pagamento recebido, nova multa, cancelamentos e tudo que for urgente",
+        "Resumo diário às 8h com vencimentos e atrasos",
+        "Notificações da equipe (Web Push)",
+        "Alertas do sino e notificações no navegador/celular.",
+        "Vencimentos de multas",
+        "Manutenções programadas",
+        "Recebimentos de aluguel",
+        "Restaurar dados de demonstração?",
+        "Todos os registros criados ou alterados neste navegador serão apagados. Esta ação não pode ser desfeita."
+      ],
+      "messages": [
+        "Configurações salvas."
+      ]
+    },
+    {
+      "file": "src/app/admin/vehicles/page.tsx",
+      "kind": "page",
+      "route": "/admin/vehicles",
+      "hash": "32fa58ce6d851a491f849c35aa9978b374ec523c9d8317146e621ec334fccd56",
+      "labels": [
+        "Veículos",
+        "Gestão completa da frota: cadastro, documentos, fotos e manutenção.",
+        "Preencha os dados do veículo da frota.",
+        "1. Placa",
+        "ABC1D23",
+        "2. Tipo de Veículo",
+        "3. Marca",
+        "Ex.: Fiat, Honda, Toyota...",
+        "4. Modelo",
+        "Ex.: Mobi, Kwid, CG 160...",
+        "5. Ano de Fabricação",
+        "Ano modelo (opcional)",
+        "Combustível",
+        "6. Renavam",
+        "00000000000",
+        "7. Chassi",
+        "9BWZZZ377VT000000",
+        "8. Hodômetro (KM atual)",
+        "Ex.: 45.230",
+        "9. Cor",
+        "Ex.: Branco, Preto, Prata...",
+        "10. Vencimento do Licenciamento",
+        "11. Data da Compra",
+        "12. Valor Pago / Investido (R$)",
+        "Ex.: 45900.00",
+        "Remover foto",
+        "Remover documento"
+      ],
+      "messages": [
+        "CRLV importado com sucesso! Dados preenchidos automaticamente.",
+        "Não foi possível ler o arquivo. Você pode preencher os dados manualmente.",
+        "Documento do veículo anexado com sucesso!",
+        "Não foi possível enviar o documento. Tente novamente.",
+        "Falha no envio de fotos. Tente novamente.",
+        "Documento removido.",
+        "Informe a placa do veículo.",
+        "Placa inválida. Utilize o formato ABC1234 ou ABC1D23.",
+        "Informe a marca do veículo.",
+        "Informe o modelo do veículo.",
+        "O hodômetro não pode ser negativo.",
+        "Os dados mudaram após a seleção FIPE. Selecione a versão novamente ou preencha manualmente.",
+        "FIPE vinculada ao veículo.",
+        "Não foi possível gerar link do documento.",
+        "Erro ao abrir documento.",
+        "Consulta por placa não configurada. Localize o veículo pela Tabela FIPE ou preencha manualmente.",
+        "Versão selecionada. Fabricação, Renavam, chassi e compra continuam manuais."
+      ]
+    },
+    {
+      "file": "src/app/ajuda/artigo/[slug]/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/artigo/[slug]",
+      "hash": "41bce574f29eeef4e68318fcf9906b37228a368986f30b530f8bfa187fa13163",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/categoria/[slug]/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/categoria/[slug]",
+      "hash": "44fd57db366822d86de3667cb53b8785d6ebbf2c63a8419179b286c2d4084f2f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/faq/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/faq",
+      "hash": "71c657ce191b33cbd079495d6f3e7d341dbd716e5039e24bc047d6f9dce3674c",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/glossario/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/glossario",
+      "hash": "63576a1789de082ce61197196ec1064c5f4bb80473b48fd99d9d478a5991d7bd",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/layout.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "0af5ec8462187754ef58f9447a5a52507d6b8cfc69c4bd82dcd81972c404f29e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/manual/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/manual",
+      "hash": "1fe084adf9845e69b816084b3ee0a8141de756d052050e779da9992a35c36a26",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/page.tsx",
+      "kind": "page",
+      "route": "/ajuda",
+      "hash": "23e210c2258923f8d1b6ec15c35217b659cc3b1dde0df59dcf1a6300fb138b4e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/tenant-help.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "c044e857aff2fb1a1a3d2ed78438db68ac5d790c03c9eb98e40c94c35b708561",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/treinamentos/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/treinamentos",
+      "hash": "baa6b1311bed0aee1104efaf12903b7027e5aeb43106a1c903b4307336b3ec65",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/treinamentos/[slug]/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/treinamentos/[slug]",
+      "hash": "329a486114ba838dd58cb40bc9cb8b671a6247a5e0e0b92a1a1075e2f3cc0207",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/asaas/charges/route.ts",
+      "kind": "api",
+      "route": "/api/asaas/charges",
+      "hash": "b2297ddab767a35559326cd72c171451e9e8bbbe434b05adea6c9b1e5fa271af",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/asaas/config/route.ts",
+      "kind": "api",
+      "route": "/api/asaas/config",
+      "hash": "8879c93515c50275b7c98b1173a13292b1a5959e1711ebf35f48627666daf738",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/contracts/resolve/route.ts",
+      "kind": "api",
+      "route": "/api/contracts/resolve",
+      "hash": "1847ba8a06a8cda7e572282c00b11c0f04a2b8c82f9aac8ffaad822e880ef659",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/contracts/templates/route.ts",
+      "kind": "api",
+      "route": "/api/contracts/templates",
+      "hash": "400503590aab440d12db74e51e010f9b3e889cebbf47ae06a2ce230bcd0885b5",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/cron/alerts/route.ts",
+      "kind": "api",
+      "route": "/api/cron/alerts",
+      "hash": "92ca73ac821b0efc29a42bf3df0ef35a2787bc422e1a96c50d704c66393f1257",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/email/route.ts",
+      "kind": "api",
+      "route": "/api/email",
+      "hash": "ff28054cf231443a1cc44304426093e49bc6466053423eef93eaf23a117a8fb1",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/fipe/config/route.ts",
+      "kind": "api",
+      "route": "/api/fipe/config",
+      "hash": "e17525091f4676bd89abdac0e8c96f35698192b1ac552842f3058113e3737f73",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/fipe/query/route.ts",
+      "kind": "api",
+      "route": "/api/fipe/query",
+      "hash": "912322c2244ebcdf6161b3d0af1dc37d752e3ee1779a6c56ca9d8c33667935a7",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/fipe/vehicles/route.ts",
+      "kind": "api",
+      "route": "/api/fipe/vehicles",
+      "hash": "6f6b036b7fbb95edb5a4d9b49b8dcb28f1bccfd17bda687eeba16704ee91c21f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/help/ask/route.ts",
+      "kind": "api",
+      "route": "/api/help/ask",
+      "hash": "457d8d8073aef09bb6e4c47d5dd2ab6741e82720f92211af0bc130bff6d0ca37",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/help/route.ts",
+      "kind": "api",
+      "route": "/api/help",
+      "hash": "f96046c87d76361d5ed3a97bffd70f1a02f27973b6a28fffe53086c09c3e887e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/org/route.ts",
+      "kind": "api",
+      "route": "/api/org",
+      "hash": "3775b8c06cb49326151572826a87bdb63624413dfa281369af63ca0f9930e616",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/payments/infinitepay/route.ts",
+      "kind": "api",
+      "route": "/api/payments/infinitepay",
+      "hash": "ce416911658edcde68b92fd43ba93ff57d9316e0e0b11991487d8ca0e7e2f5ac",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/payments/methods/route.ts",
+      "kind": "api",
+      "route": "/api/payments/methods",
+      "hash": "e26e4eddaabf0103b6023bd18673a71775593b469e6230928eb6e1eb8b28763e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/payments/receipt/route.ts",
+      "kind": "api",
+      "route": "/api/payments/receipt",
+      "hash": "901fa1245982e88503d4c9cf26612d19f6bf155014e585836752f2ce1333581d",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/platform/admin/route.ts",
+      "kind": "api",
+      "route": "/api/platform/admin",
+      "hash": "e7dbcdcd393ba88cdf943d3399be7100b5a7a35baa5644a6237f74c45a119180",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/platform/invite/route.ts",
+      "kind": "api",
+      "route": "/api/platform/invite",
+      "hash": "9af7bf16043edee570578c20942b41ea0f488c56772ae47e7bfbc681edb9665d",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/platform/register/route.ts",
+      "kind": "api",
+      "route": "/api/platform/register",
+      "hash": "4debc41141f94dfebac99cbe779d04a02186c8e1e12dd5b9b1da9f6242c24e43",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/public/org/[slug]/route.ts",
+      "kind": "api",
+      "route": "/api/public/org/[slug]",
+      "hash": "acc2d62687d6348b5f6a91a834f1936ad190178cda944b60ddfc66b83d0b6b5b",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/push/client/route.ts",
+      "kind": "api",
+      "route": "/api/push/client",
+      "hash": "46467ca61327770d2631376b396cc1b4d6b584890f09e8992f76982d72ee2714",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/push/route.ts",
+      "kind": "api",
+      "route": "/api/push",
+      "hash": "1d7f276689316c6119e2c680970f5f3b12eeb716cb5c51314c1c9b4c986769fa",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/selsyn/diagnostic/route.ts",
+      "kind": "api",
+      "route": "/api/selsyn/diagnostic",
+      "hash": "2cde6971159e4d2c1bf70e10de840a79793342ef633d19123c902d1aaff0c576",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/selsyn/fleet/route.ts",
+      "kind": "api",
+      "route": "/api/selsyn/fleet",
+      "hash": "c884c7f74ae9c4d1dac5b4b37ef0bb7c2999aa9d73cd128bf84a6c007eed1717",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/selsyn/link/route.ts",
+      "kind": "api",
+      "route": "/api/selsyn/link",
+      "hash": "d6d5c7d88b88aebadfd1bd17ad28501dde7c0a306286a5066381996410379d19",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/selsyn/query/[operationId]/route.ts",
+      "kind": "api",
+      "route": "/api/selsyn/query/[operationId]",
+      "hash": "55353ac584eb7eed7ac7ffdeb99a606488d28e1c1faf36598b1402456f2b1304",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/selsyn/status/route.ts",
+      "kind": "api",
+      "route": "/api/selsyn/status",
+      "hash": "97ac3f428f0ebe8be555b26832593b060aa9abfa9bb393b708e2e8f8eb9d834c",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/sign/route.ts",
+      "kind": "api",
+      "route": "/api/sign",
+      "hash": "64fd817a6557d2a5eced445f8f6cdd4449d8bf46e87c8f879a16e3539cc29380",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/asaas/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/asaas",
+      "hash": "83780efa8761be8beebd1d35450c9495909c4bd988ccccc23dccabb5d6656fdf",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/device/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/device",
+      "hash": "367a16da380a8180bd940116db7978d129afe46fc6dc5f063879934fa12c28a8",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/documents/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/documents",
+      "hash": "dd397ead5c561b1fea94a0916aee3f08cba1560487663adcb0500343ef2de0c3",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/incidents/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/incidents",
+      "hash": "ed1a74cb4d8bd389dd6fd8bcb379a923991dc24dea225ff4f1dd4e93b6f49a95",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/infinitepay/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/infinitepay",
+      "hash": "44932e120befec8e15158b7850f6583b7e4badc23b9dac3f0b6b8ba284cf71bc",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/inspections/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/inspections",
+      "hash": "a089f9cf3f7ba42bae946c4fbbf95ca3b59e091ece4961171442631411d4988e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/receipts/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/receipts",
+      "hash": "ac767291498dbd168dd28aae08373fb57c7548cf8fdf5a44b4b6cc0e09543f00",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/requests/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/requests",
+      "hash": "a21d339563a6053c4115e639250b7c5a7250aeacee71335db4ab81a03e01289d",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/reservations/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/reservations",
+      "hash": "abf1a5fb4dde8c869230f63a051dc9a1c3cdcabfda2e8f35e80d2578316c7215",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/summary/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/summary",
+      "hash": "3d41bca9839500689f333698538de9357323f8de5261aec81ac097b962f1f79d",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant/vehicle/route.ts",
+      "kind": "api",
+      "route": "/api/tenant/vehicle",
+      "hash": "33ad18ca0140a2615365e0a968d381f76e51598b461da941bb38dcbe50c63409",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/tenant-admin/route.ts",
+      "kind": "api",
+      "route": "/api/tenant-admin",
+      "hash": "cfdf4662b742e64108f3a53749137d54ee457c8e0ba55f6c976fdcef7ca87652",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/webhooks/asaas/route.ts",
+      "kind": "api",
+      "route": "/api/webhooks/asaas",
+      "hash": "efeca0a43d571ef694d10b318deb1a943d6ded0ab05015e5febf7096f3f74d9f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/webhooks/infinitepay/route.ts",
+      "kind": "api",
+      "route": "/api/webhooks/infinitepay",
+      "hash": "ec4236872b028d9b7ee6ab67ac0322849f272398d8ed502097432c27687e5925",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/whatsapp/route.ts",
+      "kind": "api",
+      "route": "/api/whatsapp",
+      "hash": "bcdbbd0de1c0a2554cc35ff96850d508e3c44a9d53cd0e369ded94dbea49680d",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/assinar/layout.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "8cc317ac87f60e36525f125358bb1f4d76006c64cea4a6c3191182281aa2fa3f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/assinar/[token]/page.tsx",
+      "kind": "page",
+      "route": "/assinar/[token]",
+      "hash": "9bb52729ee9f607bda3e2094f358037d165165f0ffcb23ae7b507c7175eaabb4",
+      "labels": [
+        "Carregando contrato",
+        "Contrato não encontrado",
+        "Contrato cancelado",
+        "Link expirado",
+        "Texto do contrato",
+        "Nome completo",
+        "CPF",
+        "000.000.000-00",
+        "Sua assinatura",
+        "Li e concordo com todas as cláusulas deste contrato e reconheço a validade desta assinatura eletrônica."
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/contato/route.ts",
+      "kind": "api",
+      "route": "/contato",
+      "hash": "d18e90ac79b2ca77050f180955552ff40c59de0eac7949d8d928867eed95a99a",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/convite/[token]/page.tsx",
+      "kind": "page",
+      "route": "/convite/[token]",
+      "hash": "8cfc07d041dbb3f38b3da1e03e9159e581c457a814cf6f8594e3320f3fb5c713",
+      "labels": [],
+      "messages": [
+        "Acesso concedido com sucesso!"
+      ]
+    },
+    {
+      "file": "src/app/l/[slug]/page.tsx",
+      "kind": "page",
+      "route": "/l/[slug]",
+      "hash": "629a8b73e3d6d0ad69457bc3c5c094a509f52eb5378ee0e18f7a3c6d06ed9e70",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/layout.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "1e26e948b501f1d02a68157ebb88b1fabb657c7de15a088a29d60f459ed8aa7a",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/manifest.webmanifest/route.ts",
+      "kind": "api",
+      "route": "/manifest.webmanifest",
+      "hash": "5c6250b9b2615706266ea7cb809d7d7211b20d8fcb5a196c0fd43597193982e6",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/not-found.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "f3ea9283cfa654310a928a85aa2c0852a87fded60c00f39e85f024be3524681c",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/offline/page.tsx",
+      "kind": "page",
+      "route": "/offline",
+      "hash": "afe1db1f389f48078c699339fbe553002f207746615e382dfdf5df14b7ba69c6",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/pagamento/infinitepay/page.tsx",
+      "kind": "page",
+      "route": "/pagamento/infinitepay",
+      "hash": "b5790c58df8d5d340122c229cac57a8102ce691ade2f3ce1c802c8452bc3f68a",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/page.tsx",
+      "kind": "page",
+      "route": "/",
+      "hash": "be436703d43fa854c8efb854612c0585e759578cfae03182994271b2161cca32",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/plataforma/admin/page.tsx",
+      "kind": "page",
+      "route": "/plataforma/admin",
+      "hash": "0f3dd8756ee5bacf9b2add2ba4cef59c104dd7d2a0ce8d329c56092a5855e783",
+      "labels": [
+        "Buscar por nome, endereço, e-mail ou CNPJ",
+        "Buscar locadora",
+        "Todos os status",
+        "Filtrar por status",
+        "Status e plano",
+        "Status",
+        "Plano",
+        "Sem plano",
+        "Prorrogar teste (dias)",
+        "Dados da locadora",
+        "Nome",
+        "Endereço (link /l/...)",
+        "Razão social",
+        "CPF/CNPJ",
+        "E-mail",
+        "Telefone",
+        "WhatsApp",
+        "Adicionar por e-mail (conta já cadastrada)",
+        "pessoa@empresa.com",
+        "Função",
+        "Suporte",
+        "Excluir locadora",
+        "Dias de teste grátis",
+        "Dias de carência",
+        "e-mail de uma conta cadastrada",
+        "E-mail do novo Super Admin"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/plataforma/cadastro/page.tsx",
+      "kind": "page",
+      "route": "/plataforma/cadastro",
+      "hash": "a2aeec7e91f05336bab3e7af909529cc9019f4f5f3e3fa74e1de23c2114609c6",
+      "labels": [
+        "Nome da sua locadora",
+        "Ex.: Rota Sul Locadora",
+        "Endereço exclusivo no sistema",
+        "rota-sul",
+        "WhatsApp de contato",
+        "(11) 99999-0000",
+        "Seu e-mail de acesso",
+        "voce@sualocadora.com",
+        "Crie uma senha",
+        "••••••••"
+      ],
+      "messages": [
+        "Enviamos um link de confirmação para o seu e-mail.",
+        "Locadora criada com 30 dias de teste grátis! O painel agora abre nela; use o seletor no topo para trocar de locadora.",
+        "Conta desconectada. Cadastre a nova locadora com o e-mail do dono dela."
+      ]
+    },
+    {
+      "file": "src/app/plataforma/layout.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "7e6088b1bee7f3f7aad0ab616f1f96c529943dcfc0f85141532a6e86928a0159",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/plataforma/page.tsx",
+      "kind": "page",
+      "route": "/plataforma",
+      "hash": "a94c0a4eb79a973749dfa99853095d05dde4f58cf686a36c2f9fca13ebba79f4",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/plataforma/privacidade/page.tsx",
+      "kind": "page",
+      "route": "/plataforma/privacidade",
+      "hash": "4ab616d89ad898535c3cf11d756eac8660e109eaf6f26f4634cab283f49f9283",
+      "labels": [
+        "Política de Privacidade"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/plataforma/termos/page.tsx",
+      "kind": "page",
+      "route": "/plataforma/termos",
+      "hash": "2a5646ecd7f0dc22c885fad86745009f5d40d110cca66b8cab87bd5bf94feb14",
+      "labels": [
+        "Termos de uso"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/app/robots.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "96858dd1267cb5202ac8bd94818e7e2c1ff7e8ef5002907e6186894cd10c3bb7",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/sitemap.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "0718d03ab383fa4148a868ba1d6c00bcc7a40d090988a1db77534e4e8181382a",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/admin-shell.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "4535794578a069f3f4522b75ba94053fec22a564c89593af3627296ba3b10c31",
+      "labels": [
+        "Administração",
+        "Instalar app de gestão",
+        "Fechar notificações",
+        "Marcar como lida",
+        "Abrir menu",
+        "Trilha",
+        "Instalar",
+        "Carregando",
+        "Dashboard",
+        "Menu administrativo",
+        "Fechar menu"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/asaas-charge-dialog.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "cc26321e8b4b0fa03d8c1f5671b3b20e60a382e7e88fba741b3cc989512b39ae",
+      "labels": [
+        "Cobrança pelo Asaas (Pix, boleto, cartão ou fatura).",
+        "Forma de pagamento",
+        "Cancelar cobrança?",
+        "A cobrança será removida no Asaas e o link/Pix/boleto deixará de funcionar para o cliente. A parcela continua em aberto no LOCAKAR."
+      ],
+      "messages": [
+        "Cobrança Asaas desta parcela cancelada automaticamente.",
+        "A cobrança Asaas não foi cancelada. Cancele em Mais → Ver cobrança Asaas.",
+        "Não foi possível copiar.",
+        "Esta parcela já possui uma cobrança Asaas.",
+        "Cobrança Asaas gerada.",
+        "Enviada no WhatsApp.",
+        "Enviada por e-mail.",
+        "Pagamento simulado no Sandbox.",
+        "Cobrança cancelada no Asaas."
+      ]
+    },
+    {
+      "file": "src/components/admin/asaas-settings.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "1b6a3981708166c5883591b66eb49b7ab33cd375c095340728aa060d2326da64",
+      "labels": [
+        "Ambiente Asaas",
+        "••••••••••••••••",
+        "Permitir cliente escolher (fatura Asaas)",
+        "Multa (%)",
+        "Padrão da conta",
+        "Juros ao mês (%)",
+        "Desconto (%)",
+        "Sem desconto",
+        "Desconto até (dias antes)",
+        "0 = até o vencimento",
+        "Asaas pode enviar notificações ao cliente (e-mail/SMS do Asaas)",
+        "LOCAKAR envia WhatsApp ao gerar a cobrança",
+        "LOCAKAR envia e-mail ao gerar a cobrança",
+        "Copiar URL do webhook"
+      ],
+      "messages": [
+        "Copiado.",
+        "Não foi possível copiar."
+      ]
+    },
+    {
+      "file": "src/components/admin/charge-method-dialog.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "cda342841dc024ba42c497435bebbb344329e2ac1be37aff262dc0c0f9f19371",
+      "labels": [
+        "Cobrar cliente"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/charts.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "08fb6a8f7792197c5668ea689fd82705beb09a514b57932749cb2177134b646f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/contract-panel.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "46ee35e47f552c0b9e8595ace195447eac304992fe3967e0a598c65a2f5b9b14",
+      "labels": [
+        "Contrato e assinatura",
+        "Contrato",
+        "Cancelar contrato?",
+        "O link de assinatura deixa de funcionar. Você poderá gerar um novo contrato em seguida."
+      ],
+      "messages": [
+        "Permita pop-ups para abrir o documento.",
+        "Link de assinatura copiado.",
+        "Não foi possível copiar. Abra o contrato e copie o link manualmente.",
+        "Contrato cancelado."
+      ]
+    },
+    {
+      "file": "src/components/admin/contract-templates-manager.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "2166af4f2dc7c18e5769f20ad163fd701dbcfcac60e41b7c691da711831109d9",
+      "labels": [
+        "Reanalisar com IA",
+        "Excluir",
+        "Anexar modelo de contrato",
+        "Envie o documento original da sua locadora (PDF ou DOCX).",
+        "Nome do modelo",
+        "Ex: Contrato Semanal Padrão",
+        "Aplicável ao tipo de locação",
+        "Excluir modelo de contrato?",
+        "Esta ação não afetará os contratos já gerados ou assinados com este modelo.",
+        "Confirme ou ajuste a correspondência sugerida pela IA para os campos do contrato."
+      ],
+      "messages": [
+        "Limite atingido: você já possui 5 modelos de contrato cadastrados.",
+        "Formato inválido. Apenas PDF e DOCX são suportados.",
+        "Modelo anexado com sucesso!",
+        "Campos detectados com sucesso pela IA! Revise os mapeamentos.",
+        "Modelo removido.",
+        "Modelo aprovado e configurado! Pronto para uso determinístico."
+      ]
+    },
+    {
+      "file": "src/components/admin/crud-dialogs.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "5a4f46a62736ad818caedc3aaa50889406a2912e039c6b19e554c3777598f1bf",
+      "labels": [
+        "Confirmar exclusão"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/data-table.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "cdb29d918d33326608f616e639ac09f9a9f39cb92578c8426142d3e154914a67",
+      "labels": [
+        "Visualizar",
+        "Editar",
+        "Excluir",
+        "Ajuste a busca ou os filtros.",
+        "Página anterior",
+        "Próxima página"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/date-range-filter.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "7a12c2d5da981c13914e0a5a8ba0b8920e79f5c858e320b5d5981ec9ee7e75e1",
+      "labels": [
+        "Restaurar padrão (6 meses)"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/email-history.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "2235e39b5becea1087011d08f8e313c42c6193e3b96436fcb741e6e20a354b1b",
+      "labels": [
+        "E-mail (Resend) e WhatsApp, com o resultado de cada envio."
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/fipe-picker.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "75ab697fe0be588a69604ba5d96865ca6343389d4cfc5c6b64f7d14c48277433",
+      "labels": [
+        "Tipo FIPE",
+        "Marca",
+        "Modelo / versão FIPE",
+        "Ano modelo / combustível"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/fipe-settings.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "5f3ef897d6c61820891e0740ba9998974722af07fa05d099b3d61b0d0137017d",
+      "labels": [
+        "Novo token FIPE (opcional)",
+        "Ativar integração FIPE",
+        "Atualizar vínculos automaticamente na nova referência mensal"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/infinitepay-dialog.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "b3663591991ae7b89f44d1866ab8442c7572cabc6215fd04c3cd28abc791f1af",
+      "labels": [
+        "Pagamento InfinitePay",
+        "Aproximação no celular ou link de pagamento (Pix e cartão).",
+        "Forma de cobrança",
+        "Método",
+        "Parcelas",
+        "Ver comprovante InfinitePay",
+        "Verificar pagamento",
+        "Cancelar tentativa"
+      ],
+      "messages": [
+        "Não foi possível iniciar o InfinitePay neste dispositivo. Para utilizar o pagamento por aproximação, instale ou configure o aplicativo InfinitePay neste dispositivo.",
+        "Pagamento confirmado pela InfinitePay. Parcela baixada.",
+        "Valor pago diferente do cobrado. Confira no app InfinitePay.",
+        "Link copiado.",
+        "Não foi possível copiar."
+      ]
+    },
+    {
+      "file": "src/components/admin/infinitepay-settings.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "8378b19da2b1c00be272fa463b78e0e701b92c461b2b3070fac843c23226177f",
+      "labels": [
+        "InfiniteTag (handle)",
+        "locakar",
+        "Modo",
+        "CNPJ/CPF da conta InfinitePay",
+        "00.000.000/0000-00",
+        "Aproximação só na conta da empresa (envia InfiniteTag/CNPJ ao app)"
+      ],
+      "messages": [
+        "Copiado.",
+        "Não foi possível copiar."
+      ]
+    },
+    {
+      "file": "src/components/admin/inspection-panel.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "7476de3b04c438b7cca1780e8a6161570adad503c604a64c216011c3f3c042ec",
+      "labels": [
+        "Vistorias",
+        "Checklist e assinatura do cliente na entrega e na devolução.",
+        "Confira o veículo junto com o cliente e colete a assinatura.",
+        "Quilometragem",
+        "Combustível",
+        "Valores adicionais (R$)",
+        "Avarias",
+        "Ex.: risco na porta traseira direita",
+        "Observações",
+        "Nome de quem assina",
+        "Assinatura do cliente"
+      ],
+      "messages": [
+        "Descreva as avarias encontradas.",
+        "O cliente precisa assinar a vistoria."
+      ]
+    },
+    {
+      "file": "src/components/admin/nav.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "6a147c6746154cd362f7743f26f94f5ed1962dbb4315b976f15ab98f6e713fb3",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/notify-button.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "7591463c259a1b0b36c09260f9722e5cc51a4d478e5df791c80d813fa0ee6b6f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/onboarding-card.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "0e961036c38696b4cf081318e5944f86d4f1afe960e1b81cb859f76d7824b1e4",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/org-branding-form.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "7a7100462afd0c1e077a36772dc3d99a6ae8396a60045c8051711da29ca834f8",
+      "labels": [
+        "Nome da locadora no painel e app",
+        "Ex.: Rota Sul Locadora",
+        "Tema padrão preferido"
+      ],
+      "messages": [
+        "Imagem muito grande (máximo 1 MB).",
+        "SVG não permitido por segurança. Use PNG, JPG ou WebP.",
+        "Logo atualizado.",
+        "Cor principal inválida (use formato #rrggbb).",
+        "Identidade visual atualizada."
+      ]
+    },
+    {
+      "file": "src/components/admin/org-company-form.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "023a440bc72d9440478ffb3eaa6dc23252b382e9ea12cdfb856b3263a2b95211",
+      "labels": [
+        "Nome fantasia (exibido na plataforma)",
+        "Razão social",
+        "Empresa Ltda",
+        "CNPJ / CPF",
+        "00.000.000/0000-00",
+        "E-mail principal",
+        "contato@sualocadora.com",
+        "Telefone",
+        "(11) 99999-0000",
+        "WhatsApp de atendimento",
+        "Site oficial",
+        "https://www.sualocadora.com.br",
+        "Endereço completo",
+        "Av. Principal, 100 - Bairro",
+        "Cidade",
+        "UF",
+        "SP",
+        "CEP",
+        "00000-000"
+      ],
+      "messages": [
+        "Dados da locadora atualizados."
+      ]
+    },
+    {
+      "file": "src/components/admin/org-share-link.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "1abde80696e8be77773af758832627a7c079016516aa97873c3909749dcd0f7d",
+      "labels": [
+        "Página da locadora",
+        "Link direto do app"
+      ],
+      "messages": [
+        "Link copiado!",
+        "Não foi possível copiar. Selecione e copie o link manualmente."
+      ]
+    },
+    {
+      "file": "src/components/admin/org-team-manager.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "6d9036f795170cea3a1ab9e62276a12e8005e3b5010ebd276bc03102be4727f7",
+      "labels": [
+        "Remover",
+        "Convidar membro para a equipe",
+        "Informe o e-mail e a função da pessoa na sua locadora.",
+        "E-mail do convidado",
+        "colaborador@sualocadora.com",
+        "Função"
+      ],
+      "messages": [
+        "Convite gerado!",
+        "Link copiado!",
+        "Convite revogado.",
+        "Membro removido."
+      ]
+    },
+    {
+      "file": "src/components/admin/org-texts-form.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "ca1dc297ed47bb392a29d0dd32bb902101fc93f28bcf6b0fe0be627f9004c0d0",
+      "labels": [
+        "Mensagem de boas-vindas do aplicativo",
+        "Ex.: Bem-vindo à nossa locadora! Conte com a gente para sua mobilidade.",
+        "Observação nas cobranças",
+        "Ex.: Pagamento pontual garante condições especiais na renovação da sua locação.",
+        "Instruções de suporte",
+        "Ex.: Em caso de pane ou acidente, acione nosso plantão 24h pelo WhatsApp.",
+        "Texto de rodapé",
+        "Ex.: Todos os direitos reservados."
+      ],
+      "messages": [
+        "Textos atualizados.",
+        "Backup baixado com sucesso!"
+      ]
+    },
+    {
+      "file": "src/components/admin/org-ui.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "53ebbb1b0377aa3b3418a9991671f8136ddf6d69740ef0c7d7d6e56212dc4b7c",
+      "labels": [
+        "Locadora atual"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/page-header.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "7ff204c4a3f25742d841d3cbac52756a3b53686152cc5e7df300d45dc366a4e2",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/payment-actions-sheet.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "90449ae4e6f85eac6f9ae29d038db28af2580b219bd576a4b7daf57c113b8340",
+      "labels": [
+        "Fechar"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/payment-card.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "6c68e7327dcc2fe8235cfba9f35b965ec05bdb2197ba557d101520bd34282bae",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/payment-details-dialog.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "62213d82cab84c5ea42dc9c7f75acfde5bbfb5e8be43d2be1ea05371d8281d50",
+      "labels": [
+        "Detalhes do pagamento"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/payment-edit-dialog.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "e789f5a51128135bc6168ea01d4ed51a5f978aebdd0fd77b09af7ac9f5ab1979",
+      "labels": [
+        "Editar pagamento",
+        "Valor da cobrança (R$)",
+        "Data de vencimento",
+        "Descrição da cobrança",
+        "Ex.: Aluguel semanal, Parcela 2, etc.",
+        "Forma de pagamento (opcional)",
+        "PIX, Cartão, Dinheiro...",
+        "Observações internas"
+      ],
+      "messages": [
+        "Informe um valor válido.",
+        "Informe a data de vencimento.",
+        "Pagamento atualizado com sucesso!"
+      ]
+    },
+    {
+      "file": "src/components/admin/payment-methods-settings.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "86cfaf3b58ffb1107d86719e8fd94ac78a4e343cf5705c25e5d7ef49e83b7b71",
+      "labels": [],
+      "messages": [
+        "Configure este meio de pagamento antes de ativá-lo."
+      ]
+    },
+    {
+      "file": "src/components/admin/payment-settle-dialog.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "4005f0af9ef5a54d8ef5b5553d6d7c3d5bda0b1e3562f512cd7e682e3a9c1c7b",
+      "labels": [
+        "Dar baixa no pagamento",
+        "Confirme o recebimento para atualizar o financeiro e o histórico da locação.",
+        "Valor pago (R$)",
+        "Data do pagamento",
+        "Forma de pagamento",
+        "Observações do recebimento",
+        "Ex.: comprovante enviado pelo locatário, pago em dinheiro na loja, etc."
+      ],
+      "messages": [
+        "Comprovante anexado!",
+        "Não foi possível enviar o comprovante. Tente novamente.",
+        "Informe um valor válido pago.",
+        "Informe a data do pagamento."
+      ]
+    },
+    {
+      "file": "src/components/admin/pix-settings.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "847ab64e836538b0dad09e6cef1a071d459890c0c6c65faa36e1b62274072027",
+      "labels": [
+        "Tipo da chave",
+        "Chave PIX",
+        "Nome do recebedor",
+        "LOCAKAR LOCADORA",
+        "Cidade do recebedor",
+        "INDAIATUBA"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/push-settings.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "e8772010f2a1753456a77fe7e347313d4eed0e525f4cfadf73c0b3032c97e066",
+      "labels": [
+        "Carregando"
+      ],
+      "messages": [
+        "Permissão negada. Libere as notificações nas configurações do navegador."
+      ]
+    },
+    {
+      "file": "src/components/admin/receipt-approval-dialog.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "200fa091cec9176c92d7be9356c671cb323331e6a60bb32ea69d7936a77b694b",
+      "labels": [
+        "Aprovar este pagamento?",
+        "Confirme que o valor entrou na conta cadastrada. A aprovação dá baixa na parcela e avisa o cliente.",
+        "Enviados pelos clientes no aplicativo. A parcela só fica paga depois da sua aprovação.",
+        "Conferir comprovante",
+        "Confira valor, data e recebedor antes de aprovar.",
+        "Ex.: valor diferente da parcela, comprovante ilegível, data errada."
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/rental-form.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "2c340be968ac95e0921a47d6d2b1c58333c05d00e268740b643473c889051f9e",
+      "labels": [
+        "Locatário",
+        "Selecione",
+        "Veículo (placa)",
+        "Tipo de contrato",
+        "Status",
+        "Período inicial",
+        "Hora inicial",
+        "Período final",
+        "Hora final",
+        "Periodicidade",
+        "Primeira cobrança",
+        "Última cobrança até",
+        "Multa por atraso (%)",
+        "Ex.: 2",
+        "Juros por atraso (%)",
+        "Ex.: 0,033",
+        "Período",
+        "Carência (dias)",
+        "Dia de pagamento",
+        "Enviar a cobrança com PIX automaticamente (e-mail, WhatsApp e celular do cliente)",
+        "Enviar quantos dias antes do vencimento",
+        "Caução (R$)",
+        "KM inicial",
+        "KM final",
+        "Observação"
+      ],
+      "messages": [
+        "A data final deve ser posterior à inicial.",
+        "KM final menor que o KM inicial.",
+        "A última cobrança deve ser igual ou posterior à primeira."
+      ]
+    },
+    {
+      "file": "src/components/admin/selsyn-result.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "e023f10038c3b81ca84e51af479ad0e4ad416f23b30c2787180152185f97a279",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/selsyn-settings.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "71f7797de8c7be2619dcd9895983f3fc3210467910e6e8e28841b61580423a8a",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/tenant-api.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "c3a7edb98d2605ade69bdf37b9290df9449fda48ace182a1fa088450966a4725",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/tenant-inspections-panel.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "53ff769c85b2eb584771188f941e145010293b38a83be559056795799c40543f",
+      "labels": [
+        "Vistorias feitas pelo cliente no app",
+        "Fotos e checklist enviados pelo locatário. Confira e compare retirada com devolução.",
+        "Observação para o cliente",
+        "Retirada × Devolução (pelo app)"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/tracking-map.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "14ebb9e9f092b20940501d7a7bc1f7b758473c352f18cfcd6c4525061673a2a1",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/vehicle-360-dialog.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "115df0f04f86b7d6b4bb1eb2a3b53ed7dc4b4ed1be05fe713b764fc82b821fe6",
+      "labels": [
+        "Raio-X completo: lucratividade, custos, manutenções, vistorias e multas.",
+        "Faturamento",
+        "Custos do carro",
+        "Lucro líquido",
+        "Retorno (ROI)"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/vehicle-fipe-panel.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "9fe1ccdc5e174e70fa9a4925a9420fb644c63465d0159e9414968c7c3b87dd2d",
+      "labels": [
+        "Desvincular FIPE?",
+        "O preço atual será removido. Leituras históricas permanecerão registradas."
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/vehicle-tracking-panel.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "57fb58516aa0478dbc0195a42e83c28e8714929bf5dda7c32b132f079e5f1001",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/admin/whatsapp-connection.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "85b4d3c7660dacc77bc5b80dc759d79afa8c2c7986942651730794b0115d8336",
+      "labels": [
+        "Carregando",
+        "Enviar mensagem de teste para",
+        "Desconectar o WhatsApp?",
+        "As notificações por WhatsApp param até você escanear o QR Code novamente. Os e-mails continuam funcionando.",
+        "Gerando QR Code"
+      ],
+      "messages": [
+        "WhatsApp desconectado."
+      ]
+    },
+    {
+      "file": "src/components/landing/fleet-section.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "c3a1bf6c5499290b47642ceb10b6e1164943c0f35ea1645a84884cc397583c49",
+      "labels": [
+        "Veículos prontos para o seu caminho.",
+        "Modelos econômicos e práticos para o dia a dia. Consulte a disponibilidade diretamente com a nossa equipe."
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/landing/floating-whatsapp.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "5e31150be613247211cf57e4bd2a8ebf4e8c9f101d96830f0d4469499859edc5",
+      "labels": [
+        "Fale com a LOCAKAR pelo WhatsApp"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/landing/footer.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "0cf4b7fe467922c7503ab435b4c7fa856cbe8ebb30e9ec32982dd95fcbff6d42",
+      "labels": [
+        "Instalar o app",
+        "Rodapé"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/landing/header.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "7e66a575a870f0e7966f11afe98b295e3b0bb86c9904def1e959d5541a82836d",
+      "labels": [
+        "LOCAKAR — voltar ao início",
+        "Principal",
+        "Acessar Área do Cliente",
+        "Acesso Administrativo — Área do Locador",
+        "Área do Locador",
+        "Menu móvel",
+        "Instalar o app LOCAKAR"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/landing/hero.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "5114fdb190d89535fcdb690d4c02afa2c9ab3f65c8a64c71fb33866977a177fd",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/landing/reveal.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "e0408e233bcc31fb0bd41359682d0ce9af6784f54d9c6c3eadc0dc023a5f3e07",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/landing/sections.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "27940d187b601f936e2150dc8fa7ef244c840af6b40bd9a6670923880f1a0bb5",
+      "labels": [
+        "Alugar é simples.",
+        "Um processo direto, sem burocracia desnecessária.",
+        "Menos custo no aluguel, mais dinheiro no seu bolso."
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/landing/video-background.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "1615872432ad93753c6fb0db8fadd9da567c0f1306400b8135e57b1b0b4bd3a2",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/layout/motion-provider.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "b9278c898e3c5837214cbe96c15832eaee9272b35e759f21259405fe1687eeb2",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/platform-landing/content.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "03da9c3a333793d425cc0bba9201f15eec3e7d78e07e94723b48404d0f430e99",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/platform-landing/devices.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "f79217359bf00381125682a2131a3eeedea6e6f6ebfa81ed239c0bb96190721b",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/platform-landing/footer.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "38f6d6639477751d6db71747b604d3bef7999bd035994141f19a5a1a333a2c77",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/platform-landing/interactive.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "873c10a9907c4ab69dd6f1194f8ef2b006150c30ce9fff23a29c06f0f3f63ef6",
+      "labels": [
+        "Seções",
+        "Exemplos de marca",
+        "Comparar tema claro e escuro"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/platform-landing/legal-page.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "fac3b500f761fd2d275d6684744a07bc2116cc0d0d22a605c0877417cd5c89ec",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/platform-landing/sections.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "f0e988394b66135aed0df6385687ab41882e34563ed54ba5feafb99e8bed4c7a",
+      "labels": [
+        "Tudo o que sua locadora precisa.",
+        "Painel · Financeiro",
+        "Seu sistema. Sua marca.",
+        "O dia a dia da locadora, organizado.",
+        "Seu contrato preenchido automaticamente.",
+        "Você escolhe quais meios oferecer.",
+        "Dinheiro, oficina e infrações sob controle.",
+        "Seu cliente também tem um aplicativo.",
+        "Painel · Relatórios",
+        "Do jeito que sua equipe prefere trabalhar.",
+        "Trabalhe de onde estiver.",
+        "Cada locadora, seus próprios dados.",
+        "Conecte só o que fizer sentido.",
+        "Comece em poucos passos.",
+        "Tudo em um só lugar.",
+        "Planos para cada momento da sua locadora.",
+        "Perguntas frequentes"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/pwa/install-button.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "b4e141af1bbb45f703b0b03f9e4094f3681189174f00c4e5c486aab23403127c",
+      "labels": [
+        "Adicione à Tela de Início do iPhone ou iPad.",
+        "ícone compartilhar"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/pwa/offline-actions.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "2787045e93c1ef55bbd2a70c4f4903274a6990c3c1c7a87383d1a878bd454ee9",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/pwa/pwa-provider.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "271bc61266f46c9244a850bc18e5fde5e7a0caeb139c25e21ec9f48cf9c48715",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/badge.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "75a1c9e26acb4c0a49ce596d6268e2dacab399f72500210b410215377b535eeb",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/button.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "160c40e6dd582f18104b5358041d0446f5bfc56f2b8c608ecf8e99d6014c5b7b",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/card.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "eec8bc92ba702ee52e58079bbc744deb3ba079088cd95b60145944f02190fb8c",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/client-push-button.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "d83a95d8f4d6addb3699f05893d60d28f5450a697b72426e7d50b8103549dc48",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/dialog.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "bc1cf0ec2ab3f220ebc54bee48810ff1a7fb1d722d504a5dc7c9c034ad97e6e2",
+      "labels": [
+        "Fechar"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/form.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "3baa55ef2d1a863e07d2813cafe20c2dc05f06f1a217ae036b1127b7ac96dfaa",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/instagram-icon.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "d2c872230e818a9cf82d2d3f9786ba1126e19f09a800c5d82592ca0b490227ce",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/logo.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "40fc151b3600585a7ef8404641fe85a782ec6be90541ca652c75e7f6c6638799",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/search-choice.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "ffb03f578554eeb1ede37da76df5295f736b8acfe0ac573373c8309f58a3f006",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/selfie-capture.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "01da2c1b0b4687791cedb8b636c2787e43de685fe6babeaf353f1b8810092d96",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/signature-pad.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "7f156df333297d0eb195de209a22d8c47299a0058d82195346e1248e2727b2a2",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/components/ui/whatsapp-icon.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "9ae3fa2cf48ba5e8088da1f4a4e263fd687e23a528f0a70ac443dd28f0ca952d",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/data/fleet.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "be32e4c1fe1fb9618af10545b54023e989ca7cf4f18250fce2e531edf83f0b98",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/data/mock/index.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "0c14ea10cc47f8195981e80502d2825e7199ee6470d7eb7daead81f8cc706677",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/access.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "23c78a9e69b9a4657c2d4ee6cd912b038a7486ad2033d6c13574847653797528",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/assistant.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "d90176c68f8d9b58a4e0ac823486582d6967f14f0c46b69382ed67c17b16a227",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/article.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "ccacb251205dfbfdfb6da17126f27a790508c6ea67f10ae5a95e8df0a0bcedc7",
+      "labels": [
+        "Antes de começar",
+        "Passo a passo",
+        "Dica útil",
+        "Atenção",
+        "Problemas comuns",
+        "Dúvidas frequentes"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/assistant.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "1f9501ec05868557fa304a9054be3414cc11db2d5adf4f91fd66098b2399a892",
+      "labels": [
+        "Assistente",
+        "Ex.: meu cliente pagou e mandou comprovante, o que faço?",
+        "Pergunta para o assistente"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/context.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "0b04eee1208f6d975e0376bb096f7a4e2ee0e3575b52e1549fe5f9736813502d",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/contextual.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "ed3c83ef78d8e24a342fe2aef615643b6b432052b2f0b81fa467f2110c51ec93",
+      "labels": [
+        "Ajuda sobre esta página",
+        "Abrir ajuda sobre esta página",
+        "Tutoriais e dúvidas frequentes recomendados para o que você está fazendo agora."
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/glossary.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "4f1796c6eacd7745cf2a0b2c6f431430a91449382e44908c11e1678d3009717d",
+      "labels": [
+        "Filtrar termos (ex.: caução, baixa, FIPE)...",
+        "Filtrar glossário"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/home.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "987cc31dd6ae3cf88c3a26ca5c9310fdeb479102588266a99a76e9c5444c9ea5",
+      "labels": [
+        "Pesquisar na Central de Ajuda",
+        "Resultados da pesquisa",
+        "Tutoriais concluídos"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/manual.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "d902beeff9a9b5b5493efae7001d452ad0ddc2308a5b7a79ace58a991c03930a",
+      "labels": [
+        "Índice"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/palette.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "f42628c9f301f611d0c432eb36d4831c6dfc2c8f8015caaf19d56464d1e9477a",
+      "labels": [
+        "Pesquisar na ajuda",
+        "Digite sua dúvida. Enter abre o tutorial.",
+        "Ex.: como aprovar comprovante PIX"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/tour.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "bacd7e013a610f776e98780e8d3baea9fdf2700eeb8d544f4ff0cbb82deb026b",
+      "labels": [
+        "Abrir ajuda sobre esta página",
+        "Bem-vindo",
+        "Fechar tour"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/ui.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "6ce1270115da3bd04de94dea1fdee22d1ea355e85d2c1921931717868727e6fc",
+      "labels": [
+        "Navegação da Ajuda",
+        "Obrigatório",
+        "Ainda precisa de ajuda?",
+        "O que faltou ou ficou confuso neste tutorial?"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/glossary.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "4300317fb4bfe1f9b6a59f609db3ba0589d8294daba952d249e63de2a40809f4",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/index.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "999925caf5720c7b4508490c249e2123a277bda3f83c9eac667955301cc411db",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/progress.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "4587b11e155bf6360bf90e5c38493603c8e717169d8cfa3e269bef850fc04b84",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/search.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "84813b118341cd4b7e5f3e8799aedebb629fc5dc3a3f9884f684dfb6c36b23f9",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/track.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "a50ffc44685756f653c16afc39b5f9ea54388c12143ab68a3496b7118416748d",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/types.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "9d1f278e79029c56f59ec8ea3e7a46910b8f7be0bfa60a4aedaee33bf656785f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/hooks/use-admin-data.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "16385582881deac440d58b1507034ff6b1b6ba73eaa43840c67440ce45eb6c2e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/hooks/use-crud.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "cca28841903a1e5e49ae7ef32053ecfa211f74852ddb4981d9a4dbc2b47fdd17",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/hooks/use-notifications.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "7e9df4c74b539b18f5219be3dcfdde1d87a2aa182bd299e68e20dadf5c78859f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/hooks/use-organization.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "cc70b688a99ec4fb53d0b7c9c98de102b4b97ad6bd22eac3128fd6380b9c3937",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/hooks/use-pwa.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "44a8e5c22f01df62c3d3f4ff8fee86e7b15cce19def9bf0024297478a07b9290",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/hooks/use-theme.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "38988207f14cc3f4401c13010cfdd6b430f193c77ff6df463ea488ebb1a8181e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/analytics.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "e26df1f71996540092e95edecc72503672c52448768039043bf7e22b3cd63386",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/antifraud.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "473e68a55dd32db113587478b59b08ffe4174a1898809775d03e1d3ed8cfd25b",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/api.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "020b55bc213ac62071200a3205e73c0b49b5bbc5c78ecae0648ae716bd21e756",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/asaas.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "2ec6aad66bb8f83770cf10b174c3a07a8027d625050d269d32b0a3feda0b7921",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/auth.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "b164088dd2caae1c1acb3a7efaa5f2be8b79b4aa80d45f65d4dd66ddd8e808b4",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/billing.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "0454d3d86f79c882da6219631dee3f9ca076f25fdbd3bb6f28f6d8ff1dcf5f4e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/cep.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "1e59171c66ed0c281b3dcbcb312c33d8a9cb94766307b5f61683248a243de975",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/company.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "83cf9becf3244c06b997fc11b1b9454707baefb8ff7d5bf7a0e0669abe990ecc",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/constants.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "7af04a914563015e63fb3cd42a0b2d0a448e20b50f9a18233da67188e82540b3",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/contract-variables.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "e280f10f4210420a9b189a7dbae61e73808d253a699ec767dca1fd1eb455c09c",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/contract.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "13e760f1e64820aaa16e43a79e1b05fd62f670170e569730f37650e23fd02c97",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/contrast.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "65d1e43de40abf16d25394f4fd126c67e92e098af07806b6945c9aef439d9f37",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/crlv.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "6bd0545b6cc9b8f12eabbfe74cb22a353aa592775e4f316cc2370351090e9e1f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/documents.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "1475dfd66d4895061a67e28332e0073650275bba303670f0e6e9049320b05dcd",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/fipe.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "c9d03a6d7cfc054faf76a292cc3248a6c95699937ad427a3f21b3fe41395adec",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/infinitepay.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "f24e15a23b12fb5d920a8e608f50d1111810c804a785a9a0e6cb92b99fe4782c",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/notifications.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "cc99674d67eaec81a82c95f3e10b0e1dc07af06bed4d989479bb036c8c37dbc8",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/org-path.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "bed26c8f3ee0ae5c04c1155f9f6e082e153209285e5423a9bd90c4f9baafc120",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/payment-methods.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "b14345a28156915fd544a8345b94aacf48b75477344c7bbc5111b1541f77d4c4",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/pdf.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "9b151bac9bef93ccc8559e45f31e3d974a4ba84bc1d136386d345f7c80630eaf",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/permissions.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "71568fbc3b4b5948ea6e95ef822bc015d743cf1aa61f5cfc6b87bd3d4784b3b3",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/platform.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "34fa1772b7d0f1b0e334ed093c4e279cf434907ecd4e0aa21a0612b76947b43f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/push-events.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "f4eaf6d5d9426cc68330912cd3eb4017c82d2c5434f8cedc2a7d6b7175ca7a49",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/pwa.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "6c621f4132cada210a7117c19060a11d097a3eae0437c8d9c81572f8401b9bc5",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/reservations.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "45a3e65f1bdbd6e043b672860316498779f3f1d263596043f3e3b6e89d12a774",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/selsyn.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "be58051fa1769d12dfa5ec942bde1699c758bebb34f99bbf1bc80d42c2be3e8a",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/asaas-crypto.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "de48069252701a515f26391d0b803d33351433f5341844a728df0c189f208e55",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/asaas-webhook.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "2c953bc32e8ba702ebff83dd0c16c1fa3d0d36369fde0c4b58ad29f85644d360",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/asaas.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "d523f5d48a8ff3c384457d9a6d346439d2928cd3307b25a9ebe4e5911153916a",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/charge.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "406a380aba4c7d6de0fbbfd9e69c2caa224c7220dddc9f4788fe15a4d2c18d67",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/contract-ai.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "69ff7d25329f195f56d49a646d90928a3f3f321fd0c3913298e976f2f25270fb",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/contract-resolver.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "dae19b684f829abfe9e6ed9f92e660d459068e9e9fae631b5ade423d0cbcf75f",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/docx.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "e71af20c8697a91b4723d43adfb8783f6d693e0337b75ce7064815a282640762",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/email.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "e60189f6d2f647a8f7ed808d23b093771e43a31e00ffd1b5703237c8f60ceab0",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/fipe.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "53d9e5122177f0d977e761127cdd3665d08818f4e951d00502ced65f44c2d6b3",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/infinitepay.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "d5aef8f6833ffc79499474e7e35c1029211b0cc6a1e12a15a6fa57b79b6e87cc",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/integrity.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "affc932d5f05c6971d9321cfa975c082ccad1b0ccb5559e36a4ee28c8eeddf52",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/org-context.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "3675068a1ba22baa527f83495e13e4dbaf1ab47e41d179a6c99dc0d9344d4657",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/org-db.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "4992ddc13bd212600f89e284d009cfcd8e7964b38c7fdb0b6455934e9d8b874e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/payment-methods.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "422d4bf88d5146e13e7b3908d2a04850121957c8d97b2cc393a9455aabcb8627",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/push.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "05facef4aa201305350a8b423517d71201fa4e36fdcc5e2f5549ba4ac920fb87",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/secret.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "a6cca45224c015d8f6e45e6a5d06636fb7041ec5fa4fef8eb23f02900cb37d65",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/selsyn-transport.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "691b6e815aa3c4c7e7ad4794016e45b2ba5920b6e874a92068a8db289047eab3",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/selsyn.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "559068e710a01732ff010e6bd86658f1eeddb559ba92b5de587b07381b82b0d1",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/subscription.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "9a5b6efe25bcc8ee81adfd64ddaf20aeac5f2bb2e6f0a772631b62c127d4a4a0",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/supabase.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "a8b6b3a88ab8659757ec7fcd301036994700fc95b6b8912b62ad1eaab6fad113",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/tenant.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "08448530f8f0480fdc2f5799d2dd92a3cc9e37b8adf5bc5ccbf10827d64db147",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/server/whatsapp.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "ff2e58eb8be36ab75924d4b2ee209a6256719181383bf9e02d74d75e56b04d87",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/storage.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "20f18fc47db046544aa177b701a47d0559c7feec73891ab1d0ab45c49a1d0963",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/supabase/client.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "31525a9ab03e1a6363a17d6b78a86a58ddfa15bbac38ce411ddc096600736037",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/supabase/env.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "ca9738cc51aaaab35909d7eaf00761d64f12a27e4a3995dc44dd6d9a8ef094c4",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/tenant.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "daf22a41ad33cc3d043df567ab19ec7de1f1dd7e7a8a2cb04f834836724dbf76",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/track.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "28bc61375e1b0f96dbda097a2371112aa4e436f2dfd93e83bf347391ae8980ff",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/utils.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "1868d093b14f4ac544244ce76318339a7e1b58f68ee306cfa489452521576991",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/vehicle-lookup.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "5ea1f2f85c1fac2f639d1427d1ae53bebfb494da74a3936a0723e69031f08f89",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/web-push.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "ed87da68aaf2a704fd818f96abd362d0a030febbc2b8af5f8a3601e9020bbc29",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/whatsapp.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "b271f996948b2b0ad2cca9498fb088592869e3369be8396fe6c075de0c316413",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/proxy.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "4394ccfe2f74d8b725e0d9e9c27703c081abadbd3c85fefbee46060fd769ae83",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/repositories/index.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "1eddeb19fd8ef24a02cb8c06e692eba73d1d766152bb364a9984ab797b2185a8",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/repositories/local-storage.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "eb529ae73771e90e773fc881214b863e6603f2901690f8a73ad21116de58debe",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/repositories/mapping.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "8c389bdce45df34d439129f29f63f20c95aa4f5a2ed56971c601cd9e750e5a02",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/repositories/supabase.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "7730b71ea64add43ae7d59d474377935e8ba1f865cd1e4ef2569c25da03c7a57",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/repositories/types.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "5b659982cc99a42a2a32aac4bc01e722bf9d3c08946490d0f3171b2960c76ab8",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/types/index.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "aa7362c38f63302f38848f8d44c6eef26667837e4fbf55b54b2b296aa34b59d0",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/(auth)/cadastro.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/cadastro",
+      "hash": "9ecf2e91a4111b093fffec12b7649aeaa3b91be8277677aae1493454261fae77",
+      "labels": [
+        "Nome completo",
+        "Seu nome completo",
+        "CPF",
+        "000.000.000-00",
+        "WhatsApp / Telefone",
+        "(00) 00000-0000",
+        "E-mail",
+        "seu@email.com",
+        "Crie uma senha",
+        "Pelo menos 8 caracteres",
+        "Criar conta"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/(auth)/login.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/login",
+      "hash": "b383c79f9180d88990abf72c855e14df02b4102860c6f8e13ec84f7182bf2680",
+      "labels": [
+        "E-mail",
+        "seu@email.com",
+        "Senha",
+        "Sua senha",
+        "Entrar",
+        "Esqueci minha senha"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/(auth)/vincular.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/vincular",
+      "hash": "ac9b89e6d1c5a0ab06111c0dc4672402c19b6329bf3c404d1b34b5a73f46a70d",
+      "labels": [
+        "Escolher veículo e solicitar locação",
+        "Sair"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/(auth)/_layout.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "64b43ce41293e9f829ef2a624ee990ee291d908fe600c9fedf2f8ecfd4ae01b0",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/(tabs)/inicio.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/inicio",
+      "hash": "e5418e55d0d8040ddc68ca6454522a7b3fffe4ab121403bf2f13851040a749a5",
+      "labels": [
+        "Pagar com PIX",
+        "Pagamentos",
+        "Ajuste solicitado",
+        "Corrigir solicitação",
+        "Resultado",
+        "Nova solicitação",
+        "Status da solicitação",
+        "Escolher veículo e solicitar",
+        "Meu veículo",
+        "Placa",
+        "Ano",
+        "Km na retirada",
+        "Câmbio",
+        "Acesso rápido"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/(tabs)/locacao.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/locacao",
+      "hash": "96f96b6eee94acec2baa3e7fb05a29e34007aeb462503759f0b735d9f5adbc58",
+      "labels": [
+        "Minha locação",
+        "Nenhuma locação",
+        "Solicitar locação",
+        "Modelo",
+        "Placa",
+        "Ano",
+        "Combustível",
+        "Início",
+        "Devolução prevista",
+        "Tipo",
+        "Caução",
+        "Parcelas pagas",
+        "Km na retirada",
+        "Km na devolução",
+        "Meu veículo e vistorias",
+        "Relatar um problema com o veículo",
+        "Outras locações"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/(tabs)/pagamentos.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/pagamentos",
+      "hash": "1addaccf470d540f42ac4ec662b3b274d51acb4d467be78afbf94d31a7989256",
+      "labels": [
+        "Pagamentos",
+        "Nenhuma parcela",
+        "Concluir",
+        "Tirar foto",
+        "Galeria",
+        "Anexar arquivo (PDF, JPG ou PNG)",
+        "Escolher outra imagem"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/(tabs)/perfil.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/perfil",
+      "hash": "1fd731c22356e93bc8797091a57518ceaba509721dfd0f1bec3d73cfdc20cc90",
+      "labels": [
+        "Perfil",
+        "CPF",
+        "Telefone",
+        "E-mail",
+        "CNH",
+        "Validade da CNH",
+        "Aparência",
+        "Conta",
+        "Suas locadoras",
+        "Atual",
+        "Central de Ajuda e Treinamento",
+        "Cancelar",
+        "Sair",
+        "Sair da conta"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/(tabs)/_layout.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "2a45901af406e597eed55e101a80693eb1634bc913c0f89afb8025569decc0db",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/documentos.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/documentos",
+      "hash": "353935473f09f9f276f7d522290e3561fe730d066673685700da605e29867026",
+      "labels": [
+        "Enviar para conferência"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/index.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario",
+      "hash": "2edcd0ef3da50b679826e72461dc635c21f2e284787343bd72410312e88e014c",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/multas.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/multas",
+      "hash": "9fe9a4fbd82051d5051a80009fd589617db2ffdd18817dd11edb6217282d1a6d",
+      "labels": [
+        "Nenhuma multa",
+        "Falar sobre esta multa"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/ocorrencias.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/ocorrencias",
+      "hash": "a622bf05aa7ebb1c8f4e40639a8aa54bebbd945759be94c70ff27fbe3815db22",
+      "labels": [
+        "Nenhuma locação",
+        "O que aconteceu?",
+        "Ex.: pneu dianteiro direito furou na Av. X, estou no posto Y.",
+        "Adicionar foto",
+        "Cancelar",
+        "Enviar relato",
+        "Relatar um problema",
+        "Nenhum relato"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/privacidade.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/privacidade",
+      "hash": "e2ca069e6c28d30d2d68c1dfc8f2e61a122801f1a1ce302b93d7020d358d583b",
+      "labels": [
+        "Li e concordo com o uso dos meus dados descrito acima, inclusive os sinais de segurança do aparelho.",
+        "Continuar"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/reservas.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/reservas",
+      "hash": "46b3fc65acf96132460eae4c0cf1663c304949d751f228b0e3d7ac4549624361",
+      "labels": [
+        "Retirada",
+        "DD/MM/AAAA",
+        "Devolução",
+        "Enviar pedido",
+        "Nenhuma reserva",
+        "Manter",
+        "Cancelar reserva",
+        "Cancelar"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/solicitar.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/solicitar",
+      "hash": "c2b34f410d4c8140c50ba2abc3f409edf514f699c426469f57e8c84b1eac6fd6",
+      "labels": [
+        "Acompanhar no app",
+        "Data de retirada",
+        "DD/MM/AAAA",
+        "Data de devolução",
+        "KM Médio / dia",
+        "80",
+        "KM Médio / mês",
+        "2400",
+        "Telefone de recado / reserva (opcional)",
+        "(00) 00000-0000",
+        "CEP",
+        "00000-000",
+        "Logradouro / Rua",
+        "Rua, Avenida...",
+        "Número",
+        "123",
+        "Complemento",
+        "Apto, Bloco...",
+        "Bairro",
+        "Cidade",
+        "UF",
+        "SP",
+        "Número da CNH",
+        "00000000000",
+        "Validade da CNH",
+        "1. CNH (frente)",
+        "2. CNH (verso)",
+        "3. Comprovante de endereço",
+        "4. Selfie com a CNH",
+        "Veículo",
+        "Período",
+        "Plano",
+        "Valor previsto",
+        "Endereço",
+        "KM previsto",
+        "Caução (a pagar na retirada)",
+        "CNH",
+        "Documentos anexados",
+        "Voltar",
+        "Continuar"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/veiculo.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/veiculo",
+      "hash": "27a7bc91c1f22b579f24985e07e101745479e29db8c2a636fd2a093ea6cbb0c3",
+      "labels": [
+        "Nenhum veículo",
+        "Retirada",
+        "Devolução",
+        "Periódica",
+        "Nenhuma manutenção registrada"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/vistoria.tsx",
+      "kind": "tenant-page",
+      "route": "/locatario/vistoria",
+      "hash": "909828097d9b6c71e8786c3284b8e328d42421547c761166c75f2452242f4fba",
+      "labels": [
+        "Voltar",
+        "Quilometragem no painel",
+        "Ex.: 45230",
+        "O que tem? (opcional)",
+        "Avarias encontradas (se houver)",
+        "Ex.: risco na porta traseira direita",
+        "Adicionar foto de avaria",
+        "Observações",
+        "Veículo",
+        "Quilometragem",
+        "Combustível",
+        "Itens com problema",
+        "Fotos",
+        "Continuar"
+      ],
+      "messages": []
+    },
+    {
+      "file": "apps/locatario/app/_layout.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "f11f060cc37a996c36064e8350a121ab7c2002ff7fd4fa786a65cb3cc1d09f4a",
+      "labels": [],
+      "messages": []
+    }
+  ],
+  "needsReview": []
+}

@@ -1,0 +1,55 @@
+{
+  "name": "locakar",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build:locatario": "npm --prefix apps/locatario run build:web && rm -rf public/locatario && cp -r apps/locatario/dist public/locatario",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "check": "node node_modules/jiti/lib/jiti-cli.mjs scripts/check.ts",
+    "locatario": "npm --prefix apps/locatario start",
+    "help:validate": "node scripts/help/validate.cjs && node scripts/check-help.cjs",
+    "help:audit": "node scripts/help/audit.cjs",
+    "help:screenshots": "node scripts/help/screenshots.cjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.48.0",
+    "motion": "^13.4.4",
+    "next": "16.3.6",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
+    "radix-ui": "^1.6.7",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "recharts": "^3.10.1",
+    "resend": "^6.30.0",
+    "server-only": "^0.0.1",
+    "sonner": "^2.0.8",
+    "tailwind-merge": "^3.7.0",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.21",
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.6",
+    "tailwindcss": "^4",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20.9"
+  }
+}

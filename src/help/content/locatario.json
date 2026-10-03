@@ -1,0 +1,297 @@
+[
+  {
+    "slug": "app-locatario-como-acessar-entrar",
+    "title": "Como o locatário acessa e entra no aplicativo",
+    "description": "Orientações para o cliente final: link da locadora, login com e-mail, criação de conta e recuperação de senha.",
+    "category": "locatario",
+    "audience": "tenant",
+    "permission": "read",
+    "keywords": ["app", "locatario", "login", "senha", "entrar", "acesso", "link"],
+    "aliases": ["como o cliente entra no app", "acesso do motorista", "login do locatario", "como baixar o app"],
+    "routes": ["/locatario", "/locatario/login", "/locatario/cadastro", "/locatario/vincular"],
+    "sources": ["apps/locatario/app/(auth)/login.tsx", "apps/locatario/app/(auth)/cadastro.tsx"],
+    "minutes": 3,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Navegador no celular ou computador conectado à internet."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse pelo link da sua locadora",
+        "text": "Abra o link enviado pela locadora (ex.: locakar.com.br/locatario?org=sualocadora) ou acesse pelo botão 'Área do Cliente' no site oficial.",
+        "image": "/help/screenshots/app/login.webp"
+      },
+      {
+        "title": "Passo 2 — Faça login ou crie sua conta",
+        "text": "Se você já tem cadastro na locadora, digite seu e-mail e senha. Se for o seu primeiro acesso, clique em 'Criar conta com o e-mail cadastrado'."
+      },
+      {
+        "title": "Passo 3 — Cadastro rápido",
+        "text": "Na tela de criação de conta, informe Nome completo, CPF (somente números), WhatsApp, E-mail e crie uma senha segura com no mínimo 8 caracteres."
+      },
+      {
+        "title": "Passo 4 — Confirmação e entrada",
+        "text": "Caso o envio de confirmação esteja ativo, abra a caixa de entrada do seu e-mail, toque no link de ativação recebido e volte ao app para entrar."
+      }
+    ],
+    "tips": [
+      "No celular, adicione o link à Tela de Início do aparelho para ter um ícone de acesso rápido como um aplicativo nativo.",
+      "'Esqueci minha senha' envia um e-mail de recuperação para o endereço digitado. Se o link não permitir criar a nova senha, fale com a locadora pelo WhatsApp."
+    ],
+    "warnings": [
+      "Utilize sempre o mesmo CPF e e-mail informados no contrato para que o sistema vincule seu carro e parcelas automaticamente."
+    ],
+    "problems": [
+      {
+        "question": "Aparece a mensagem 'E-mail ou senha incorretos'",
+        "answer": "Confira se digitou o e-mail sem espaços extras e se a senha está correta. Use 'Esqueci minha senha' caso não lembre."
+      }
+    ],
+    "faq": [
+      {
+        "question": "O aplicativo é gratuito para o cliente?",
+        "answer": "Sim! O motorista não paga nada para usar o aplicativo para pagar parcelas, enviar vistorias e conferir multas."
+      }
+    ],
+    "related": ["app-locatario-pagar-pix-cartao", "app-locatario-fazer-vistoria"],
+    "result": "O cliente entra na Área do Cliente e visualiza o veículo e as cobranças em andamento."
+  },
+  {
+    "slug": "app-locatario-pagar-pix-cartao",
+    "title": "Como pagar parcelas e enviar comprovante pelo app",
+    "description": "Veja como o cliente paga por PIX Copia e Cola, anexa comprovante para conferência ou paga com cartão online.",
+    "category": "locatario",
+    "audience": "tenant",
+    "permission": "read",
+    "keywords": ["pagar", "pix", "comprovante", "qr code", "copia e cola", "cartao", "parcela"],
+    "aliases": ["como o cliente paga", "enviar comprovante pelo app", "pagar com pix no celular"],
+    "routes": ["/locatario/pagamentos", "/pagamento/infinitepay"],
+    "sources": ["apps/locatario/app/(tabs)/pagamentos.tsx", "apps/locatario/services/upload.ts", "src/app/pagamento/infinitepay/page.tsx"],
+    "minutes": 3,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Locação com parcelas geradas."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse a aba Pagamentos",
+        "text": "Na barra inferior do app, toque em 'Pagamentos'. O cliente vê o resumo de parcelas pagas e em aberto.",
+        "image": "/help/screenshots/app/pagamentos.webp"
+      },
+      {
+        "title": "Passo 2 — Escolha a parcela a pagar",
+        "text": "Toque no botão 'Pagar com PIX' ou 'Pagar agora' na parcela desejada para abrir a janela de pagamento."
+      },
+      {
+        "title": "Passo 3 — Pagar com PIX Copia e Cola",
+        "text": "O app exibe o QR Code e o botão 'Copiar código PIX'. O cliente abre o aplicativo do seu banco, escolhe PIX Copia e Cola, confere o recebedor da locadora e faz o pagamento."
+      },
+      {
+        "title": "Passo 4 — Anexar o comprovante",
+        "text": "Após pagar no banco, volte ao app, toque em 'Já pagou? Envie o comprovante' e selecione a foto ou arquivo PDF (até 7 MB) do comprovante. O status muda para 'Em análise'."
+      },
+      {
+        "title": "Passo 5 — Pagamento com cartão (quando disponível)",
+        "text": "Se a locadora tiver cartão ativo, toque em 'Pagar com cartão'. O checkout abre em ambiente seguro e a confirmação é automática sem precisar enviar foto."
+      }
+    ],
+    "tips": [
+      "Ao enviar o comprovante, certifique-se de que a data, o valor e o nome do recebedor estão nítidos na foto.",
+      "Assim que a locadora aprova o comprovante, o cliente recebe uma notificação no celular e a parcela fica verde com status 'Pago'."
+    ],
+    "warnings": [
+      "Enviar a foto do comprovante coloca a parcela 'Em análise': a baixa definitiva ocorre assim que a locadora confere o extrato."
+    ],
+    "problems": [
+      {
+        "question": "Aparece 'Comprovante recusado'",
+        "answer": "A locadora identificou alguma divergência (ex.: valor diferente ou foto cortada). Toque em 'Pagar ou reenviar comprovante' para ler o motivo e anexar a foto certa."
+      }
+    ],
+    "faq": [
+      {
+        "question": "O comprovante pode ser em PDF?",
+        "answer": "Sim! O aplicativo aceita arquivos em formato PDF, JPG ou PNG de até 7 MB."
+      },
+      {
+        "question": "Paguei pelo link da InfinitePay e apareceu 'Pagamento em processamento'",
+        "answer": "É a tela de retorno do pagamento. Assim que a InfinitePay confirmar, a parcela é baixada e você recebe a confirmação por e-mail e notificação. Toque em 'Voltar ao app' para acompanhar."
+      }
+    ],
+    "related": ["app-locatario-como-acessar-entrar", "app-locatario-fazer-vistoria"],
+    "result": "O cliente quita sua locação com agilidade e comodidade pelo próprio celular."
+  },
+  {
+    "slug": "app-locatario-fazer-vistoria",
+    "title": "Como realizar a vistoria do veículo pelo aplicativo",
+    "description": "Passo a passo para registrar km, combustível, checklist de 10 itens e as 9 fotos obrigatórias na retirada ou devolução.",
+    "category": "locatario",
+    "audience": "tenant",
+    "permission": "read",
+    "keywords": ["vistoria", "fotos", "checklist", "avarias", "km", "painel", "assinatura"],
+    "aliases": ["como fazer vistoria no app", "tirar fotos da vistoria", "vistoria do motorista"],
+    "routes": ["/locatario/veiculo", "/locatario/vistoria"],
+    "sources": ["apps/locatario/app/vistoria.tsx", "apps/locatario/app/veiculo.tsx"],
+    "minutes": 5,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Veículo entregue e locação ativa."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Meu veículo > Vistoria",
+        "text": "No app, acesse 'Meu veículo' e toque em 'Retirada', 'Devolução' ou 'Periódica'.",
+        "image": "/help/screenshots/app/vistoria.webp"
+      },
+      {
+        "title": "Passo 2 — Informe KM e Combustível",
+        "text": "Digite a quilometragem exibida no painel do carro e selecione o ponteiro de combustível (Reserva, 1/4, 1/2, 3/4 ou Cheio)."
+      },
+      {
+        "title": "Passo 3 — Checklist de 10 itens",
+        "text": "Marque OK ou Problema para cada item do carro: lataria, vidros, pneus, faróis, bancos, painel, ar-condicionado, documento, macaco/triângulo e chave."
+      },
+      {
+        "title": "Passo 4 — Tire as 9 fotos obrigatórias",
+        "text": "O app orienta o enquadramento de cada foto necessária: Frente, Traseira (placa legível), Lateral esquerda, Lateral direita, Teto, Rodas e pneus, Interior, Painel (com km visível) e Marcador de combustível."
+      },
+      {
+        "title": "Passo 5 — Avarias e Assinatura",
+        "text": "Se houver riscos ou amassados prévios, descreva e adicione até 6 fotos de perto. Em seguida, desenhe sua assinatura na tela e toque em 'Enviar vistoria'."
+      }
+    ],
+    "tips": [
+      "Se a conexão de internet oscilar durante as fotos, o aplicativo guarda seu rascunho no aparelho para você enviar assim que restabelecer o sinal.",
+      "Tire as fotos em local iluminado para garantir nitidez dos detalhes."
+    ],
+    "warnings": [
+      "A assinatura com o dedo confirma a autenticidade das fotos e protege o locatário contra cobranças indevidas de avarias já existentes."
+    ],
+    "problems": [
+      {
+        "question": "O botão 'Enviar vistoria' diz que faltam fotos",
+        "answer": "O app exige todas as 9 fotos obrigatórias dos ângulos do carro. Confira se algum dos slots ficou com o quadro cinza vazio."
+      }
+    ],
+    "faq": [
+      {
+        "question": "A locadora confere a vistoria enviada?",
+        "answer": "Sim! A equipe analisa as fotos no painel administrativo e o status muda para 'Conferida'."
+      }
+    ],
+    "related": ["app-locatario-como-acessar-entrar", "app-locatario-relatar-problema"],
+    "result": "O estado exato do veículo fica arquivado e protegido com fotos de alta qualidade."
+  },
+  {
+    "slug": "app-locatario-relatar-problema",
+    "title": "Como relatar problemas e ocorrências com o veículo",
+    "description": "Comunique furos de pneu, panes elétricas ou mecânicas com fotos direto para a equipe de plantão da locadora.",
+    "category": "locatario",
+    "audience": "tenant",
+    "permission": "read",
+    "keywords": ["ocorrencia", "problema", "pane", "pneu", "acidente", "guincho", "suporte"],
+    "aliases": ["como relatar problema no app", "chamar guincho", "carro quebrou", "avisar batida"],
+    "routes": ["/locatario/ocorrencias"],
+    "sources": ["apps/locatario/app/ocorrencias.tsx"],
+    "minutes": 3,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Locação em andamento."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Relatar problema",
+        "text": "Na tela inicial ou na aba Minha locação, toque em 'Relatar problema'.",
+        "image": "/help/screenshots/app/ocorrencias.webp"
+      },
+      {
+        "title": "Passo 2 — Escolha a categoria",
+        "text": "Selecione o tipo de problema: Mecânica, Pneu, Elétrica, Ar-condicionado, Acidente, Luz no painel, Vidro, Lataria ou Outro."
+      },
+      {
+        "title": "Passo 3 — Descreva a situação e anexe fotos",
+        "text": "Escreva onde você está e o que aconteceu com pelo menos 10 caracteres. Você pode anexar até 6 fotos da peça ou avaria."
+      },
+      {
+        "title": "Passo 4 — Envie o relato",
+        "text": "Toque em 'Enviar relato'. A locadora recebe o chamado imediatamente e responde com as instruções de atendimento."
+      }
+    ],
+    "tips": [
+      "Em caso de emergência ou acidente com feridos, ligue imediatamente para o 190 ou 193 antes de registrar no aplicativo."
+    ],
+    "warnings": [
+      "O relato pelo app comunica a equipe da locadora, mas não aciona diretamente autoridades policiais ou serviço médico."
+    ],
+    "problems": [
+      {
+        "question": "Como sei quando a locadora respondeu?",
+        "answer": "O app exibe a resposta oficial da equipe dentro do card do relato e você recebe um aviso por notificação no celular."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Posso falar diretamente no WhatsApp?",
+        "answer": "Sim! A própria tela possui o botão verde 'WhatsApp da locadora' para contato rápido com o atendente."
+      }
+    ],
+    "related": ["app-locatario-como-acessar-entrar", "app-locatario-fazer-vistoria"],
+    "result": "Ocorrência registrada e equipe da locadora acionada para resolver o problema."
+  },
+  {
+    "slug": "app-locatario-enviar-documentos-cnh",
+    "title": "Como enviar CNH renovada e comprovante de residência",
+    "description": "Envie fotos da CNH (frente e verso) ou conta de consumo para manter seu cadastro em dia.",
+    "category": "locatario",
+    "audience": "tenant",
+    "permission": "read",
+    "keywords": ["documentos", "cnh", "endereco", "comprovante", "foto", "renovacao"],
+    "aliases": ["como mandar cnh pelo app", "atualizar endereco", "enviar documento locatario"],
+    "routes": ["/locatario/documentos"],
+    "sources": ["apps/locatario/app/documentos.tsx"],
+    "minutes": 3,
+    "difficulty": "Iniciante",
+    "updated": "2026-10-02",
+    "version": 1,
+    "prerequisites": ["Aparelho celular com câmera disponível."],
+    "steps": [
+      {
+        "title": "Passo 1 — Acesse Documentos",
+        "text": "No app, acesse 'Documentos' na tela inicial ou pelo Perfil.",
+        "image": "/help/screenshots/app/documentos.webp"
+      },
+      {
+        "title": "Passo 2 — Escolha o tipo de documento",
+        "text": "A tela oferece 3 tipos organizados: 1. CNH (frente), 2. CNH (verso) e 3. Comprovante de endereço."
+      },
+      {
+        "title": "Passo 3 — Tire a foto ou escolha da galeria",
+        "text": "Toque no cartão do documento desejado, tire uma foto bem iluminada sem reflexos e confira a pré-visualização."
+      },
+      {
+        "title": "Passo 4 — Envie para conferência",
+        "text": "Toque em 'Enviar para conferência'. O status muda para 'Em análise' até que a locadora valide os dados."
+      }
+    ],
+    "tips": [
+      "Evite fundos escuros ou brilhantes para que o texto da CNH e o endereço fiquem totalmente legíveis."
+    ],
+    "warnings": [
+      "Documentos já em análise não permitem novo envio até que a locadora conclua a conferência."
+    ],
+    "problems": [
+      {
+        "question": "O documento aparece com status 'Recusado'",
+        "answer": "O motivo informado pela locadora aparece logo abaixo do status. Toque em 'Enviar nova foto' para reenviar uma imagem mais nítida."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Os meus documentos ficam protegidos?",
+        "answer": "Sim! Todas as fotos são guardadas em armazenamento seguro com criptografia e acesso exclusivo da equipe da locadora conforme a LGPD."
+      }
+    ],
+    "related": ["app-locatario-como-acessar-entrar", "app-locatario-pagar-pix-cartao"],
+    "result": "Seu cadastro fica 100% regularizado para renovações de contratos e novas retiradas."
+  }
+]

@@ -1,0 +1,88 @@
+import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { currentOrg } from "@/lib/server/org-context";
+import { toWhatsAppNumber } from "@/lib/utils";
+import type { EmailKind } from "@/types";
+
+/**
+ * Envio de WhatsApp pela Evolution API (v2). Chaves só no servidor (EVOLUTION_API_URL, EVOLUTION_API_KEY).
+ * Cada locadora conecta o próprio número: instância "org-<slug>". A LOCAKAR (slug "locakar") mantém
+ * a instância existente (EVOLUTION_INSTANCE, padrão "locakar").
+ */
+export const isWhatsAppEnabled = () => Boolean(process.env.EVOLUTION_API_URL && process.env.EVOLUTION_API_KEY);
+
+export function whatsAppInstance() {
+  const slug = currentOrg()?.org.slug;
+  if (!slug) throw new Error("WhatsApp sem locadora definida.");
+  return slug === "locakar" ? process.env.EVOLUTION_INSTANCE || "locakar" : `org-${slug}`;
+}
+
+export interface OutgoingWhatsApp {
+  kind: EmailKind;
+  phone?: string;
+  text: string;
+  rentalId?: string;
+  fineId?: string;
+  contractId?: string;
+  alertKeys?: string[];
+  /** PDF enviado como documento; `text` vira a legenda. */
+  document?: { filename: string; content: Uint8Array };
+  /** Imagem PNG (ex.: QR Code PIX); `text` vira a legenda. */
+  image?: { filename: string; content: Uint8Array };
+}
+
+/**
+ * Envia texto e registra no mesmo histórico dos e-mails (email_log, destino "whatsapp:<número>").
+ * Não lança erro: WhatsApp é canal complementar e não deve bloquear a operação principal.
+ */
+export async function sendWhatsApp(db: SupabaseClient, msg: OutgoingWhatsApp): Promise<{ ok: boolean; error?: string }> {
+  if (!isWhatsAppEnabled()) return { ok: false, error: "WhatsApp não configurado." };
+  const number = toWhatsAppNumber(msg.phone);
+  if (!number) return { ok: false, error: "Telefone do cliente inválido para WhatsApp." };
+
+  const base = process.env.EVOLUTION_API_URL!.replace(/\/+$/, "");
+  const instance = whatsAppInstance();
+  let error: string | undefined;
+  let providerId: string | undefined;
+  try {
+    const doc = msg.document ?? msg.image;
+    const media = msg.document
+      ? { mediatype: "document", mimetype: "application/pdf" }
+      : { mediatype: "image", mimetype: "image/png" };
+    const res = await fetch(`${base}/message/${doc ? "sendMedia" : "sendText"}/${encodeURIComponent(instance)}`, {
+      method: "POST",
+      headers: { apikey: process.env.EVOLUTION_API_KEY!, "Content-Type": "application/json" },
+      body: JSON.stringify(
+        doc
+          ? { number, ...media, fileName: doc.filename, caption: msg.text, media: Buffer.from(doc.content).toString("base64") }
+          : { number, text: msg.text, linkPreview: false },
+      ),
+      // Evolution costuma levar 10-15s para responder; PDF leva mais.
+      signal: AbortSignal.timeout(doc ? 45_000 : 30_000),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const detail = json?.response?.message ?? json?.message ?? `HTTP ${res.status}`;
+      // Evolution responde [{ exists: false }] quando o número não tem conta no WhatsApp.
+      error = Array.isArray(detail) && detail[0]?.exists === false
+        ? `O número ${number} não tem WhatsApp. Confira o DDD e o telefone cadastrado.`
+        : typeof detail === "string" ? detail : JSON.stringify(detail).slice(0, 200);
+    } else providerId = json?.key?.id;
+  } catch (e) {
+    error = (e as Error).name === "TimeoutError" ? "Servidor do WhatsApp não respondeu." : (e as Error).message;
+  }
+
+  await db.from("email_log").insert({
+    kind: msg.kind,
+    to_email: `whatsapp:${number}`,
+    subject: msg.text.split("\n")[0].slice(0, 120),
+    rental_id: msg.rentalId ?? null,
+    fine_id: msg.fineId ?? null,
+    contract_id: msg.contractId ?? null,
+    alert_keys: msg.alertKeys ?? null,
+    provider_id: providerId ?? null,
+    status: error ? "failed" : "sent",
+    error: error ?? null,
+  });
+  return error ? { ok: false, error } : { ok: true };
+}

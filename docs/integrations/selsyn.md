@@ -1,0 +1,781 @@
+# Selsyn — Rastreamento LOCAKAR
+
+## Fonte oficial
+Arquivo OpenAPI fornecido pelo cliente: Swagger 3.0.0 / OpenAPI 3.0.1, 214 operações, 163 caminhos, 94 schemas. Referência: https://api.appselsyn.com.br/documentacao.html. A página apresentou conexão recusada/timeout; contratos extraídos do arquivo local sem chamadas autenticadas.
+
+## Autenticação
+`api-key-cliente`: apiKey **x-api-key na query**, conforme `components.securitySchemes`. O esquema de operador usa header e é outro tipo de credencial. Base: `https://api.appselsyn.com.br/keek/rest/`.
+
+Chave lida somente de `process.env.SELSYN_API_KEY`. Não salvar em settings, frontend, app ou Git. Recomenda-se substituir a credencial exposta na conversa. Nunca registrar URL externa completa nos logs/APM: a query contém a chave por exigência do fornecedor. Transporte usa `redirect: error`, `cache: no-store`, timeout interno de 20s e limite de resposta 8MB.
+
+## Arquitetura
+Admin → endpoints LOCAKAR com `requireStaff` → client server-only → Selsyn → resposta validada/sanitizada → Admin.
+
+Arquivos novos:
+- `src/lib/selsyn-contracts.json`: catálogo extraído do OpenAPI: 53 GETs (34 Consulta, 10 Monitoramento, 9 GDR) e 41 schemas referenciados.
+- `src/lib/selsyn.ts`: validação, normalização e tipos puros.
+- `src/lib/server/selsyn.ts`: autorização, reserva, auditoria e respostas seguras.
+- `src/lib/server/selsyn-transport.ts`: único transporte externo, testável com fetch simulado.
+- `src/app/api/selsyn/status/route.ts`: status local, sem consultar fornecedor.
+- `src/app/api/selsyn/fleet/route.ts`: descoberta de frota/posições com sugestões por placa.
+- `src/app/api/selsyn/link/route.ts`: confirmar/remover vínculo; confirmação valida cadastro no fornecedor.
+- `src/app/api/selsyn/query/[operationId]/route.ts`: catálogo fechado de consultas; não aceita URL, método ou headers fornecidos pelo navegador.
+- `src/app/admin/monitoring/page.tsx`: central Rastreamento.
+- `src/components/admin/{tracking-map,vehicle-tracking-panel,selsyn-result,selsyn-settings}.tsx`.
+- `scripts/check-selsyn.ts` e `scripts/check-selsyn.cjs`: testes offline, sem consumo de consultas.
+- `supabase/migrations/20261007000000_selsyn_tracking.sql`.
+
+Alterados: navegação/rotas, tipos FleetVehicle, detalhes de veículos, seção informativa de Configurações, `.env.example` e dependências Leaflet. App locatário/Financeiro/pagamentos/clientes não alterados.
+
+## Configuração
+- `SELSYN_API_KEY`: secret exclusivamente backend/Vercel.
+- `SELSYN_POSITION_REFRESH_SECONDS`: 120s por padrão, mínimo interno 60s, máximo 3600s; valor efetivamente usado pela UI.
+- Sem campo de chave no Admin. Configurações mostra presença da credencial, migration, intervalo e última consulta/erro.
+
+## Persistência e segurança
+Campos novos em `vehicles`: `selsyn_rastreavel_id` como texto decimal int64, `selsyn_identificador`, `selsyn_linked_at`. ID local e ID do fornecedor são distintos. Índice único impede dois veículos com o mesmo rastreável. A placa normalizada sugere o cadastro; somente a ação Vincular salva, após nova consulta validar ID/placa. Não cria veículos automaticamente.
+
+Tabela `selsyn_requests`: somente operador, operation ID, request ID, hash de parâmetros, status, duração e horário; nenhuma telemetria/chave. RPC com advisory lock reserva atomicamente; limites internos 15/min por operador, 60/min na conta, uma em andamento por operador. IDs repetidos e pedidos equivalentes em 5s não geram nova chamada. São proteções internas, não quotas oficiais. Registros de mais de 24h são limpos na próxima reserva. Escrita/leitura restritas à service role, com RLS e RPC sem execução para anon/authenticated.
+
+Reutiliza `audit_log`: ator/operação/vínculo/status/duração/correlation ID, sem coordenadas/resposta completa. Não replica histórico no Supabase. Permissão é a equipe existente (`staff`); locatário e anônimo não acessam. Não há comando de bloqueio, saída, acionamento, reinício ou gravação na Selsyn.
+
+## Dados apresentados
+Somente retornos oficiais: posição, velocidade, ignição, offline explícito, última comunicação/data da posição, coordenadas, bateria/fonte e unidades, GPS/satélites, dispositivo, endereço recebido e sensores. Zero/false preservados; ausentes são Não informado.
+
+Movimento/parada derivados de velocidade disponível; offline só por flag/status do fornecedor. Não inventa totais de alertas da conta a partir de uma página limitada. Histórico GDR possui `HistoricoResultDto.posicoes`; trajeto usa coordenadas/timestamps válidos. Paradas/distância só são apresentadas quando o fornecedor retornar.
+
+Contador de distância Selsyn é mostrado como unidade não documentada, ao lado do hodômetro LOCAKAR em km. Não sobrescreve cadastro nem oferece aplicação do valor sem confirmar unidade.
+
+## Mapa e datas
+Leaflet sob demanda com tiles OSM e atribuição visível. Sem geocoding ou download offline. Nenhuma placa/cliente/chave vai na URL dos tiles; o serviço recebe IP e tiles da região visualizada. Popups usam DOM/textContent, sem HTML recebido. Coordenadas inválidas são excluídas, zero é válido.
+
+Data/hora local do dispositivo é convertida via Date/ISO para UTC real. Datas simples continuam yyyy-MM-dd nos endpoints que exigem esse formato. Inputs validam calendário, enums, tipos, int64 e ordem do período; não concatenam Z sobre horário local.
+
+## Relatórios e lacunas
+Formatos JSON/PDF_PORTRAIT/PDF_LANDSCAPE/XLSX/HTML só nos endpoints que os declaram. `ReportResultDto` define content: object sem propriedades, id, status (key/value/ativo), mensagem. Não documenta estrutura interna, download ou estados assíncronos. Conteúdo é mostrado como rótulos, tabelas/listas e resposta técnica sanitizada opcional.
+
+Se retornar diretamente PDF/XLSX/HTML com MIME/assinatura compatíveis, permite baixar o arquivo original sem conversão. Esse caminho foi testado com fixtures, **não homologado com a API real**. HTML é baixado como texto sem executar scripts. URLs presentes no conteúdo não são seguidas automaticamente: sem SSRF ou vazamento de chave. Envelopes/links desconhecidos ficam explícitos; não anunciar exportação funcional sem evidência.
+
+Sensor detalhado requer sensorId no path e query: um campo visual envia o mesmo valor nas duas posições. Unidades de odometro/distance e alguns totalizadores não são definidas. Responses só possuem default, sem códigos específicos, preço, quota temporal ou timeout oficial. `api-key-cliente` na operação comprova compatibilidade documental, não autorização efetiva desta conta. 401/403 devem aparecer, sem experimentar outra credencial.
+
+## Testes e pendências
+- `npm run check`: suíte existente.
+- `node scripts/check-selsyn.cjs`: offline, requests/header/query, enums/datas/IDs, entrada e resposta inválidas, HTTP 400/401/403/404/429/500, timeout, redaction, falsy, vazio e exports com fixtures.
+- APIs LOCAKAR locais sem sessão: 401 em status/fleet/link/query.
+- SQL em PostgreSQL isolado: migration aplicada duas vezes, reservas, busy/duplicidade/quota, vínculo único, bloqueio roles anon/authenticated, service role e limpeza. Concorrência de múltiplas sessões e RLS completa da instância Supabase precisam de homologação autorizada.
+- UI real isolada com fixtures e CSS real: 11 larguras (320–1920) em Dark/Light, sincronização e consulta de sensor; sem overflow ou erro JS. Não representa autenticação staff/persistência reais.
+- Nenhuma chamada autenticada à Selsyn: credencial ausente no processo local. Fonte web indisponível. Permissões da conta, content/exportações e unidades continuam pendentes.
+
+## Habilitar em produção
+1. Execute a migration no SQL Editor do Supabase.
+2. Configure chave substituída como `SELSYN_API_KEY` no backend/Vercel; redeploy.
+3. Abra Rastreamento, consulte a frota autorizada uma vez e confira permissões reais de gdrAovivo.
+4. Vincule uma placa autorizada, consulte posição/histórico/sensores com período curto.
+5. Homologue uma exportação essencial e a estrutura de content. Não varra IDs nem dispare dezenas de consultas.
+
+## Erros públicos
+NOT_CONFIGURED: secret ausente; DATABASE_NOT_READY: migration/RPC; PROVIDER_FORBIDDEN: permissão do fornecedor; DUPLICATE_REQUEST: consulta repetida/em andamento; RATE_LIMITED: quota interna/fornecedor; TIMEOUT: sem nova tentativa automática; INVALID_PROVIDER_RESPONSE: formato divergente. Logs não incluem chave, URL autenticada ou corpo da resposta.
+
+## Inventário técnico
+A tabela a seguir é gerada do catálogo oficial. Todos implementados no catálogo/API/formulários; chamadas reais pendentes de ambiente e fornecedor. Ver schemas completos em `src/lib/selsyn-contracts.json`.
+
+| Funcionalidade / operationId | Endpoint | Método / Security | Teste |
+|---|---|---|---|
+| Consultar um Evento / findAlerta | /v2/alerta/{id} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar a posição de um Evento / findAlertaByPosicaoId | /v2/alerta/posicao/{posicaoId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Pesquisar Alertas / listAlerta | /v2/alerta | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Pesquisar Alertas para monitoramento / listAlertaMonitormento | /v2/alerta/monitoramento | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Dashboard de avaliação condução / getDashboardAvaliacaoConducao | /dashboard/cliente/avaliacao-conducao/{entidade} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Dashboard de gastos gerais / getDashboardClientGasto | /dashboard/cliente/gasto | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Dashboard situação atual / getDashboardCliente | /dashboard/cliente | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Dashboard de abastecimento / getDashboardClienteAbastecimento | /dashboard/cliente/abastecimento | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Dashboard de manutenção / getDashboardClienteManutencao | /dashboard/cliente/manutencao | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Última Atualização / gdrAovivo | /v1/integracao/gdr/posicao/aovivo | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Última Atualização por Identificador / gdrAovivoPorIdentificador | /v1/integracao/gdr/posicao/aovivo/{identificador} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Exportar Evento Periférico / gdrExportarEventoPerifericoById | /v1/integracao/gdr/evento-periferico/exportar/{fromEventoPerifericoId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Exportar Posições / gdrExportarPosicao | /v1/integracao/gdr/posicao/exportar/{fromPositionId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Rastreável por Identificador / gdrFindRastreavelPorIdentificador | /v1/integracao/gdr/rastreavel/{identificador} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Evento Periférico / gdrGetEventoPerifericoById | /v1/integracao/gdr/evento-periferico/{id} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Alertas / gdrListAlertas | /v1/integracao/gdr/alerta | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Histórico de Posições / gdrListHistoricoPosicaoPorRastreavel | /v1/integracao/gdr/posicao/historico/{identificador} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Alerta por ID / gdrfindAlertaById | /v1/integracao/gdr/alerta/{id} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Ultimos Alertas / integracaoAlerta | /v1/integracao/alerta | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Agrupadores de Alertas / integracaoAlertaAgrupador | /v1/integracao/alerta/agrupador | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Ultima Atualização / integracaoAoVivo | /v1/integracao/posicao | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Ultima Atualização de um Rastreavel / integracaoAoVivoPorPlaca | /v1/integracao/posicao/{identificador} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Alerta por Agrupador / integracapListAlertaAgrupador | /v1/integracao/alerta/tipo/{agrupador} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Consultar Todos os Tipos de Alertas / intergacaoListTipoAlerta | /v1/integracao/alerta/tipo | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Ancora do rastreavel / ancoraPorRastreavel | /posicao/v2/ancora/{rastreavelId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Ultima posição / aovivo | /posicao/v2/aovivo | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Ultima posição do rastreavel / aovivoPorRastreavel | /posicao/v2/aovivo/{rastreavelId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Ultima posição satelital do rastreavel / aovivoSatelital | /posicao/v2/satelital/aovivo/{rastreavelId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Jornadas do rastreavel / jornadaRastreavel | /posicao/v2/jornada/rastreavel/{rastreavelId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Histórico de posições arquivadas do rastreavel / listHistoricoPosicaoArquivadoPorRastreavel | /posicao/v2/historico/arquivado/{rastreavelId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Histórico de posições do rastreavel / listHistoricoPosicaoPorRastreavel | /posicao/v2/historico/{rastreavelId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Histórico de posições satelitais do rastreavel / listHistoricoSatelitalPorRastreavel | /posicao/v2/satelital/historico/{rastreavelId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de exportação de posições / exportarPositionPorRastreavel | /relatorio/exportar-posicao/{idRastreavel} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de abastecimento / relatorioAbastecimento | /relatorio/abastecimento | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de avaliação de condução / relatorioAvaliacaoConducao | /relatorio/avaliacao-conducao/{entidade} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de custo operacional / relatorioCustoOperacional | /relatorio/custo-operacional | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de eventos / relatorioEvento | /relatorio/evento | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de fonte de energia / relatorioFonteEnergia | /relatorio/fonte-energia | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de gastos gerais / relatorioGasto | /relatorio/gasto | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de histórico de eventos do periférico / relatorioHistoricoEventoPeriferico | /relatorio/evento-periferico/historico/{idRastreavel} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de histórico de paradas / relatorioHistoricoParada | /relatorio/historico-parada/{idRastreavel} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de histórico de posições / relatorioHistoricoPosicao | /relatorio/historico-posicao/{idRastreavel} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de histórico de sensor / relatorioHistoricoSensor | /relatorio/sensor/historico/{idRastreavel} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de jornadas por cerca / relatorioJornadaCerca | /relatorio/jornada/cerca | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de jornadas do motorista / relatorioJornadaMotorista | /relatorio/jornada/motorista/{motoristaId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de jornadas do rastreavel / relatorioJornadaRastreavel | /relatorio/jornada/rastreavel/{idRastreavel} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de manutenção / relatorioManutencao | /relatorio/manutencao | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de monitoramento / relatorioMonitoramento | /relatorio/monitoramento | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de histórico detalhado de sensor / relatorioSensorDetalhado | /relatorio/sensor/detalhado/{idRastreavel}/{sensorId} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório da situação atual / relatorioSituacaoAtual | /relatorio/situacao-atual/{idRastreavel} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de totalizadores do rastreavel / relatorioTotalizador | /relatorio/totalizador | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de totalizador diário do rastreavel / relatorioTotalizadorDiario | /relatorio/totalizador/diario/{idRastreavel} | GET / api-key-cliente | Fixture/contrato; real pendente |
+| Relatório de velocidades do rastreavel / relatorioVelocidade | /relatorio/velocidade/{idRastreavel}/{limiteVelocidade} | GET / api-key-cliente | Fixture/contrato; real pendente |
+
+### Parâmetros por consulta
+
+#### Consultar um Evento (findAlerta)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| id | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/EventoDto"}
+
+#### Consultar a posição de um Evento (findAlertaByPosicaoId)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| posicaoId | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/EventoDto"}
+
+#### Pesquisar Alertas (listAlerta)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| status | query | Não | string | — | NONE, NEW, OPENED, CLOSED, ARCHIVED |
+| tipo | query | Não | string | — | NONE, IGNITION, SECURITY_ATTACK, PANIC, SPEED_LIMIT, LOCK_UNLOCK, GEO_FENCE, SENSOR_LIMITS, ENERGY_SOURCE, COLLISION_ALARM, DEVICE_BATTERY, GPS, OFFLINE_TIMEOUT, SLEEP_MODE, INPUT1_OPEN, INPUT1_GROUND, INPUT2_OPEN, INPUT2_GROUND, INPUT3_OPEN, INPUT3_GROUND, EXTERNAL_INPUT, OUTPUT, BEHAVIOR, STOPPED_OVERTIME, CALIBRATION, I_BUTTON, DRIVER_AUTHORIZATION, PARKING_LOCK, DRIVING_SCHEDULE, MAGNETIC_CONNECTION, DOCUMENTATION, MECHANICAL_ISSUE, DEVICE_ISSUE, GPRS, OBD, CUSTOM, GENERIC, REDE_INPUTS, REDE_OUTPUTS, REPORTADO, CAMERA, INPUT4_OPEN, INPUT4_GROUND, IMPLEMENT_CONNECTION, SENSOR_LIGHT, SENSOR_BETONEIRA, INPUT5_OPEN, INPUT5_GROUND, INPUT6_OPEN, INPUT6_GROUND |
+| cliente | query | Não | number | — | — |
+| deparatamento | query | Não | number | — | — |
+| motorista | query | Não | number | — | — |
+| rastreavel | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| monitoramento | query | Não | boolean | — | — |
+| size | query | Não | number | 100 | — |
+| page | query | Não | number | 0 | — |
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/EventoResultDto"}}
+
+#### Pesquisar Alertas para monitoramento (listAlertaMonitormento)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| status | query | Não | string | — | NONE, NEW, OPENED, CLOSED, ARCHIVED |
+| tipo | query | Não | string | — | NONE, IGNITION, SECURITY_ATTACK, PANIC, SPEED_LIMIT, LOCK_UNLOCK, GEO_FENCE, SENSOR_LIMITS, ENERGY_SOURCE, COLLISION_ALARM, DEVICE_BATTERY, GPS, OFFLINE_TIMEOUT, SLEEP_MODE, INPUT1_OPEN, INPUT1_GROUND, INPUT2_OPEN, INPUT2_GROUND, INPUT3_OPEN, INPUT3_GROUND, EXTERNAL_INPUT, OUTPUT, BEHAVIOR, STOPPED_OVERTIME, CALIBRATION, I_BUTTON, DRIVER_AUTHORIZATION, PARKING_LOCK, DRIVING_SCHEDULE, MAGNETIC_CONNECTION, DOCUMENTATION, MECHANICAL_ISSUE, DEVICE_ISSUE, GPRS, OBD, CUSTOM, GENERIC, REDE_INPUTS, REDE_OUTPUTS, REPORTADO, CAMERA, INPUT4_OPEN, INPUT4_GROUND, IMPLEMENT_CONNECTION, SENSOR_LIGHT, SENSOR_BETONEIRA, INPUT5_OPEN, INPUT5_GROUND, INPUT6_OPEN, INPUT6_GROUND |
+| cliente | query | Não | number | — | — |
+| deparatamento | query | Não | number | — | — |
+| motorista | query | Não | number | — | — |
+| rastreavel | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| monitoramento | query | Não | boolean | — | — |
+| size | query | Não | number | 100 | — |
+| page | query | Não | number | 0 | — |
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/EventoResultDto"}}
+
+#### Dashboard de avaliação condução (getDashboardAvaliacaoConducao)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| entidade | path | Sim | string | — | motorista|rastreavel |
+
+Response: {"$ref":"#/components/schemas/DashboardAvaliacaoConducaoResultDto"}
+
+#### Dashboard de gastos gerais (getDashboardClientGasto)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| grupo | query | Não | number | — | — |
+| rastreavel | query | Não | number | — | — |
+| motorista | query | Não | number | — | — |
+| fornecedor | query | Não | number | — | — |
+| tipo | query | Não | string | — | OUTROS, MULTA, PEDAGIO, DOCUMENTACAO, ALIMENTACAO, HOSPEDAGEM, SALARIO, DESCARGA_MERCADORIA |
+
+Response: {"$ref":"#/components/schemas/DashboardGastoResultDto"}
+
+#### Dashboard situação atual (getDashboardCliente)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+
+Response: {"$ref":"#/components/schemas/DashboardClienteResultDto"}
+
+#### Dashboard de abastecimento (getDashboardClienteAbastecimento)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| rastreavel | query | Não | number | — | — |
+| motorista | query | Não | number | — | — |
+| fornecedor | query | Não | number | — | — |
+| arla | query | Não | string | false | — |
+| categoria | query | Não | string | VEICULO | VEICULO, NAUTICO, AERONAUTICO, PESSOA, ANIMAL, MAQUINA, OBJETO |
+
+Response: {"$ref":"#/components/schemas/DashboardAbastecimentoResultDto"}
+
+#### Dashboard de manutenção (getDashboardClienteManutencao)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| grupo | query | Não | number | — | — |
+| rastreavel | query | Não | number | — | — |
+| motorista | query | Não | number | — | — |
+| fornecedor | query | Não | number | — | — |
+| tipo | query | Não | string | — | OUTROS, PROGRAMADA, EMERGENCIAL, ELETRICA, PNEU, FUNILARIA, MECANICA, OLEO, BORRACHARIA, TAPECARIA, REFRIGERACAO, SERVICO, SINISTRO, REBOQUE, DOCUMENTACAO, SEGURO, PECAS, LIMPEZA, BATERIA, TACOGRAFO, MUNCK, GNV, VISTORIA |
+
+Response: {"$ref":"#/components/schemas/DashboardManutencaoResultDto"}
+
+#### Consultar Última Atualização (gdrAovivo)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| departamento | query | Não | number | — | — |
+| grupo | query | Não | number | — | — |
+| status | query | Não | string | — | MOVING_ON, MOVING_OFF, STOPPED_ON, STOPPED_OFF, MOVING_NO_IGNITION, STOPPED_NO_IGNITION, NO_IGNITION_INFO, NO_SPEED_INFO, OFF_LINE |
+| rastreavel | query | Não | number | — | — |
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/AoVivoDto"}}
+
+#### Consultar Última Atualização por Identificador (gdrAovivoPorIdentificador)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| identificador | path | Sim | string | — | — |
+
+Response: {"$ref":"#/components/schemas/AoVivoDto"}
+
+#### Exportar Evento Periférico (gdrExportarEventoPerifericoById)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Não | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Não | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| size | query | Não | number | 10000 | — |
+| page | query | Não | number | 0 | — |
+| fromEventoPerifericoId | path | Sim | integer / int64 | — | — |
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/EventoPerifericoExportDto"}}
+
+#### Exportar Posições (gdrExportarPosicao)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Não | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Não | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| size | query | Não | number | 10000 | — |
+| page | query | Não | number | 0 | — |
+| fromPositionId | path | Sim | integer / int64 | — | — |
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/PosicaoExportDto"}}
+
+#### Consultar Rastreável por Identificador (gdrFindRastreavelPorIdentificador)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| identificador | path | Sim | string | — | — |
+
+Response: {"$ref":"#/components/schemas/RastreavelIntegracaoDto"}
+
+#### Consultar Evento Periférico (gdrGetEventoPerifericoById)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| id | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/EventoPerifericoDto"}
+
+#### Consultar Alertas (gdrListAlertas)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| status | query | Não | string | — | NONE, NEW, OPENED, CLOSED, ARCHIVED |
+| tipo | query | Não | string | — | NONE, IGNITION, SECURITY_ATTACK, PANIC, SPEED_LIMIT, LOCK_UNLOCK, GEO_FENCE, SENSOR_LIMITS, ENERGY_SOURCE, COLLISION_ALARM, DEVICE_BATTERY, GPS, OFFLINE_TIMEOUT, SLEEP_MODE, INPUT1_OPEN, INPUT1_GROUND, INPUT2_OPEN, INPUT2_GROUND, INPUT3_OPEN, INPUT3_GROUND, EXTERNAL_INPUT, OUTPUT, BEHAVIOR, STOPPED_OVERTIME, CALIBRATION, I_BUTTON, DRIVER_AUTHORIZATION, PARKING_LOCK, DRIVING_SCHEDULE, MAGNETIC_CONNECTION, DOCUMENTATION, MECHANICAL_ISSUE, DEVICE_ISSUE, GPRS, OBD, CUSTOM, GENERIC, REDE_INPUTS, REDE_OUTPUTS, REPORTADO, CAMERA, INPUT4_OPEN, INPUT4_GROUND, IMPLEMENT_CONNECTION, SENSOR_LIGHT, SENSOR_BETONEIRA, INPUT5_OPEN, INPUT5_GROUND, INPUT6_OPEN, INPUT6_GROUND |
+| rastreavel | query | Não | string | — | — |
+| monitoramento | query | Não | boolean | — | — |
+| size | query | Não | number | 100 | — |
+| page | query | Não | number | 0 | — |
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/EventoResultDto"}}
+
+#### Consultar Histórico de Posições (gdrListHistoricoPosicaoPorRastreavel)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| type | query | Não | string | — | STT, ALT, EMG, EVT, PID, UEX, UBL |
+| dispositivo | query | Não | number | — | — |
+| identificador | path | Sim | string | — | — |
+
+Response: {"$ref":"#/components/schemas/HistoricoResultDto"}
+
+#### Consultar Alerta por ID (gdrfindAlertaById)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| id | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/EventoDto"}
+
+#### Consultar Ultimos Alertas (integracaoAlerta)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| ultimosMinutos | query | Não | number | — | — |
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/AlertaIntegracaoDto"}}
+
+#### Consultar Agrupadores de Alertas (integracaoAlertaAgrupador)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/SelectableDto"}}
+
+#### Consultar Ultima Atualização (integracaoAoVivo)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| identificador | query | Não | string | — | — |
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/PosicaoIntegracaoDto"}}
+
+#### Consultar Ultima Atualização de um Rastreavel (integracaoAoVivoPorPlaca)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| identificador | path | Sim | string | — | — |
+
+Response: {"$ref":"#/components/schemas/PosicaoIntegracaoDto"}
+
+#### Consultar Alerta por Agrupador (integracapListAlertaAgrupador)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| agrupador | path | Sim | string | — | NONE, IGNITION, SECURITY_ATTACK, PANIC, SPEED_LIMIT, LOCK_UNLOCK, GEO_FENCE, SENSOR_LIMITS, ENERGY_SOURCE, COLLISION_ALARM, DEVICE_BATTERY, GPS, OFFLINE_TIMEOUT, SLEEP_MODE, INPUT1_OPEN, INPUT1_GROUND, INPUT2_OPEN, INPUT2_GROUND, INPUT3_OPEN, INPUT3_GROUND, EXTERNAL_INPUT, OUTPUT, BEHAVIOR, STOPPED_OVERTIME, CALIBRATION, I_BUTTON, DRIVER_AUTHORIZATION, PARKING_LOCK, DRIVING_SCHEDULE, MAGNETIC_CONNECTION, DOCUMENTATION, MECHANICAL_ISSUE, DEVICE_ISSUE, GPRS, OBD, CUSTOM, GENERIC, REDE_INPUTS, REDE_OUTPUTS, REPORTADO, CAMERA, INPUT4_OPEN, INPUT4_GROUND, IMPLEMENT_CONNECTION, SENSOR_LIGHT, SENSOR_BETONEIRA, INPUT5_OPEN, INPUT5_GROUND, INPUT6_OPEN, INPUT6_GROUND |
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/SelectableDto"}}
+
+#### Consultar Todos os Tipos de Alertas (intergacaoListTipoAlerta)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+
+Response: {"type":"array","items":{"$ref":"#/components/schemas/TipoAlertaResultDto"}}
+
+#### Ancora do rastreavel (ancoraPorRastreavel)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| rastreavelId | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/AncoraDto"}
+
+#### Ultima posição (aovivo)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| cliente | query | Não | number | — | — |
+| rastreavel | query | Não | string | — | — |
+| grupo | query | Não | number | — | — |
+| status | query | Não | string | — | MOVING_ON, MOVING_OFF, STOPPED_ON, STOPPED_OFF, MOVING_NO_IGNITION, STOPPED_NO_IGNITION, NO_IGNITION_INFO, NO_SPEED_INFO, OFF_LINE |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Ultima posição do rastreavel (aovivoPorRastreavel)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| rastreavelId | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/AoVivoDto"}
+
+#### Ultima posição satelital do rastreavel (aovivoSatelital)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| rastreavelId | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/AoVivoDto"}
+
+#### Jornadas do rastreavel (jornadaRastreavel)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| rastreavelId | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Histórico de posições arquivadas do rastreavel (listHistoricoPosicaoArquivadoPorRastreavel)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| type | query | Não | string | — | STT, ALT, EMG, EVT, PID, UEX, UBL |
+| dispositivo | query | Não | number | — | — |
+| endereco | query | Não | boolean | false | — |
+| cliente | query | Não | number | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| rastreavelId | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Histórico de posições do rastreavel (listHistoricoPosicaoPorRastreavel)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| type | query | Não | string | — | STT, ALT, EMG, EVT, PID, UEX, UBL |
+| dispositivo | query | Não | number | — | — |
+| endereco | query | Não | boolean | false | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| rastreavelId | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Histórico de posições satelitais do rastreavel (listHistoricoSatelitalPorRastreavel)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dispositivo | query | Não | number | — | — |
+| endereco | query | Não | boolean | false | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| rastreavelId | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de exportação de posições (exportarPositionPorRastreavel)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dispositivo | query | Não | number | — | — |
+| endereco | query | Não | boolean | false | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| idRastreavel | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de abastecimento (relatorioAbastecimento)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| rastreavel | query | Não | string | — | — |
+| fornecedor | query | Não | number | — | — |
+| categoria | query | Não | string | VEICULO | VEICULO, NAUTICO, AERONAUTICO, PESSOA, ANIMAL, MAQUINA, OBJETO |
+| arla | query | Não | string | false | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de avaliação de condução (relatorioAvaliacaoConducao)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| entidade | path | Sim | string | — | motorista|rastreavel |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de custo operacional (relatorioCustoOperacional)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de eventos (relatorioEvento)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| status | query | Não | string | — | NONE, NEW, OPENED, CLOSED, ARCHIVED |
+| tipo | query | Não | string | — | NONE, IGNITION, SECURITY_ATTACK, PANIC, SPEED_LIMIT, LOCK_UNLOCK, GEO_FENCE, SENSOR_LIMITS, ENERGY_SOURCE, COLLISION_ALARM, DEVICE_BATTERY, GPS, OFFLINE_TIMEOUT, SLEEP_MODE, INPUT1_OPEN, INPUT1_GROUND, INPUT2_OPEN, INPUT2_GROUND, INPUT3_OPEN, INPUT3_GROUND, EXTERNAL_INPUT, OUTPUT, BEHAVIOR, STOPPED_OVERTIME, CALIBRATION, I_BUTTON, DRIVER_AUTHORIZATION, PARKING_LOCK, DRIVING_SCHEDULE, MAGNETIC_CONNECTION, DOCUMENTATION, MECHANICAL_ISSUE, DEVICE_ISSUE, GPRS, OBD, CUSTOM, GENERIC, REDE_INPUTS, REDE_OUTPUTS, REPORTADO, CAMERA, INPUT4_OPEN, INPUT4_GROUND, IMPLEMENT_CONNECTION, SENSOR_LIGHT, SENSOR_BETONEIRA, INPUT5_OPEN, INPUT5_GROUND, INPUT6_OPEN, INPUT6_GROUND |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| rastreavel | query | Não | string | — | — |
+| motorista | query | Não | number | — | — |
+| statusCerca | query | Não | string | TODOS | DENTRO, FORA, TODOS |
+| cerca | query | Não | number | — | — |
+| eventoPersonalizado | query | Não | number | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de fonte de energia (relatorioFonteEnergia)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| power-ge | query | Não | number | — | — |
+| power-le | query | Não | number | — | — |
+| battery-ge | query | Não | number | — | — |
+| battery-le | query | Não | number | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de gastos gerais (relatorioGasto)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| rastreavel | query | Não | string | — | — |
+| fornecedor | query | Não | number | — | — |
+| motorista | query | Não | number | — | — |
+| tipo | query | Não | string | — | OUTROS, MULTA, PEDAGIO, DOCUMENTACAO, ALIMENTACAO, HOSPEDAGEM, SALARIO, DESCARGA_MERCADORIA |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de histórico de eventos do periférico (relatorioHistoricoEventoPeriferico)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dispositivo | query | Não | number | — | — |
+| atuadorId | query | Não | number | — | — |
+| type | query | Não | string | — | STT, ALT, EMG, EVT, PID, UEX, UBL |
+| endereco | query | Não | boolean | false | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| idRastreavel | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de histórico de paradas (relatorioHistoricoParada)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| tempo | query | Não | number | 0 | — |
+| tipoParada | query | Não | string | TODOS | TODOS, LIGADO, DESLIGADO |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| idRastreavel | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de histórico de posições (relatorioHistoricoPosicao)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dispositivo | query | Não | number | — | — |
+| type | query | Não | string | — | STT, ALT, EMG, EVT, PID, UEX, UBL |
+| endereco | query | Não | boolean | false | — |
+| sumario | query | Não | boolean | false | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| idRastreavel | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de histórico de sensor (relatorioHistoricoSensor)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| idRastreavel | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de jornadas por cerca (relatorioJornadaCerca)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| rastreavel | query | Não | string | — | — |
+| motorista | query | Não | number | — | — |
+| cerca | query | Não | number | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de jornadas do motorista (relatorioJornadaMotorista)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| turnoInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| turnoFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| turnoDoisInicial | query | Não | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| turnoDoisFinal | query | Não | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| motoristaId | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de jornadas do rastreavel (relatorioJornadaRastreavel)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| turnoInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| turnoFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| turnoDoisInicial | query | Não | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| turnoDoisFinal | query | Não | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| idRastreavel | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de manutenção (relatorioManutencao)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| rastreavel | query | Não | string | — | — |
+| fornecedor | query | Não | number | — | — |
+| tipo | query | Não | string | — | OUTROS, PROGRAMADA, EMERGENCIAL, ELETRICA, PNEU, FUNILARIA, MECANICA, OLEO, BORRACHARIA, TAPECARIA, REFRIGERACAO, SERVICO, SINISTRO, REBOQUE, DOCUMENTACAO, SEGURO, PECAS, LIMPEZA, BATERIA, TACOGRAFO, MUNCK, GNV, VISTORIA |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de monitoramento (relatorioMonitoramento)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| status | query | Não | string | — | NONE, NEW, OPENED, CLOSED, ARCHIVED |
+| tipo | query | Não | string | — | NONE, IGNITION, SECURITY_ATTACK, PANIC, SPEED_LIMIT, LOCK_UNLOCK, GEO_FENCE, SENSOR_LIMITS, ENERGY_SOURCE, COLLISION_ALARM, DEVICE_BATTERY, GPS, OFFLINE_TIMEOUT, SLEEP_MODE, INPUT1_OPEN, INPUT1_GROUND, INPUT2_OPEN, INPUT2_GROUND, INPUT3_OPEN, INPUT3_GROUND, EXTERNAL_INPUT, OUTPUT, BEHAVIOR, STOPPED_OVERTIME, CALIBRATION, I_BUTTON, DRIVER_AUTHORIZATION, PARKING_LOCK, DRIVING_SCHEDULE, MAGNETIC_CONNECTION, DOCUMENTATION, MECHANICAL_ISSUE, DEVICE_ISSUE, GPRS, OBD, CUSTOM, GENERIC, REDE_INPUTS, REDE_OUTPUTS, REPORTADO, CAMERA, INPUT4_OPEN, INPUT4_GROUND, IMPLEMENT_CONNECTION, SENSOR_LIGHT, SENSOR_BETONEIRA, INPUT5_OPEN, INPUT5_GROUND, INPUT6_OPEN, INPUT6_GROUND |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| rastreavel | query | Não | string | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de histórico detalhado de sensor (relatorioSensorDetalhado)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| sensorId | query | Sim | number | — | — |
+| statusSensor | query | Não | string | TODOS | EXCEDIDO, TODOS |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| idRastreavel | path | Sim | integer / int64 | — | — |
+| sensorId | path | Sim | integer / int32 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório da situação atual (relatorioSituacaoAtual)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| idRastreavel | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de totalizadores do rastreavel (relatorioTotalizador)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| cliente | query | Não | number | — | — |
+| departamento | query | Não | number | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de totalizador diário do rastreavel (relatorioTotalizadorDiario)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| idRastreavel | path | Sim | integer / int64 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
+
+#### Relatório de velocidades do rastreavel (relatorioVelocidade)
+
+| Campo | Local | Obrigatório | Tipo/formato | Default | Enum/pattern |
+|---|---|---|---|---|---|
+| dataInicial | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dataFinal | query | Sim | string / yyyy-MM-dd'T'HH:mm:ss.SSS'Z' | — | — |
+| dispositivo | query | Não | number | — | — |
+| format | query | Não | string | JSON | JSON, PDF_PORTRAIT, PDF_LANDSCAPE, XLSX, HTML |
+| idRastreavel | path | Sim | integer / int64 | — | — |
+| limiteVelocidade | path | Sim | integer / int32 | — | — |
+
+Response: {"$ref":"#/components/schemas/ReportResultDto"}
