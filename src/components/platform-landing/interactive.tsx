@@ -123,9 +123,12 @@ export function PlatformHeader() {
           >
             {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
           </button>
-          <TrackedLink href={WA.know} event="hero_cta_clicked" params={{ place: "header" }} className="pl-btn pl-btn-primary hidden !min-h-10 sm:inline-flex">
-            Quero conhecer
-          </TrackedLink>
+          <Link href="/admin/login" className="pl-btn pl-btn-ghost hidden !min-h-10 lg:inline-flex">
+            Área do Locador
+          </Link>
+          <Link href="/plataforma/cadastro" className="pl-btn pl-btn-primary hidden !min-h-10 lg:inline-flex">
+            Criar minha locadora
+          </Link>
           <button
             type="button"
             onClick={() => setOpen(!open)}
@@ -137,6 +140,15 @@ export function PlatformHeader() {
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
         </div>
+      </div>
+
+      <div className="mx-auto flex max-w-6xl flex-wrap gap-2 px-4 pb-3 sm:px-6 lg:hidden">
+        <Link href="/admin/login" className="pl-btn pl-btn-ghost !min-h-10 flex-1">
+          Área do Locador
+        </Link>
+        <Link href="/plataforma/cadastro" className="pl-btn pl-btn-primary !min-h-10 flex-1">
+          Criar minha locadora
+        </Link>
       </div>
 
       <nav id="pl-menu" aria-label="Seções" className={cn("border-t pl-line px-4 pb-4 lg:hidden", !open && "hidden")}>
