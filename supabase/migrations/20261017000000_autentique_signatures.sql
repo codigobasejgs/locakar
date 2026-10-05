@@ -112,7 +112,7 @@ grant all on public.signature_provider_config, public.contract_signature_process
 -- Enquanto houver envio ativo na Autentique, o contrato não é assinado pelo link próprio nem cancelado localmente.
 -- O status "signed" só é gravado pelo servidor depois que o processo externo foi concluído.
 create or replace function public.contracts_external_signature_guard() returns trigger
-language plpgsql set search_path = '' as $
+language plpgsql set search_path = '' as $guard$
 begin
   if new.status is distinct from old.status and exists (
     select 1 from public.contract_signature_processes p
@@ -121,7 +121,7 @@ begin
     raise exception 'Este contrato está em assinatura pela Autentique. Cancele o envio antes de alterar.' using errcode = 'P0001';
   end if;
   return new;
-end $;
+end $guard$;
 drop trigger if exists contracts_external_signature_guard on public.contracts;
 create trigger contracts_external_signature_guard before update of status on public.contracts
   for each row execute function public.contracts_external_signature_guard();
