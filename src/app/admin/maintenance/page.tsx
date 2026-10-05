@@ -103,16 +103,17 @@ export default function MaintenancePage() {
   return (
     <>
       <PageHeader
+        tour="maintenance"
         title="Manutenção"
         description="Histórico e agenda de manutenções da frota."
         actions={
-          <Button onClick={crud.openNew}>
+          <Button data-tour="maintenance-new" onClick={crud.openNew}>
             <Plus /> Nova manutenção
           </Button>
         }
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div data-tour="maintenance-kpis" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Pendentes" value={items.filter((m) => m.status === "pending").length} icon={Wrench} accent />
         <StatCard label="Próximas" value={items.filter((m) => m.status === "scheduled").length} icon={CalendarClock} hint="agendadas" />
         <StatCard label="Realizadas" value={items.filter((m) => m.status === "done").length} icon={CheckCircle2} />
@@ -120,6 +121,7 @@ export default function MaintenancePage() {
       </div>
 
       <DataTable
+        tour="maintenance"
         label="Manutenções"
         rows={items}
         columns={columns}
@@ -134,7 +136,7 @@ export default function MaintenancePage() {
         onDelete={crud.setDeleting}
       />
 
-      <FormDialog open={crud.formOpen} onOpenChange={crud.setFormOpen} title={crud.editing ? "Editar manutenção" : "Nova manutenção"} onSubmit={submit}>
+      <FormDialog tour="maintenance-form" open={crud.formOpen} onOpenChange={crud.setFormOpen} title={crud.editing ? "Editar manutenção" : "Nova manutenção"} onSubmit={submit}>
         <Field label="Placa" htmlFor="f-vehicleId" required>
           <Select {...bind("vehicleId")} options={vehicleOptions} placeholder="Selecione" required />
         </Field>

@@ -13,6 +13,7 @@ export function FormDialog({
   children,
   submitLabel = "Salvar",
   size = "md",
+  tour,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -22,6 +23,8 @@ export function FormDialog({
   children: React.ReactNode;
   submitLabel?: string;
   size?: "sm" | "md" | "lg";
+  /** Alvo do tour guiado no formulário (data-tour). */
+  tour?: string;
 }) {
   const formId = `form-${title.replace(/\s+/g, "-").toLowerCase()}`;
   return (
@@ -44,6 +47,7 @@ export function FormDialog({
     >
       <form
         id={formId}
+        data-tour={tour}
         noValidate={false}
         onSubmit={(e) => {
           e.preventDefault();

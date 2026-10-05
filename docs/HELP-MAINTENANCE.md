@@ -43,8 +43,13 @@ npm run help:screenshots -- vehicles # só uma pasta
 - Para incluir uma tela nova, adicione uma linha em `SHOTS` no `scripts/help/screenshots.cjs` (rota, clique opcional, recorte opcional).
 - Confira as imagens geradas antes de publicar.
 
+## Tour guiado
+
+Conteúdo, alvos `data-tour`, versões e testes: veja `docs/HELP-TOURS.md`. Resumo: edite `src/help/content/tours/*.ts`, aumente `version` quando a tela mudar, rode `npm run help:validate` e `npm run help:e2e`.
+
 ## Testes
 
 `npm run help:validate` roda:
 - `scripts/help/validate.cjs`: esquema, slugs únicos, links entre artigos.
+- `scripts/check-tours.ts`: registro de tours, alvos existentes no código, rotas, cliques seguros, permissões, plano, progresso e versões.
 - `scripts/check-help.cjs`: busca em linguagem natural ("cadastrar carro", "cadastra veiculo", "onde aprovo comprovante"), perfis (viewer, locatário, Super Admin), ajuda por rota e progresso (armazenamento vazio, corrompido, bloqueado, separado por locadora).

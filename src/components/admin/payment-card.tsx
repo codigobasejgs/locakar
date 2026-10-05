@@ -9,6 +9,8 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import type { UnifiedPaymentItem } from "./payment-actions-sheet";
 
 interface PaymentCardProps {
+  /** Prefixo dos alvos do tour guiado (só no primeiro cartão da lista). */
+  tour?: string;
   payment: UnifiedPaymentItem;
   onSettle: (p: UnifiedPaymentItem) => void;
   onEdit: (p: UnifiedPaymentItem) => void;
@@ -16,7 +18,7 @@ interface PaymentCardProps {
   onMore: (p: UnifiedPaymentItem) => void;
 }
 
-export function PaymentCard({ payment, onSettle, onEdit, onCharge, onMore }: PaymentCardProps) {
+export function PaymentCard({ tour, payment, onSettle, onEdit, onCharge, onMore }: PaymentCardProps) {
   const isPaid = payment.status === "paid";
   const isOverdue = payment.status === "overdue";
   const isCancelled = payment.status === "cancelled";
@@ -117,7 +119,7 @@ export function PaymentCard({ payment, onSettle, onEdit, onCharge, onMore }: Pay
       <div className="my-3.5 h-px bg-line" />
 
       {/* Ações Circulares Inferiores (conforme imagem #17) */}
-      <div className="grid grid-cols-4 gap-2 pt-0.5 text-center">
+      <div data-tour={tour && `${tour}-actions`} className="grid grid-cols-4 gap-2 pt-0.5 text-center">
         {/* 1. Dar baixa */}
         <button
           type="button"

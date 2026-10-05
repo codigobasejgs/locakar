@@ -1,6 +1,6 @@
 {
   "appVersion": "0.1.0",
-  "generatedAt": "2026-10-02T21:27:14.830Z",
+  "generatedAt": "2026-10-05T13:49:55.019Z",
   "note": "Inventário estrutural. Campos calculados, permissões e efeitos precisam de auditoria humana. Cobertura por rota não comprova cobertura de cada ação.",
   "pages": [
     {
@@ -8,14 +8,16 @@
       "route": "/admin/clients",
       "articles": [
         "cadastrar-cliente"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/expenses/page.tsx",
       "route": "/admin/expenses",
       "articles": [
         "cadastrar-despesa"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/finance/page.tsx",
@@ -23,56 +25,64 @@
       "articles": [
         "visao-geral-financeiro",
         "aprovar-comprovante-pix"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/fines/page.tsx",
       "route": "/admin/fines",
       "articles": [
         "gerenciar-multas-transito"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/incidents/page.tsx",
       "route": "/admin/incidents",
       "articles": [
         "conferir-ocorrencias-documentos"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/login/page.tsx",
       "route": "/admin/login",
       "articles": [
         "entrar-no-painel-e-criar-locadora"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "src/app/admin/maintenance/page.tsx",
       "route": "/admin/maintenance",
       "articles": [
         "cadastrar-manutencao"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/monitoring/page.tsx",
       "route": "/admin/monitoring",
       "articles": [
         "monitoramento-frota-selsyn"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/notes/page.tsx",
       "route": "/admin/notes",
       "articles": [
         "registro-anotacoes-ocorrencias"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/pagamentos/infinitepay/page.tsx",
       "route": "/admin/pagamentos/infinitepay",
       "articles": [
         "infinitepay-retorno-aproximacao"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "src/app/admin/pagamentos/page.tsx",
@@ -85,7 +95,8 @@
         "aprovar-comprovante-pix",
         "integracao-asaas-cobrancas",
         "integracao-infinitepay"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/page.tsx",
@@ -94,7 +105,8 @@
         "visao-360-veiculo",
         "primeiros-passos-visao-geral",
         "onboarding-checklist-locadora"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/rentals/page.tsx",
@@ -102,7 +114,8 @@
       "articles": [
         "criar-locacao-contrato",
         "fluxo-completo-locacao"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/rentals/[id]/page.tsx",
@@ -113,14 +126,16 @@
         "vistoria-entrega-devolucao",
         "dar-baixa-pagamento",
         "fluxo-completo-locacao"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/reports/page.tsx",
       "route": "/admin/reports",
       "articles": [
         "relatorios-exportacao-csv"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/requests/page.tsx",
@@ -128,28 +143,32 @@
       "articles": [
         "aprovar-solicitacao-locacao",
         "fluxo-completo-locacao"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/reservations/page.tsx",
       "route": "/admin/reservations",
       "articles": [
         "criar-reserva"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/security/page.tsx",
       "route": "/admin/security",
       "articles": [
         "seguranca-antifraude-app"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/settings/page.tsx",
       "route": "/admin/settings",
       "articles": [
         "onboarding-checklist-locadora"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/admin/vehicles/page.tsx",
@@ -159,186 +178,214 @@
         "cadastrar-veiculo",
         "editar-excluir-veiculo",
         "visao-360-veiculo"
-      ]
+      ],
+      "tour": true
     },
     {
       "file": "src/app/assinar/[token]/page.tsx",
       "route": "/assinar/[token]",
       "articles": [
         "gerar-assinar-contrato"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "src/app/convite/[token]/page.tsx",
       "route": "/convite/[token]",
       "articles": [
         "gerenciar-equipe-permissoes"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "src/app/l/[slug]/page.tsx",
       "route": "/l/[slug]",
       "articles": [
         "entrar-no-painel-e-criar-locadora"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "src/app/offline/page.tsx",
       "route": "/offline",
-      "articles": []
+      "articles": [],
+      "tour": false
     },
     {
       "file": "src/app/pagamento/infinitepay/page.tsx",
       "route": "/pagamento/infinitepay",
       "articles": [
         "app-locatario-pagar-pix-cartao"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "src/app/page.tsx",
       "route": "/",
-      "articles": []
+      "articles": [],
+      "tour": false
     },
     {
       "file": "src/app/plataforma/admin/page.tsx",
       "route": "/plataforma/admin",
       "articles": [
         "super-admin-gestao-plataforma"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "src/app/plataforma/cadastro/page.tsx",
       "route": "/plataforma/cadastro",
       "articles": [
         "entrar-no-painel-e-criar-locadora"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "src/app/plataforma/page.tsx",
       "route": "/plataforma",
-      "articles": []
+      "articles": [],
+      "tour": false
     },
     {
       "file": "src/app/plataforma/privacidade/page.tsx",
       "route": "/plataforma/privacidade",
-      "articles": []
+      "articles": [],
+      "tour": false
     },
     {
       "file": "src/app/plataforma/termos/page.tsx",
       "route": "/plataforma/termos",
-      "articles": []
+      "articles": [],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/(auth)/cadastro.tsx",
       "route": "/locatario/cadastro",
       "articles": [
         "app-locatario-como-acessar-entrar"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/(auth)/login.tsx",
       "route": "/locatario/login",
       "articles": [
         "app-locatario-como-acessar-entrar"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/(auth)/vincular.tsx",
       "route": "/locatario/vincular",
       "articles": [
         "app-locatario-como-acessar-entrar"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/(tabs)/inicio.tsx",
       "route": "/locatario/inicio",
       "articles": [
         "app-locatario-inicio-minha-locacao"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/(tabs)/locacao.tsx",
       "route": "/locatario/locacao",
       "articles": [
         "app-locatario-inicio-minha-locacao"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/(tabs)/pagamentos.tsx",
       "route": "/locatario/pagamentos",
       "articles": [
         "app-locatario-pagar-pix-cartao"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/(tabs)/perfil.tsx",
       "route": "/locatario/perfil",
       "articles": [
         "app-locatario-multas-perfil"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/documentos.tsx",
       "route": "/locatario/documentos",
       "articles": [
         "app-locatario-enviar-documentos-cnh"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/index.tsx",
       "route": "/locatario",
       "articles": [
         "app-locatario-como-acessar-entrar"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/multas.tsx",
       "route": "/locatario/multas",
       "articles": [
         "app-locatario-multas-perfil"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/ocorrencias.tsx",
       "route": "/locatario/ocorrencias",
       "articles": [
         "app-locatario-relatar-problema"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/privacidade.tsx",
       "route": "/locatario/privacidade",
       "articles": [
         "app-locatario-multas-perfil"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/reservas.tsx",
       "route": "/locatario/reservas",
       "articles": [
         "app-locatario-reservas"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/solicitar.tsx",
       "route": "/locatario/solicitar",
       "articles": [
         "app-locatario-solicitar-locacao"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/veiculo.tsx",
       "route": "/locatario/veiculo",
       "articles": [
         "app-locatario-fazer-vistoria"
-      ]
+      ],
+      "tour": false
     },
     {
       "file": "apps/locatario/app/vistoria.tsx",
       "route": "/locatario/vistoria",
       "articles": [
         "app-locatario-fazer-vistoria"
-      ]
+      ],
+      "tour": false
     }
   ],
   "apiRoutes": [
@@ -528,7 +575,7 @@
       "file": "src/app/admin/ajuda/categoria/[slug]/page.tsx",
       "kind": "page",
       "route": "/admin/ajuda/categoria/[slug]",
-      "hash": "c8030ea24ecaa89721b8997f631282f19f1fe78afa2e5e8bc0c4840144235c02",
+      "hash": "a0771a87535ae44d9bf15310abb9bfc55f7e3e32b56edccf73d753aac14d5cd6",
       "labels": [],
       "messages": []
     },
@@ -536,7 +583,7 @@
       "file": "src/app/admin/ajuda/faq/page.tsx",
       "kind": "page",
       "route": "/admin/ajuda/faq",
-      "hash": "7de1f02127db9a9c8db54a06c32c2c2b6da6ae417fe01a69294ba2a87ee14631",
+      "hash": "4448f5b31496352aa51d75cfbc89987d5dd0ae76fb55358370a5dbee17ccc978",
       "labels": [
         "Filtrar perguntas (ex.: placa, comprovante, pix, contrato)...",
         "Filtrar perguntas frequentes"
@@ -563,7 +610,7 @@
       "file": "src/app/admin/ajuda/treinamentos/page.tsx",
       "kind": "page",
       "route": "/admin/ajuda/treinamentos",
-      "hash": "3f2ae820496f3a66cc86d0554bc1e0cae28568d393583ac8696f43c9da7bc36e",
+      "hash": "66261edaee06d3ee43e3092dcebeb942eed72ce417462eb8727d0f63f415113e",
       "labels": [],
       "messages": []
     },
@@ -571,7 +618,7 @@
       "file": "src/app/admin/ajuda/treinamentos/[slug]/page.tsx",
       "kind": "page",
       "route": "/admin/ajuda/treinamentos/[slug]",
-      "hash": "439d1446d5081b76a36b5841854f766f9b3d0d82c890fd18fb59d65a88380aea",
+      "hash": "7ff05817ae3becbbee9487f6835daa818374a651b397574e388a15e4973b4e77",
       "labels": [],
       "messages": []
     },
@@ -579,7 +626,7 @@
       "file": "src/app/admin/clients/page.tsx",
       "kind": "page",
       "route": "/admin/clients",
-      "hash": "6dccf39bedc13438e6e1662bafcba68708d9a322d6c10336f3857f0e20864380",
+      "hash": "69849e6749f267be7c9a3d4e06a088aa0ae2fc38dc3a70176435ca4c4097acad",
       "labels": [
         "Clientes",
         "Cadastro completo de locatários e histórico de contratos.",
@@ -629,7 +676,7 @@
       "file": "src/app/admin/expenses/page.tsx",
       "kind": "page",
       "route": "/admin/expenses",
-      "hash": "20b9184b2de4cd3e935e0dcfd0363ca458e63787cc8e02c89e62bc6a40bd31e9",
+      "hash": "c49fea6efc03b34c5098358f6863906eb89dce10a0ddbe7e3885920bc5c784e9",
       "labels": [
         "Despesas",
         "Despesas recorrentes e diversas da operação.",
@@ -655,7 +702,7 @@
       "file": "src/app/admin/finance/page.tsx",
       "kind": "page",
       "route": "/admin/finance",
-      "hash": "feab4df1dd96e0fe8ec21dffbc8869e1853569e73edf3e28cc411a4138950161",
+      "hash": "6e7e45315d9aaaf6c1aadd8f28a3a9746458792c2aa8bbd695dbb3eac628c1aa",
       "labels": [
         "Financeiro",
         "Receitas de locações, despesas operacionais e saldo.",
@@ -677,7 +724,7 @@
       "file": "src/app/admin/fines/page.tsx",
       "kind": "page",
       "route": "/admin/fines",
-      "hash": "7f8d90416b5deb939b09d3ed19d1f8a2e988cb92afcde798cdbb12cb69c7ae11",
+      "hash": "0a625e2a8fd3b746cbae0e193ead8be7adffd4d90aab99611b673949505e33ac",
       "labels": [
         "Multas",
         "Autuações, prazos de identificação do condutor e pagamentos.",
@@ -708,7 +755,7 @@
       "file": "src/app/admin/incidents/page.tsx",
       "kind": "page",
       "route": "/admin/incidents",
-      "hash": "5419b11c027c919aaee7c421965fccbfa56775bd96a658db5c16eff321bccb34",
+      "hash": "6742f5b46b1cabd6f302ee1ce85c95899a41300d3519ec9597a7381374d65d63",
       "labels": [
         "App do locatário",
         "Ocorrências e documentos enviados pelos clientes no aplicativo. Cada resposta avisa o cliente no celular.",
@@ -751,7 +798,7 @@
       "file": "src/app/admin/maintenance/page.tsx",
       "kind": "page",
       "route": "/admin/maintenance",
-      "hash": "1268d5caa78d271286d8cea0a85b0027270a758ecd161000fae75fc452f53790",
+      "hash": "13e215139da88340ffd8f97bfa6cbf4cddf48e27c285e84f9e90cd65f5be0418",
       "labels": [
         "Avisar cliente com o veículo",
         "Manutenção",
@@ -786,7 +833,7 @@
       "file": "src/app/admin/monitoring/page.tsx",
       "kind": "page",
       "route": "/admin/monitoring",
-      "hash": "92e51b23a88cc8f3b3ababc948c080aac08dc13e1b7a6ee9a5e0b2e4282f63a9",
+      "hash": "0ab8dc85f6ea36c6ecf9a9ba1db4feb545cab77656e8dbd1f8c9f0abab31f209",
       "labels": [
         "Monitoramento da frota",
         "Rastreamento Selsyn: consultas administrativas, sem comandos sobre os veículos.",
@@ -808,7 +855,7 @@
       "file": "src/app/admin/notes/page.tsx",
       "kind": "page",
       "route": "/admin/notes",
-      "hash": "6ccaa54c82d8f81538ac0b823e8778971a5ae092113c0fb2df08cf7c7eb5c625",
+      "hash": "8fe2eb02dd0068b76e2a55896b638884ab5c27f5f457cdcbcf1827b0c186dc7e",
       "labels": [
         "Anotações",
         "Registro cronológico de ocorrências e combinados.",
@@ -843,7 +890,7 @@
       "file": "src/app/admin/pagamentos/page.tsx",
       "kind": "page",
       "route": "/admin/pagamentos",
-      "hash": "4d1dcd756b1f9f18f979f680f4ba47b70bd7385e7895d6a8a3e94872adf16411",
+      "hash": "d45a41a0a48ce2fc590b6b03f50b7e54b24fe684ab62eaa66069b9b84e25a707",
       "labels": [
         "Pagamentos",
         "Controle de cobranças e recebimentos das locações.",
@@ -872,7 +919,7 @@
       "file": "src/app/admin/page.tsx",
       "kind": "page",
       "route": "/admin",
-      "hash": "424d59000e112c1e2f5ff4e5f1bbd672ac1e1cdba168191d005981ce672641fb",
+      "hash": "9094e3a85c83ffefec7e119d44e01a27b85884785fba0acb2f75236e0d9d8f3a",
       "labels": [
         "Dashboard",
         "Total investido",
@@ -903,7 +950,7 @@
       "file": "src/app/admin/rentals/page.tsx",
       "kind": "page",
       "route": "/admin/rentals",
-      "hash": "759f8e21211f8a04dc6425b9758c6caa81831340cfa0a20abd26a7e0bcb76899",
+      "hash": "e13b8af38363e0a4ba8be84a19e7f140c7e17147e31bf0f91772319c63e7fa93",
       "labels": [
         "Locações",
         "Contratos, recebimentos semanais e quilometragem.",
@@ -918,7 +965,7 @@
       "file": "src/app/admin/rentals/[id]/page.tsx",
       "kind": "page",
       "route": "/admin/rentals/[id]",
-      "hash": "7cc41bd33943c17fdef7c942324ac2ad33d083df9db0be83cfc79b81f6d51a99",
+      "hash": "7e333a95a6bd53634de9154ab348554ef20cc774d4778d7c9e4a6987f56cd52b",
       "labels": [
         "Locação não encontrada",
         "Ela pode ter sido excluída.",
@@ -937,7 +984,7 @@
       "file": "src/app/admin/reports/page.tsx",
       "kind": "page",
       "route": "/admin/reports",
-      "hash": "cfae3a44ecc2cbdab0371d1d807eb7579deb80fbd1c833d2773f274aec827723",
+      "hash": "625b20886ce8ed01b788561dc8c022a125575792b504b0f3042b6363433542f4",
       "labels": [
         "Relatórios",
         "Relatórios visuais com filtros por mês, período, veículo e status.",
@@ -956,7 +1003,7 @@
       "file": "src/app/admin/requests/page.tsx",
       "kind": "page",
       "route": "/admin/requests",
-      "hash": "2eff37fdf2023ce94da35fb239542960bc1c9babd5ff0e636213e2ef9127269d",
+      "hash": "f86d8325d7652b469353d89d557e683a8ffabedfc774e0665c290aacb6342f6f",
       "labels": [
         "Solicitações de Locação",
         "Novos cadastros e pedidos de aluguel feitos pelo aplicativo. Analise os documentos e aprove em 1 clique.",
@@ -986,7 +1033,7 @@
       "file": "src/app/admin/reservations/page.tsx",
       "kind": "page",
       "route": "/admin/reservations",
-      "hash": "73cca48cff019b10c91751e554e14b841ba001293d23e6f935e71dda08f33958",
+      "hash": "f54fe38b6c08afce05e33c55b7deb9f3ee1f57f93ce3f345f22fe3ff463613e6",
       "labels": [
         "Mês anterior",
         "Próximo mês",
@@ -1010,7 +1057,7 @@
       "file": "src/app/admin/security/page.tsx",
       "kind": "page",
       "route": "/admin/security",
-      "hash": "1a0b726ecc3ff6e22bbd915647612f05f9738859b8cc1c5cd3f028d331724eb2",
+      "hash": "06074eb89acc82f86d45b98f785d7818b3cb65d74ed0f111ab3670a1c5804d5a",
       "labels": [
         "Segurança",
         "Sinais do app do locatário nos últimos 30 dias. O score orienta a conferência: nenhum cliente é bloqueado automaticamente.",
@@ -1034,7 +1081,7 @@
       "file": "src/app/admin/settings/page.tsx",
       "kind": "page",
       "route": "/admin/settings",
-      "hash": "e694acfd60fe997e5520d08f3026a688198cb78c0220ab034c6f0cd8a8a2a3c2",
+      "hash": "eca776ea790a2ebf078324ff5b01ade261ef10c88dc297da661d073e499be891",
       "labels": [
         "Enviar e-mail de teste para",
         "nome@exemplo.com",
@@ -1096,7 +1143,7 @@
       "file": "src/app/admin/vehicles/page.tsx",
       "kind": "page",
       "route": "/admin/vehicles",
-      "hash": "a2d3512945de0a7246be1b41006c3be5e35381319f717a0a5291b551bd984ef8",
+      "hash": "ddf495b4b0db3b86a48b4fd705a18c60ed48322f9a51da73a0153521cd229e5d",
       "labels": [
         "Veículos",
         "Gestão completa da frota: cadastro, documentos, fotos e manutenção.",
@@ -1745,7 +1792,7 @@
       "file": "src/components/admin/admin-shell.tsx",
       "kind": "component",
       "route": null,
-      "hash": "81fd7a4c9c63a528995d2fb3f069b82917f92c8b25453826351c9a65eed839ae",
+      "hash": "e123b108695d6c5ca75daaa39b20138757f3d9635f015894393784ef799603d4",
       "labels": [
         "Administração",
         "Instalar app de gestão",
@@ -1876,7 +1923,7 @@
       "file": "src/components/admin/crud-dialogs.tsx",
       "kind": "component",
       "route": null,
-      "hash": "e798d1b2c181beb0974bf0f47c2af6a0c884517529844bf07edaf14a9de1d433",
+      "hash": "37ca50b42bd2f6c98175f3fe2a2f5b5e539fdcfe00b21b91bd2fcf8530fa9a39",
       "labels": [
         "Confirmar exclusão"
       ],
@@ -1886,7 +1933,7 @@
       "file": "src/components/admin/data-table.tsx",
       "kind": "component",
       "route": null,
-      "hash": "ca5a83732a66e911e3f63d33b24e5098b6459fb97d6cfdf02dea2cc519ee6878",
+      "hash": "be9f61cb28cc2fcf392882ab304ddd25896bc6978b7a5926137aed7cda62b9a8",
       "labels": [
         "Visualizar",
         "Editar",
@@ -1901,7 +1948,7 @@
       "file": "src/components/admin/date-range-filter.tsx",
       "kind": "component",
       "route": null,
-      "hash": "7a12c2d5da981c13914e0a5a8ba0b8920e79f5c858e320b5d5981ec9ee7e75e1",
+      "hash": "5ac9fdd20644e41f05a81bcdca5c3d9467af75e2b92e3205169c60be9da75dce",
       "labels": [
         "Restaurar padrão (6 meses)"
       ],
@@ -2026,8 +2073,10 @@
       "file": "src/components/admin/onboarding-card.tsx",
       "kind": "component",
       "route": null,
-      "hash": "fed1b027e960422ca3a0abefae2785f773d4f749d5129de09a85ec1c43cacda1",
-      "labels": [],
+      "hash": "63bed0500c31dd87970d65b2a25506277826f5f59e00a0d17ad68b799148ce7d",
+      "labels": [
+        "Aprender como"
+      ],
       "messages": []
     },
     {
@@ -2146,7 +2195,7 @@
       "file": "src/components/admin/page-header.tsx",
       "kind": "component",
       "route": null,
-      "hash": "648bf10951195f336c69dfd1bb353de8d9e0541e177843f8705b99a03fd12dcb",
+      "hash": "f2213a61679f70f181221dc2a890f54c3fff45afc6a93ae289d72f573775192a",
       "labels": [],
       "messages": []
     },
@@ -2164,7 +2213,7 @@
       "file": "src/components/admin/payment-card.tsx",
       "kind": "component",
       "route": null,
-      "hash": "ee41b4097c83bebefa938eb79c3b01da3dfb5e5e545cfde2ed27c36ecc6c7519",
+      "hash": "02d46ee43caa63025c842a83ae014359c255540a4c40abce0dfb5cbccdda8dea",
       "labels": [],
       "messages": []
     },
@@ -2261,7 +2310,7 @@
       "file": "src/components/admin/receipt-approval-dialog.tsx",
       "kind": "component",
       "route": null,
-      "hash": "9174e9b62a02064e169041f43ac0e283f2b5b49b64d86f0e94dd81063cc58391",
+      "hash": "c90367bdc55b5ca9af78ce48aa646bd664808f58392c4b31eebb6bf02101a9dd",
       "labels": [
         "Aprovar este pagamento?",
         "Confirme que o valor entrou na conta cadastrada. A aprovação dá baixa na parcela e avisa o cliente.",
@@ -2276,7 +2325,7 @@
       "file": "src/components/admin/rental-form.tsx",
       "kind": "component",
       "route": null,
-      "hash": "d176313ffc31096b09a150bb8b9dec8be0813add987bfc87051663a23758b8e4",
+      "hash": "0caa11ef91e6994c1129f76f2d799406e0348580606db17d5638442648cf32dc",
       "labels": [
         "Locatário",
         "Selecione",
@@ -2613,7 +2662,7 @@
       "file": "src/components/ui/card.tsx",
       "kind": "component",
       "route": null,
-      "hash": "5013407f982e7d33b12eb1d86d5ca6af9977a9eb227ce2db956bdaf74f1e9432",
+      "hash": "dd2365ecee21e57c4813d7d704f47e80ed9f67a391a961c47fe4f8bb627be37d",
       "labels": [],
       "messages": []
     },
@@ -2629,7 +2678,7 @@
       "file": "src/components/ui/dialog.tsx",
       "kind": "component",
       "route": null,
-      "hash": "b525b354ed6378e6d146425401681c5174d9659b8da946684cb75746e6ca5909",
+      "hash": "88bc161348149103c2beb9dc6626636c59a46b77b050c99c62320ba5a63e4951",
       "labels": [
         "Fechar"
       ],
@@ -2719,7 +2768,7 @@
       "file": "src/help/components/article.tsx",
       "kind": "component",
       "route": null,
-      "hash": "3b0a7859c83d93123c19efd59dfea1968da944e5afa9e19589c84f92746e9cd4",
+      "hash": "35ff55ba396a26ba2f1c970d35d4c8883132cfa98eac61cefe37576116e0ad3a",
       "labels": [
         "Antes de começar",
         "Passo a passo",
@@ -2734,7 +2783,7 @@
       "file": "src/help/components/context.tsx",
       "kind": "component",
       "route": null,
-      "hash": "983c5f31a39e9a8944946b5ae0ad3ac51539e8791b26481c936f7f5a50074ce7",
+      "hash": "75c23e25126f71a7f7ee907309874c514a72ad8345e90efadfa84aa8c520ffb0",
       "labels": [],
       "messages": []
     },
@@ -2742,11 +2791,13 @@
       "file": "src/help/components/contextual.tsx",
       "kind": "component",
       "route": null,
-      "hash": "26bdaffb684aa594498c0d92c34222bbd9fa959ba170f499e0dd7507bc92f1e2",
+      "hash": "befe3567cc289d987c233fa84b80a2b889d9271d52e6ffc018e85693019f0b67",
       "labels": [
         "Ajuda sobre esta página",
         "Abrir ajuda sobre esta página",
-        "Tutoriais e dúvidas frequentes recomendados para o que você está fazendo agora."
+        "Tour pela tela, guias passo a passo e dúvidas frequentes do que você está fazendo agora.",
+        "Tours desta tela",
+        "Concluído"
       ],
       "messages": []
     },
@@ -2754,7 +2805,7 @@
       "file": "src/help/components/home.tsx",
       "kind": "component",
       "route": null,
-      "hash": "1314f40c22104bdbdfd920924477fa9b98116311f4a49a2a6e45123d1d460fd7",
+      "hash": "c42a2ecfa438fb733dca3e2c5cd3fc351e10505ce8fe86cf384c6744fa0b12e7",
       "labels": [
         "Pesquise sua dúvida (ex.: como cadastrar veículo, cobrar PIX, contrato)...",
         "Pesquisar na Central de Ajuda",
@@ -2763,15 +2814,105 @@
       "messages": []
     },
     {
+      "file": "src/help/components/tour-catalog.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "b9c957dfcf3bc92fb0fd150766a092f583a6ed7523bf4351ea9b86e4b0d1d1c6",
+      "labels": [
+        "Tours guiados"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/tour-dialogs.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "9d791c21c792d0844b70cb202866caf8921e3d7064e201cf4b1d98203a8c8eee",
+      "labels": [
+        "Quer continuar depois?"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/tour-invites.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "adfc8be48368739a195d3b6112e1d64661f347f64fca96803c8f2698fd73ed44",
+      "labels": [
+        "Agora não"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/tour-overlay.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "afe1ba88b85ff075dd9394035659da63e24347b185ccd49d939d5ef2bda1bb41",
+      "labels": [
+        "Fechar treinamento"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/tour-provider.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "6a312ab15ab91cfff4181b73d4da0add503143e64a5d41c94fdebb51e1ff7a49",
+      "labels": [
+        "Menu administrativo"
+      ],
+      "messages": []
+    },
+    {
       "file": "src/help/components/ui.tsx",
       "kind": "component",
       "route": null,
-      "hash": "5acdebc3a2376e0d5917fe86e2eac02a029fe910983f76f81448db882b43d089",
+      "hash": "b4c2c9a0859fe42d1a5e95a63a615b5874de4ad257d6f5f8f2aa3895f3ef6b49",
       "labels": [
         "Navegação da Ajuda",
         "Obrigatório",
         "O que faltou ou ficou confuso neste tutorial?"
       ],
+      "messages": []
+    },
+    {
+      "file": "src/help/content/tours/configuracoes.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "8230f448c75ed80cc1bd5236c023df61f1cf382fc236539136da5d49b6aae81a",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/content/tours/geral.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "2576a992cf42165ea95ffe85a166150d8e945d05860abca8287c79f5837f3a40",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/content/tours/index.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "2cd4479acfe1e4d4c645234b51f4b62f22b80a09059ef2394ad6b70e9ed81ff9",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/content/tours/jornadas.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "d012d2c9b3e646c31263f775b8757175b257376295c240829031235dcce71ff8",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/content/tours/operacao.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "9a4f779c3aca21981f4e97c3c2725e37f7c1f2461c5a5ad371e3bb974301820f",
+      "labels": [],
       "messages": []
     },
     {
@@ -2794,7 +2935,23 @@
       "file": "src/help/search.ts",
       "kind": "component",
       "route": null,
-      "hash": "81e18691e11c0949d8bbedcb45cfb7001186c4681d076aae98423a29128a98ce",
+      "hash": "fc5cde53d95f05045727dd08c09346e57df19f7218fbfc2f79fe1406824054eb",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/tour-progress.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "fd4f1dc9eb549d8e2468147ed1f64f7609e21583489be8b2c9adcdef5ae5692d",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/help/tours.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "dc85928b7b1333d0728f6698ac9b7f36d74135d45ce701ead35c923a37c2360b",
       "labels": [],
       "messages": []
     },
@@ -2802,7 +2959,7 @@
       "file": "src/help/types.ts",
       "kind": "component",
       "route": null,
-      "hash": "8a6776891fd9829e06e02ae47899e28adaf5f30bbee0be8bf2199102a65b7d88",
+      "hash": "d4380c41ab168fbd27794eafa5982b163b3e297fec3a81d7581fd769b8c94d83",
       "labels": [],
       "messages": []
     },
@@ -3267,6 +3424,14 @@
       "kind": "component",
       "route": null,
       "hash": "daf22a41ad33cc3d043df567ab19ec7de1f1dd7e7a8a2cb04f834836724dbf76",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/lib/tour-flag.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "e5306dcb57126413f1f63e85f027009ed710bcdc52face2d06aedeb0a2cab9a7",
       "labels": [],
       "messages": []
     },

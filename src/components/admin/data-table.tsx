@@ -37,6 +37,8 @@ interface DataTableProps<T extends { id: string }> {
   toolbar?: React.ReactNode;
   emptyTitle?: string;
   label: string;
+  /** Prefixo dos alvos do tour guiado: `<tour>-table`, `-search`, `-filters`, `-row-actions`. */
+  tour?: string;
 }
 
 const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -54,6 +56,7 @@ export function DataTable<T extends { id: string }>({
   toolbar,
   emptyTitle = "Nenhum registro encontrado",
   label,
+  tour,
 }: DataTableProps<T>) {
   const { settings } = useAdminData();
   const [query, setQuery] = useState("");
@@ -93,10 +96,10 @@ export function DataTable<T extends { id: string }>({
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-tour={tour && `${tour}-table`}>
       <div className="flex flex-col gap-3 border-b border-line p-4 lg:flex-row lg:items-center">
         {searchText && (
-          <div className="relative lg:w-72">
+          <div className="relative lg:w-72" data-tour={tour && `${tour}-search`}>
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" aria-hidden />
             <Input
               type="search"
@@ -112,7 +115,7 @@ export function DataTable<T extends { id: string }>({
           </div>
         )}
         {filters.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap" data-tour={tour && `${tour}-filters`}>
             {filters.map((f) => (
               <Select
                 key={f.key}
@@ -169,7 +172,7 @@ export function DataTable<T extends { id: string }>({
             </tr>
           </thead>
           <tbody>
-            {visible.map((row) => (
+            {visible.map((row, i) => (
               <tr
                 key={row.id}
                 className={cn(
@@ -184,10 +187,10 @@ export function DataTable<T extends { id: string }>({
                   </td>
                 ))}
                 {hasActions && (
-                  <td className="sticky right-0 bg-panel px-4 py-2 text-right shadow-[-12px_0_12px_-12px_rgb(0_0_0/0.8)]" onClick={(e) => e.stopPropagation()}>
+                  <td className="sticky right-0 bg-panel px-4 py-2 text-right shadow-[-12px_0_12px_-12px_rgb(0_0_0/0.8)]" data-tour={tour && i === 0 ? `${tour}-row-actions` : undefined} onClick={(e) => e.stopPropagation()}>
                     <div className="inline-flex gap-0.5">
                       {onView && (
-                        <Button variant="ghost" size="icon" className="size-8" aria-label="Visualizar" onClick={() => onView(row)}>
+                        <Button variant="ghost" size="icon" className="size-8" aria-label="Visualizar" data-tour={tour && i === 0 ? `${tour}-view` : undefined} onClick={() => onView(row)}>
                           <Eye />
                         </Button>
                       )}

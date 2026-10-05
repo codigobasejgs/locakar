@@ -262,9 +262,25 @@ body {
   .animate-scroll-cue, .animate-soft-pulse { animation: none; }
 }
 
+/* ---------- Tour guiado ---------- */
+/* Recorte do destaque: a sombra gigante escurece o resto da tela sem tocar no elemento real. */
+.tour-spot {
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.58), 0 0 0 2px var(--color-brand-soft);
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+.tour-dim { background: rgb(0 0 0 / 0.58); }
+:root[data-theme="light"] .tour-spot { box-shadow: 0 0 0 9999px rgb(15 23 42 / 0.45), 0 0 0 2px var(--color-brand); }
+:root[data-theme="light"] .tour-dim { background: rgb(15 23 42 / 0.45); }
+.tour-pop { animation: tour-in 0.18s ease-out; }
+@keyframes tour-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot { transition: none; }
+  .tour-pop { animation: none; }
+}
+
 /* ---------- Impressão de relatórios ---------- */
 @media print {
   body { background: #fff; color: #000; }
-  .no-print { display: none !important; }
+  .no-print, .tour-root { display: none !important; }
   .print-area { padding: 0 !important; margin: 0 !important; }
 }

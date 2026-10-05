@@ -9,6 +9,9 @@ const synonyms: Record<string, string> = {
   pagamentos: "pagamento", pagar: "pagamento", parcelas: "parcela", cobrancas: "cobranca", cobrar: "cobranca",
   logotipo: "logo", logos: "logo", mudar: "alterar", trocar: "alterar", editar: "alterar", atualizar: "alterar",
   notificacoes: "notificacao", multas: "multa", manutencoes: "manutencao", contratos: "contrato", comprovantes: "comprovante",
+  inquilino: "cliente", inquilinos: "cliente", receber: "pagamento", recebimento: "pagamento", recebimentos: "pagamento",
+  conserto: "manutencao", consertos: "manutencao", oficina: "manutencao", infracao: "multa", infracoes: "multa",
+  tour: "treinamento", tutorial: "treinamento", aprender: "treinamento", treinar: "treinamento",
 };
 export function normalize(text: string) {
   return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();

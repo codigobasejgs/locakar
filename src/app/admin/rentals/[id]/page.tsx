@@ -91,6 +91,7 @@ export default function RentalDetailPage() {
         <ChevronLeft className="size-4" /> Locações
       </Link>
       <PageHeader
+        tour="rental-detail"
         title={client?.name ?? "Locação"}
         description={`${vehicle ? `${vehicle.name} · ${vehicle.plate}` : "Veículo removido"} · ${rental.contractType}`}
         actions={
@@ -105,7 +106,7 @@ export default function RentalDetailPage() {
         }
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div data-tour="rental-detail-kpis" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Status" value={<StatusBadge map={RENTAL_STATUS} value={rental.status} />} icon={Clock} accent />
         <StatCard label="Total recebido" value={formatCurrency(received)} icon={CircleDollarSign} hint="total por locatário" />
         <StatCard label="Em atraso" value={formatCurrency(pending)} icon={Clock} />
@@ -113,7 +114,7 @@ export default function RentalDetailPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_1.2fr]">
-        <Card className="p-5">
+        <Card className="p-5" data-tour="rental-detail-contract-data">
           <h2 className="mb-4 font-display text-base font-semibold">Contrato</h2>
           <DetailList
             items={[
@@ -136,6 +137,7 @@ export default function RentalDetailPage() {
 
         <Card>
           <CardHeader
+            tour="rental-detail-installments"
             title={`Cobranças · ${PERIOD_LABEL[billing.period].toLowerCase()}`}
             description={
               billing.lateFeePercent || billing.interestPercent
@@ -184,8 +186,12 @@ export default function RentalDetailPage() {
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
-        <ContractPanel rental={rental} />
-        <InspectionPanel rental={rental} />
+        <div data-tour="rental-detail-contract">
+          <ContractPanel rental={rental} />
+        </div>
+        <div data-tour="rental-detail-inspections">
+          <InspectionPanel rental={rental} />
+        </div>
       </div>
       <TenantInspectionsPanel rental={rental} />
       <div className="mt-4">

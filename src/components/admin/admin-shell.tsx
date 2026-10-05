@@ -23,6 +23,8 @@ import { cn, todayISO } from "@/lib/utils";
 import { ADMIN_NAV, findNavItem } from "./nav";
 import { ContextualHelpButton } from "@/help/components/contextual";
 import { AdminHelpProvider } from "@/help/components/context";
+import { TourInvites } from "@/help/components/tour-invites";
+import { TourProvider } from "@/help/components/tour-provider";
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -35,6 +37,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           <Link
             key={href}
             href={href}
+            data-tour={`nav-${href.split("/").pop()}`}
             onClick={onNavigate}
             aria-current={isActive ? "page" : undefined}
             className={cn(
@@ -250,7 +253,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
 
   return (
     <header className="no-print sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-line bg-ink/85 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl sm:px-6">
-      <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Abrir menu" onClick={onMenu}>
+      <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Abrir menu" data-tour="nav-open-menu" onClick={onMenu}>
         <Menu />
       </Button>
       <nav aria-label="Trilha" className="min-w-0 flex-1 truncate text-sm">
@@ -275,7 +278,9 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
       >
         {theme === "light" ? <Moon className="size-4 text-brand-soft" /> : <Sun className="size-4 text-amber-300" />}
       </button>
-      <AlertsBell />
+      <div data-tour="topbar-bell">
+        <AlertsBell />
+      </div>
       <div
         className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-magenta to-brand-deep text-xs font-bold uppercase"
         title={email ?? "Administrador"}
@@ -379,6 +384,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <BrandingStyle theme={theme} />
       <AdminDataProvider>
         <AdminHelpProvider>
+        <TourProvider>
           <div className="min-h-dvh bg-ink text-white admin-shell">
           <OrgStatusBanner />
           {/* Sidebar desktop */}
@@ -435,6 +441,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         richColors
         toastOptions={{ className: "!bg-panel !border-line-strong !rounded-xl" }}
       />
+      <TourInvites />
+        </TourProvider>
         </AdminHelpProvider>
       </AdminDataProvider>
     </OrganizationProvider>

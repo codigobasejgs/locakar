@@ -40,6 +40,7 @@ export default function FinancePage() {
   return (
     <>
       <PageHeader
+        tour="finance"
         title="Financeiro"
         description="Receitas de locações, despesas operacionais e saldo."
         actions={<Select aria-label="Período" value={range} onChange={(e) => setRange(e.target.value)} options={RANGES} className="w-48" />}
@@ -47,7 +48,7 @@ export default function FinancePage() {
 
       <ReceiptApprovalSection />
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
+      <div data-tour="finance-kpis" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
         <StatCard label="Receitas" value={formatCurrency(view.totals.receitas)} icon={TrendingUp} accent />
         <StatCard label="Despesas" value={formatCurrency(view.totals.despesas)} icon={TrendingDown} hint="inclui manutenção" />
         <StatCard
@@ -61,7 +62,7 @@ export default function FinancePage() {
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
         <Card>
-          <CardHeader title="Receitas x despesas" description="Comparativo mensal" />
+          <CardHeader tour="finance-charts" title="Receitas x despesas" description="Comparativo mensal" />
           <div className="p-3 sm:p-5">
             <SimpleBarChart
               data={view.series}
@@ -91,7 +92,7 @@ export default function FinancePage() {
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
         <Card>
-          <CardHeader title="Recebimentos pendentes" description={`${view.pendingReceipts.length} lançamento(s)`} />
+          <CardHeader tour="finance-pending" title="Recebimentos pendentes" description={`${view.pendingReceipts.length} lançamento(s)`} />
           <ul className="divide-y divide-line p-2">
             {view.pendingReceipts.length === 0 && <li className="p-6 text-center text-sm text-muted">Nenhum recebimento pendente.</li>}
             {view.pendingReceipts.map((r) => (

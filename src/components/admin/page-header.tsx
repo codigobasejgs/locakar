@@ -5,19 +5,22 @@ export function PageHeader({
   description,
   actions,
   className,
+  tour,
 }: {
   title: string;
   description?: string;
   actions?: React.ReactNode;
   className?: string;
+  /** Prefixo dos alvos do tour guiado: `<tour>-header` e `<tour>-actions`. */
+  tour?: string;
 }) {
   return (
-    <div className={cn("mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between", className)}>
+    <div data-tour={tour && `${tour}-header`} className={cn("mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between", className)}>
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       </div>
-      {actions && <div className="no-print flex flex-wrap gap-2">{actions}</div>}
+      {actions && <div data-tour={tour && `${tour}-actions`} className="no-print flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }

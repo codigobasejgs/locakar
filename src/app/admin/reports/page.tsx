@@ -201,6 +201,7 @@ export default function ReportsPage() {
   return (
     <>
       <PageHeader
+        tour="reports"
         title="Relatórios"
         description="Relatórios visuais com filtros por mês, período, veículo e status."
         actions={
@@ -215,7 +216,7 @@ export default function ReportsPage() {
         }
       />
 
-      <div className="no-print mb-4 flex gap-1 overflow-x-auto rounded-2xl border border-line bg-panel p-1" role="tablist" aria-label="Tipo de relatório">
+      <div data-tour="reports-types" className="no-print mb-4 flex gap-1 overflow-x-auto rounded-2xl border border-line bg-panel p-1" role="tablist" aria-label="Tipo de relatório">
         {REPORTS.map((r) => (
           <button
             key={r.key}
@@ -236,7 +237,7 @@ export default function ReportsPage() {
         ))}
       </div>
 
-      <Card className="no-print mb-6 grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-6">
+      <Card data-tour="reports-filters" className="no-print mb-6 grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-6">
         <Field label="Mês" htmlFor="r-month">
           <Select
             id="r-month"
@@ -275,6 +276,7 @@ export default function ReportsPage() {
       <div className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
         <Card>
           <CardHeader
+            tour="reports-chart"
             title={`Relatório de ${title}`}
             description={month ? monthLabel(month) : `${formatDate(from)} a ${formatDate(to)}`}
           />
@@ -301,7 +303,7 @@ export default function ReportsPage() {
           </div>
         </Card>
 
-        <Card className="overflow-hidden">
+        <Card data-tour="reports-table" className="overflow-hidden">
           <div className="max-h-[560px] overflow-auto">
             <table className="w-full min-w-[640px] text-left text-sm" aria-label={`Relatório de ${title}`}>
               <thead className="sticky top-0 bg-panel">

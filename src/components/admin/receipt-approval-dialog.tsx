@@ -85,7 +85,7 @@ export function ReceiptApprovalSection() {
   return (
     <>
       <ConfirmDialog open={confirmApproval} onOpenChange={setConfirmApproval} title="Aprovar este pagamento?" description="Confirme que o valor entrou na conta cadastrada. A aprovação dá baixa na parcela e avisa o cliente." confirmLabel="Aprovar pagamento" onConfirm={() => act("approve")} />
-      <Card className="mb-6 border-amber-400/30">
+      <Card data-tour="finance-receipts" className="mb-6 border-amber-400/30">
         <CardHeader
           title={`Comprovantes para conferir (${items.length})`}
           description="Enviados pelos clientes no aplicativo. A parcela só fica paga depois da sua aprovação."

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckCircle2, Clock } from "lucide-react";
 import { useHelp } from "@/help/components/context";
 import { Breadcrumb } from "@/help/components/ui";
+import { ModuleTours } from "@/help/components/tour-catalog";
 import { articles, trainingsOf } from "@/help";
 import { canReadArticle, featureAvailable } from "@/help/access";
 
@@ -42,6 +43,8 @@ export default function TrainingDetailPage({ params }: { params: Promise<{ slug:
           <div className="h-full bg-gradient-to-r from-magenta to-brand transition-all" style={{ width: `${pct}%` }} />
         </div>
       </header>
+
+      <ModuleTours module={training.slug} />
 
       <div className="space-y-3">
         <h2 className="font-semibold text-sm text-white">Conteúdo programático</h2>

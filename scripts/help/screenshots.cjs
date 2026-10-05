@@ -54,6 +54,7 @@ const organization = {
   texts: { welcome: "Bem-vindo à Locadora Demonstração!" }, onboarding: {}, created_at: new Date().toISOString(),
 };
 
+const FAKE = { role: "owner", modules: {}, tourProgress: [] };
 async function startFakeSupabase() {
   const m = await jiti.import(path.join(ROOT, "src/data/mock/index.ts"));
   const now = new Date().toISOString();
@@ -79,13 +80,28 @@ async function startFakeSupabase() {
     if (u.pathname.startsWith("/auth/v1/user")) return send(200, USER);
     if (u.pathname.startsWith("/auth/v1/logout")) return send(204);
     if (u.pathname.includes("/.well-known/jwks")) return send(200, { keys: [] });
+    // Papel e plano ajustáveis pelo E2E (FAKE.role / FAKE.modules); capturas usam dono com tudo liberado.
+    if (u.pathname === "/rest/v1/rpc/current_membership") return send(200, { ...rpc.current_membership, role: FAKE.role });
     if (u.pathname.startsWith("/rest/v1/rpc/")) return send(200, rpc[u.pathname.slice(13)] ?? null);
     const t = u.pathname.replace("/rest/v1/", "");
     const single = (q.headers.accept || "").includes("vnd.pgrst.object");
     if (t === "settings") return send(200, single ? { data: settings } : [{ data: settings }]);
     if (t === "organizations") return send(200, single ? organization : [organization]);
     if (t === "memberships") return send(200, [{ organization_id: ORG, role: "owner", organizations: organization }]);
-    if (t === "subscriptions") return send(200, single ? { plans: { entitlements: { modules: {} } } } : []);
+    // maybeSingle() pede lista e escolhe a primeira linha no cliente.
+    if (t === "subscriptions") { const sub = { plans: { entitlements: { modules: FAKE.modules } } }; return send(200, single ? sub : [sub]); }
+    if (t === "tour_events") return send(201, single ? {} : []);
+    if (t === "tour_progress") {
+      if (q.method === "GET") return send(200, FAKE.tourProgress);
+      let body = "";
+      q.on("data", (c) => (body += c));
+      return q.on("end", () => {
+        try {
+          for (const r of [].concat(JSON.parse(body || "[]"))) FAKE.tourProgress = [...FAKE.tourProgress.filter((x) => x.tour_id !== r.tour_id), r];
+        } catch { /* ok */ }
+        send(201, []);
+      });
+    }
     const rows = T[t] ?? [];
     if (q.method !== "GET") return send(200, single ? rows[0] ?? {} : []);
     const id = u.searchParams.get("id");
@@ -184,35 +200,44 @@ async function save(png, file) {
   return path.relative(ROOT, dest).replaceAll("\\", "/");
 }
 
-(async () => {
+/** Ambiente isolado: Supabase falso + next dev com credenciais reais removidas. Reusado pelo E2E do tour. */
+async function startEnv() {
   const supa = await startFakeSupabase();
   const env = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: `http://localhost:${SUPA_PORT}`, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_demo", HELP_DIST_DIR: ".next-help", NEXT_TELEMETRY_DISABLED: "1" };
   // Remove credenciais reais do processo de captura: nada sai para Supabase/Resend/Evolution de verdade.
   for (const k of ["SUPABASE_SECRET_KEY", "RESEND_API_KEY", "EVOLUTION_API_URL", "EVOLUTION_API_KEY", "ASAAS_ENCRYPTION_KEY", "SELSYN_API_KEY"]) delete env[k];
   const dev = spawn(process.execPath, [path.join(ROOT, "node_modules/next/dist/bin/next"), "dev", "-p", String(APP_PORT)], { cwd: ROOT, env, stdio: ["ignore", "pipe", "pipe"] });
   dev.stderr.on("data", (d) => process.env.HELP_DEBUG && process.stderr.write(d));
+  await waitForServer(`${BASE}/admin/login`);
+  return { supa, dev };
+}
+/** Rotas de rede do painel: nada sai da máquina; APIs do sistema recebem respostas de demonstração. */
+const adminRoutes = (route) => {
+  const u = new URL(route.request().url());
+  if (u.hostname !== "localhost") return route.abort();
+  if (u.port === String(APP_PORT) && u.pathname.startsWith("/api/")) return route.fulfill({ json: API[u.pathname + u.search] ?? API[u.pathname] ?? {} });
+  return route.continue();
+};
+async function login(page) {
+  await page.goto(`${BASE}/admin/login`);
+  await page.fill("#email", USER.email);
+  await page.fill("#password", "demo-senha");
+  await page.click("button[type=submit]");
+  await page.waitForURL((u) => !u.pathname.includes("login"), { timeout: 60000 });
+}
+module.exports = { FAKE, chromium, startEnv, adminRoutes, login, USER, ORG, BASE, APP_PORT, SUPA_PORT, CHROME };
+
+if (require.main === module) (async () => {
+  const { supa, dev } = await startEnv();
   const manifest = [];
   let browser;
   try {
-    await waitForServer(`${BASE}/admin/login`);
     browser = await chromium.launch({ executablePath: CHROME });
     const ctx = await browser.newContext({ viewport: { width: D.w, height: D.h }, deviceScaleFactor: 1 });
     await ctx.addInitScript(() => { try { localStorage.setItem("locakar-admin-theme", "dark"); } catch { /* ok */ } });
-    await ctx.route("**/*", (route) => {
-      const u = new URL(route.request().url());
-      if (u.hostname !== "localhost") return route.abort(); // nada externo
-      if (u.port === String(APP_PORT) && u.pathname.startsWith("/api/")) {
-        const hit = API[u.pathname + u.search] ?? API[u.pathname];
-        return route.fulfill({ json: hit ?? {}, status: hit ? 200 : 200 });
-      }
-      return route.continue();
-    });
+    await ctx.route("**/*", adminRoutes);
     const page = await ctx.newPage();
-    await page.goto(`${BASE}/admin/login`);
-    await page.fill("#email", USER.email);
-    await page.fill("#password", "demo-senha");
-    await page.click("button[type=submit]");
-    await page.waitForURL((u) => !u.pathname.includes("login"), { timeout: 60000 });
+    await login(page);
 
     for (const s of SHOTS.filter((s) => !only || s.file.startsWith(only + "/"))) {
       await page.goto(BASE + s.path, { waitUntil: "networkidle" }).catch(() => {});

@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { useState } from "react";
 import { Dialog as D } from "radix-ui";
+import { useTourActive } from "@/lib/tour-flag";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 
@@ -19,11 +20,14 @@ interface DialogProps {
 const SIZES = { sm: "max-w-md", md: "max-w-2xl", lg: "max-w-4xl" };
 
 export function Dialog({ open, onOpenChange, title, description, children, footer, size = "md" }: DialogProps) {
+  const touring = useTourActive();
   return (
-    <D.Root open={open} onOpenChange={onOpenChange}>
+    <D.Root open={open} onOpenChange={onOpenChange} modal={!touring}>
       <D.Portal>
         <D.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
         <D.Content
+          // Clicar no balão do tour guiado não fecha o formulário que ele está explicando.
+          onInteractOutside={(e) => (e.target as Element | null)?.closest?.("[data-tour-overlay]") && e.preventDefault()}
           className={cn(
             "fixed left-1/2 top-1/2 z-50 flex max-h-[92dvh] w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-2xl border border-line-strong bg-panel shadow-2xl shadow-black/60",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",

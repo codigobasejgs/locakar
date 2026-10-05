@@ -100,16 +100,17 @@ export default function ExpensesPage() {
   return (
     <>
       <PageHeader
+        tour="expenses"
         title="Despesas"
         description="Despesas recorrentes e diversas da operação."
         actions={
-          <Button onClick={crud.openNew}>
+          <Button data-tour="expenses-new" onClick={crud.openNew}>
             <Plus /> Nova despesa
           </Button>
         }
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div data-tour="expenses-kpis" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Total recorrente" value={formatCurrency(recurring)} icon={Repeat} />
         <StatCard label="Total diversas" value={formatCurrency(misc)} icon={Shapes} />
         <StatCard label="Total geral" value={formatCurrency(recurring + misc)} icon={Receipt} accent />
@@ -117,6 +118,7 @@ export default function ExpensesPage() {
       </div>
 
       <DataTable
+        tour="expenses"
         label="Despesas"
         rows={expenses}
         columns={columns}
@@ -140,7 +142,7 @@ export default function ExpensesPage() {
         onDelete={crud.setDeleting}
       />
 
-      <FormDialog open={crud.formOpen} onOpenChange={crud.setFormOpen} title={crud.editing ? "Editar despesa" : "Nova despesa"} onSubmit={submit}>
+      <FormDialog tour="expenses-form" open={crud.formOpen} onOpenChange={crud.setFormOpen} title={crud.editing ? "Editar despesa" : "Nova despesa"} onSubmit={submit}>
         <Field label="Descrição" htmlFor="f-description" required className="sm:col-span-2">
           <Input {...bind("description")} required />
         </Field>

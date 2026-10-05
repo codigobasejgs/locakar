@@ -93,9 +93,9 @@ function EmailTest() {
   );
 }
 
-function Section({ id, icon: Icon, title, description, children }: { id?: string; icon: typeof Building2; title: string; description: string; children: React.ReactNode }) {
+function Section({ id, tour, icon: Icon, title, description, children }: { id?: string; tour?: string; icon: typeof Building2; title: string; description: string; children: React.ReactNode }) {
   return (
-    <Card id={id} className="p-5 sm:p-6">
+    <Card id={id} data-tour={tour} className="p-5 sm:p-6">
       <div className="mb-5 border-b border-line pb-4">
         <div className="flex items-center gap-2">
           <Icon className="size-5 text-brand-soft" />
@@ -150,6 +150,7 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader
+        tour="settings"
         title="Configurações"
         description={`Dados da locadora, identidade visual e preferências do painel${isSupabaseEnabled ? "" : " (salvos neste navegador)"}.`}
         actions={
@@ -160,13 +161,14 @@ export default function SettingsPage() {
       />
 
       {/* Navegação por Abas */}
-      <div className="mb-6 flex flex-wrap gap-1 rounded-2xl border border-line bg-surface p-1.5">
+      <div data-tour="settings-tabs" className="mb-6 flex flex-wrap gap-1 rounded-2xl border border-line bg-surface p-1.5">
         {TABS.map(({ id, label, icon: Icon }) => {
           const active = tab === id;
           return (
             <button
               key={id}
               type="button"
+              data-tour={`settings-tab-${id}`}
               onClick={() => changeTab(id)}
               className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
                 active ? "bg-magenta/20 text-white font-bold shadow-sm border border-magenta/40" : "text-muted hover:text-white hover:bg-white/[0.04]"
@@ -183,8 +185,10 @@ export default function SettingsPage() {
         {/* ABA: EMPRESA */}
         {tab === "empresa" && (
           <div className="space-y-4">
-            <OrgShareLink />
-            <Card className="p-5 sm:p-6">
+            <div data-tour="settings-share">
+              <OrgShareLink />
+            </div>
+            <Card data-tour="settings-company" className="p-5 sm:p-6">
               <OrgCompanyForm />
             </Card>
           </div>
@@ -193,11 +197,11 @@ export default function SettingsPage() {
         {/* ABA: APARÊNCIA */}
         {tab === "aparencia" && (
           <div className="space-y-4">
-            <Card className="p-5 sm:p-6">
+            <Card data-tour="settings-branding" className="p-5 sm:p-6">
               <OrgBrandingForm />
             </Card>
 
-            <Section icon={Palette} title="Tema do Painel" description="Escolha como o painel administrativo será exibido para você neste navegador.">
+            <Section tour="settings-theme" icon={Palette} title="Tema do Painel" description="Escolha como o painel administrativo será exibido para você neste navegador.">
               <div className="flex flex-col gap-2 sm:col-span-2">
                 <div className="flex flex-wrap gap-3">
                   <button
@@ -229,14 +233,14 @@ export default function SettingsPage() {
 
         {/* ABA: EQUIPE */}
         {tab === "equipe" && (
-          <Card className="p-5 sm:p-6">
+          <Card data-tour="settings-team" className="p-5 sm:p-6">
             <OrgTeamManager />
           </Card>
         )}
 
         {/* ABA: TEXTOS */}
         {tab === "textos" && (
-          <Card className="p-5 sm:p-6">
+          <Card data-tour="settings-texts" className="p-5 sm:p-6">
             <OrgTextsForm />
           </Card>
         )}
@@ -245,6 +249,7 @@ export default function SettingsPage() {
         {tab === "contratos" && (
           <div className="space-y-4">
             <Section
+              tour="settings-contract-templates"
               icon={FileSignature}
               title="Modelos de Contrato Inteligentes"
               description="Cadastre os modelos em PDF ou DOCX da sua locadora. A IA detecta os campos variáveis para preenchimento determinístico nas locações."
@@ -252,7 +257,7 @@ export default function SettingsPage() {
               <ContractTemplatesManager />
             </Section>
 
-            <Section icon={FileSignature} title="Representante e Cláusulas Gerais" description="Dados do assinante pela locadora e cláusulas padrão para emissão.">
+            <Section tour="settings-contract-signer" icon={FileSignature} title="Representante e Cláusulas Gerais" description="Dados do assinante pela locadora e cláusulas padrão para emissão.">
               <Field label="Razão social (como sairá nos contratos)" htmlFor="c-legal" required>
                 <Input id="c-legal" value={draft.company.legalName} onChange={(e) => setCompany("legalName", e.target.value)} />
               </Field>
@@ -296,7 +301,7 @@ export default function SettingsPage() {
         {/* ABA: PAGAMENTOS */}
         {tab === "pagamentos" && (
           <div className="space-y-4">
-            <Section id="config-meios" icon={Wallet} title="Meios de pagamento ativos" description="Escolha quais formas de pagamento estarão disponíveis para seus clientes. Vale na hora para o painel e o App Locatário.">
+            <Section id="config-meios" tour="settings-payment-methods" icon={Wallet} title="Meios de pagamento ativos" description="Escolha quais formas de pagamento estarão disponíveis para seus clientes. Vale na hora para o painel e o App Locatário.">
               <PaymentMethodsSettings
                 onToggled={(id, enabled) => {
                   if (id === "pix_manual") setDraft((d) => ({ ...d, pix: { ...d.pix, enabled } }));
@@ -305,15 +310,15 @@ export default function SettingsPage() {
               />
             </Section>
 
-            <Section id="config-pix" icon={QrCode} title="PIX QR Code (comprovante manual)" description="Chave usada no QR Code e no copia e cola. O Pix cai direto na sua conta; o cliente envia o comprovante e a equipe aprova.">
+            <Section id="config-pix" tour="settings-pix" icon={QrCode} title="PIX QR Code (comprovante manual)" description="Chave usada no QR Code e no copia e cola. O Pix cai direto na sua conta; o cliente envia o comprovante e a equipe aprova.">
               <PixSettingsFields value={draft.pix} onChange={(pix) => set("pix", pix)} />
             </Section>
 
-            <Section id="config-infinitepay" icon={CreditCard} title="InfinitePay" description="Receber parcelas por aproximação no celular (InfiniteTap) ou link de pagamento Pix / cartão (Checkout Integrado).">
+            <Section id="config-infinitepay" tour="settings-infinitepay" icon={CreditCard} title="InfinitePay" description="Receber parcelas por aproximação no celular (InfiniteTap) ou link de pagamento Pix / cartão (Checkout Integrado).">
               <InfinitePaySettingsFields value={draft.infinitepay ?? DEFAULT_INFINITEPAY} onChange={(infinitepay) => set("infinitepay", infinitepay)} />
             </Section>
 
-            <Section id="config-asaas" icon={Landmark} title="Asaas (Cobranças automáticas)" description="Cobranças Pix, boleto, cartão e fatura com baixa automática por webhook. Opcional: desligado, o PIX e a baixa manual continuam iguais.">
+            <Section id="config-asaas" tour="settings-asaas" icon={Landmark} title="Asaas (Cobranças automáticas)" description="Cobranças Pix, boleto, cartão e fatura com baixa automática por webhook. Opcional: desligado, o PIX e a baixa manual continuam iguais.">
               <AsaasSettings />
             </Section>
           </div>
@@ -322,16 +327,16 @@ export default function SettingsPage() {
         {/* ABA: INTEGRAÇÕES */}
         {tab === "integracoes" && (
           <div className="space-y-4">
-            <Section icon={SlidersHorizontal} title="Tabela FIPE" description="Valores mensais e histórico da frota comercial.">
+            <Section tour="settings-fipe" icon={SlidersHorizontal} title="Tabela FIPE" description="Valores mensais e histórico da frota comercial.">
               <FipeSettings />
             </Section>
-            <Section icon={SlidersHorizontal} title="Selsyn — Rastreamento" description="Posições, sensores e relatórios da frota. Credencial somente no backend.">
+            <Section tour="settings-selsyn" icon={SlidersHorizontal} title="Selsyn — Rastreamento" description="Posições, sensores e relatórios da frota. Credencial somente no backend.">
               <SelsynSettings />
             </Section>
-            <Section icon={MessageCircle} title="WhatsApp das notificações" description="Número que envia contratos, termos, comprovantes, multas e alertas automáticos aos clientes.">
+            <Section tour="settings-whatsapp" icon={MessageCircle} title="WhatsApp das notificações" description="Número que envia contratos, termos, comprovantes, multas e alertas automáticos aos clientes.">
               <WhatsAppConnection />
             </Section>
-            <Section icon={Mail} title="E-mails" description="Envio pelo Resend: contratos, termos de entrega/devolução, comprovantes e multas.">
+            <Section tour="settings-email" icon={Mail} title="E-mails" description="Envio pelo Resend: contratos, termos de entrega/devolução, comprovantes e multas.">
               <p className="text-sm text-zinc-300 sm:col-span-2">
                 Os e-mails saem do servidor com a identidade da sua locadora. Para enviar a qualquer destinatário, o domínio precisa estar verificado no Resend.
               </p>
@@ -343,7 +348,7 @@ export default function SettingsPage() {
         {/* ABA: PREFERÊNCIAS */}
         {tab === "preferencias" && (
           <div className="space-y-4">
-            <Section icon={BellRing} title="Alertas para a locadora" description="E-mail e WhatsApp que recebem os avisos importantes da operação, além do Web Push da equipe.">
+            <Section tour="settings-alerts" icon={BellRing} title="Alertas para a locadora" description="E-mail e WhatsApp que recebem os avisos importantes da operação, além do Web Push da equipe.">
               <Field label="E-mail que recebe os alertas" htmlFor="a-email">
                 <Input id="a-email" type="email" value={draft.alerts.email} onChange={(e) => set("alerts", { ...draft.alerts, email: e.target.value })} placeholder="seu-email@locadora.com" autoComplete="email" />
               </Field>
@@ -364,7 +369,7 @@ export default function SettingsPage() {
               />
             </Section>
 
-            <Section icon={SlidersHorizontal} title="Notificações da equipe (Web Push)" description="Alertas do sino e notificações no navegador/celular.">
+            <Section tour="settings-push" icon={SlidersHorizontal} title="Notificações da equipe (Web Push)" description="Alertas do sino e notificações no navegador/celular.">
               <PushSettings />
               <p className="text-xs font-semibold uppercase tracking-wide text-muted sm:col-span-2">Alertas de vencimento</p>
               <Checkbox label="Vencimentos de multas" checked={draft.notifyFines} onChange={(e) => set("notifyFines", e.target.checked)} />

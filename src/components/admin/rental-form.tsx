@@ -178,6 +178,7 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
       title={crud.editing ? "Editar locação" : "Nova locação"}
       onSubmit={submit}
       size="lg"
+      tour="rentals-form"
     >
       <Field label="Locatário" htmlFor="f-clientId" required>
         <Select {...bind("clientId")} options={clientOptions} placeholder="Selecione" required />
@@ -213,7 +214,7 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
       <Field label="Hora final" htmlFor="f-endTime">
         <Input {...bind("endTime")} type="time" />
       </Field>
-      <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted sm:col-span-2">Cobrança</p>
+      <p data-tour="rentals-form-billing" className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted sm:col-span-2">Cobrança</p>
       <Field label="Periodicidade" htmlFor="f-period" required>
         <Select
           id="f-period"

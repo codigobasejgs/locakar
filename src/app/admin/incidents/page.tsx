@@ -90,9 +90,9 @@ function TenantRequests() {
 
   return (
     <>
-      <PageHeader title="App do locatário" description="Ocorrências e documentos enviados pelos clientes no aplicativo. Cada resposta avisa o cliente no celular." />
+      <PageHeader tour="incidents" title="App do locatário" description="Ocorrências e documentos enviados pelos clientes no aplicativo. Cada resposta avisa o cliente no celular." />
 
-      <div role="tablist" className="mb-4 inline-flex rounded-xl border border-line bg-panel p-1">
+      <div data-tour="incidents-tabs" role="tablist" className="mb-4 inline-flex rounded-xl border border-line bg-panel p-1">
         {(
           [
             ["ocorrencias", `Ocorrências${openIncidents ? ` (${openIncidents})` : ""}`],
@@ -101,6 +101,7 @@ function TenantRequests() {
         ).map(([key, label]) => (
           <button
             key={key}
+            data-tour={`incidents-tab-${key}`}
             role="tab"
             aria-selected={tab === key}
             onClick={() => setTab(key)}
@@ -112,7 +113,7 @@ function TenantRequests() {
       </div>
 
       {tab === "ocorrencias" && (
-        <Card>
+        <Card data-tour="incidents-list">
           {!incidents ? (
             <EmptyState title="Carregando..." />
           ) : !incidents.length ? (
@@ -161,7 +162,7 @@ function TenantRequests() {
       )}
 
       {tab === "documentos" && (
-        <Card>
+        <Card data-tour="incidents-documents">
           {!docs ? (
             <EmptyState title="Carregando..." />
           ) : !docs.length ? (

@@ -405,12 +405,13 @@ export default function PagamentosPage() {
   return (
     <>
       <PageHeader
+        tour="payments"
         title="Pagamentos"
         description="Controle de cobranças e recebimentos das locações."
       />
 
       {/* Indicadores do Resumo Financeiro (valores reais calculados) */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div data-tour="payments-kpis" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Em aberto"
           value={formatCurrency(totals.emAberto)}
@@ -440,7 +441,7 @@ export default function PagamentosPage() {
       </div>
 
       {/* Barra de Filtros e Busca */}
-      <Card className="mb-6 p-4">
+      <Card className="mb-6 p-4" data-tour="payments-filters">
         <div className="flex flex-col gap-3">
           {/* Linha 1: Input de Busca + Ordenação */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -537,9 +538,10 @@ export default function PagamentosPage() {
           />
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sorted.map((payment) => (
+        <div data-tour="payments-list" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {sorted.map((payment, i) => (
             <PaymentCard
+              tour={i === 0 ? "payments-card" : undefined}
               key={`${payment.rentalId}-${payment.id}`}
               payment={payment}
               onSettle={(p) => setSettleTarget(p)}

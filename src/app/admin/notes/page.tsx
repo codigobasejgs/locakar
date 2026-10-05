@@ -52,16 +52,17 @@ export default function NotesPage() {
   return (
     <>
       <PageHeader
+        tour="notes"
         title="Anotações"
         description="Registro cronológico de ocorrências e combinados."
         actions={
-          <Button onClick={crud.openNew}>
+          <Button data-tour="notes-new" onClick={crud.openNew}>
             <Plus /> Nova anotação
           </Button>
         }
       />
 
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+      <div data-tour="notes-filters" className="mb-6 flex flex-col gap-3 sm:flex-row">
         <div className="relative sm:w-80">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" aria-hidden />
           <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar anotações" aria-label="Buscar anotações" className="pl-9" />
@@ -74,7 +75,7 @@ export default function NotesPage() {
           <EmptyState title="Nenhuma anotação encontrada" />
         </Card>
       ) : (
-        <ol className="relative space-y-8 before:absolute before:bottom-0 before:left-[7px] before:top-2 before:w-px before:bg-gradient-to-b before:from-magenta/60 before:via-line before:to-transparent">
+        <ol data-tour="notes-timeline" className="relative space-y-8 before:absolute before:bottom-0 before:left-[7px] before:top-2 before:w-px before:bg-gradient-to-b before:from-magenta/60 before:via-line before:to-transparent">
           {groups.map(([date, notes]) => (
             <li key={date} className="relative pl-8">
               <span className="absolute left-0 top-1.5 size-[15px] rounded-full border-2 border-magenta bg-ink shadow-glow-sm" aria-hidden />
@@ -107,7 +108,7 @@ export default function NotesPage() {
         </ol>
       )}
 
-      <FormDialog open={crud.formOpen} onOpenChange={crud.setFormOpen} title={crud.editing ? "Editar anotação" : "Nova anotação"} onSubmit={submit}>
+      <FormDialog tour="notes-form" open={crud.formOpen} onOpenChange={crud.setFormOpen} title={crud.editing ? "Editar anotação" : "Nova anotação"} onSubmit={submit}>
         <Field label="Data" htmlFor="f-date" required>
           <Input {...bind("date")} type="date" required />
         </Field>

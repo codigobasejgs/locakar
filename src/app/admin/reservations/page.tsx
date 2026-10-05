@@ -175,11 +175,12 @@ export default function ReservationsPage() {
   return (
     <>
       <PageHeader
+        tour="reservations"
         title="Reservas"
         description="Agenda de reservas com verificação de conflito por veículo."
         actions={
           <>
-            <div className="inline-flex rounded-xl border border-line p-1" role="group" aria-label="Visualização">
+            <div data-tour="reservations-view" className="inline-flex rounded-xl border border-line p-1" role="group" aria-label="Visualização">
               {(
                 [
                   ["list", "Lista", List],
@@ -200,7 +201,7 @@ export default function ReservationsPage() {
                 </button>
               ))}
             </div>
-            <Button onClick={crud.openNew}>
+            <Button data-tour="reservations-new" onClick={crud.openNew}>
               <Plus /> Nova reserva
             </Button>
           </>
@@ -209,6 +210,7 @@ export default function ReservationsPage() {
 
       {view === "list" ? (
         <DataTable
+          tour="reservations"
           label="Reservas"
           rows={reservations}
           columns={columns}
@@ -226,7 +228,7 @@ export default function ReservationsPage() {
         <Calendar reservations={reservations} onSelect={crud.openEdit} />
       )}
 
-      <FormDialog open={crud.formOpen} onOpenChange={crud.setFormOpen} title={crud.editing ? "Editar reserva" : "Nova reserva"} onSubmit={submit}>
+      <FormDialog tour="reservations-form" open={crud.formOpen} onOpenChange={crud.setFormOpen} title={crud.editing ? "Editar reserva" : "Nova reserva"} onSubmit={submit}>
         <Field label="Nome do locatário" htmlFor="f-clientId" required>
           <Select {...bind("clientId")} options={clientOptions} placeholder="Selecione" required />
         </Field>

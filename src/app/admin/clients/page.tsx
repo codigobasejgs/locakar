@@ -301,16 +301,18 @@ export default function ClientsPage() {
   return (
     <>
       <PageHeader
+        tour="clients"
         title="Clientes"
         description="Cadastro completo de locatários e histórico de contratos."
         actions={
-          <Button onClick={crud.openNew}>
+          <Button data-tour="clients-new" onClick={crud.openNew}>
             <Plus /> Novo cliente
           </Button>
         }
       />
 
       <DataTable
+        tour="clients"
         label="Clientes"
         rows={clients}
         columns={columns}
@@ -354,6 +356,7 @@ export default function ClientsPage() {
 
       {/* Modal de Formulário Completo */}
       <FormDialog
+        tour="clients-form"
         open={crud.formOpen}
         onOpenChange={crud.setFormOpen}
         title={crud.editing ? "Editar cliente" : "Novo cliente"}
@@ -362,7 +365,7 @@ export default function ClientsPage() {
       >
         {/* Seção 1: Identificação */}
         <div className="border-b border-line pb-2 sm:col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-brand-soft">1. Identificação</p>
+          <p data-tour="clients-form-identity" className="text-xs font-semibold uppercase tracking-wider text-brand-soft">1. Identificação</p>
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -414,7 +417,7 @@ export default function ClientsPage() {
 
         {/* Seção 2: Habilitação e CNH Digital */}
         <div className="mt-2 border-b border-line pb-2 sm:col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-brand-soft">2. Habilitação & CNH Digital</p>
+          <p data-tour="clients-form-cnh" className="text-xs font-semibold uppercase tracking-wider text-brand-soft">2. Habilitação & CNH Digital</p>
         </div>
 
         <Field label="Nº Registro CNH" htmlFor="f-cnhNumber">
@@ -486,7 +489,7 @@ export default function ClientsPage() {
 
         {/* Seção 4: Contatos */}
         <div className="mt-2 border-b border-line pb-2 sm:col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-brand-soft">4. Contatos</p>
+          <p data-tour="clients-form-contacts" className="text-xs font-semibold uppercase tracking-wider text-brand-soft">4. Contatos</p>
         </div>
 
         <Field label="Telefone principal (WhatsApp)" htmlFor="f-phone" required>
@@ -504,7 +507,7 @@ export default function ClientsPage() {
         {/* Seção 5: Endereço com Auto-busca CEP */}
         <div className="mt-2 border-b border-line pb-2 sm:col-span-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-brand-soft">5. Endereço Completo</p>
+            <p data-tour="clients-form-address" className="text-xs font-semibold uppercase tracking-wider text-brand-soft">5. Endereço Completo</p>
             {lookingUpCep && <span className="text-xs text-brand-soft animate-pulse">Buscando CEP no ViaCEP...</span>}
           </div>
         </div>

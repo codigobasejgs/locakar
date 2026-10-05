@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useHelp } from "@/help/components/context";
 import { Breadcrumb } from "@/help/components/ui";
+import { LearnSection } from "@/help/components/tour-catalog";
 import { articles, trainingsOf } from "@/help";
 import { canReadArticle, featureAvailable } from "@/help/access";
 
@@ -25,6 +26,9 @@ export default function TrainingsPage() {
         <p className="mt-1 text-xs text-muted">Cursos estruturados para capacitação rápida de novos colaboradores e proprietários.</p>
       </header>
 
+      <LearnSection />
+
+      <h2 className="border-t border-line pt-6 font-display text-lg font-bold text-white">Trilhas de leitura</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         {trainings.map((t) => {
           const done = t.lessons.filter((l) => progress.completed.includes(l.slug)).length;

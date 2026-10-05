@@ -69,6 +69,7 @@ export default function SecurityPage() {
   return (
     <>
       <PageHeader
+        tour="security"
         title="Segurança"
         description="Sinais do app do locatário nos últimos 30 dias. O score orienta a conferência: nenhum cliente é bloqueado automaticamente."
       />
@@ -77,7 +78,7 @@ export default function SecurityPage() {
         <Card className="mb-6 p-5 text-sm text-muted">Não foi possível carregar. Confirme que a migração 20261002000000_locatario_fases_3_7.sql foi executada no Supabase.</Card>
       )}
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div data-tour="security-kpis" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Clientes monitorados" value={data?.clients.length ?? "—"} icon={ShieldCheck} />
         <StatCard label="Atenção ou mais" value={attention} icon={ShieldAlert} accent={attention > 0} />
         <StatCard label="Críticos" value={critical} icon={ShieldAlert} accent={critical > 0} />
@@ -85,7 +86,7 @@ export default function SecurityPage() {
       </div>
 
       <Card className="mb-6">
-        <CardHeader title="Clientes por risco" description="0–29 baixo · 30–59 atenção · 60–79 elevado · 80–100 crítico. Toque para ver as evidências." />
+        <CardHeader tour="security-risk" title="Clientes por risco" description="0–29 baixo · 30–59 atenção · 60–79 elevado · 80–100 crítico. Toque para ver as evidências." />
         {!data ? (
           <EmptyState title="Carregando..." />
         ) : !data.clients.length ? (
@@ -142,7 +143,7 @@ export default function SecurityPage() {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
-          <CardHeader title="Aparelhos" description="Registrados pelo app. Push = recebe notificações no celular." />
+          <CardHeader tour="security-devices" title="Aparelhos" description="Registrados pelo app. Push = recebe notificações no celular." />
           <div className="overflow-x-auto px-5 pb-5 pt-3">
             <table className="w-full text-sm">
               <thead className="text-left text-xs uppercase text-muted">
@@ -171,7 +172,7 @@ export default function SecurityPage() {
         </Card>
 
         <Card>
-          <CardHeader title="Auditoria" description="Últimas ações feitas pelo app e pela equipe, com IP." />
+          <CardHeader tour="security-audit" title="Auditoria" description="Últimas ações feitas pelo app e pela equipe, com IP." />
           <ul className="divide-y divide-line px-5 pb-3 pt-2 text-sm">
             {data?.audit.map((a) => (
               <li key={a.id} className="flex flex-wrap items-baseline justify-between gap-2 py-2">

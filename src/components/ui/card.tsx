@@ -10,14 +10,17 @@ export function CardHeader({
   description,
   action,
   className,
+  tour,
 }: {
   title: string;
   description?: string;
   action?: React.ReactNode;
   className?: string;
+  /** Alvo do tour guiado (data-tour). */
+  tour?: string;
 }) {
   return (
-    <div className={cn("flex flex-wrap items-start justify-between gap-3 px-5 pt-5", className)}>
+    <div data-tour={tour} className={cn("flex flex-wrap items-start justify-between gap-3 px-5 pt-5", className)}>
       <div>
         <h2 className="font-display text-base font-semibold">{title}</h2>
         {description && <p className="mt-0.5 text-sm text-muted">{description}</p>}

@@ -91,6 +91,7 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
+        tour="dashboard"
         title="Dashboard"
         description={`Visão geral da operação · ${new Date().toLocaleDateString("pt-BR", { dateStyle: "full" })}`}
       />
@@ -102,7 +103,7 @@ export default function DashboardPage() {
       <DateRangeFilter range={range} today={today} onChange={setRange} />
 
       {/* Linha 1: Frota & Operação */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
+      <div data-tour="dashboard-kpis-fleet" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           label="Total investido"
           value={formatCurrency(execTotals.fleetInvested)}
@@ -137,7 +138,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Linha 2: Indicadores Financeiros do Período Selecionado */}
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
+      <div data-tour="dashboard-kpis-finance" className="mt-3 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           label="Faturamento recebido"
           value={formatCurrency(execTotals.faturamentoRecebido)}
@@ -176,6 +177,7 @@ export default function DashboardPage() {
       {/* Seção Nova: Desempenho da Frota (com clique para visão 360°) */}
       <Card className="mt-6">
         <CardHeader
+          tour="dashboard-vehicles"
           title="Desempenho por veículo (Visão 360°)"
           description={`Clique em qualquer veículo para ver raio-X financeiro, trocas de óleo, vistorias, multas e histórico no período (${range.label}).`}
           action={
@@ -275,7 +277,7 @@ export default function DashboardPage() {
       {/* Gráficos e Distribuições */}
       <div className="mt-6 grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
-          <CardHeader title="Receitas x despesas" description={`Série mensal histórica · período ativo: ${range.label}`} />
+          <CardHeader tour="dashboard-charts" title="Receitas x despesas" description={`Série mensal histórica · período ativo: ${range.label}`} />
           <div className="p-3 sm:p-5">
             <MoneyAreaChart
               data={view.series}
@@ -310,7 +312,7 @@ export default function DashboardPage() {
       {/* Alertas, Reservas e Locações Recentes */}
       <div className="mt-6 grid gap-4 xl:grid-cols-3">
         <Card>
-          <CardHeader title="Alertas" description="Vencimentos e pendências" />
+          <CardHeader tour="dashboard-alerts" title="Alertas" description="Vencimentos e pendências" />
           <ul className="p-3">
             {view.alerts.length === 0 && <li className="px-2 py-6 text-center text-sm text-muted">Tudo em dia.</li>}
             {view.alerts.map((a) => (
@@ -329,6 +331,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader
+            tour="dashboard-upcoming"
             title="Próximas reservas"
             action={<Link href={ROUTES.reservations} className="text-xs font-semibold text-brand-soft hover:underline">Ver todas</Link>}
           />

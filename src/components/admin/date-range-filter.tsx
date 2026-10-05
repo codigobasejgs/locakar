@@ -48,7 +48,7 @@ export function DateRangeFilter({ range, today, onChange }: DateRangeFilterProps
   };
 
   return (
-    <Card className="mb-6 p-4">
+    <Card data-tour="dashboard-period" className="mb-6 p-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         {/* Presets rápidos */}
         <div className="flex flex-wrap items-center gap-1.5">

@@ -359,16 +359,18 @@ export default function VehiclesPage() {
   return (
     <>
       <PageHeader
+        tour="vehicles"
         title="Veículos"
         description="Gestão completa da frota: cadastro, documentos, fotos e manutenção."
         actions={
-          <Button onClick={() => { setShowFipe(false); crud.openNew(); }}>
+          <Button data-tour="vehicles-new" onClick={() => { setShowFipe(false); crud.openNew(); }}>
             <Plus /> Novo veículo
           </Button>
         }
       />
 
       <DataTable
+        tour="vehicles"
         label="Veículos"
         rows={vehicles}
         columns={columns}
@@ -394,6 +396,7 @@ export default function VehiclesPage() {
 
       {/* Cadastro simplificado: 14 campos, assistência FIPE opcional. */}
       <FormDialog
+        tour="vehicles-form"
         open={crud.formOpen}
         onOpenChange={crud.setFormOpen}
         title={crud.editing ? `Editar veículo · ${crud.editing.plate}` : "Novo veículo"}
@@ -402,7 +405,7 @@ export default function VehiclesPage() {
         size="lg"
       >
         {/* Bloco Auxiliar: Leitor inteligente de CRLV-e */}
-        <div className="rounded-xl border border-magenta/30 bg-magenta/5 p-4 sm:col-span-2">
+        <div data-tour="vehicles-form-crlv" className="rounded-xl border border-magenta/30 bg-magenta/5 p-4 sm:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-white">Importar dados do CRLV-e (PDF / Foto)</p>
@@ -435,7 +438,7 @@ export default function VehiclesPage() {
           />
         </Field>
 
-        <div className="grid gap-2 sm:col-span-2"><Button type="button" variant="outline" onClick={() => { toast.message("Consulta por placa não configurada. Localize o veículo pela Tabela FIPE ou preencha manualmente."); setShowFipe(true); }}>Consultar veículo</Button><Button type="button" variant="ghost" onClick={() => { setShowFipe(!showFipe); if(showFipe) set("fipeSelection", undefined); }}>{showFipe ? "Preencher manualmente" : "Buscar na FIPE"}</Button></div>
+        <div data-tour="vehicles-form-fipe" className="grid gap-2 sm:col-span-2"><Button type="button" variant="outline" onClick={() => { toast.message("Consulta por placa não configurada. Localize o veículo pela Tabela FIPE ou preencha manualmente."); setShowFipe(true); }}>Consultar veículo</Button><Button type="button" variant="ghost" onClick={() => { setShowFipe(!showFipe); if(showFipe) set("fipeSelection", undefined); }}>{showFipe ? "Preencher manualmente" : "Buscar na FIPE"}</Button></div>
         {showFipe && <FipePicker initialType={draft.vehicleType === "Moto" ? "motorcycles" : "cars"} onUse={(d,p) => { set("vehicleType", FIPE_TYPES[d.type].label); set("brand", d.brand); if (!draft.model.trim()) set("model", d.model); if(d.modelYear !== 32000) set("yearModel", String(d.modelYear)); set("fuel", d.fuel); set("fipeSelection", { detail: d, parameters: p }); toast.success("Versão selecionada. Fabricação, Renavam, chassi e compra continuam manuais."); }} />}
         {draft.fipeSelection && <p className="text-xs text-muted sm:col-span-2">Versão FIPE: {draft.fipeSelection.detail.model} · código {draft.fipeSelection.detail.code}. Ano modelo: {draft.yearModel || "Zero KM"}; fabricação é o campo 5.</p>}
 
@@ -567,7 +570,7 @@ export default function VehiclesPage() {
         </Field>
 
         {/* 13. FOTOS DO VEÍCULO (Múltiplas Fotos) */}
-        <div className="rounded-xl border border-line bg-surface p-4 sm:col-span-2">
+        <div data-tour="vehicles-form-photos" className="rounded-xl border border-line bg-surface p-4 sm:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-white">13. Fotos do Veículo</p>
@@ -618,7 +621,7 @@ export default function VehiclesPage() {
         </div>
 
         {/* 14. DOCUMENTO DO VEÍCULO (CRLV) */}
-        <div className="rounded-xl border border-line bg-surface p-4 sm:col-span-2">
+        <div data-tour="vehicles-form-document" className="rounded-xl border border-line bg-surface p-4 sm:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-white">14. Documento do Veículo (CRLV)</p>

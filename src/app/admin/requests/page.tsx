@@ -169,18 +169,19 @@ function RequestsContent() {
   return (
     <>
       <PageHeader
+        tour="requests"
         title="Solicitações de Locação"
         description="Novos cadastros e pedidos de aluguel feitos pelo aplicativo. Analise os documentos e aprove em 1 clique."
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div data-tour="requests-kpis" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Aguardando análise" value={pendingCount} icon={Clock} accent={pendingCount > 0} />
         <StatCard label="Locações aprovadas" value={approvedCount} icon={CheckCircle2} />
         <StatCard label="Não aprovadas" value={rejectedCount} icon={XCircle} />
         <StatCard label="Total recebidas" value={total} icon={FileCheck} />
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div data-tour="requests-filters" className="mb-4 flex flex-wrap items-center gap-2">
         {(
           [
             ["pending", `Pendentes (${pendingCount})`],
@@ -200,7 +201,7 @@ function RequestsContent() {
         ))}
       </div>
 
-      <Card>
+      <Card data-tour="requests-list">
         {!requests ? (
           <EmptyState title="Carregando solicitações..." />
         ) : !filtered.length ? (
@@ -210,7 +211,7 @@ function RequestsContent() {
           />
         ) : (
           <ul className="divide-y divide-line">
-            {filtered.map((r) => {
+            {filtered.map((r, i) => {
               const statusCfg = STATUS_CONFIG[r.status] ?? STATUS_CONFIG.pending;
               return (
                 <li key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5">
@@ -244,7 +245,7 @@ function RequestsContent() {
                     </div>
                   </div>
 
-                  <Button size="sm" variant={r.status === "pending" ? "primary" : "outline"} onClick={() => openModal(r)}>
+                  <Button data-tour={i === 0 ? "requests-open" : undefined} size="sm" variant={r.status === "pending" ? "primary" : "outline"} onClick={() => openModal(r)}>
                     <Eye className="size-4" /> {r.status === "pending" ? "Analisar e aprovar" : "Ver detalhes"}
                   </Button>
                 </li>
@@ -291,7 +292,7 @@ function RequestsContent() {
                 </Button>
               </div>
             ) : (
-              <div className="flex w-full flex-wrap items-center justify-end gap-2">
+              <div data-tour="requests-decision" className="flex w-full flex-wrap items-center justify-end gap-2">
                 <Button variant="outline" onClick={() => setCorrecting(true)}>
                   Pedir ajuste
                 </Button>

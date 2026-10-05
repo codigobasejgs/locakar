@@ -9,6 +9,8 @@ import type { HelpAccess } from "../types";
 interface HelpContextValue {
   access: HelpAccess;
   base: string;
+  /** Dono do progresso: conta + locadora (ou "tenant" + slug). */
+  identity: { user: string; org: string; orgName: string };
   progress: HelpProgress;
   setProgress: (update: (p: HelpProgress) => HelpProgress) => void;
 }
@@ -19,7 +21,7 @@ export const useHelp = () => {
   return ctx;
 };
 
-const storage = () => {
+export const helpStorage = () => {
   try {
     return window.localStorage;
   } catch {
@@ -27,13 +29,14 @@ const storage = () => {
   }
 };
 
-/** Progresso local por conta + locadora. Remonta (key) ao trocar de conta ou locadora: nada se mistura. */
-function PersonalHelp({ access, base, storageKey, children }: { access: HelpAccess; base: string; storageKey: string; children: React.ReactNode }) {
+/** Progresso local por conta + locadora. Ao trocar de conta ou locadora a chave muda e o progresso é relido: nada se mistura. */
+function PersonalHelp({ access, base, identity, children }: { access: HelpAccess; base: string; identity: HelpContextValue["identity"]; children: React.ReactNode }) {
+  const storageKey = progressKey(identity.user, identity.org);
   const [progress, update] = useState<HelpProgress>(emptyProgress);
   // Lê depois de montar: o HTML do servidor não conhece o localStorage (evita divergência de hidratação).
   useEffect(() => {
     let alive = true;
-    Promise.resolve().then(() => alive && update(readProgress(storage(), storageKey)));
+    Promise.resolve().then(() => alive && update(readProgress(helpStorage(), storageKey)));
     return () => {
       alive = false;
     };
@@ -42,12 +45,12 @@ function PersonalHelp({ access, base, storageKey, children }: { access: HelpAcce
     (fn: (p: HelpProgress) => HelpProgress) =>
       update((p) => {
         const next = fn(p);
-        saveProgress(storage(), storageKey, next);
+        saveProgress(helpStorage(), storageKey, next);
         return next;
       }),
     [storageKey],
   );
-  return <Context.Provider value={{ access, base, progress, setProgress }}>{children}</Context.Provider>;
+  return <Context.Provider value={{ access, base, identity, progress, setProgress }}>{children}</Context.Provider>;
 }
 
 /** Painel: perfil vem da locadora ativa; enquanto carrega, role null = só o que não exige permissão (nada). */
@@ -74,8 +77,7 @@ export function AdminHelpProvider({ children }: { children: React.ReactNode }) {
   }, [org?.id]);
   return (
     <PersonalHelp
-      key={`${session.id}:${org?.id ?? "none"}`}
-      storageKey={progressKey(session.id, org?.id ?? "none")}
+      identity={{ user: session.id, org: org?.id ?? "none", orgName: org?.branding?.displayName || org?.name || "" }}
       base="/admin/ajuda"
       access={{ audience: "admin", role, platformAdmin: session.platformAdmin, modules: session.modules }}
     >
@@ -87,7 +89,7 @@ export function AdminHelpProvider({ children }: { children: React.ReactNode }) {
 /** Locatário: só conteúdo público do locatário. O slug apenas separa o progresso local por locadora. */
 export function TenantHelpProvider({ slug, children }: { slug: string; children: React.ReactNode }) {
   return (
-    <PersonalHelp key={slug} storageKey={progressKey("tenant", slug)} base="/ajuda" access={{ audience: "tenant", role: null, platformAdmin: false }}>
+    <PersonalHelp key={slug} identity={{ user: "tenant", org: slug, orgName: "" }} base="/ajuda" access={{ audience: "tenant", role: null, platformAdmin: false }}>
       {children}
     </PersonalHelp>
   );

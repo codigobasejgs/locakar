@@ -32,7 +32,15 @@ const articles = walk(path.join(root, 'src/help/content')).filter((f) => f.endsW
   const value = JSON.parse(fs.readFileSync(f, 'utf8')); return Array.isArray(value) ? value : [];
 }).filter((a) => a.slug && a.routes);
 const pages = sources.filter((s) => ['page', 'tenant-page'].includes(s.kind) && !/\/ajuda(?:\/|$)/.test(s.route));
-const coverage = pages.map((s) => ({ file: s.file, route: s.route, articles: articles.filter((a) => a.routes.includes(s.route)).map((a) => a.slug) }));
+// Tours: rotas lidas do registro (texto), sem executar código do app.
+const tourText = walk(path.join(root, 'src/help/content/tours')).filter((f) => f.endsWith('.ts')).map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+// Telas de módulo têm tour próprio; a rota do passo com [param] também conta (ex.: detalhes da locação).
+const tourRoutes = [
+  ...tourText.matchAll(/kind: "(?:modulo|configuracao|geral)"[^\n]*?route: "([^"#]+)/g),
+  ...tourText.matchAll(/\bid: "settings-[a-z]+"[^\n]*?route: "([^"#]+)/g),
+  ...tourText.matchAll(/\broute: "(\/admin[^"#]*\[[^"]+)"/g),
+].map((m) => m[1]);
+const coverage = pages.map((s) => ({ file: s.file, route: s.route, articles: articles.filter((a) => a.routes.includes(s.route)).map((a) => a.slug), tour: tourRoutes.includes(s.route) }));
 const oldPath = path.join(root, 'docs/help-source-review.json');
 const old = fs.existsSync(oldPath) ? JSON.parse(fs.readFileSync(oldPath, 'utf8')) : {};
 const needsReview = articles.flatMap((a) => (a.sources || []).filter((f) => old[f] && sources.find((s) => s.file === f)?.hash !== old[f]).map((f) => ({ article: a.slug, source: f, status: 'NEEDS_REVIEW' })));
@@ -42,5 +50,5 @@ fs.writeFileSync(path.join(root, 'docs/help-inventory.json'), JSON.stringify(rep
 if (process.argv.includes('--reviewed')) {
   fs.writeFileSync(oldPath, JSON.stringify(Object.fromEntries(sources.map((s) => [s.file, s.hash])), null, 2) + '\n');
 }
-console.log(`Inventário: ${pages.length} telas; ${report.apiRoutes.length} rotas técnicas; ${articles.length} artigos; ${coverage.filter((s) => s.articles.length).length} telas relacionadas; ${needsReview.length} fontes pedem revisão.`);
+console.log(`Inventário: ${pages.length} telas; ${report.apiRoutes.length} rotas técnicas; ${articles.length} artigos; ${coverage.filter((s) => s.articles.length).length} telas relacionadas; ${coverage.filter((s) => s.tour).length} telas com tour; ${needsReview.length} fontes pedem revisão.`);
 console.log('Arquivo: docs/help-inventory.json. Sem acesso ao banco ou a serviços externos.');

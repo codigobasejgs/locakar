@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Clock } from "lucide-react";
 import { useHelp } from "@/help/components/context";
 import { Breadcrumb } from "@/help/components/ui";
+import { ModuleTours } from "@/help/components/tour-catalog";
 import { articles, categoryName } from "@/help";
 import { canReadArticle, featureAvailable } from "@/help/access";
 
@@ -26,6 +27,8 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
         <h1 className="font-display text-2xl font-bold text-white">{title}</h1>
         <p className="mt-1 text-xs text-muted">{list.length} tutorial(is) disponível(is) nesta categoria.</p>
       </header>
+
+      <ModuleTours module={slug} />
 
       {!list.length ? (
         <p className="text-sm text-muted">Nenhum artigo disponível para o seu perfil nesta categoria.</p>

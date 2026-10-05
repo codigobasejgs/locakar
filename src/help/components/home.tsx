@@ -11,6 +11,8 @@ import { useHelp } from "@/help/components/context";
 import { articles, categoriesOf, trainingsOf } from "@/help";
 import { canReadArticle, featureAvailable } from "@/help/access";
 import { searchArticles } from "@/help/search";
+import { searchTours } from "@/help/tours";
+import { LearnSection, TourRow, useTourCatalog } from "./tour-catalog";
 
 export default function HelpHomePage() {
   const { access, base, progress } = useHelp();
@@ -19,6 +21,8 @@ export default function HelpHomePage() {
   const visible = useMemo(() => articles.filter((a) => canReadArticle(a, access) && featureAvailable(a, access)), [access]);
   const categories = useMemo(() => categoriesOf(visible), [visible]);
   const searchResults = useMemo(() => query.trim() ? searchArticles(visible, query) : [], [visible, query]);
+  const tourCatalog = useTourCatalog();
+  const tourResults = useMemo(() => (query.trim() && tourCatalog ? searchTours(tourCatalog, query).slice(0, 4) : []), [tourCatalog, query]);
 
   const trainings = useMemo(() => trainingsOf(visible).slice(0, 6), [visible]);
   const completedCount = progress.completed.length;
@@ -54,12 +58,20 @@ export default function HelpHomePage() {
         <section aria-label="Resultados da pesquisa" className="space-y-4">
           <div className="flex items-center justify-between border-b border-line pb-2">
             <h2 className="font-display text-sm font-semibold text-white">
-              Resultados para &quot;{query}&quot; ({searchResults.length})
+              Resultados para &quot;{query}&quot; ({searchResults.length + tourResults.length})
             </h2>
             <Button size="sm" variant="ghost" onClick={() => setQuery("")}>Limpar busca</Button>
           </div>
 
-          {!searchResults.length ? (
+          {tourResults.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-soft">Tours guiados</h3>
+              <ul className="grid gap-2">{tourResults.map(({ tour }) => <TourRow key={tour.id} tour={tour} compact />)}</ul>
+              {searchResults.length > 0 && <h3 className="pt-2 text-xs font-semibold uppercase tracking-wider text-muted">Guias e perguntas</h3>}
+            </div>
+          )}
+
+          {!searchResults.length && !tourResults.length ? (
             <Card className="p-8 text-center space-y-3">
               <AlertCircle className="size-8 text-amber-400 mx-auto" />
               <p className="font-semibold text-white">Não encontramos uma resposta exata.</p>
@@ -67,7 +79,7 @@ export default function HelpHomePage() {
                 Tente outras palavras (ex.: carro, aluguel, recebimento), navegue pelas categorias abaixo ou confira o FAQ da locadora.
               </p>
             </Card>
-          ) : (
+          ) : !searchResults.length ? null : (
             <div className="grid gap-3 sm:grid-cols-2">
               {searchResults.map(({ article }) => (
                 <Link
@@ -91,6 +103,8 @@ export default function HelpHomePage() {
       {/* Comece por aqui */}
       {!query.trim() && (
         <>
+          <LearnSection limit={6} />
+
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <div>

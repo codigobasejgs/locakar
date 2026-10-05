@@ -159,16 +159,17 @@ export default function FinesPage() {
   return (
     <>
       <PageHeader
+        tour="fines"
         title="Multas"
         description="Autuações, prazos de identificação do condutor e pagamentos."
         actions={
-          <Button onClick={crud.openNew}>
+          <Button data-tour="fines-new" onClick={crud.openNew}>
             <Plus /> Nova multa
           </Button>
         }
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div data-tour="fines-kpis" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Em aberto" value={open.length} icon={TriangleAlert} accent />
         <StatCard label="Valor em aberto" value={formatCurrency(open.reduce((a, f) => a + f.amount, 0))} icon={CircleDollarSign} />
         <StatCard label="Identificar condutor" value={idPending.length} icon={UserSearch} />
@@ -176,7 +177,7 @@ export default function FinesPage() {
       </div>
 
       {(upcoming.length > 0 || idPending.length > 0) && (
-        <Card className="mb-6 border-amber-400/25 bg-amber-400/[0.04] p-4">
+        <Card data-tour="fines-alerts" className="mb-6 border-amber-400/25 bg-amber-400/[0.04] p-4">
           <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-amber-200">
             <BellRing className="size-4" /> Alertas de vencimento
           </p>
@@ -198,6 +199,7 @@ export default function FinesPage() {
       )}
 
       <DataTable
+        tour="fines"
         label="Multas"
         rows={fines}
         columns={columns}
@@ -210,7 +212,7 @@ export default function FinesPage() {
         onDelete={crud.setDeleting}
       />
 
-      <FormDialog open={crud.formOpen} onOpenChange={crud.setFormOpen} title={crud.editing ? "Editar multa" : "Nova multa"} onSubmit={submit} size="lg">
+      <FormDialog tour="fines-form" open={crud.formOpen} onOpenChange={crud.setFormOpen} title={crud.editing ? "Editar multa" : "Nova multa"} onSubmit={submit} size="lg">
         <Field label="Placa" htmlFor="f-vehicleId" required>
           <Select {...bind("vehicleId")} options={vehicleOptions} placeholder="Selecione" required />
         </Field>

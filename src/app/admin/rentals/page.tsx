@@ -68,16 +68,17 @@ export default function RentalsPage() {
   return (
     <>
       <PageHeader
+        tour="rentals"
         title="Locações"
         description="Contratos, recebimentos semanais e quilometragem."
         actions={
-          <Button onClick={crud.openNew}>
+          <Button data-tour="rentals-new" onClick={crud.openNew}>
             <Plus /> Nova locação
           </Button>
         }
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div data-tour="rentals-kpis" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Ativas" value={active.length} icon={KeyRound} accent />
         <StatCard label="Atrasadas" value={rentals.filter((r) => r.status === "late").length} icon={TriangleAlert} />
         <StatCard label="Total recebido" value={formatCurrency(received)} icon={CircleDollarSign} />
@@ -85,6 +86,7 @@ export default function RentalsPage() {
       </div>
 
       <DataTable
+        tour="rentals"
         label="Locações"
         rows={rentals}
         columns={columns}
