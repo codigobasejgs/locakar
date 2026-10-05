@@ -11,7 +11,8 @@ import { loadSignatureConfig, syncProcess, webhookSecret } from "@/lib/server/si
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-type Payload = { event?: { id?: unknown; type?: unknown; created_at?: unknown; data?: { id?: unknown; document?: unknown } } };
+type EventData = { id?: unknown; document?: unknown; object?: unknown };
+type Payload = { event?: { id?: unknown; type?: unknown; created_at?: unknown; data?: EventData } };
 
 export const POST = scoped(async function POST(request: Request) {
   const raw = await request.text();
@@ -25,7 +26,9 @@ export const POST = scoped(async function POST(request: Request) {
   const event = body.event;
   const eventId = typeof event?.id === "string" ? event.id : "";
   const type = typeof event?.type === "string" ? event.type : "";
-  const documentId = typeof event?.data?.document === "string" ? event.data.document : typeof event?.data?.id === "string" ? event.data.id : "";
+  // Documentação mostra os dois formatos: recurso direto em data ou aninhado em data.object.
+  const data = (event?.data?.object && typeof event.data.object === "object" ? event.data.object : event?.data) as EventData | undefined;
+  const documentId = typeof data?.document === "string" ? data.document : typeof data?.id === "string" ? data.id : "";
   if (!/^[A-Za-z0-9_-]{8,120}$/.test(eventId) || !/^[a-z_]+\.[a-z_]+$/.test(type) || !/^[A-Za-z0-9_-]{8,160}$/.test(documentId)) {
     return Response.json({ error: "evento inválido" }, { status: 400 });
   }
