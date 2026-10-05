@@ -86,7 +86,7 @@ Alvos por tela: Dashboard (`dashboard-onboarding`, `-period`, `-kpis-fleet`, `-k
 
 ## Banco de dados
 
-Migration `supabase/migrations/20261015000000_guided_tours.sql` (rodar uma vez no SQL Editor; idempotente):
+Migration `supabase/migrations/20261015000100_guided_tours.sql` (rodar uma vez no SQL Editor; idempotente):
 
 - `tour_progress`: PK `(user_id, organization_id, tour_id)`; RLS: cada pessoa lê e grava só o próprio progresso, e só na locadora ativa (`current_org_id()`).
 - `tour_events`: `tour_started`, `tour_step_viewed`, `tour_skipped`, `tour_completed`, `tour_abandoned`, `help_opened`; só ids e número do passo, **nunca texto digitado**. Insert pela própria pessoa na própria locadora; leitura só Super Admin.

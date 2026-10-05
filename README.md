@@ -356,7 +356,7 @@ Como funciona:
 - Busca local (`src/help/search.ts`): ignora acentos, entende sinônimos ("carro" = "veículo") e erros de digitação. Sem IA e sem serviço externo.
 - Permissões (`src/help/access.ts`): artigos seguem `can(role, permission)` de `src/lib/permissions.ts` e os módulos do plano.
 - Progresso, favoritos, recentes e avaliação ficam no aparelho (`localStorage`, por usuário e locadora).
-- Tour guiado: conteúdo em `src/help/content/tours/`, motor em `src/help/components/tour-*.tsx`, alvos `data-tour` nas telas. Só observa: abre formulários vazios para mostrar onde preencher e nunca salva. Progresso também em `tour_progress` (migration `20261015000000_guided_tours.sql`).
+- Tour guiado: conteúdo em `src/help/content/tours/`, motor em `src/help/components/tour-*.tsx`, alvos `data-tour` nas telas. Só observa: abre formulários vazios para mostrar onde preencher e nunca salva. Progresso também em `tour_progress` (migration `20261015000100_guided_tours.sql`).
 
 Comandos:
 
