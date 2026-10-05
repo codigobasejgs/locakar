@@ -22,6 +22,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AsaasSettings } from "@/components/admin/asaas-settings";
+import { AutentiqueSettings } from "@/components/admin/autentique-settings";
 import { ContractTemplatesManager } from "@/components/admin/contract-templates-manager";
 import { FipeSettings } from "@/components/admin/fipe-settings";
 import { InfinitePaySettingsFields } from "@/components/admin/infinitepay-settings";
@@ -332,6 +333,9 @@ export default function SettingsPage() {
             </Section>
             <Section tour="settings-selsyn" icon={SlidersHorizontal} title="Selsyn — Rastreamento" description="Posições, sensores e relatórios da frota. Credencial somente no backend.">
               <SelsynSettings />
+            </Section>
+            <Section id="config-autentique" tour="settings-autentique" icon={FileSignature} title="Autentique — Assinatura eletrônica" description="Envia o contrato da locação para assinatura do locatário e da locadora. Token e segredo ficam cifrados no servidor.">
+              <AutentiqueSettings />
             </Section>
             <Section tour="settings-whatsapp" icon={MessageCircle} title="WhatsApp das notificações" description="Número que envia contratos, termos, comprovantes, multas e alertas automáticos aos clientes.">
               <WhatsAppConnection />

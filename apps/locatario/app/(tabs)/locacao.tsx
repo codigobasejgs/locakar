@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { AlertTriangle, Car, ClipboardCheck, FileText, MessageCircle } from "lucide-react-native";
 import { Linking, StyleSheet, Text, View } from "react-native";
+import { ContractSignature } from "../../components/domain/ContractSignature";
 import { Empty } from "../../components/domain/Screen";
 import { SectionHeader, TenantPage } from "../../components/layout/TenantPage";
 import { ErrorBanner } from "../../components/domain/ScreenState";
@@ -88,6 +89,7 @@ export default function LocacaoScreen() {
                   {b.graceDays ? `, após ${b.graceDays} dia(s) do vencimento` : ""}.
                 </Text>
               )}
+              {r.contract && <ContractSignature contract={r.contract} onChanged={refresh} />}
             </Card>
             </View>
 

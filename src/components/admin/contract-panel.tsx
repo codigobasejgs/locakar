@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
+import { AutentiqueProcess, SendToAutentique, useContractSignature, type SignatureState } from "@/components/admin/contract-signature";
 import { useAdminData, useLookups } from "@/hooks/use-admin-data";
 import { sendEmailRequest } from "@/lib/api";
 import { authService } from "@/lib/auth";
@@ -29,7 +30,7 @@ export function openDocument(html: string) {
 }
 
 export function ContractPanel({ rental }: { rental: Rental }) {
-  const { data, settings, create, update } = useAdminData();
+  const { data, settings, create, update, reload } = useAdminData();
   const { clientById, vehicleById } = useLookups();
   const [busy, setBusy] = useState(false);
   const [cancelling, setCancelling] = useState<Contract | null>(null);
@@ -41,6 +42,14 @@ export function ContractPanel({ rental }: { rental: Rental }) {
     .filter((c) => c.rentalId === rental.id)
     .sort((a, b) => (b.issuedAt ?? "").localeCompare(a.issuedAt ?? ""));
   const active = contracts.find((c) => c.status !== "cancelled");
+  const { info: signature, setInfo: setSignature } = useContractSignature(active?.id);
+  const process = signature?.state?.process;
+  // Envio ativo na Autentique substitui o link próprio até concluir, recusar ou ser cancelado.
+  const external = !!process && ["sending", "awaiting_signature", "partially_signed"].includes(process.status);
+  const onSignature = (state: SignatureState | null) => {
+    setSignature((cur) => (cur ? { ...cur, state } : cur));
+    if (active && state?.process.status === "completed") void reload("contracts", active.id);
+  };
 
   const signUrl = (c: Contract) => `${window.location.origin}/assinar/${c.token}`;
 
@@ -137,8 +146,16 @@ export function ContractPanel({ rental }: { rental: Rental }) {
           </>
         )}
 
-        {active?.status === "pending" && (
+        {active && signature?.state && <AutentiqueProcess contractId={active.id} state={signature.state} onChange={onSignature} />}
+
+        {active?.status === "pending" && !external && (
           <>
+            {signature?.enabled && client && (
+              <div className="flex flex-wrap items-center gap-2">
+                <SendToAutentique contract={active} client={client} environment={signature.environment} onSent={onSignature} />
+                <span className="text-xs text-muted">Recomendado: assinatura eletrônica pela Autentique.</span>
+              </div>
+            )}
             <p className="text-sm text-zinc-300">
               O cliente assina pelo link com CPF, selfie e assinatura.{" "}
               O link vai por e-mail{client?.email ? <> (<strong>{client.email}</strong>)</> : " (cliente sem e-mail)"} e WhatsApp ({client?.phone ?? "sem telefone"}).

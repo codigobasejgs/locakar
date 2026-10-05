@@ -6,15 +6,38 @@
     "category": "locatario",
     "audience": "tenant",
     "permission": "read",
-    "keywords": ["app", "locatario", "login", "senha", "entrar", "acesso", "link"],
-    "aliases": ["como o cliente entra no app", "acesso do motorista", "login do locatario", "como baixar o app"],
-    "routes": ["/locatario", "/locatario/login", "/locatario/cadastro", "/locatario/vincular"],
-    "sources": ["apps/locatario/app/(auth)/login.tsx", "apps/locatario/app/(auth)/cadastro.tsx"],
+    "keywords": [
+      "app",
+      "locatario",
+      "login",
+      "senha",
+      "entrar",
+      "acesso",
+      "link"
+    ],
+    "aliases": [
+      "como o cliente entra no app",
+      "acesso do motorista",
+      "login do locatario",
+      "como baixar o app"
+    ],
+    "routes": [
+      "/locatario",
+      "/locatario/login",
+      "/locatario/cadastro",
+      "/locatario/vincular"
+    ],
+    "sources": [
+      "apps/locatario/app/(auth)/login.tsx",
+      "apps/locatario/app/(auth)/cadastro.tsx"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Navegador no celular ou computador conectado à internet."],
+    "prerequisites": [
+      "Navegador no celular ou computador conectado à internet."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse pelo link da sua locadora",
@@ -53,7 +76,10 @@
         "answer": "Sim! O motorista não paga nada para usar o aplicativo para pagar parcelas, enviar vistorias e conferir multas."
       }
     ],
-    "related": ["app-locatario-pagar-pix-cartao", "app-locatario-fazer-vistoria"],
+    "related": [
+      "app-locatario-pagar-pix-cartao",
+      "app-locatario-fazer-vistoria"
+    ],
     "result": "O cliente entra na Área do Cliente e visualiza o veículo e as cobranças em andamento."
   },
   {
@@ -63,15 +89,36 @@
     "category": "locatario",
     "audience": "tenant",
     "permission": "read",
-    "keywords": ["pagar", "pix", "comprovante", "qr code", "copia e cola", "cartao", "parcela"],
-    "aliases": ["como o cliente paga", "enviar comprovante pelo app", "pagar com pix no celular"],
-    "routes": ["/locatario/pagamentos", "/pagamento/infinitepay"],
-    "sources": ["apps/locatario/app/(tabs)/pagamentos.tsx", "apps/locatario/services/upload.ts", "src/app/pagamento/infinitepay/page.tsx"],
+    "keywords": [
+      "pagar",
+      "pix",
+      "comprovante",
+      "qr code",
+      "copia e cola",
+      "cartao",
+      "parcela"
+    ],
+    "aliases": [
+      "como o cliente paga",
+      "enviar comprovante pelo app",
+      "pagar com pix no celular"
+    ],
+    "routes": [
+      "/locatario/pagamentos",
+      "/pagamento/infinitepay"
+    ],
+    "sources": [
+      "apps/locatario/app/(tabs)/pagamentos.tsx",
+      "apps/locatario/services/upload.ts",
+      "src/app/pagamento/infinitepay/page.tsx"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Locação com parcelas geradas."],
+    "prerequisites": [
+      "Locação com parcelas geradas."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse a aba Pagamentos",
@@ -118,7 +165,10 @@
         "answer": "É a tela de retorno do pagamento. Assim que a InfinitePay confirmar, a parcela é baixada e você recebe a confirmação por e-mail e notificação. Toque em 'Voltar ao app' para acompanhar."
       }
     ],
-    "related": ["app-locatario-como-acessar-entrar", "app-locatario-fazer-vistoria"],
+    "related": [
+      "app-locatario-como-acessar-entrar",
+      "app-locatario-fazer-vistoria"
+    ],
     "result": "O cliente quita sua locação com agilidade e comodidade pelo próprio celular."
   },
   {
@@ -128,15 +178,35 @@
     "category": "locatario",
     "audience": "tenant",
     "permission": "read",
-    "keywords": ["vistoria", "fotos", "checklist", "avarias", "km", "painel", "assinatura"],
-    "aliases": ["como fazer vistoria no app", "tirar fotos da vistoria", "vistoria do motorista"],
-    "routes": ["/locatario/veiculo", "/locatario/vistoria"],
-    "sources": ["apps/locatario/app/vistoria.tsx", "apps/locatario/app/veiculo.tsx"],
+    "keywords": [
+      "vistoria",
+      "fotos",
+      "checklist",
+      "avarias",
+      "km",
+      "painel",
+      "assinatura"
+    ],
+    "aliases": [
+      "como fazer vistoria no app",
+      "tirar fotos da vistoria",
+      "vistoria do motorista"
+    ],
+    "routes": [
+      "/locatario/veiculo",
+      "/locatario/vistoria"
+    ],
+    "sources": [
+      "apps/locatario/app/vistoria.tsx",
+      "apps/locatario/app/veiculo.tsx"
+    ],
     "minutes": 5,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Veículo entregue e locação ativa."],
+    "prerequisites": [
+      "Veículo entregue e locação ativa."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Meu veículo > Vistoria",
@@ -179,7 +249,10 @@
         "answer": "Sim! A equipe analisa as fotos no painel administrativo e o status muda para 'Conferida'."
       }
     ],
-    "related": ["app-locatario-como-acessar-entrar", "app-locatario-relatar-problema"],
+    "related": [
+      "app-locatario-como-acessar-entrar",
+      "app-locatario-relatar-problema"
+    ],
     "result": "O estado exato do veículo fica arquivado e protegido com fotos de alta qualidade."
   },
   {
@@ -189,15 +262,34 @@
     "category": "locatario",
     "audience": "tenant",
     "permission": "read",
-    "keywords": ["ocorrencia", "problema", "pane", "pneu", "acidente", "guincho", "suporte"],
-    "aliases": ["como relatar problema no app", "chamar guincho", "carro quebrou", "avisar batida"],
-    "routes": ["/locatario/ocorrencias"],
-    "sources": ["apps/locatario/app/ocorrencias.tsx"],
+    "keywords": [
+      "ocorrencia",
+      "problema",
+      "pane",
+      "pneu",
+      "acidente",
+      "guincho",
+      "suporte"
+    ],
+    "aliases": [
+      "como relatar problema no app",
+      "chamar guincho",
+      "carro quebrou",
+      "avisar batida"
+    ],
+    "routes": [
+      "/locatario/ocorrencias"
+    ],
+    "sources": [
+      "apps/locatario/app/ocorrencias.tsx"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Locação em andamento."],
+    "prerequisites": [
+      "Locação em andamento."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Relatar problema",
@@ -235,7 +327,10 @@
         "answer": "Sim! A própria tela possui o botão verde 'WhatsApp da locadora' para contato rápido com o atendente."
       }
     ],
-    "related": ["app-locatario-como-acessar-entrar", "app-locatario-fazer-vistoria"],
+    "related": [
+      "app-locatario-como-acessar-entrar",
+      "app-locatario-fazer-vistoria"
+    ],
     "result": "Ocorrência registrada e equipe da locadora acionada para resolver o problema."
   },
   {
@@ -245,15 +340,32 @@
     "category": "locatario",
     "audience": "tenant",
     "permission": "read",
-    "keywords": ["documentos", "cnh", "endereco", "comprovante", "foto", "renovacao"],
-    "aliases": ["como mandar cnh pelo app", "atualizar endereco", "enviar documento locatario"],
-    "routes": ["/locatario/documentos"],
-    "sources": ["apps/locatario/app/documentos.tsx"],
+    "keywords": [
+      "documentos",
+      "cnh",
+      "endereco",
+      "comprovante",
+      "foto",
+      "renovacao"
+    ],
+    "aliases": [
+      "como mandar cnh pelo app",
+      "atualizar endereco",
+      "enviar documento locatario"
+    ],
+    "routes": [
+      "/locatario/documentos"
+    ],
+    "sources": [
+      "apps/locatario/app/documentos.tsx"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Aparelho celular com câmera disponível."],
+    "prerequisites": [
+      "Aparelho celular com câmera disponível."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Documentos",
@@ -291,7 +403,77 @@
         "answer": "Sim! Todas as fotos são guardadas em armazenamento seguro com criptografia e acesso exclusivo da equipe da locadora conforme a LGPD."
       }
     ],
-    "related": ["app-locatario-como-acessar-entrar", "app-locatario-pagar-pix-cartao"],
+    "related": [
+      "app-locatario-como-acessar-entrar",
+      "app-locatario-pagar-pix-cartao"
+    ],
     "result": "Seu cadastro fica 100% regularizado para renovações de contratos e novas retiradas."
+  },
+  {
+    "difficulty": "Iniciante",
+    "updated": "2026-10-05",
+    "version": 1,
+    "slug": "app-locatario-assinar-contrato",
+    "title": "Como assinar meu contrato",
+    "description": "Assine o contrato de locação pelo ambiente seguro da Autentique e confira a confirmação no app.",
+    "category": "locatario",
+    "audience": "tenant",
+    "permission": "read",
+    "keywords": [
+      "contrato",
+      "assinar",
+      "autentique",
+      "assinatura"
+    ],
+    "aliases": [
+      "onde assino o contrato",
+      "assinar contrato pelo app"
+    ],
+    "routes": [
+      "/locatario/locacao"
+    ],
+    "sources": [
+      "apps/locatario/components/domain/ContractSignature.tsx"
+    ],
+    "minutes": 2,
+    "prerequisites": [
+      "Contrato enviado pela locadora."
+    ],
+    "steps": [
+      {
+        "title": "Passo 1 — Abra Minha locação",
+        "text": "No card Contrato, veja o status da assinatura e toque em 'Assinar contrato'."
+      },
+      {
+        "title": "Passo 2 — Assine na Autentique",
+        "text": "Toque em 'Continuar para a Autentique'. Leia o contrato e assine no ambiente seguro da Autentique."
+      },
+      {
+        "title": "Passo 3 — Volte ao app",
+        "text": "Ao voltar, o app mostra 'Estamos verificando sua assinatura…' e consulta a Autentique. Quando todos assinarem, aparece 'Ver contrato assinado'."
+      }
+    ],
+    "tips": [
+      "Você também pode assinar pelo e-mail ou WhatsApp enviado pela Autentique."
+    ],
+    "warnings": [
+      "Assine somente pelo link oficial da Autentique. A locadora nunca pede senha ou código por mensagem."
+    ],
+    "problems": [
+      {
+        "question": "Assinei, mas o app ainda mostra pendente",
+        "answer": "Aguarde alguns segundos e toque em 'Verificar assinatura'. A confirmação vem da Autentique, não do retorno ao app."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Por que depois aparece 'Aguardando a locadora'?",
+        "answer": "Depois de você, o representante da locadora também assina. O contrato fica 'Assinado' quando todos concluem."
+      }
+    ],
+    "related": [
+      "app-locatario-como-acessar-entrar"
+    ],
+    "result": "Seu contrato fica assinado e disponível para consulta no app."
   }
 ]

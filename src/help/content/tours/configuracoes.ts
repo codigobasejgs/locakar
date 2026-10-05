@@ -67,12 +67,13 @@ export const configuracoes: TourDef[] = [
   },
   {
     ...base, id: "settings-integracoes", title: "Configurações: Integrações", module: "integracoes", route: "/admin/settings#integracoes", permission: "integrations", minutes: 3,
-    description: "Tabela FIPE, rastreamento, WhatsApp e e-mails.", article: "configurar-whatsapp-notificacoes",
-    keywords: ["integracao", "fipe", "whatsapp", "email", "selsyn", "rastreamento"], aliases: ["conectar whatsapp", "ativar fipe", "configurar email"],
+    description: "Tabela FIPE, rastreamento, assinatura Autentique, WhatsApp e e-mails.", article: "configurar-whatsapp-notificacoes",
+    keywords: ["integracao", "fipe", "whatsapp", "email", "selsyn", "rastreamento", "autentique"], aliases: ["conectar whatsapp", "ativar fipe", "configurar email"],
     learn: ["ativar a Tabela FIPE", "conectar o WhatsApp das notificações", "testar o envio de e-mails"], next: "settings-preferencias",
     steps: [
       { id: "fipe", title: "Tabela FIPE", content: "Mantém o valor de referência dos carros atualizado todo mês. Funciona no modo público; um token próprio é opcional.", target: "settings-fipe", feature: "fipe", article: "configurar-tabela-fipe" },
       { id: "selsyn", title: "Rastreamento", content: "Mostra se o rastreamento Selsyn está configurado e permite verificar as permissões da credencial.", target: "settings-selsyn", feature: "tracking" },
+      { id: "autentique", title: "Autentique", content: "Assinatura eletrônica dos contratos pela conta Autentique da {org}. Salve e teste o token no Sandbox, cadastre o aviso automático de status e só depois ative.", target: "settings-autentique", article: "configurar-autentique-assinatura" },
       { id: "whatsapp", title: "WhatsApp das notificações", content: "Conecte um número lendo o QR Code com o WhatsApp do celular. Por ele saem contratos, cobranças, comprovantes e alertas aos clientes. Envie um teste para conferir.", target: "settings-whatsapp", quick: true },
       { id: "email", title: "E-mails", content: "Contratos, termos de vistoria, comprovantes e multas também saem por e-mail com a identidade da {org}. Envie um teste para conferir.", target: "settings-email", quick: true },
     ],

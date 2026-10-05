@@ -13,7 +13,9 @@
     "help:validate": "node scripts/help/validate.cjs && node scripts/check-help.cjs",
     "help:audit": "node scripts/help/audit.cjs",
     "help:screenshots": "node scripts/help/screenshots.cjs",
-    "help:e2e": "node scripts/help/e2e-tours.cjs"
+    "help:e2e": "node scripts/help/e2e-tours.cjs",
+    "check:signature": "node scripts/check-signature.cjs",
+    "autentique:smoke": "node scripts/autentique-smoke.cjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

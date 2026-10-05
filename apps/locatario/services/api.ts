@@ -98,6 +98,7 @@ export interface TenantRental {
     graceDays: number;
   } | null;
   installments: Installment[];
+  contract?: { id: string; status: string; signature: { processId: string; status: "sending" | "awaiting_signature" | "partially_signed" | "completed" | "rejected" | "expired" | "cancelled" | "error" } | null } | null;
 }
 
 export interface PendingRentalRequest {

@@ -820,7 +820,7 @@
   {
     "slug": "gerar-assinar-contrato",
     "title": "Como emitir contratos e coletar assinatura eletrônica",
-    "description": "Gere contratos digitais, envie o link por WhatsApp/e-mail e confira a assinatura com selfie do cliente.",
+    "description": "Gere o contrato da locação e colete a assinatura pela Autentique ou pelo link próprio com selfie.",
     "category": "contratos",
     "audience": "admin",
     "permission": "operate",
@@ -832,13 +832,17 @@
       "link",
       "docx",
       "pdf",
-      "termo"
+      "termo",
+      "autentique",
+      "enviar para assinatura"
     ],
     "aliases": [
       "como assinar contrato",
       "enviar contrato pro cliente",
       "gerar contrato de aluguel",
-      "assinatura digital"
+      "assinatura digital",
+      "enviar contrato pela autentique",
+      "como enviar um contrato para assinatura"
     ],
     "routes": [
       "/admin/rentals/[id]",
@@ -846,12 +850,13 @@
     ],
     "sources": [
       "src/components/admin/contract-panel.tsx",
-      "src/app/assinar/[token]/page.tsx"
+      "src/app/assinar/[token]/page.tsx",
+      "src/components/admin/contract-signature.tsx"
     ],
     "minutes": 4,
     "difficulty": "Iniciante",
-    "updated": "2026-10-02",
-    "version": 1,
+    "updated": "2026-10-05",
+    "version": 2,
     "prerequisites": [
       "Dados da empresa preenchidos em Configurações e locação criada."
     ],
@@ -861,7 +866,38 @@
         "text": "No painel 'Contrato e assinatura', clique em 'Gerar contrato'. O sistema resolve todas as cláusulas e variáveis de forma determinística."
       },
       {
-        "title": "Passo 2 — Envie o link ao cliente",
+        "title": "Passo 2 — Com a Autentique ativa, clique em 'Enviar para assinatura'",
+        "text": "Confira na janela de confirmação o locatário, o e-mail, o celular e o CPF mascarado. Ao confirmar, o sistema guarda o PDF enviado com seu hash SHA-256 e cria o documento na Autentique: o locatário assina primeiro e o representante da locadora depois. Enquanto o envio estiver ativo, o link próprio fica oculto.",
+        "fields": [
+          {
+            "name": "Atualizar status",
+            "required": false,
+            "description": "Consulta a Autentique agora. Use se o webhook atrasar."
+          },
+          {
+            "name": "Copiar link",
+            "required": false,
+            "description": "Gera o link exclusivo do locatário para você mandar pelo seu canal."
+          },
+          {
+            "name": "Reenviar lembrete",
+            "required": false,
+            "description": "Pede à Autentique para reenviar o pedido aos signatários pendentes."
+          },
+          {
+            "name": "Baixar assinado",
+            "required": false,
+            "description": "Aparece quando todos assinaram; abre o PDF final guardado no armazenamento privado."
+          },
+          {
+            "name": "Cancelar envio",
+            "required": false,
+            "description": "Bloqueia o documento na Autentique. O contrato volta a aceitar o fluxo próprio ou um novo envio."
+          }
+        ]
+      },
+      {
+        "title": "Passo 3 — Envie o link ao cliente",
         "text": "Com o contrato gerado com status 'Aguardando assinatura', você pode:",
         "fields": [
           {
@@ -882,12 +918,12 @@
         ]
       },
       {
-        "title": "Passo 3 — Assinatura pelo cliente",
+        "title": "Passo 4 — Assinatura pelo cliente",
         "text": "Na tela de assinatura, o cliente lê as cláusulas, preenche o CPF para confirmação de identidade, captura uma selfie e desenha a assinatura com o dedo ou mouse.",
         "image": "/help/screenshots/contracts/sign.webp"
       },
       {
-        "title": "Passo 4 — Conferência do contrato assinado",
+        "title": "Passo 5 — Conferência do contrato assinado",
         "text": "Ao assinar, o status muda para 'Assinado'. O painel exibe a data, hora, IP de assinatura e a foto selfie do cliente para auditoria e segurança jurídica."
       }
     ],
@@ -896,7 +932,8 @@
     ],
     "warnings": [
       "Contratos com status 'Assinado' são protegidos pelo banco de dados e não podem ser alterados nem excluídos.",
-      "Se precisar mudar regras de uma locação já assinada, cancele o contrato e gere um novo."
+      "Se precisar mudar regras de uma locação já assinada, cancele o contrato e gere um novo.",
+      "O contrato só fica 'Assinado' quando a Autentique confirma todas as assinaturas. Voltar do link não conta como assinatura."
     ],
     "problems": [
       {
@@ -908,11 +945,24 @@
       {
         "question": "A assinatura tem validade jurídica?",
         "answer": "Sim, segue o padrão de assinatura eletrônica com registro de consentimento, hash SHA-256, selfie biométrica, IP, carimbo de tempo e validação de CPF."
+      },
+      {
+        "question": "Preciso de conta na Autentique?",
+        "answer": "Sim. Cada locadora usa a própria conta e o próprio token, configurados em Configurações → Integrações → Autentique. Sem isso, o fluxo próprio com selfie continua igual."
+      },
+      {
+        "question": "Posso alterar um contrato já enviado?",
+        "answer": "Não. O texto enviado fica congelado com hash. Cancele o envio, cancele o contrato e gere um novo."
+      },
+      {
+        "question": "O locatário não recebeu o pedido. O que faço?",
+        "answer": "Confira o e-mail ou celular no cadastro, use 'Reenviar lembrete' ou 'Copiar link'. O locatário também pode assinar pelo app, em Minha locação."
       }
     ],
     "related": [
       "modelos-contrato-ia",
-      "vistoria-entrega-devolucao"
+      "vistoria-entrega-devolucao",
+      "configurar-autentique-assinatura"
     ],
     "result": "O contrato fica arquivado de forma inviolável e a locação ganha respaldo documental."
   },

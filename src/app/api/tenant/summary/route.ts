@@ -47,6 +47,15 @@ export const GET = scoped(async function GET(request: Request) {
     const asaasOn = Boolean(availability?.methods.some((m) => m.id === "asaas" && usable(m)));
     const ipOn = Boolean(availability?.infinitepay.checkout);
     const rentalIds = (rentals.data ?? []).map((r) => r.id);
+    // Contrato do próprio cliente: só status e ações. Link de assinatura é criado sob demanda em /api/tenant/contracts.
+    const { data: signatureRows } = process.env.SUPABASE_SECRET_KEY && rentalIds.length
+      ? await serviceDb().from("contracts").select("id,rental_id,status,contract_signature_processes(id,status,created_at)").in("rental_id", rentalIds).neq("status", "cancelled")
+      : { data: [] };
+    const contractByRental = new Map<string, { id: string; status: string; signature: { processId: string; status: string } | null }>();
+    for (const c of signatureRows ?? []) {
+      const processes = ((c.contract_signature_processes ?? []) as { id: string; status: string; created_at: string }[]).sort((a, b) => b.created_at.localeCompare(a.created_at));
+      if (!contractByRental.has(c.rental_id)) contractByRental.set(c.rental_id, { id: c.id, status: c.status, signature: processes[0] ? { processId: processes[0].id, status: processes[0].status } : null });
+    }
     const { data: transactions } = process.env.SUPABASE_SECRET_KEY && rentalIds.length
       ? await serviceDb().from("payment_transactions").select("id,provider,rental_id,receipt_id,status,billing_type,invoice_url,checkout_url,amount_cents,created_at")
         .in("rental_id", rentalIds).in("status", ["link_created"]).order("created_at", { ascending: false })
@@ -81,6 +90,7 @@ export const GET = scoped(async function GET(request: Request) {
         returned: r.returnInspection ? { at: r.returnInspection.at, km: r.returnInspection.km, fuel: r.returnInspection.fuel } : null,
         vehicle: vehicleById.get(r.vehicleId) ?? null,
         billing: r.billing ?? null,
+        contract: contractByRental.get(r.id) ?? null,
         installments: r.receipts.map((x) => {
           const c = settings ? chargeFor(r, x.id, settings.pix, today) : null;
           const proof = latestProof.get(`${r.id}:${x.id}`);

@@ -6,15 +6,36 @@
     "category": "empresa",
     "audience": "admin",
     "permission": "settings",
-    "keywords": ["empresa", "cnpj", "razao social", "dados", "endereco", "telefone", "whatsapp", "link"],
-    "aliases": ["como mudar dados da locadora", "alterar cnpj da locadora", "configurar empresa", "link da locadora"],
-    "routes": ["/admin/settings#empresa"],
-    "sources": ["src/components/admin/org-company-form.tsx", "src/components/admin/org-share-link.tsx"],
+    "keywords": [
+      "empresa",
+      "cnpj",
+      "razao social",
+      "dados",
+      "endereco",
+      "telefone",
+      "whatsapp",
+      "link"
+    ],
+    "aliases": [
+      "como mudar dados da locadora",
+      "alterar cnpj da locadora",
+      "configurar empresa",
+      "link da locadora"
+    ],
+    "routes": [
+      "/admin/settings#empresa"
+    ],
+    "sources": [
+      "src/components/admin/org-company-form.tsx",
+      "src/components/admin/org-share-link.tsx"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Perfil de Proprietário (owner) ou Administrador (admin)."],
+    "prerequisites": [
+      "Perfil de Proprietário (owner) ou Administrador (admin)."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Configurações > Empresa",
@@ -29,12 +50,40 @@
         "title": "Passo 3 — Preencha os dados cadastrais",
         "text": "Preencha os campos da empresa:",
         "fields": [
-          { "name": "Nome fantasia", "required": true, "description": "Nome da marca exibido no topo do painel e no app.", "example": "Rota Sul Locadora" },
-          { "name": "Razão social", "required": false, "description": "Nome empresarial que sairá no cabeçalho dos contratos.", "example": "Rota Sul Locadora de Veículos Ltda" },
-          { "name": "CNPJ / CPF", "required": false, "description": "Documento da empresa para qualificação contratual.", "example": "00.000.000/0000-00" },
-          { "name": "E-mail principal", "required": false, "description": "E-mail de contato oficial da locadora." },
-          { "name": "WhatsApp de atendimento", "required": false, "description": "Número acionado quando os clientes clicam em 'Falar no WhatsApp' no app.", "example": "(19) 99999-0000" },
-          { "name": "Endereço completo, Cidade, UF e CEP", "required": false, "description": "Localização física da locadora utilizada nos contratos e termos de vistoria." }
+          {
+            "name": "Nome fantasia",
+            "required": true,
+            "description": "Nome da marca exibido no topo do painel e no app.",
+            "example": "Rota Sul Locadora"
+          },
+          {
+            "name": "Razão social",
+            "required": false,
+            "description": "Nome empresarial que sairá no cabeçalho dos contratos.",
+            "example": "Rota Sul Locadora de Veículos Ltda"
+          },
+          {
+            "name": "CNPJ / CPF",
+            "required": false,
+            "description": "Documento da empresa para qualificação contratual.",
+            "example": "00.000.000/0000-00"
+          },
+          {
+            "name": "E-mail principal",
+            "required": false,
+            "description": "E-mail de contato oficial da locadora."
+          },
+          {
+            "name": "WhatsApp de atendimento",
+            "required": false,
+            "description": "Número acionado quando os clientes clicam em 'Falar no WhatsApp' no app.",
+            "example": "(19) 99999-0000"
+          },
+          {
+            "name": "Endereço completo, Cidade, UF e CEP",
+            "required": false,
+            "description": "Localização física da locadora utilizada nos contratos e termos de vistoria."
+          }
         ]
       },
       {
@@ -60,7 +109,10 @@
         "answer": "O endereço exclusivo (slug) pode ser alterado através do Super Admin da plataforma. Cuidado: alterar quebra QR Codes já impressos."
       }
     ],
-    "related": ["configurar-identidade-visual", "gerar-assinar-contrato"],
+    "related": [
+      "configurar-identidade-visual",
+      "gerar-assinar-contrato"
+    ],
     "result": "Sua locadora identificada com profissionalismo em todos os documentos emitidos."
   },
   {
@@ -70,15 +122,35 @@
     "category": "aparencia",
     "audience": "admin",
     "permission": "settings",
-    "keywords": ["marca", "logo", "cores", "white label", "personalizar", "contraste", "tema"],
-    "aliases": ["como mudar o logo", "trocar cor do sistema", "personalizar aparencia", "marca propria"],
-    "routes": ["/admin/settings#aparencia"],
-    "sources": ["src/components/admin/org-branding-form.tsx", "src/lib/contrast.ts"],
+    "keywords": [
+      "marca",
+      "logo",
+      "cores",
+      "white label",
+      "personalizar",
+      "contraste",
+      "tema"
+    ],
+    "aliases": [
+      "como mudar o logo",
+      "trocar cor do sistema",
+      "personalizar aparencia",
+      "marca propria"
+    ],
+    "routes": [
+      "/admin/settings#aparencia"
+    ],
+    "sources": [
+      "src/components/admin/org-branding-form.tsx",
+      "src/lib/contrast.ts"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Arquivos de imagem da sua logomarca (PNG, JPG ou WebP até 1 MB)."],
+    "prerequisites": [
+      "Arquivos de imagem da sua logomarca (PNG, JPG ou WebP até 1 MB)."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Configurações > Aparência",
@@ -89,9 +161,21 @@
         "title": "Passo 2 — Envie os logotipos da sua empresa",
         "text": "Você pode enviar até 3 variações da sua marca:",
         "fields": [
-          { "name": "Logo Principal (Fundo escuro)", "required": false, "description": "Logotipo para uso no painel escuro e topo do app." },
-          { "name": "Logo para Fundo Claro", "required": false, "description": "Versão com cores escuras para contraste em fundos brancos (caso não envie, usa a principal)." },
-          { "name": "Ícone / Logo Compacto", "required": false, "description": "Versão circular ou quadrada para ícones e favicon do navegador." }
+          {
+            "name": "Logo Principal (Fundo escuro)",
+            "required": false,
+            "description": "Logotipo para uso no painel escuro e topo do app."
+          },
+          {
+            "name": "Logo para Fundo Claro",
+            "required": false,
+            "description": "Versão com cores escuras para contraste em fundos brancos (caso não envie, usa a principal)."
+          },
+          {
+            "name": "Ícone / Logo Compacto",
+            "required": false,
+            "description": "Versão circular ou quadrada para ícones e favicon do navegador."
+          }
         ]
       },
       {
@@ -126,7 +210,10 @@
         "answer": "Sim! O aplicativo web e os links de cobrança exibem o seu logotipo, o nome da sua locadora e as suas cores personalizadas."
       }
     ],
-    "related": ["configurar-empresa-dados", "onboarding-checklist-locadora"],
+    "related": [
+      "configurar-empresa-dados",
+      "onboarding-checklist-locadora"
+    ],
     "result": "O sistema passa a operar como uma plataforma exclusiva com a identidade da sua locadora."
   },
   {
@@ -136,15 +223,37 @@
     "category": "equipe",
     "audience": "admin",
     "permission": "team",
-    "keywords": ["equipe", "usuario", "convite", "papel", "permissao", "gerente", "operador", "financeiro"],
-    "aliases": ["como cadastrar funcionario", "adicionar usuario", "convidar colaborador", "mudar funcao de funcionario"],
-    "routes": ["/admin/settings#equipe", "/convite/[token]"],
-    "sources": ["src/components/admin/org-team-manager.tsx", "src/lib/permissions.ts"],
+    "keywords": [
+      "equipe",
+      "usuario",
+      "convite",
+      "papel",
+      "permissao",
+      "gerente",
+      "operador",
+      "financeiro"
+    ],
+    "aliases": [
+      "como cadastrar funcionario",
+      "adicionar usuario",
+      "convidar colaborador",
+      "mudar funcao de funcionario"
+    ],
+    "routes": [
+      "/admin/settings#equipe",
+      "/convite/[token]"
+    ],
+    "sources": [
+      "src/components/admin/org-team-manager.tsx",
+      "src/lib/permissions.ts"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Perfil de Proprietário (owner) ou Administrador (admin)."],
+    "prerequisites": [
+      "Perfil de Proprietário (owner) ou Administrador (admin)."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Configurações > Equipe",
@@ -159,11 +268,31 @@
         "title": "Passo 3 — Informe o e-mail e a função",
         "text": "Digite o e-mail do colaborador e selecione o papel correspondente à atuação dele:",
         "fields": [
-          { "name": "Administrador", "required": false, "description": "Acesso amplo a cadastros, contratos, financeiro, configurações e equipe." },
-          { "name": "Gerente", "required": false, "description": "Opera frota, reservas, clientes, contratos e relatórios financeiros." },
-          { "name": "Financeiro", "required": false, "description": "Acesso focado em cobranças, baixas, despesas e faturamento." },
-          { "name": "Operador", "required": false, "description": "Operação diária de veículos, vistorias, multas e locações." },
-          { "name": "Somente leitura", "required": false, "description": "Visualiza os dados sem permissão de alteração ou exclusão." }
+          {
+            "name": "Administrador",
+            "required": false,
+            "description": "Acesso amplo a cadastros, contratos, financeiro, configurações e equipe."
+          },
+          {
+            "name": "Gerente",
+            "required": false,
+            "description": "Opera frota, reservas, clientes, contratos e relatórios financeiros."
+          },
+          {
+            "name": "Financeiro",
+            "required": false,
+            "description": "Acesso focado em cobranças, baixas, despesas e faturamento."
+          },
+          {
+            "name": "Operador",
+            "required": false,
+            "description": "Operação diária de veículos, vistorias, multas e locações."
+          },
+          {
+            "name": "Somente leitura",
+            "required": false,
+            "description": "Visualiza os dados sem permissão de alteração ou exclusão."
+          }
         ]
       },
       {
@@ -195,7 +324,10 @@
         "answer": "O único proprietário não pode ser removido diretamente. É necessário atribuir outro proprietário antes para garantir a continuidade da locadora."
       }
     ],
-    "related": ["configurar-empresa-dados", "onboarding-checklist-locadora"],
+    "related": [
+      "configurar-empresa-dados",
+      "onboarding-checklist-locadora"
+    ],
     "result": "Sua equipe trabalha de forma colaborativa com níveis de acesso seguros e organizados."
   },
   {
@@ -205,15 +337,33 @@
     "category": "textos",
     "audience": "admin",
     "permission": "settings",
-    "keywords": ["textos", "mensagens", "boas-vindas", "suporte", "rodape", "cobranca", "personalizar"],
-    "aliases": ["como mudar mensagem do app", "alterar texto de boas vindas", "personalizar mensagens"],
-    "routes": ["/admin/settings#textos"],
-    "sources": ["src/components/admin/org-texts-form.tsx"],
+    "keywords": [
+      "textos",
+      "mensagens",
+      "boas-vindas",
+      "suporte",
+      "rodape",
+      "cobranca",
+      "personalizar"
+    ],
+    "aliases": [
+      "como mudar mensagem do app",
+      "alterar texto de boas vindas",
+      "personalizar mensagens"
+    ],
+    "routes": [
+      "/admin/settings#textos"
+    ],
+    "sources": [
+      "src/components/admin/org-texts-form.tsx"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Acesso a Configurações."],
+    "prerequisites": [
+      "Acesso a Configurações."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Configurações > Textos",
@@ -224,10 +374,26 @@
         "title": "Passo 2 — Ajuste as mensagens da locadora",
         "text": "Personalize conforme o tom da sua empresa:",
         "fields": [
-          { "name": "Mensagem de boas-vindas do aplicativo", "required": false, "description": "Exibida no topo da tela inicial do aplicativo do cliente (até 400 caracteres)." },
-          { "name": "Observação nas cobranças", "required": false, "description": "Texto orientativo que acompanha as faturas e cobranças PIX." },
-          { "name": "Instruções de suporte", "required": false, "description": "Orientações sobre horário de atendimento ou plantão 24h em caso de emergência." },
-          { "name": "Texto de rodapé", "required": false, "description": "Mensagem institucional curta exibida no final das páginas (até 200 caracteres)." }
+          {
+            "name": "Mensagem de boas-vindas do aplicativo",
+            "required": false,
+            "description": "Exibida no topo da tela inicial do aplicativo do cliente (até 400 caracteres)."
+          },
+          {
+            "name": "Observação nas cobranças",
+            "required": false,
+            "description": "Texto orientativo que acompanha as faturas e cobranças PIX."
+          },
+          {
+            "name": "Instruções de suporte",
+            "required": false,
+            "description": "Orientações sobre horário de atendimento ou plantão 24h em caso de emergência."
+          },
+          {
+            "name": "Texto de rodapé",
+            "required": false,
+            "description": "Mensagem institucional curta exibida no final das páginas (até 200 caracteres)."
+          }
         ]
       },
       {
@@ -257,7 +423,10 @@
         "answer": "Contém todos os registros da sua organização em formato JSON estruturado, garantindo conformidade com a portabilidade de dados da LGPD."
       }
     ],
-    "related": ["configurar-empresa-dados", "configurar-identidade-visual"],
+    "related": [
+      "configurar-empresa-dados",
+      "configurar-identidade-visual"
+    ],
     "result": "Sua comunicação alinhada com as necessidades e identidade da sua empresa."
   },
   {
@@ -267,15 +436,34 @@
     "category": "integracoes",
     "audience": "admin",
     "permission": "integrations",
-    "keywords": ["fipe", "tabela fipe", "valor de mercado", "patrimonio", "depreciacao", "cotacao"],
-    "aliases": ["como configurar fipe", "consultar tabela fipe", "atualizar valor fipe do carro"],
-    "routes": ["/admin/settings#integracoes", "/admin/vehicles"],
-    "sources": ["src/components/admin/fipe-settings.tsx", "src/lib/server/fipe.ts"],
+    "keywords": [
+      "fipe",
+      "tabela fipe",
+      "valor de mercado",
+      "patrimonio",
+      "depreciacao",
+      "cotacao"
+    ],
+    "aliases": [
+      "como configurar fipe",
+      "consultar tabela fipe",
+      "atualizar valor fipe do carro"
+    ],
+    "routes": [
+      "/admin/settings#integracoes",
+      "/admin/vehicles"
+    ],
+    "sources": [
+      "src/components/admin/fipe-settings.tsx",
+      "src/lib/server/fipe.ts"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Acesso a Configurações > Integrações."],
+    "prerequisites": [
+      "Acesso a Configurações > Integrações."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Configurações > Integrações",
@@ -314,7 +502,10 @@
         "answer": "Não. O 'Valor Pago / Investido' é o que sua locadora pagou na aquisição. O 'Valor FIPE' é a cotação média de mercado calculada mensalmente pela Fundação Instituto de Pesquisas Econômicas."
       }
     ],
-    "related": ["cadastrar-veiculo", "visao-360-veiculo"],
+    "related": [
+      "cadastrar-veiculo",
+      "visao-360-veiculo"
+    ],
     "result": "Patrimônio da frota valorado de acordo com as cotações oficiais do mercado brasileiro."
   },
   {
@@ -324,15 +515,32 @@
     "category": "integracoes",
     "audience": "admin",
     "permission": "integrations",
-    "keywords": ["whatsapp", "qrcode", "conexao", "evolution", "notificacao", "alerta"],
-    "aliases": ["como conectar whatsapp", "escanear qrcode whatsapp", "ativar mensagens whatsapp"],
-    "routes": ["/admin/settings#integracoes"],
-    "sources": ["src/components/admin/whatsapp-connection.tsx"],
+    "keywords": [
+      "whatsapp",
+      "qrcode",
+      "conexao",
+      "evolution",
+      "notificacao",
+      "alerta"
+    ],
+    "aliases": [
+      "como conectar whatsapp",
+      "escanear qrcode whatsapp",
+      "ativar mensagens whatsapp"
+    ],
+    "routes": [
+      "/admin/settings#integracoes"
+    ],
+    "sources": [
+      "src/components/admin/whatsapp-connection.tsx"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Aparelho celular com o WhatsApp oficial da locadora em mãos."],
+    "prerequisites": [
+      "Aparelho celular com o WhatsApp oficial da locadora em mãos."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Configurações > Integrações",
@@ -370,7 +578,10 @@
         "answer": "Sim! As conversas ficam disponíveis no celular físico da locadora normalmente, permitindo atendimento humano aos locatários."
       }
     ],
-    "related": ["cobrar-whatsapp-pix", "gerar-assinar-contrato"],
+    "related": [
+      "cobrar-whatsapp-pix",
+      "gerar-assinar-contrato"
+    ],
     "result": "Sua locadora comunicando em tempo real com clientes direto no aplicativo de mensagens mais usado."
   },
   {
@@ -380,15 +591,34 @@
     "category": "notificacoes",
     "audience": "admin",
     "permission": "settings",
-    "keywords": ["notificacao", "push", "sino", "alertas", "navegador", "celular", "vapid"],
-    "aliases": ["como ativar notificacoes", "nao recebo notificacao", "ativar sino de alerta"],
-    "routes": ["/admin/settings#preferencias"],
-    "sources": ["src/components/admin/push-settings.tsx", "src/hooks/use-notifications.ts"],
+    "keywords": [
+      "notificacao",
+      "push",
+      "sino",
+      "alertas",
+      "navegador",
+      "celular",
+      "vapid"
+    ],
+    "aliases": [
+      "como ativar notificacoes",
+      "nao recebo notificacao",
+      "ativar sino de alerta"
+    ],
+    "routes": [
+      "/admin/settings#preferencias"
+    ],
+    "sources": [
+      "src/components/admin/push-settings.tsx",
+      "src/hooks/use-notifications.ts"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Navegador compatível (Chrome, Edge, Safari iOS 16.4+, Firefox)."],
+    "prerequisites": [
+      "Navegador compatível (Chrome, Edge, Safari iOS 16.4+, Firefox)."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Configurações > Preferências",
@@ -427,7 +657,10 @@
         "answer": "Não! A tecnologia Web Push entrega as mensagens mesmo com o navegador em segundo plano ou com a aba fechada."
       }
     ],
-    "related": ["configurar-empresa-dados", "detalhes-locacao-gestao"],
+    "related": [
+      "configurar-empresa-dados",
+      "detalhes-locacao-gestao"
+    ],
     "result": "Você nunca perde um contrato assinado ou pagamento de locação na sua operação."
   },
   {
@@ -437,15 +670,34 @@
     "category": "plataforma",
     "audience": "platform",
     "permission": "settings",
-    "keywords": ["super admin", "plataforma", "locadoras", "prorrogar", "suspender", "suporte", "excluir"],
-    "aliases": ["como acessar super admin", "gerenciar locadoras saas", "painel master"],
-    "routes": ["/plataforma/admin"],
-    "sources": ["src/app/plataforma/admin/page.tsx", "src/app/api/platform/admin/route.ts"],
+    "keywords": [
+      "super admin",
+      "plataforma",
+      "locadoras",
+      "prorrogar",
+      "suspender",
+      "suporte",
+      "excluir"
+    ],
+    "aliases": [
+      "como acessar super admin",
+      "gerenciar locadoras saas",
+      "painel master"
+    ],
+    "routes": [
+      "/plataforma/admin"
+    ],
+    "sources": [
+      "src/app/plataforma/admin/page.tsx",
+      "src/app/api/platform/admin/route.ts"
+    ],
     "minutes": 5,
     "difficulty": "Intermediário",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Conta cadastrada na tabela de Super Admins da plataforma (is_platform_admin)."],
+    "prerequisites": [
+      "Conta cadastrada na tabela de Super Admins da plataforma (is_platform_admin)."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse /plataforma/admin",
@@ -460,11 +712,31 @@
         "title": "Passo 3 — Gerencie cada locadora",
         "text": "Clique no botão 'Gerenciar' da locadora desejada para abrir o painel master:",
         "fields": [
-          { "name": "Status e plano", "required": false, "description": "Alterne entre Ativa, Teste grátis, Pagamento pendente e Suspensa, ou troque o plano da assinatura." },
-          { "name": "Prorrogar teste", "required": false, "description": "Informe a quantidade de dias (1 a 365) para estender o período de avaliação da locadora." },
-          { "name": "Dados e endereço", "required": false, "description": "Edite o nome, CNPJ, contatos ou o endereço exclusivo (slug /l/...) da locadora." },
-          { "name": "Equipe da locadora", "required": false, "description": "Adicione colaboradores por e-mail, altere papéis ou remova membros." },
-          { "name": "Acesso de suporte", "required": false, "description": "Entra no painel daquela locadora como administrador para apoiar o cliente com auditoria registrada." }
+          {
+            "name": "Status e plano",
+            "required": false,
+            "description": "Alterne entre Ativa, Teste grátis, Pagamento pendente e Suspensa, ou troque o plano da assinatura."
+          },
+          {
+            "name": "Prorrogar teste",
+            "required": false,
+            "description": "Informe a quantidade de dias (1 a 365) para estender o período de avaliação da locadora."
+          },
+          {
+            "name": "Dados e endereço",
+            "required": false,
+            "description": "Edite o nome, CNPJ, contatos ou o endereço exclusivo (slug /l/...) da locadora."
+          },
+          {
+            "name": "Equipe da locadora",
+            "required": false,
+            "description": "Adicione colaboradores por e-mail, altere papéis ou remova membros."
+          },
+          {
+            "name": "Acesso de suporte",
+            "required": false,
+            "description": "Entra no painel daquela locadora como administrador para apoiar o cliente com auditoria registrada."
+          }
         ]
       },
       {
@@ -492,7 +764,96 @@
         "answer": "Não. Este painel é invisível e inacessível para contas de locadoras convencionais."
       }
     ],
-    "related": ["configurar-empresa-dados", "gerenciar-equipe-permissoes"],
+    "related": [
+      "configurar-empresa-dados",
+      "gerenciar-equipe-permissoes"
+    ],
     "result": "Gestão centralizada de todas as empresas e clientes da plataforma SaaS."
+  },
+  {
+    "difficulty": "Intermediário",
+    "updated": "2026-10-05",
+    "version": 1,
+    "slug": "configurar-autentique-assinatura",
+    "title": "Como configurar a Autentique para assinar contratos",
+    "description": "Conecte a conta Autentique da locadora, cadastre o webhook e teste em Sandbox antes de usar em Produção.",
+    "category": "configuracoes",
+    "audience": "admin",
+    "permission": "integrations",
+    "keywords": [
+      "autentique",
+      "assinatura",
+      "contrato",
+      "token",
+      "webhook",
+      "sandbox"
+    ],
+    "aliases": [
+      "ativar autentique",
+      "integrar autentique",
+      "assinatura eletronica autentique"
+    ],
+    "routes": [
+      "/admin/settings#integracoes"
+    ],
+    "sources": [
+      "src/components/admin/autentique-settings.tsx",
+      "src/app/api/signature/config/route.ts",
+      "src/app/api/webhooks/autentique/route.ts"
+    ],
+    "minutes": 5,
+    "prerequisites": [
+      "Conta na Autentique (painel.autentique.com.br) e permissão de Integrações no sistema."
+    ],
+    "steps": [
+      {
+        "title": "Passo 1 — Gere o token na Autentique",
+        "text": "No painel da Autentique, abra Perfil → API e copie o token. Comece pelo ambiente Sandbox."
+      },
+      {
+        "title": "Passo 2 — Salve e teste o token",
+        "text": "Em Configurações → Integrações → Autentique, escolha Sandbox, cole o token, clique em 'Salvar token' e depois em 'Testar conexão'. O token fica cifrado no servidor; a tela mostra só os últimos 4 caracteres."
+      },
+      {
+        "title": "Passo 3 — Cadastre o webhook",
+        "text": "Copie a URL do webhook exibida na tela e cadastre no painel da Autentique, com os eventos de documento e de assinatura. Use o mesmo segredo nos dois lados: cole o segredo da Autentique ou deixe vazio para gerar um e copie-o na hora."
+      },
+      {
+        "title": "Passo 4 — Defina o representante e ative",
+        "text": "Informe o e-mail do representante da locadora, escolha lembrete e ordem de assinatura e clique em 'Salvar e ativar'. Faça um envio de teste com dados fictícios antes de trocar para Produção."
+      }
+    ],
+    "tips": [
+      "Sandbox não consome créditos, mas os documentos de teste são apagados pela Autentique após alguns dias.",
+      "'Desativar novos envios' não interrompe os processos já enviados: eles continuam sincronizando."
+    ],
+    "warnings": [
+      "Nunca use dados reais de clientes no Sandbox.",
+      "Não compartilhe o token por chat ou e-mail; cole direto na tela de Integrações."
+    ],
+    "problems": [
+      {
+        "question": "Aparece 'Configure SIGNATURE_ENCRYPTION_KEY'",
+        "answer": "O servidor precisa da chave de criptografia. Peça ao responsável técnico para configurá-la antes de salvar o token."
+      },
+      {
+        "question": "O status não muda depois da assinatura",
+        "answer": "Confira se a URL e o segredo do webhook são iguais nos dois painéis. Enquanto isso, use 'Atualizar status' no contrato."
+      }
+    ],
+    "faq": [
+      {
+        "question": "Cada locadora usa a própria conta?",
+        "answer": "Sim. Token, webhook e créditos são de cada locadora. Uma locadora não enxerga os documentos de outra."
+      },
+      {
+        "question": "Quanto custa?",
+        "answer": "Os créditos e planos são cobrados pela Autentique, direto na conta da locadora."
+      }
+    ],
+    "related": [
+      "gerar-assinar-contrato"
+    ],
+    "result": "A locadora envia contratos para assinatura eletrônica pela Autentique, com status e PDF assinado dentro do sistema."
   }
 ]
