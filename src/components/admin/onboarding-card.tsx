@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useAdminData } from "@/hooks/use-admin-data";
 import { useOrganization } from "@/hooks/use-organization";
 import { useTours } from "@/help/components/tour-provider";
+import { ROUTES } from "@/lib/constants";
 
 export function OnboardingCard() {
   const { org } = useOrganization();
@@ -16,15 +17,18 @@ export function OnboardingCard() {
     const hasCompany = Boolean(org?.document && org?.address);
     const hasLogo = Boolean(org?.branding?.logo || org?.branding?.logoLight);
     const hasVehicle = (data?.vehicles?.length ?? 0) > 0;
+    const hasClient = (data?.clients?.length ?? 0) > 0;
     const hasPayment = Boolean(settings.pix?.key || settings.infinitepay?.handle);
     const hasContract = (data?.contracts?.length ?? 0) > 0;
 
+    // help = tutorial da Central de Ajuda que ensina o item.
     return [
-      { id: "company", label: "Dados da empresa (CNPJ e endereço)", done: hasCompany, href: "/admin/settings#empresa", tour: "settings-empresa" },
-      { id: "logo", label: "Identidade visual (logo e cores)", done: hasLogo, href: "/admin/settings#aparencia", tour: "settings-aparencia" },
-      { id: "vehicle", label: "Cadastrar primeiro veículo", done: hasVehicle, href: "/admin/vehicles", tour: "vehicles" },
-      { id: "payment", label: "Configurar pagamentos (Pix / InfinitePay / Asaas)", done: hasPayment, href: "/admin/settings#pagamentos", tour: "settings-pagamentos" },
-      { id: "contract", label: "Configurar modelo de contrato", done: hasContract, href: "/admin/settings#contratos", tour: "settings-contratos" },
+      { id: "company", label: "Dados da empresa (CNPJ e endereço)", done: hasCompany, href: "/admin/settings#empresa", help: "configurar-empresa-dados", tour: "settings-empresa" },
+      { id: "logo", label: "Identidade visual (logo e cores)", done: hasLogo, href: "/admin/settings#aparencia", help: "configurar-identidade-visual", tour: "settings-aparencia" },
+      { id: "vehicle", label: "Cadastrar primeiro veículo", done: hasVehicle, href: "/admin/vehicles", help: "cadastrar-veiculo", tour: "vehicles" },
+      { id: "client", label: "Cadastrar primeiro cliente", done: hasClient, href: "/admin/clients", help: "cadastrar-cliente", tour: "clients" },
+      { id: "payment", label: "Configurar pagamentos (Pix / InfinitePay / Asaas)", done: hasPayment, href: "/admin/settings#pagamentos", help: "configurar-meios-pagamento", tour: "settings-pagamentos" },
+      { id: "contract", label: "Configurar modelo de contrato", done: hasContract, href: "/admin/settings#contratos", help: "modelos-contrato-ia", tour: "settings-contratos" },
     ];
   }, [org, data, settings]);
 
@@ -57,27 +61,31 @@ export function OnboardingCard() {
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {steps.map((s) => (
-          <div key={s.id} className="flex items-stretch gap-1">
-            <Link
-              href={s.href}
-              className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border border-line bg-white/[0.02] p-3 text-xs text-zinc-300 transition-colors hover:border-line-strong hover:bg-white/[0.05] hover:text-white"
-            >
+          <div key={s.id} className="flex items-center gap-1 rounded-xl border border-line bg-white/[0.02] text-xs text-zinc-300 transition-colors hover:border-line-strong">
+            <Link href={s.href} className="flex min-w-0 flex-1 items-center justify-between gap-2 p-3 hover:text-white">
               <div className="flex items-center gap-2 min-w-0">
                 {s.done ? <CheckCircle2 className="size-4 text-emerald-400 shrink-0" /> : <Circle className="size-4 text-zinc-600 shrink-0" />}
                 <span className="truncate">{s.label}</span>
               </div>
               <ChevronRight className="size-3.5 text-muted shrink-0" />
             </Link>
-            {tours && !s.done && (
-              <button
-                type="button"
-                onClick={() => void tours.start(s.tour, "quick")}
-                title="Aprender como"
-                aria-label={`Aprender como: ${s.label}`}
-                className="grid w-10 shrink-0 place-items-center rounded-xl border border-line text-brand-soft transition-colors hover:border-line-strong hover:bg-white/[0.05]"
-              >
-                <GraduationCap className="size-4" />
-              </button>
+            {!s.done && (
+              <>
+                {tours && (
+                  <button
+                    type="button"
+                    onClick={() => void tours.start(s.tour, "quick")}
+                    title="Aprender com o tour"
+                    aria-label={`Aprender com o tour: ${s.label}`}
+                    className="grid size-8 shrink-0 place-items-center rounded-lg text-brand-soft hover:bg-white/[0.05]"
+                  >
+                    <GraduationCap className="size-4" />
+                  </button>
+                )}
+                <Link href={`${ROUTES.help}/artigo/${s.help}`} className="shrink-0 px-3 py-3 text-[11px] font-semibold text-brand-soft hover:underline" aria-label={`Ver como fazer: ${s.label}`}>
+                  Como fazer
+                </Link>
+              </>
             )}
           </div>
         ))}

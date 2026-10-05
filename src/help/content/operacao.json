@@ -6,21 +6,56 @@
     "category": "veiculos",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["veiculo", "carro", "moto", "frota", "placa", "cadastro", "renavam", "chassi", "hodometro"],
-    "aliases": ["como cadastrar carro", "adicionar veiculo", "colocar carro no sistema", "cadastrar novo automovel", "registrar frota"],
-    "routes": ["/admin/vehicles"],
-    "sources": ["src/app/admin/vehicles/page.tsx", "src/lib/constants.ts"],
+    "keywords": [
+      "veiculo",
+      "carro",
+      "moto",
+      "frota",
+      "placa",
+      "cadastro",
+      "renavam",
+      "chassi",
+      "hodometro"
+    ],
+    "aliases": [
+      "como cadastrar carro",
+      "adicionar veiculo",
+      "colocar carro no sistema",
+      "cadastrar novo automovel",
+      "registrar frota"
+    ],
+    "routes": [
+      "/admin/vehicles"
+    ],
+    "sources": [
+      "src/app/admin/vehicles/page.tsx",
+      "src/lib/constants.ts"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Ter em mãos a placa, CRLV-e ou dados do documento do veículo."],
+    "prerequisites": [
+      "Ter em mãos a placa, CRLV-e ou dados do documento do veículo."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Veículos",
         "text": "No menu lateral, clique em 'Veículos'. A tela lista toda a frota cadastrada com status, placas e filtros rápidos.",
         "image": "/help/screenshots/vehicles/list.webp",
-        "caption": "Tela de Veículos com botões de ação, filtros de status/tipo e barra de busca."
+        "caption": "Tela de Veículos com botões de ação, filtros de status/tipo e barra de busca.",
+        "markers": [
+          {
+            "x": 9,
+            "y": 29.8,
+            "label": "Clique em \"Veículos\" no menu lateral"
+          },
+          {
+            "x": 87.6,
+            "y": 15.1,
+            "label": "Clique em \"Novo veículo\""
+          }
+        ]
       },
       {
         "title": "Passo 2 — Clique em 'Novo veículo'",
@@ -35,17 +70,66 @@
         "title": "Passo 4 — Preencha os campos do veículo",
         "text": "Preencha os campos obrigatórios indicados com asterisco:",
         "fields": [
-          { "name": "1. Placa", "required": true, "description": "Placa no padrão Mercosul (ABC1D23) ou tradicional (ABC1234).", "example": "ABC1D23" },
-          { "name": "2. Tipo de Veículo", "required": true, "description": "Selecione Carro, Moto, Van, Caminhão, Utilitário ou Ônibus." },
-          { "name": "3. Marca", "required": true, "description": "Fabricante do veículo.", "example": "Fiat, Renault, Chevrolet, Honda" },
-          { "name": "4. Modelo", "required": true, "description": "Modelo e versão comercial.", "example": "Mobi Like 1.0, Kwid Zen, Onix" },
-          { "name": "5. Ano de Fabricação", "required": true, "description": "Ano de fabricação (de 1950 até atual + 2).", "example": "2024" },
-          { "name": "8. Hodômetro (KM atual)", "required": true, "description": "Quilometragem atual registrada no painel do carro.", "example": "45230" },
-          { "name": "Renavam", "required": false, "description": "Código Renavam com até 11 dígitos numéricos." },
-          { "name": "Chassi", "required": false, "description": "Identificação de 17 caracteres alfanuméricos." },
-          { "name": "Cor", "required": false, "description": "Cor predominante do veículo." },
-          { "name": "Vencimento do Licenciamento", "required": false, "description": "Data limite para o pagamento anual do licenciamento." },
-          { "name": "Valor Pago / Investido (R$)", "required": false, "description": "Valor de aquisição pela locadora para cálculo de patrimônio e retorno." }
+          {
+            "name": "1. Placa",
+            "required": true,
+            "description": "Placa no padrão Mercosul (ABC1D23) ou tradicional (ABC1234).",
+            "example": "ABC1D23"
+          },
+          {
+            "name": "2. Tipo de Veículo",
+            "required": true,
+            "description": "Selecione Carro, Moto, Van, Caminhão, Utilitário ou Ônibus."
+          },
+          {
+            "name": "3. Marca",
+            "required": true,
+            "description": "Fabricante do veículo.",
+            "example": "Fiat, Renault, Chevrolet, Honda"
+          },
+          {
+            "name": "4. Modelo",
+            "required": true,
+            "description": "Modelo e versão comercial.",
+            "example": "Mobi Like 1.0, Kwid Zen, Onix"
+          },
+          {
+            "name": "5. Ano de Fabricação",
+            "required": true,
+            "description": "Ano de fabricação (de 1950 até atual + 2).",
+            "example": "2024"
+          },
+          {
+            "name": "8. Hodômetro (KM atual)",
+            "required": true,
+            "description": "Quilometragem atual registrada no painel do carro.",
+            "example": "45230"
+          },
+          {
+            "name": "Renavam",
+            "required": false,
+            "description": "Código Renavam com até 11 dígitos numéricos."
+          },
+          {
+            "name": "Chassi",
+            "required": false,
+            "description": "Identificação de 17 caracteres alfanuméricos."
+          },
+          {
+            "name": "Cor",
+            "required": false,
+            "description": "Cor predominante do veículo."
+          },
+          {
+            "name": "Vencimento do Licenciamento",
+            "required": false,
+            "description": "Data limite para o pagamento anual do licenciamento."
+          },
+          {
+            "name": "Valor Pago / Investido (R$)",
+            "required": false,
+            "description": "Valor de aquisição pela locadora para cálculo de patrimônio e retorno."
+          }
         ]
       },
       {
@@ -89,7 +173,11 @@
         "answer": "Sim, todo novo veículo salvo entra inicialmente como 'Disponível' para locação e reservas."
       }
     ],
-    "related": ["editar-excluir-veiculo", "configurar-tabela-fipe", "criar-reserva"],
+    "related": [
+      "editar-excluir-veiculo",
+      "configurar-tabela-fipe",
+      "criar-reserva"
+    ],
     "result": "O veículo é adicionado à frota e já pode ser selecionado em reservas, locações e no aplicativo do locatário."
   },
   {
@@ -99,15 +187,34 @@
     "category": "veiculos",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["editar", "atualizar", "excluir", "apagar", "remover", "hodometro", "km"],
-    "aliases": ["como mudar km do veiculo", "como excluir carro", "atualizar placa", "editar veiculo"],
-    "routes": ["/admin/vehicles"],
-    "sources": ["src/app/admin/vehicles/page.tsx"],
+    "keywords": [
+      "editar",
+      "atualizar",
+      "excluir",
+      "apagar",
+      "remover",
+      "hodometro",
+      "km"
+    ],
+    "aliases": [
+      "como mudar km do veiculo",
+      "como excluir carro",
+      "atualizar placa",
+      "editar veiculo"
+    ],
+    "routes": [
+      "/admin/vehicles"
+    ],
+    "sources": [
+      "src/app/admin/vehicles/page.tsx"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Veículo cadastrado na frota."],
+    "prerequisites": [
+      "Veículo cadastrado na frota."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Localize o veículo",
@@ -140,7 +247,10 @@
         "answer": "Os contratos já assinados preservam o conteúdo emitido para garantir validade jurídica."
       }
     ],
-    "related": ["cadastrar-veiculo", "visao-360-veiculo"],
+    "related": [
+      "cadastrar-veiculo",
+      "visao-360-veiculo"
+    ],
     "result": "Os dados do veículo ficam atualizados no painel e na vitrine da locadora."
   },
   {
@@ -150,15 +260,35 @@
     "category": "veiculos",
     "audience": "admin",
     "permission": "read",
-    "keywords": ["visao 360", "raio-x", "desempenho", "lucro", "oleo", "troca de oleo", "vistoria"],
-    "aliases": ["como ver lucro do carro", "conferir troca de oleo", "desempenho do veiculo"],
-    "routes": ["/admin", "/admin/vehicles"],
-    "sources": ["src/components/admin/vehicle-360-dialog.tsx", "src/app/admin/page.tsx"],
+    "keywords": [
+      "visao 360",
+      "raio-x",
+      "desempenho",
+      "lucro",
+      "oleo",
+      "troca de oleo",
+      "vistoria"
+    ],
+    "aliases": [
+      "como ver lucro do carro",
+      "conferir troca de oleo",
+      "desempenho do veiculo"
+    ],
+    "routes": [
+      "/admin",
+      "/admin/vehicles"
+    ],
+    "sources": [
+      "src/components/admin/vehicle-360-dialog.tsx",
+      "src/app/admin/page.tsx"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Veículos com lançamentos de locação ou manutenção no período."],
+    "prerequisites": [
+      "Veículos com lançamentos de locação ou manutenção no período."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse pelo Dashboard ou Veículos",
@@ -191,7 +321,10 @@
         "answer": "Ele contabiliza as receitas das locações do veículo menos os custos de manutenção e despesas especificamente vinculadas à placa dele."
       }
     ],
-    "related": ["cadastrar-manutencao", "cadastrar-veiculo"],
+    "related": [
+      "cadastrar-manutencao",
+      "cadastrar-veiculo"
+    ],
     "result": "Você sabe exatamente quanto cada veículo dá de retorno financeiro e quando precisa parar para manutenção."
   },
   {
@@ -201,20 +334,52 @@
     "category": "clientes",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["cliente", "locatario", "motorista", "cpf", "cnpj", "cnh", "cep", "endereco"],
-    "aliases": ["como cadastrar cliente", "adicionar locatario", "cadastrar motorista", "novo cliente"],
-    "routes": ["/admin/clients"],
-    "sources": ["src/app/admin/clients/page.tsx"],
+    "keywords": [
+      "cliente",
+      "locatario",
+      "motorista",
+      "cpf",
+      "cnpj",
+      "cnh",
+      "cep",
+      "endereco"
+    ],
+    "aliases": [
+      "como cadastrar cliente",
+      "adicionar locatario",
+      "cadastrar motorista",
+      "novo cliente"
+    ],
+    "routes": [
+      "/admin/clients"
+    ],
+    "sources": [
+      "src/app/admin/clients/page.tsx"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Dados do cliente (documento, telefone e endereço)."],
+    "prerequisites": [
+      "Dados do cliente (documento, telefone e endereço)."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Clientes",
         "text": "No menu lateral, clique em 'Clientes'. A listagem mostra os locatários com ID, nome, documento oculto para privacidade, WhatsApp e situação da CNH.",
-        "image": "/help/screenshots/clients/list.webp"
+        "image": "/help/screenshots/clients/list.webp",
+        "markers": [
+          {
+            "x": 9,
+            "y": 39.1,
+            "label": "Clique em \"Clientes\" no menu lateral"
+          },
+          {
+            "x": 87.6,
+            "y": 15.1,
+            "label": "Clique em \"Novo cliente\""
+          }
+        ]
       },
       {
         "title": "Passo 2 — Clique em 'Novo cliente'",
@@ -225,10 +390,28 @@
         "title": "Passo 3 — Identificação",
         "text": "Escolha entre 'Pessoa Física (CPF)' ou 'Pessoa Jurídica (CNPJ)', preencha o número do documento com validação oficial e informe o nome completo ou razão social.",
         "fields": [
-          { "name": "Tipo de documento", "required": true, "description": "Define a máscara e a validação oficial de CPF ou CNPJ." },
-          { "name": "CPF / CNPJ", "required": true, "description": "Documento do titular com validação de dígitos verificadores.", "example": "000.000.000-00" },
-          { "name": "Nome completo / Razão social", "required": true, "description": "Nome que sairá nos contratos e comprovantes." },
-          { "name": "Telefone principal (WhatsApp)", "required": true, "description": "Telefone com DDD para envio de contratos e cobranças PIX.", "example": "(19) 99999-0000" }
+          {
+            "name": "Tipo de documento",
+            "required": true,
+            "description": "Define a máscara e a validação oficial de CPF ou CNPJ."
+          },
+          {
+            "name": "CPF / CNPJ",
+            "required": true,
+            "description": "Documento do titular com validação de dígitos verificadores.",
+            "example": "000.000.000-00"
+          },
+          {
+            "name": "Nome completo / Razão social",
+            "required": true,
+            "description": "Nome que sairá nos contratos e comprovantes."
+          },
+          {
+            "name": "Telefone principal (WhatsApp)",
+            "required": true,
+            "description": "Telefone com DDD para envio de contratos e cobranças PIX.",
+            "example": "(19) 99999-0000"
+          }
         ]
       },
       {
@@ -263,7 +446,10 @@
         "answer": "Sim! Quando o cliente se cadastra pelo app do locatário e faz uma solicitação, o cadastro é criado automaticamente na sua base."
       }
     ],
-    "related": ["criar-reserva", "criar-locacao-contrato"],
+    "related": [
+      "criar-reserva",
+      "criar-locacao-contrato"
+    ],
     "result": "Cliente cadastrado e pronto para ter reservas ou locações criadas."
   },
   {
@@ -273,20 +459,51 @@
     "category": "reservas",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["reserva", "agendamento", "calendario", "datas", "conflito", "agenda"],
-    "aliases": ["como reservar carro", "criar agendamento", "reservar veiculo", "verificar conflito de reserva"],
-    "routes": ["/admin/reservations"],
-    "sources": ["src/app/admin/reservations/page.tsx", "src/lib/reservations.ts"],
+    "keywords": [
+      "reserva",
+      "agendamento",
+      "calendario",
+      "datas",
+      "conflito",
+      "agenda"
+    ],
+    "aliases": [
+      "como reservar carro",
+      "criar agendamento",
+      "reservar veiculo",
+      "verificar conflito de reserva"
+    ],
+    "routes": [
+      "/admin/reservations"
+    ],
+    "sources": [
+      "src/app/admin/reservations/page.tsx",
+      "src/lib/reservations.ts"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Veículo e cliente cadastrados."],
+    "prerequisites": [
+      "Veículo e cliente cadastrados."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Reservas",
         "text": "No menu lateral, clique em 'Reservas'. Você pode alternar entre a visualização em 'Lista' e em 'Calendário' mensal.",
-        "image": "/help/screenshots/reservations/list.webp"
+        "image": "/help/screenshots/reservations/list.webp",
+        "markers": [
+          {
+            "x": 9,
+            "y": 25.1,
+            "label": "Clique em \"Reservas\" no menu lateral"
+          },
+          {
+            "x": 87.6,
+            "y": 15.1,
+            "label": "Clique em \"Nova reserva\""
+          }
+        ]
       },
       {
         "title": "Passo 2 — Clique em 'Nova reserva'",
@@ -297,13 +514,41 @@
         "title": "Passo 3 — Preencha os dados da reserva",
         "text": "Selecione o locatário, a placa do carro pretendido e o período de início e fim:",
         "fields": [
-          { "name": "Nome do locatário", "required": true, "description": "Selecione o cliente na lista." },
-          { "name": "Placa", "required": true, "description": "Veículo que ficará bloqueado para o período." },
-          { "name": "Data inicial", "required": true, "description": "Dia da retirada do veículo." },
-          { "name": "Data final", "required": true, "description": "Dia previsto para devolução (precisa ser igual ou posterior à inicial)." },
-          { "name": "Status", "required": false, "description": "Pendente, Confirmada, Concluída ou Cancelada." },
-          { "name": "Modelo de contrato", "required": false, "description": "Selecione o modelo em PDF/DOCX ou o padrão do sistema." },
-          { "name": "Observação", "required": false, "description": "Anotações internas sobre a reserva." }
+          {
+            "name": "Nome do locatário",
+            "required": true,
+            "description": "Selecione o cliente na lista."
+          },
+          {
+            "name": "Placa",
+            "required": true,
+            "description": "Veículo que ficará bloqueado para o período."
+          },
+          {
+            "name": "Data inicial",
+            "required": true,
+            "description": "Dia da retirada do veículo."
+          },
+          {
+            "name": "Data final",
+            "required": true,
+            "description": "Dia previsto para devolução (precisa ser igual ou posterior à inicial)."
+          },
+          {
+            "name": "Status",
+            "required": false,
+            "description": "Pendente, Confirmada, Concluída ou Cancelada."
+          },
+          {
+            "name": "Modelo de contrato",
+            "required": false,
+            "description": "Selecione o modelo em PDF/DOCX ou o padrão do sistema."
+          },
+          {
+            "name": "Observação",
+            "required": false,
+            "description": "Anotações internas sobre a reserva."
+          }
         ]
       },
       {
@@ -330,7 +575,10 @@
         "answer": "Não. A reserva bloqueia o período para evitar conflito de datas; o veículo só fica Alugado quando a locação é criada."
       }
     ],
-    "related": ["cadastrar-cliente", "criar-locacao-contrato"],
+    "related": [
+      "cadastrar-cliente",
+      "criar-locacao-contrato"
+    ],
     "result": "A reserva fica salva na agenda e o carro fica protegido contra duplicidade de agendamento."
   },
   {
@@ -340,20 +588,54 @@
     "category": "locacoes",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["locacao", "aluguel", "contrato", "parcela", "semanal", "mensal", "caucao", "grade"],
-    "aliases": ["como criar locacao", "fazer aluguel", "nova locacao", "gerar parcelas de aluguel"],
-    "routes": ["/admin/rentals"],
-    "sources": ["src/app/admin/rentals/page.tsx", "src/components/admin/rental-form.tsx", "src/lib/billing.ts"],
+    "keywords": [
+      "locacao",
+      "aluguel",
+      "contrato",
+      "parcela",
+      "semanal",
+      "mensal",
+      "caucao",
+      "grade"
+    ],
+    "aliases": [
+      "como criar locacao",
+      "fazer aluguel",
+      "nova locacao",
+      "gerar parcelas de aluguel"
+    ],
+    "routes": [
+      "/admin/rentals"
+    ],
+    "sources": [
+      "src/app/admin/rentals/page.tsx",
+      "src/components/admin/rental-form.tsx",
+      "src/lib/billing.ts"
+    ],
     "minutes": 5,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Veículo e cliente cadastrados."],
+    "prerequisites": [
+      "Veículo e cliente cadastrados."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Locações",
         "text": "No menu lateral, clique em 'Locações' e depois no botão '+ Nova locação'.",
-        "image": "/help/screenshots/rentals/list.webp"
+        "image": "/help/screenshots/rentals/list.webp",
+        "markers": [
+          {
+            "x": 9,
+            "y": 20.4,
+            "label": "Clique em \"Locações\" no menu lateral"
+          },
+          {
+            "x": 87.6,
+            "y": 15.1,
+            "label": "Clique em \"Nova locação\""
+          }
+        ]
       },
       {
         "title": "Passo 2 — Selecione cliente e carro",
@@ -368,14 +650,52 @@
         "title": "Passo 4 — Configure a cobrança das parcelas",
         "text": "Escolha a periodicidade e os valores:",
         "fields": [
-          { "name": "Periodicidade", "required": true, "description": "Semanal, Quinzenal, Mensal ou Diária." },
-          { "name": "Valor da parcela (R$)", "required": true, "description": "Valor cobrado em cada vencimento.", "example": "650.00" },
-          { "name": "Primeira cobrança", "required": true, "description": "Data do primeiro vencimento." },
-          { "name": "Última cobrança até", "required": true, "description": "Data final para geração das parcelas. O sistema mostra quantas parcelas serão geradas.", "example": "4 parcela(s) semanal(is)" },
-          { "name": "Multa por atraso (%)", "required": false, "description": "Percentual cobrado uma única vez em caso de atraso.", "example": "2" },
-          { "name": "Juros por atraso (%)", "required": false, "description": "Percentual de juros e periodicidade (ao dia, por semana ou ao mês).", "example": "0.033" },
-          { "name": "Carência (dias)", "required": false, "description": "Dias após o vencimento sem incidência de multa nem juros.", "example": "0" },
-          { "name": "Caução (R$)", "required": false, "description": "Valor da garantia depositada pelo cliente.", "example": "1000.00" }
+          {
+            "name": "Periodicidade",
+            "required": true,
+            "description": "Semanal, Quinzenal, Mensal ou Diária."
+          },
+          {
+            "name": "Valor da parcela (R$)",
+            "required": true,
+            "description": "Valor cobrado em cada vencimento.",
+            "example": "650.00"
+          },
+          {
+            "name": "Primeira cobrança",
+            "required": true,
+            "description": "Data do primeiro vencimento."
+          },
+          {
+            "name": "Última cobrança até",
+            "required": true,
+            "description": "Data final para geração das parcelas. O sistema mostra quantas parcelas serão geradas.",
+            "example": "4 parcela(s) semanal(is)"
+          },
+          {
+            "name": "Multa por atraso (%)",
+            "required": false,
+            "description": "Percentual cobrado uma única vez em caso de atraso.",
+            "example": "2"
+          },
+          {
+            "name": "Juros por atraso (%)",
+            "required": false,
+            "description": "Percentual de juros e periodicidade (ao dia, por semana ou ao mês).",
+            "example": "0.033"
+          },
+          {
+            "name": "Carência (dias)",
+            "required": false,
+            "description": "Dias após o vencimento sem incidência de multa nem juros.",
+            "example": "0"
+          },
+          {
+            "name": "Caução (R$)",
+            "required": false,
+            "description": "Valor da garantia depositada pelo cliente.",
+            "example": "1000.00"
+          }
         ]
       },
       {
@@ -402,7 +722,11 @@
         "answer": "Você pode editar qualquer parcela diretamente na página de detalhes da locação ou pela tela de Pagamentos."
       }
     ],
-    "related": ["gerar-assinar-contrato", "vistoria-entrega-devolucao", "dar-baixa-pagamento"],
+    "related": [
+      "gerar-assinar-contrato",
+      "vistoria-entrega-devolucao",
+      "dar-baixa-pagamento"
+    ],
     "result": "A locação está criada e as cobranças aparecem prontas para recebimento."
   },
   {
@@ -412,15 +736,31 @@
     "category": "locacoes",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["detalhe", "gestao da locacao", "painel da locacao", "baixar parcela", "enviar pix"],
-    "aliases": ["ver locacao", "pagina da locacao", "gerenciar contrato do cliente"],
-    "routes": ["/admin/rentals/[id]"],
-    "sources": ["src/app/admin/rentals/[id]/page.tsx"],
+    "keywords": [
+      "detalhe",
+      "gestao da locacao",
+      "painel da locacao",
+      "baixar parcela",
+      "enviar pix"
+    ],
+    "aliases": [
+      "ver locacao",
+      "pagina da locacao",
+      "gerenciar contrato do cliente"
+    ],
+    "routes": [
+      "/admin/rentals/[id]"
+    ],
+    "sources": [
+      "src/app/admin/rentals/[id]/page.tsx"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Locação existente."],
+    "prerequisites": [
+      "Locação existente."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Abra a locação",
@@ -435,8 +775,16 @@
         "title": "Passo 3 — Controle as cobranças",
         "text": "Na grade de cobranças à direita, cada parcela mostra vencimento e valor. Clique sobre a parcela para alternar entre 'Pago' e 'A receber', ou use os botões ao lado:",
         "fields": [
-          { "name": "Ícone QR Code", "required": false, "description": "Envia a cobrança com código PIX e QR Code para o e-mail e WhatsApp do locatário." },
-          { "name": "Ícone Envelope", "required": false, "description": "Disponível nas parcelas já pagas: envia o comprovante de pagamento ao cliente." }
+          {
+            "name": "Ícone QR Code",
+            "required": false,
+            "description": "Envia a cobrança com código PIX e QR Code para o e-mail e WhatsApp do locatário."
+          },
+          {
+            "name": "Ícone Envelope",
+            "required": false,
+            "description": "Disponível nas parcelas já pagas: envia o comprovante de pagamento ao cliente."
+          }
         ]
       },
       {
@@ -462,7 +810,11 @@
         "answer": "Sim, basta clicar no botão 'Editar' no topo da tela para alterar datas, quilometragem ou valor."
       }
     ],
-    "related": ["gerar-assinar-contrato", "vistoria-entrega-devolucao", "dar-baixa-pagamento"],
+    "related": [
+      "gerar-assinar-contrato",
+      "vistoria-entrega-devolucao",
+      "dar-baixa-pagamento"
+    ],
     "result": "Você tem controle total sobre os pagamentos, documentos e termos do cliente."
   },
   {
@@ -472,15 +824,37 @@
     "category": "contratos",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["contrato", "assinatura", "eletronica", "selfie", "link", "docx", "pdf", "termo"],
-    "aliases": ["como assinar contrato", "enviar contrato pro cliente", "gerar contrato de aluguel", "assinatura digital"],
-    "routes": ["/admin/rentals/[id]", "/assinar/[token]"],
-    "sources": ["src/components/admin/contract-panel.tsx", "src/app/assinar/[token]/page.tsx"],
+    "keywords": [
+      "contrato",
+      "assinatura",
+      "eletronica",
+      "selfie",
+      "link",
+      "docx",
+      "pdf",
+      "termo"
+    ],
+    "aliases": [
+      "como assinar contrato",
+      "enviar contrato pro cliente",
+      "gerar contrato de aluguel",
+      "assinatura digital"
+    ],
+    "routes": [
+      "/admin/rentals/[id]",
+      "/assinar/[token]"
+    ],
+    "sources": [
+      "src/components/admin/contract-panel.tsx",
+      "src/app/assinar/[token]/page.tsx"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Dados da empresa preenchidos em Configurações e locação criada."],
+    "prerequisites": [
+      "Dados da empresa preenchidos em Configurações e locação criada."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Na página da locação, clique em 'Gerar contrato'",
@@ -490,9 +864,21 @@
         "title": "Passo 2 — Envie o link ao cliente",
         "text": "Com o contrato gerado com status 'Aguardando assinatura', você pode:",
         "fields": [
-          { "name": "Enviar ao cliente", "required": false, "description": "Dispara o link oficial por e-mail e WhatsApp para o contato do cliente." },
-          { "name": "Copiar link", "required": false, "description": "Copia a URL única de assinatura para enviar pelo seu próprio canal." },
-          { "name": "Assinar presencialmente", "required": false, "description": "Abre a tela de assinatura no próprio navegador/tablet para o cliente assinar no balcão da locadora." }
+          {
+            "name": "Enviar ao cliente",
+            "required": false,
+            "description": "Dispara o link oficial por e-mail e WhatsApp para o contato do cliente."
+          },
+          {
+            "name": "Copiar link",
+            "required": false,
+            "description": "Copia a URL única de assinatura para enviar pelo seu próprio canal."
+          },
+          {
+            "name": "Assinar presencialmente",
+            "required": false,
+            "description": "Abre a tela de assinatura no próprio navegador/tablet para o cliente assinar no balcão da locadora."
+          }
         ]
       },
       {
@@ -524,7 +910,10 @@
         "answer": "Sim, segue o padrão de assinatura eletrônica com registro de consentimento, hash SHA-256, selfie biométrica, IP, carimbo de tempo e validação de CPF."
       }
     ],
-    "related": ["modelos-contrato-ia", "vistoria-entrega-devolucao"],
+    "related": [
+      "modelos-contrato-ia",
+      "vistoria-entrega-devolucao"
+    ],
     "result": "O contrato fica arquivado de forma inviolável e a locação ganha respaldo documental."
   },
   {
@@ -534,15 +923,35 @@
     "category": "contratos",
     "audience": "admin",
     "permission": "settings",
-    "keywords": ["modelo", "template", "docx", "pdf", "ia", "mapeamento", "inteligente"],
-    "aliases": ["como colocar meu contrato", "anexar modelo word", "contrato personalizado", "configurar modelo"],
-    "routes": ["/admin/settings#contratos"],
-    "sources": ["src/components/admin/contract-templates-manager.tsx", "src/lib/server/contract-ai.ts"],
+    "keywords": [
+      "modelo",
+      "template",
+      "docx",
+      "pdf",
+      "ia",
+      "mapeamento",
+      "inteligente"
+    ],
+    "aliases": [
+      "como colocar meu contrato",
+      "anexar modelo word",
+      "contrato personalizado",
+      "configurar modelo"
+    ],
+    "routes": [
+      "/admin/settings#contratos"
+    ],
+    "sources": [
+      "src/components/admin/contract-templates-manager.tsx",
+      "src/lib/server/contract-ai.ts"
+    ],
     "minutes": 5,
     "difficulty": "Intermediário",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Arquivo do contrato da sua locadora em formato PDF ou DOCX (até 4 MB)."],
+    "prerequisites": [
+      "Arquivo do contrato da sua locadora em formato PDF ou DOCX (até 4 MB)."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Configurações > Contratos",
@@ -586,7 +995,10 @@
         "answer": "O sistema utiliza o contrato padrão digital da plataforma com as cláusulas gerais configuradas na mesma aba."
       }
     ],
-    "related": ["gerar-assinar-contrato", "configurar-empresa-dados"],
+    "related": [
+      "gerar-assinar-contrato",
+      "configurar-empresa-dados"
+    ],
     "result": "Seus contratos são emitidos exatamente no modelo da sua empresa com preenchimento automático de dados."
   },
   {
@@ -596,15 +1008,35 @@
     "category": "vistorias",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["vistoria", "entrega", "devolucao", "check-in", "check-out", "avarias", "combustivel", "km"],
-    "aliases": ["fazer vistoria", "vistoria de retirada", "vistoria de entrega", "termo de vistoria"],
-    "routes": ["/admin/rentals/[id]"],
-    "sources": ["src/components/admin/inspection-panel.tsx"],
+    "keywords": [
+      "vistoria",
+      "entrega",
+      "devolucao",
+      "check-in",
+      "check-out",
+      "avarias",
+      "combustivel",
+      "km"
+    ],
+    "aliases": [
+      "fazer vistoria",
+      "vistoria de retirada",
+      "vistoria de entrega",
+      "termo de vistoria"
+    ],
+    "routes": [
+      "/admin/rentals/[id]"
+    ],
+    "sources": [
+      "src/components/admin/inspection-panel.tsx"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Locação criada e veículo presente para conferência."],
+    "prerequisites": [
+      "Locação criada e veículo presente para conferência."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse a vistoria na página da locação",
@@ -618,9 +1050,21 @@
         "title": "Passo 3 — Checklist do veículo",
         "text": "Confira os itens com o cliente e desmarque qualquer item que apresente avaria:",
         "fields": [
-          { "name": "Checklist", "required": true, "description": "Lataria, vidros, pneus, estepe, faróis, bancos, painel, ar-condicionado, CRLV e chave." },
-          { "name": "Avarias", "required": false, "description": "Obrigatório descrever caso algum item tenha sido desmarcado (ex.: 'risco no para-choque dianteiro')." },
-          { "name": "Observações", "required": false, "description": "Anotações adicionais da entrega." }
+          {
+            "name": "Checklist",
+            "required": true,
+            "description": "Lataria, vidros, pneus, estepe, faróis, bancos, painel, ar-condicionado, CRLV e chave."
+          },
+          {
+            "name": "Avarias",
+            "required": false,
+            "description": "Obrigatório descrever caso algum item tenha sido desmarcado (ex.: 'risco no para-choque dianteiro')."
+          },
+          {
+            "name": "Observações",
+            "required": false,
+            "description": "Anotações adicionais da entrega."
+          }
         ]
       },
       {
@@ -652,7 +1096,10 @@
         "answer": "Sim! Ao concluir a entrega, o veículo passa automaticamente para 'Alugado'. Ao concluir a devolução, o veículo volta para 'Disponível'."
       }
     ],
-    "related": ["detalhes-locacao-gestao", "app-locatario-fazer-vistoria"],
+    "related": [
+      "detalhes-locacao-gestao",
+      "app-locatario-fazer-vistoria"
+    ],
     "result": "A locadora fica resguardada contra avarias não registradas e cobranças indevidas de combustível."
   },
   {
@@ -662,15 +1109,35 @@
     "category": "solicitacoes",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["solicitacao", "app", "pedido", "analise", "aprovar", "recusar", "ajuste", "selfie"],
-    "aliases": ["como aprovar solicitacao", "aprovar pedido do app", "analisar documento do cliente", "recusar locacao"],
-    "routes": ["/admin/requests"],
-    "sources": ["src/app/admin/requests/page.tsx"],
+    "keywords": [
+      "solicitacao",
+      "app",
+      "pedido",
+      "analise",
+      "aprovar",
+      "recusar",
+      "ajuste",
+      "selfie"
+    ],
+    "aliases": [
+      "como aprovar solicitacao",
+      "aprovar pedido do app",
+      "analisar documento do cliente",
+      "recusar locacao"
+    ],
+    "routes": [
+      "/admin/requests"
+    ],
+    "sources": [
+      "src/app/admin/requests/page.tsx"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Solicitação enviada por um cliente pelo aplicativo do locatário."],
+    "prerequisites": [
+      "Solicitação enviada por um cliente pelo aplicativo do locatário."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Solicitações",
@@ -686,19 +1153,47 @@
         "title": "Passo 3 — Confira a galeria de 4 documentos",
         "text": "Verifique com atenção as 4 fotos enviadas pelo cliente:",
         "fields": [
-          { "name": "1. CNH (frente)", "required": true, "description": "Foto nítida da frente da habilitação com nome e foto visíveis." },
-          { "name": "2. CNH (verso)", "required": true, "description": "Verso com número de registro e categoria." },
-          { "name": "3. Comprovante de Residência", "required": true, "description": "Conta de consumo recente no nome do locatário." },
-          { "name": "4. Selfie com CNH", "required": true, "description": "Foto do rosto do cliente segurando a habilitação ao lado para comprovação de identidade." }
+          {
+            "name": "1. CNH (frente)",
+            "required": true,
+            "description": "Foto nítida da frente da habilitação com nome e foto visíveis."
+          },
+          {
+            "name": "2. CNH (verso)",
+            "required": true,
+            "description": "Verso com número de registro e categoria."
+          },
+          {
+            "name": "3. Comprovante de Residência",
+            "required": true,
+            "description": "Conta de consumo recente no nome do locatário."
+          },
+          {
+            "name": "4. Selfie com CNH",
+            "required": true,
+            "description": "Foto do rosto do cliente segurando a habilitação ao lado para comprovação de identidade."
+          }
         ]
       },
       {
         "title": "Passo 4 — Tome uma das 3 decisões",
         "text": "Escolha a ação adequada para o pedido:",
         "fields": [
-          { "name": "Aprovar locação", "required": false, "description": "Confirma a locação, cria o registro em Locações, gera o contrato digital e notifica o cliente com o link de assinatura." },
-          { "name": "Pedir ajuste", "required": false, "description": "Informe o que precisa ser corrigido (ex.: 'foto do comprovante ilegível'). O cliente é notificado no celular e envia novamente." },
-          { "name": "Recusar", "required": false, "description": "Informe o motivo da reprovação (ex.: 'critério de crédito'). O cliente recebe a resposta no app." }
+          {
+            "name": "Aprovar locação",
+            "required": false,
+            "description": "Confirma a locação, cria o registro em Locações, gera o contrato digital e notifica o cliente com o link de assinatura."
+          },
+          {
+            "name": "Pedir ajuste",
+            "required": false,
+            "description": "Informe o que precisa ser corrigido (ex.: 'foto do comprovante ilegível'). O cliente é notificado no celular e envia novamente."
+          },
+          {
+            "name": "Recusar",
+            "required": false,
+            "description": "Informe o motivo da reprovação (ex.: 'critério de crédito'). O cliente recebe a resposta no app."
+          }
         ]
       }
     ],
@@ -721,7 +1216,10 @@
         "answer": "Não. Ao aprovar, o contrato é gerado e o link é enviado para o cliente assinar eletronicamente pelo celular."
       }
     ],
-    "related": ["gerar-assinar-contrato", "detalhes-locacao-gestao"],
+    "related": [
+      "gerar-assinar-contrato",
+      "detalhes-locacao-gestao"
+    ],
     "result": "O cliente recebe a notificação no celular e o fluxo de locação avança com segurança."
   },
   {
@@ -731,20 +1229,53 @@
     "category": "manutencao",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["manutencao", "oficina", "oleo", "revisao", "freios", "mecanica", "custo", "km"],
-    "aliases": ["como cadastrar manutencao", "registrar revisao", "troca de oleo", "agendar oficina"],
-    "routes": ["/admin/maintenance"],
-    "sources": ["src/app/admin/maintenance/page.tsx", "src/lib/constants.ts"],
+    "keywords": [
+      "manutencao",
+      "oficina",
+      "oleo",
+      "revisao",
+      "freios",
+      "mecanica",
+      "custo",
+      "km"
+    ],
+    "aliases": [
+      "como cadastrar manutencao",
+      "registrar revisao",
+      "troca de oleo",
+      "agendar oficina"
+    ],
+    "routes": [
+      "/admin/maintenance"
+    ],
+    "sources": [
+      "src/app/admin/maintenance/page.tsx",
+      "src/lib/constants.ts"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Veículo cadastrado na frota."],
+    "prerequisites": [
+      "Veículo cadastrado na frota."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Manutenção",
         "text": "No menu lateral, clique em 'Manutenção'. No topo você acompanha os cards: Pendentes, Próximas (agendadas), Realizadas e Custo total.",
-        "image": "/help/screenshots/maintenance/list.webp"
+        "image": "/help/screenshots/maintenance/list.webp",
+        "markers": [
+          {
+            "x": 9,
+            "y": 57.8,
+            "label": "Clique em \"Manutenção\" no menu lateral"
+          },
+          {
+            "x": 87.6,
+            "y": 15.1,
+            "label": "Clique em \"Nova manutenção\""
+          }
+        ]
       },
       {
         "title": "Passo 2 — Clique em 'Nova manutenção'",
@@ -755,15 +1286,52 @@
         "title": "Passo 3 — Preencha os dados do serviço",
         "text": "Preencha a placa, a data e a descrição do serviço:",
         "fields": [
-          { "name": "Placa", "required": true, "description": "Selecione o veículo da frota." },
-          { "name": "Data", "required": true, "description": "Data em que o serviço foi ou será realizado." },
-          { "name": "Descrição", "required": true, "description": "Detalhe da manutenção (ex.: 'Troca de óleo e filtros', 'Pastilhas de freio')." },
-          { "name": "KM atual", "required": false, "description": "Quilometragem do veículo no momento do serviço." },
-          { "name": "Próxima KM", "required": false, "description": "Quilometragem prevista para a próxima troca (usado no cálculo de revisão do Dashboard)." },
-          { "name": "Fornecedor", "required": false, "description": "Oficina mecânica, auto center ou concessionária." },
-          { "name": "Valor (R$)", "required": false, "description": "Custo total do serviço realizado.", "example": "350.00" },
-          { "name": "Status", "required": false, "description": "Agendada (futura), Pendente (aguardando execução) ou Realizada (concluída)." },
-          { "name": "Observação", "required": false, "description": "Anotações adicionais e peças trocadas." }
+          {
+            "name": "Placa",
+            "required": true,
+            "description": "Selecione o veículo da frota."
+          },
+          {
+            "name": "Data",
+            "required": true,
+            "description": "Data em que o serviço foi ou será realizado."
+          },
+          {
+            "name": "Descrição",
+            "required": true,
+            "description": "Detalhe da manutenção (ex.: 'Troca de óleo e filtros', 'Pastilhas de freio')."
+          },
+          {
+            "name": "KM atual",
+            "required": false,
+            "description": "Quilometragem do veículo no momento do serviço."
+          },
+          {
+            "name": "Próxima KM",
+            "required": false,
+            "description": "Quilometragem prevista para a próxima troca (usado no cálculo de revisão do Dashboard)."
+          },
+          {
+            "name": "Fornecedor",
+            "required": false,
+            "description": "Oficina mecânica, auto center ou concessionária."
+          },
+          {
+            "name": "Valor (R$)",
+            "required": false,
+            "description": "Custo total do serviço realizado.",
+            "example": "350.00"
+          },
+          {
+            "name": "Status",
+            "required": false,
+            "description": "Agendada (futura), Pendente (aguardando execução) ou Realizada (concluída)."
+          },
+          {
+            "name": "Observação",
+            "required": false,
+            "description": "Anotações adicionais e peças trocadas."
+          }
         ]
       },
       {
@@ -789,7 +1357,10 @@
         "answer": "Sim, na tela 'Meu veículo' do app, o locatário pode visualizar as revisões agendadas e feitas para acompanhar os cuidados com o carro."
       }
     ],
-    "related": ["visao-360-veiculo", "cadastrar-despesa"],
+    "related": [
+      "visao-360-veiculo",
+      "cadastrar-despesa"
+    ],
     "result": "O histórico mecânico do carro fica registrado e previne quebra e depreciação da frota."
   },
   {
@@ -799,20 +1370,51 @@
     "category": "despesas",
     "audience": "admin",
     "permission": "finance",
-    "keywords": ["despesa", "custo", "gasto", "recorrente", "seguro", "rastreamento", "fornecedor"],
-    "aliases": ["como lancar despesa", "cadastrar custo", "adicionar gasto", "despesas da locadora"],
-    "routes": ["/admin/expenses"],
-    "sources": ["src/app/admin/expenses/page.tsx"],
+    "keywords": [
+      "despesa",
+      "custo",
+      "gasto",
+      "recorrente",
+      "seguro",
+      "rastreamento",
+      "fornecedor"
+    ],
+    "aliases": [
+      "como lancar despesa",
+      "cadastrar custo",
+      "adicionar gasto",
+      "despesas da locadora"
+    ],
+    "routes": [
+      "/admin/expenses"
+    ],
+    "sources": [
+      "src/app/admin/expenses/page.tsx"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Dados da despesa (valor, fornecedor e comprovante se houver)."],
+    "prerequisites": [
+      "Dados da despesa (valor, fornecedor e comprovante se houver)."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Despesas",
         "text": "No menu lateral, clique em 'Despesas'. O cabeçalho resume: Total recorrente, Total diversas, Total geral e Valores a pagar.",
-        "image": "/help/screenshots/expenses/list.webp"
+        "image": "/help/screenshots/expenses/list.webp",
+        "markers": [
+          {
+            "x": 9,
+            "y": 53.1,
+            "label": "Clique em \"Despesas\" no menu lateral"
+          },
+          {
+            "x": 87.6,
+            "y": 15.1,
+            "label": "Clique em \"Nova despesa\""
+          }
+        ]
       },
       {
         "title": "Passo 2 — Clique em 'Nova despesa'",
@@ -823,14 +1425,47 @@
         "title": "Passo 3 — Preencha os campos",
         "text": "Preencha a descrição, data, valor e classificação:",
         "fields": [
-          { "name": "Descrição", "required": true, "description": "Nome da despesa (ex.: 'Seguro da frota', 'Lavagem', 'Troca de pneus')." },
-          { "name": "Data", "required": true, "description": "Data do vencimento ou do pagamento." },
-          { "name": "Valor (R$)", "required": true, "description": "Valor exato da despesa.", "example": "2400.00" },
-          { "name": "Categoria", "required": false, "description": "Recorrentes (mensalidades fixas) ou Diversas (gastos eventuais)." },
-          { "name": "Placa", "required": false, "description": "Vincule a um carro específico ou deixe em 'Frota (geral)' para despesas da empresa toda." },
-          { "name": "Fornecedor", "required": false, "description": "Nome da empresa recebedora." },
-          { "name": "Meio de pagamento", "required": false, "description": "PIX, Boleto, Cartão de crédito, Cartão de débito ou Dinheiro." },
-          { "name": "Pago", "required": false, "description": "Marque caso a despesa já tenha sido quitada." }
+          {
+            "name": "Descrição",
+            "required": true,
+            "description": "Nome da despesa (ex.: 'Seguro da frota', 'Lavagem', 'Troca de pneus')."
+          },
+          {
+            "name": "Data",
+            "required": true,
+            "description": "Data do vencimento ou do pagamento."
+          },
+          {
+            "name": "Valor (R$)",
+            "required": true,
+            "description": "Valor exato da despesa.",
+            "example": "2400.00"
+          },
+          {
+            "name": "Categoria",
+            "required": false,
+            "description": "Recorrentes (mensalidades fixas) ou Diversas (gastos eventuais)."
+          },
+          {
+            "name": "Placa",
+            "required": false,
+            "description": "Vincule a um carro específico ou deixe em 'Frota (geral)' para despesas da empresa toda."
+          },
+          {
+            "name": "Fornecedor",
+            "required": false,
+            "description": "Nome da empresa recebedora."
+          },
+          {
+            "name": "Meio de pagamento",
+            "required": false,
+            "description": "PIX, Boleto, Cartão de crédito, Cartão de débito ou Dinheiro."
+          },
+          {
+            "name": "Pago",
+            "required": false,
+            "description": "Marque caso a despesa já tenha sido quitada."
+          }
         ]
       },
       {
@@ -856,7 +1491,10 @@
         "answer": "Sim, basta clicar no botão de editar da linha correspondente, marcar a caixinha 'Pago' e salvar."
       }
     ],
-    "related": ["visao-geral-financeiro", "relatorios-exportacao-csv"],
+    "related": [
+      "visao-geral-financeiro",
+      "relatorios-exportacao-csv"
+    ],
     "result": "Suas saídas ficam organizadas e alimentam o fluxo de caixa da locadora."
   },
   {
@@ -866,20 +1504,52 @@
     "category": "multas",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["multa", "infracao", "auto", "condutor", "desconto", "vencimento", "pontos"],
-    "aliases": ["como cadastrar multa", "gerenciar multas", "notificar cliente de multa", "identificar condutor"],
-    "routes": ["/admin/fines"],
-    "sources": ["src/app/admin/fines/page.tsx", "src/lib/constants.ts"],
+    "keywords": [
+      "multa",
+      "infracao",
+      "auto",
+      "condutor",
+      "desconto",
+      "vencimento",
+      "pontos"
+    ],
+    "aliases": [
+      "como cadastrar multa",
+      "gerenciar multas",
+      "notificar cliente de multa",
+      "identificar condutor"
+    ],
+    "routes": [
+      "/admin/fines"
+    ],
+    "sources": [
+      "src/app/admin/fines/page.tsx",
+      "src/lib/constants.ts"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Notificação de autuação recebida dos órgãos de trânsito (Detran, PRF, prefeitura)."],
+    "prerequisites": [
+      "Notificação de autuação recebida dos órgãos de trânsito (Detran, PRF, prefeitura)."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Multas",
         "text": "No menu lateral, clique em 'Multas'. No topo há cards com total em aberto, valor pendente, multas aguardando identificação e as que vencem nos próximos 15 dias.",
-        "image": "/help/screenshots/fines/list.webp"
+        "image": "/help/screenshots/fines/list.webp",
+        "markers": [
+          {
+            "x": 9,
+            "y": 62.4,
+            "label": "Clique em \"Multas\" no menu lateral"
+          },
+          {
+            "x": 87.6,
+            "y": 15.1,
+            "label": "Clique em \"Nova multa\""
+          }
+        ]
       },
       {
         "title": "Passo 2 — Clique em 'Nova multa'",
@@ -890,16 +1560,58 @@
         "title": "Passo 3 — Preencha os dados do auto de infração",
         "text": "Informe a placa, auto e datas de limite:",
         "fields": [
-          { "name": "Placa", "required": true, "description": "Veículo autuado." },
-          { "name": "Nº do auto de infração", "required": true, "description": "Código da autuação do órgão de trânsito.", "example": "DEMO482100" },
-          { "name": "Locatário", "required": false, "description": "Cliente que estava com o veículo no momento da infração." },
-          { "name": "Descrição da autuação", "required": true, "description": "Tipo de infração (ex.: 'Excesso de velocidade até 20%', 'Avançar sinal vermelho')." },
-          { "name": "Data da autuação", "required": true, "description": "Dia em que ocorreu a infração. O sistema sugere o limite de indicação para 30 dias após." },
-          { "name": "Limite ident. condutor", "required": false, "description": "Data máxima para enviar o formulário de real infrator ao órgão." },
-          { "name": "Limite pagto. com desconto", "required": false, "description": "Data para obter o desconto de 20% do órgão emissor." },
-          { "name": "Data de vencimento", "required": true, "description": "Data final para pagamento." },
-          { "name": "Valor (R$)", "required": true, "description": "Valor nominal da multa.", "example": "195.23" },
-          { "name": "Status", "required": false, "description": "Pendente, Identificar condutor, Pago, Vencida ou Contestada." }
+          {
+            "name": "Placa",
+            "required": true,
+            "description": "Veículo autuado."
+          },
+          {
+            "name": "Nº do auto de infração",
+            "required": true,
+            "description": "Código da autuação do órgão de trânsito.",
+            "example": "DEMO482100"
+          },
+          {
+            "name": "Locatário",
+            "required": false,
+            "description": "Cliente que estava com o veículo no momento da infração."
+          },
+          {
+            "name": "Descrição da autuação",
+            "required": true,
+            "description": "Tipo de infração (ex.: 'Excesso de velocidade até 20%', 'Avançar sinal vermelho')."
+          },
+          {
+            "name": "Data da autuação",
+            "required": true,
+            "description": "Dia em que ocorreu a infração. O sistema sugere o limite de indicação para 30 dias após."
+          },
+          {
+            "name": "Limite ident. condutor",
+            "required": false,
+            "description": "Data máxima para enviar o formulário de real infrator ao órgão."
+          },
+          {
+            "name": "Limite pagto. com desconto",
+            "required": false,
+            "description": "Data para obter o desconto de 20% do órgão emissor."
+          },
+          {
+            "name": "Data de vencimento",
+            "required": true,
+            "description": "Data final para pagamento."
+          },
+          {
+            "name": "Valor (R$)",
+            "required": true,
+            "description": "Valor nominal da multa.",
+            "example": "195.23"
+          },
+          {
+            "name": "Status",
+            "required": false,
+            "description": "Pendente, Identificar condutor, Pago, Vencida ou Contestada."
+          }
         ]
       },
       {
@@ -926,7 +1638,10 @@
         "answer": "Sim! O cliente visualiza as multas vinculadas a ele na tela 'Multas' do app, com valor, auto e prazos, além de botão para falar no WhatsApp da locadora."
       }
     ],
-    "related": ["cadastrar-cliente", "detalhes-locacao-gestao"],
+    "related": [
+      "cadastrar-cliente",
+      "detalhes-locacao-gestao"
+    ],
     "result": "Os prazos de trânsito ficam monitorados e o cliente é acionado tempestivamente."
   },
   {
@@ -936,20 +1651,50 @@
     "category": "anotacoes",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["anotacao", "diario", "recado", "combinado", "historico", "registro", "ocorrencia"],
-    "aliases": ["como criar anotacao", "registrar recado", "historico de conversa com cliente"],
-    "routes": ["/admin/notes"],
-    "sources": ["src/app/admin/notes/page.tsx"],
+    "keywords": [
+      "anotacao",
+      "diario",
+      "recado",
+      "combinado",
+      "historico",
+      "registro",
+      "ocorrencia"
+    ],
+    "aliases": [
+      "como criar anotacao",
+      "registrar recado",
+      "historico de conversa com cliente"
+    ],
+    "routes": [
+      "/admin/notes"
+    ],
+    "sources": [
+      "src/app/admin/notes/page.tsx"
+    ],
     "minutes": 2,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Acesso ao painel administrativo."],
+    "prerequisites": [
+      "Acesso ao painel administrativo."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Anotações",
         "text": "No menu lateral, clique em 'Anotações'. A tela exibe uma linha do tempo organizada por dia com os registros anteriores.",
-        "image": "/help/screenshots/notes/list.webp"
+        "image": "/help/screenshots/notes/list.webp",
+        "markers": [
+          {
+            "x": 9,
+            "y": 67.1,
+            "label": "Clique em \"Anotações\" no menu lateral"
+          },
+          {
+            "x": 87.6,
+            "y": 15.1,
+            "label": "Clique em \"Nova anotação\""
+          }
+        ]
       },
       {
         "title": "Passo 2 — Clique em 'Nova anotação'",
@@ -983,7 +1728,10 @@
         "answer": "Sim! No campo 'Locatário', basta deixar como 'Nenhum (anotação geral)' para registrar lembretes da empresa."
       }
     ],
-    "related": ["cadastrar-cliente", "detalhes-locacao-gestao"],
+    "related": [
+      "cadastrar-cliente",
+      "detalhes-locacao-gestao"
+    ],
     "result": "Toda a equipe sabe os combinados feitos com cada locatário e evita desencontro de informações."
   },
   {
@@ -993,15 +1741,34 @@
     "category": "financeiro",
     "audience": "admin",
     "permission": "finance",
-    "keywords": ["financeiro", "receita", "despesa", "saldo", "fluxo de caixa", "grafico", "comparativo"],
-    "aliases": ["como ver saldo da locadora", "acompanhar financeiro", "fluxo de caixa mensal"],
-    "routes": ["/admin/finance"],
-    "sources": ["src/app/admin/finance/page.tsx", "src/components/admin/receipt-approval-dialog.tsx"],
+    "keywords": [
+      "financeiro",
+      "receita",
+      "despesa",
+      "saldo",
+      "fluxo de caixa",
+      "grafico",
+      "comparativo"
+    ],
+    "aliases": [
+      "como ver saldo da locadora",
+      "acompanhar financeiro",
+      "fluxo de caixa mensal"
+    ],
+    "routes": [
+      "/admin/finance"
+    ],
+    "sources": [
+      "src/app/admin/finance/page.tsx",
+      "src/components/admin/receipt-approval-dialog.tsx"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Lançamentos de locação ou despesas cadastrados."],
+    "prerequisites": [
+      "Lançamentos de locação ou despesas cadastrados."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Financeiro",
@@ -1039,7 +1806,11 @@
         "answer": "O módulo Financeiro foca nas receitas operacionais de locação e nos custos de manutenção/despesas. Multas são acompanhadas em seu módulo específico e em Relatórios."
       }
     ],
-    "related": ["aprovar-comprovante-pix", "cadastrar-despesa", "relatorios-exportacao-csv"],
+    "related": [
+      "aprovar-comprovante-pix",
+      "cadastrar-despesa",
+      "relatorios-exportacao-csv"
+    ],
     "result": "Visão clara da saúde financeira da locadora e dos recebimentos pendentes."
   },
   {
@@ -1049,15 +1820,33 @@
     "category": "relatorios",
     "audience": "admin",
     "permission": "read",
-    "keywords": ["relatorio", "exportar", "csv", "excel", "imprimir", "grafico", "filtro"],
-    "aliases": ["como exportar relatorio", "baixar planilha de carros", "imprimir relatorio de locacao"],
-    "routes": ["/admin/reports"],
-    "sources": ["src/app/admin/reports/page.tsx"],
+    "keywords": [
+      "relatorio",
+      "exportar",
+      "csv",
+      "excel",
+      "imprimir",
+      "grafico",
+      "filtro"
+    ],
+    "aliases": [
+      "como exportar relatorio",
+      "baixar planilha de carros",
+      "imprimir relatorio de locacao"
+    ],
+    "routes": [
+      "/admin/reports"
+    ],
+    "sources": [
+      "src/app/admin/reports/page.tsx"
+    ],
     "minutes": 3,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Acesso ao painel administrativo."],
+    "prerequisites": [
+      "Acesso ao painel administrativo."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Relatórios",
@@ -1095,7 +1884,10 @@
         "answer": "Sim. O arquivo usa ponto e vírgula (;) como separador e UTF-8 com BOM, então acentos aparecem corretos no Excel em português. No Google Planilhas ou LibreOffice, escolha ';' como separador ao importar."
       }
     ],
-    "related": ["visao-geral-financeiro", "detalhes-locacao-gestao"],
+    "related": [
+      "visao-geral-financeiro",
+      "detalhes-locacao-gestao"
+    ],
     "result": "Dados consolidados prontos para análise contábil, reuniões e tomada de decisão."
   },
   {
@@ -1105,15 +1897,35 @@
     "category": "rastreamento",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["rastreamento", "selsyn", "gps", "mapa", "posicao", "sensores", "velocidade"],
-    "aliases": ["como rastrear carro", "ver onde o carro esta", "mapa de veiculos", "integracao selsyn"],
-    "routes": ["/admin/monitoring"],
-    "sources": ["src/app/admin/monitoring/page.tsx", "src/lib/selsyn.ts"],
+    "keywords": [
+      "rastreamento",
+      "selsyn",
+      "gps",
+      "mapa",
+      "posicao",
+      "sensores",
+      "velocidade"
+    ],
+    "aliases": [
+      "como rastrear carro",
+      "ver onde o carro esta",
+      "mapa de veiculos",
+      "integracao selsyn"
+    ],
+    "routes": [
+      "/admin/monitoring"
+    ],
+    "sources": [
+      "src/app/admin/monitoring/page.tsx",
+      "src/lib/selsyn.ts"
+    ],
     "minutes": 4,
     "difficulty": "Intermediário",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Integração Selsyn configurada com credencial SELSYN_API_KEY no servidor."],
+    "prerequisites": [
+      "Integração Selsyn configurada com credencial SELSYN_API_KEY no servidor."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Rastreamento",
@@ -1155,7 +1967,10 @@
         "answer": "Não. O rastreamento Selsyn é uma ferramenta exclusivamente administrativa da locadora para gestão e segurança da frota."
       }
     ],
-    "related": ["cadastrar-veiculo", "seguranca-antifraude-app"],
+    "related": [
+      "cadastrar-veiculo",
+      "seguranca-antifraude-app"
+    ],
     "result": "Você sabe onde cada veículo está localizado e confere a telemetria com segurança."
   },
   {
@@ -1165,15 +1980,34 @@
     "category": "seguranca",
     "audience": "admin",
     "permission": "settings",
-    "keywords": ["seguranca", "antifraude", "score", "risco", "emulador", "aparelho", "auditoria"],
-    "aliases": ["como saber se o cliente e seguro", "analise de risco do app", "central de seguranca"],
-    "routes": ["/admin/security"],
-    "sources": ["src/app/admin/security/page.tsx", "src/lib/antifraud.ts"],
+    "keywords": [
+      "seguranca",
+      "antifraude",
+      "score",
+      "risco",
+      "emulador",
+      "aparelho",
+      "auditoria"
+    ],
+    "aliases": [
+      "como saber se o cliente e seguro",
+      "analise de risco do app",
+      "central de seguranca"
+    ],
+    "routes": [
+      "/admin/security"
+    ],
+    "sources": [
+      "src/app/admin/security/page.tsx",
+      "src/lib/antifraud.ts"
+    ],
     "minutes": 3,
     "difficulty": "Intermediário",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Clientes utilizando o aplicativo do locatário."],
+    "prerequisites": [
+      "Clientes utilizando o aplicativo do locatário."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse Segurança",
@@ -1184,10 +2018,26 @@
         "title": "Passo 2 — Analise o score de risco dos clientes",
         "text": "Os clientes são categorizados por faixas de pontuação de 0 a 100:",
         "fields": [
-          { "name": "0 a 29 (Baixo)", "required": false, "description": "Comportamento normal esperado sem alertas relevantes." },
-          { "name": "30 a 59 (Atenção)", "required": false, "description": "Alguma divergência detectada, como troca frequente de IP ou aparelho novo." },
-          { "name": "60 a 79 (Elevado)", "required": false, "description": "Múltiplos fatores de atenção combinados." },
-          { "name": "80 a 100 (Crítico)", "required": false, "description": "Sinais graves, como uso de emulador de computador simulando celular." }
+          {
+            "name": "0 a 29 (Baixo)",
+            "required": false,
+            "description": "Comportamento normal esperado sem alertas relevantes."
+          },
+          {
+            "name": "30 a 59 (Atenção)",
+            "required": false,
+            "description": "Alguma divergência detectada, como troca frequente de IP ou aparelho novo."
+          },
+          {
+            "name": "60 a 79 (Elevado)",
+            "required": false,
+            "description": "Múltiplos fatores de atenção combinados."
+          },
+          {
+            "name": "80 a 100 (Crítico)",
+            "required": false,
+            "description": "Sinais graves, como uso de emulador de computador simulando celular."
+          }
         ]
       },
       {
@@ -1217,7 +2067,10 @@
         "answer": "Não. O score e os sinais de segurança são exibidos estritamente dentro do painel administrativo da locadora."
       }
     ],
-    "related": ["aprovar-solicitacao-locacao", "conferir-ocorrencias-documentos"],
+    "related": [
+      "aprovar-solicitacao-locacao",
+      "conferir-ocorrencias-documentos"
+    ],
     "result": "Você tem respaldo e visibilidade sobre a autenticidade dos acessos ao aplicativo."
   },
   {
@@ -1227,15 +2080,34 @@
     "category": "ocorrencias",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["ocorrencia", "problema", "pane", "acidente", "documento", "cnh", "app do locatario"],
-    "aliases": ["como responder ocorrencia", "aprovar documento do app", "cliente relatou problema"],
-    "routes": ["/admin/incidents"],
-    "sources": ["src/app/admin/incidents/page.tsx", "src/lib/tenant.ts"],
+    "keywords": [
+      "ocorrencia",
+      "problema",
+      "pane",
+      "acidente",
+      "documento",
+      "cnh",
+      "app do locatario"
+    ],
+    "aliases": [
+      "como responder ocorrencia",
+      "aprovar documento do app",
+      "cliente relatou problema"
+    ],
+    "routes": [
+      "/admin/incidents"
+    ],
+    "sources": [
+      "src/app/admin/incidents/page.tsx",
+      "src/lib/tenant.ts"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Ocorrências ou documentos enviados por clientes através do aplicativo."],
+    "prerequisites": [
+      "Ocorrências ou documentos enviados por clientes através do aplicativo."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Acesse App do Locatário",
@@ -1273,7 +2145,10 @@
         "answer": "A aprovação atualiza o anexo da foto oficial. A conferência e ajuste da data de validade devem ser verificados na ficha do cliente caso necessário."
       }
     ],
-    "related": ["cadastrar-cliente", "detalhes-locacao-gestao"],
+    "related": [
+      "cadastrar-cliente",
+      "detalhes-locacao-gestao"
+    ],
     "result": "Atendimento humanizado aos motoristas e documentos sempre em dia."
   }
 ]

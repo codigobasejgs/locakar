@@ -1,6 +1,6 @@
 {
   "appVersion": "0.1.0",
-  "generatedAt": "2026-10-05T13:49:55.019Z",
+  "generatedAt": "2026-10-05T13:58:45.070Z",
   "note": "Inventário estrutural. Campos calculados, permissões e efeitos precisam de auditoria humana. Cobertura por rota não comprova cobertura de cada ação.",
   "pages": [
     {
@@ -104,7 +104,8 @@
       "articles": [
         "visao-360-veiculo",
         "primeiros-passos-visao-geral",
-        "onboarding-checklist-locadora"
+        "onboarding-checklist-locadora",
+        "por-que-nao-consigo"
       ],
       "tour": true
     },
@@ -430,6 +431,14 @@
       "route": "/api/fipe/vehicles"
     },
     {
+      "file": "src/app/api/help/ask/route.ts",
+      "route": "/api/help/ask"
+    },
+    {
+      "file": "src/app/api/help/route.ts",
+      "route": "/api/help"
+    },
+    {
       "file": "src/app/api/org/route.ts",
       "route": "/api/org"
     },
@@ -591,10 +600,26 @@
       "messages": []
     },
     {
+      "file": "src/app/admin/ajuda/glossario/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/glossario",
+      "hash": "83345c3b5ed64d76f9ff564b18509114e4e8bfa5c23ae03146c01ea38e5bdb28",
+      "labels": [],
+      "messages": []
+    },
+    {
       "file": "src/app/admin/ajuda/layout.tsx",
       "kind": "component",
       "route": null,
       "hash": "e2f56981eb1e3a66ba68b6d66a158c08d1b1c8715cb3cb7e7bbf7eee776159da",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/admin/ajuda/manual/page.tsx",
+      "kind": "page",
+      "route": "/admin/ajuda/manual",
+      "hash": "6688343725e31b51738ec8fb8c870f38b3fb8d793acd361bd9f6979c5d71a74c",
       "labels": [],
       "messages": []
     },
@@ -1218,10 +1243,26 @@
       "messages": []
     },
     {
+      "file": "src/app/ajuda/glossario/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/glossario",
+      "hash": "83345c3b5ed64d76f9ff564b18509114e4e8bfa5c23ae03146c01ea38e5bdb28",
+      "labels": [],
+      "messages": []
+    },
+    {
       "file": "src/app/ajuda/layout.tsx",
       "kind": "component",
       "route": null,
       "hash": "0af5ec8462187754ef58f9447a5a52507d6b8cfc69c4bd82dcd81972c404f29e",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/ajuda/manual/page.tsx",
+      "kind": "page",
+      "route": "/ajuda/manual",
+      "hash": "6688343725e31b51738ec8fb8c870f38b3fb8d793acd361bd9f6979c5d71a74c",
       "labels": [],
       "messages": []
     },
@@ -1330,6 +1371,22 @@
       "messages": []
     },
     {
+      "file": "src/app/api/help/ask/route.ts",
+      "kind": "api",
+      "route": "/api/help/ask",
+      "hash": "25dd0eb4d3adcc777bad64b14a9615f985b7ed82c56079baf2c5cca32055f620",
+      "labels": [],
+      "messages": []
+    },
+    {
+      "file": "src/app/api/help/route.ts",
+      "kind": "api",
+      "route": "/api/help",
+      "hash": "2f58776abafa51e5f77731ee6d36332b6aa564bc2f6e5eef8ecca0cef6949d97",
+      "labels": [],
+      "messages": []
+    },
+    {
       "file": "src/app/api/org/route.ts",
       "kind": "api",
       "route": "/api/org",
@@ -1365,7 +1422,7 @@
       "file": "src/app/api/platform/admin/route.ts",
       "kind": "api",
       "route": "/api/platform/admin",
-      "hash": "05ce075a5c01a382927dd2d5c6ef2b101ed82cd33d35058cdb54f777d11dddf8",
+      "hash": "15443bd46b0754c67e1b034a9cfaa526db35139d28eac0fc04fdbd7d9b04b988",
       "labels": [],
       "messages": []
     },
@@ -1682,7 +1739,7 @@
       "file": "src/app/plataforma/admin/page.tsx",
       "kind": "page",
       "route": "/plataforma/admin",
-      "hash": "2486cf003258fc35410e44d191988fd82f1f2fbad55de720643b71e1e9aabcae",
+      "hash": "f2b38cfe270cc786e371f7206348b2520d0437d4f2251f8b65ef34f2cc22e2ec",
       "labels": [
         "Buscar por nome, endereço, e-mail ou CNPJ",
         "Buscar locadora",
@@ -1792,7 +1849,7 @@
       "file": "src/components/admin/admin-shell.tsx",
       "kind": "component",
       "route": null,
-      "hash": "e123b108695d6c5ca75daaa39b20138757f3d9635f015894393784ef799603d4",
+      "hash": "0f53224c9489a9a62c7b5c95c9abe6cd9fd961de1d9d22d13d30d034a788a043",
       "labels": [
         "Administração",
         "Instalar app de gestão",
@@ -2073,9 +2130,9 @@
       "file": "src/components/admin/onboarding-card.tsx",
       "kind": "component",
       "route": null,
-      "hash": "63bed0500c31dd87970d65b2a25506277826f5f59e00a0d17ad68b799148ce7d",
+      "hash": "ddb9b0f7140dcda02ebb2dfb0d66b98848cd2db3af9516836ab153de2601c3d1",
       "labels": [
-        "Aprender como"
+        "Aprender com o tour"
       ],
       "messages": []
     },
@@ -2765,10 +2822,18 @@
       "messages": []
     },
     {
+      "file": "src/help/assistant.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "91e7144b9b05da21051fe052d4f7267e7a2b113b5bcde2ba07858feb720f865e",
+      "labels": [],
+      "messages": []
+    },
+    {
       "file": "src/help/components/article.tsx",
       "kind": "component",
       "route": null,
-      "hash": "35ff55ba396a26ba2f1c970d35d4c8883132cfa98eac61cefe37576116e0ad3a",
+      "hash": "6a9bbda0f1c33fdf0828f8815a8fd477790ff088fe7aab47d054c9158f557b55",
       "labels": [
         "Antes de começar",
         "Passo a passo",
@@ -2780,10 +2845,22 @@
       "messages": []
     },
     {
+      "file": "src/help/components/assistant.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "6ea7f44208e7d4b8bf62ea0ff4f4f3aa0d722ecc6ad9cd21646819108c7c408a",
+      "labels": [
+        "Assistente",
+        "Ex.: meu cliente pagou e mandou comprovante, o que faço?",
+        "Pergunta para o assistente"
+      ],
+      "messages": []
+    },
+    {
       "file": "src/help/components/context.tsx",
       "kind": "component",
       "route": null,
-      "hash": "75c23e25126f71a7f7ee907309874c514a72ad8345e90efadfa84aa8c520ffb0",
+      "hash": "34bdcc6ca2d15ac036891f85758361e2fe2d30cfe0e15b7c0384d12db1d2ff59",
       "labels": [],
       "messages": []
     },
@@ -2791,7 +2868,7 @@
       "file": "src/help/components/contextual.tsx",
       "kind": "component",
       "route": null,
-      "hash": "befe3567cc289d987c233fa84b80a2b889d9271d52e6ffc018e85693019f0b67",
+      "hash": "4de98bad81233b5e8835df884f6e071ff42dd68ba0d5e3f0dcabaff21599843c",
       "labels": [
         "Ajuda sobre esta página",
         "Abrir ajuda sobre esta página",
@@ -2802,14 +2879,47 @@
       "messages": []
     },
     {
+      "file": "src/help/components/glossary.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "5b449741caac36ccbf45696e8aeda97d966a349a27a1f1dbfb20514d7fc28dba",
+      "labels": [
+        "Filtrar termos (ex.: caução, baixa, FIPE)...",
+        "Filtrar glossário"
+      ],
+      "messages": []
+    },
+    {
       "file": "src/help/components/home.tsx",
       "kind": "component",
       "route": null,
-      "hash": "c42a2ecfa438fb733dca3e2c5cd3fc351e10505ce8fe86cf384c6744fa0b12e7",
+      "hash": "be9feef891f636bb625b9f1e36f2287a1664c859e46926c55e0a9ff65e383326",
       "labels": [
-        "Pesquise sua dúvida (ex.: como cadastrar veículo, cobrar PIX, contrato)...",
         "Pesquisar na Central de Ajuda",
-        "Resultados da pesquisa"
+        "Resultados da pesquisa",
+        "Tutoriais concluídos"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/manual.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "7b1f5d84ff41cb71afff4821e8121da41a734069ae27d671517803b426c98674",
+      "labels": [
+        "Índice"
+      ],
+      "messages": []
+    },
+    {
+      "file": "src/help/components/palette.tsx",
+      "kind": "component",
+      "route": null,
+      "hash": "73da91ec6b53acd695cf51457f2cb94b4dffef835d7fa0250ea9149e8010d55e",
+      "labels": [
+        "Pesquisar na ajuda",
+        "Digite sua dúvida. Enter abre o tutorial.",
+        "Ex.: como aprovar comprovante PIX"
       ],
       "messages": []
     },
@@ -2867,10 +2977,11 @@
       "file": "src/help/components/ui.tsx",
       "kind": "component",
       "route": null,
-      "hash": "b4c2c9a0859fe42d1a5e95a63a615b5874de4ad257d6f5f8f2aa3895f3ef6b49",
+      "hash": "73a8605e0f07413904e70bc50f0872d98b1e824bb9f27cf2b20ef556ee63d3d8",
       "labels": [
         "Navegação da Ajuda",
         "Obrigatório",
+        "Ainda precisa de ajuda?",
         "O que faltou ou ficou confuso neste tutorial?"
       ],
       "messages": []
@@ -2916,10 +3027,18 @@
       "messages": []
     },
     {
+      "file": "src/help/glossary.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "994989ebeac9a4d6df07c295b14149eff11c58e90aa3e43159b49029b24423f0",
+      "labels": [],
+      "messages": []
+    },
+    {
       "file": "src/help/index.ts",
       "kind": "component",
       "route": null,
-      "hash": "2518caadedb4b4e1195e5374f2c10351c12ada20d017acda6710a06396129bdf",
+      "hash": "79865727e22aa91b96967b94c9396519443e99c7783dd33d404287326fef15e8",
       "labels": [],
       "messages": []
     },
@@ -2935,7 +3054,7 @@
       "file": "src/help/search.ts",
       "kind": "component",
       "route": null,
-      "hash": "fc5cde53d95f05045727dd08c09346e57df19f7218fbfc2f79fe1406824054eb",
+      "hash": "066b0fb900da4bf2a7546da42b1b6bc3ae12ada04f38c9c3785dd0303470c10d",
       "labels": [],
       "messages": []
     },
@@ -2956,10 +3075,18 @@
       "messages": []
     },
     {
+      "file": "src/help/track.ts",
+      "kind": "component",
+      "route": null,
+      "hash": "9c7a4956d1a53704be47727347749f7e95ab39d3fc2578cec9a21b614298d73f",
+      "labels": [],
+      "messages": []
+    },
+    {
       "file": "src/help/types.ts",
       "kind": "component",
       "route": null,
-      "hash": "d4380c41ab168fbd27794eafa5982b163b3e297fec3a81d7581fd769b8c94d83",
+      "hash": "6531318a21194f765fa6be5ee81a1ca7ec6a4260b6843dea951e9eb0b9ce1a87",
       "labels": [],
       "messages": []
     },

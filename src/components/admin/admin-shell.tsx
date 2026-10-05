@@ -25,6 +25,7 @@ import { ContextualHelpButton } from "@/help/components/contextual";
 import { AdminHelpProvider } from "@/help/components/context";
 import { TourInvites } from "@/help/components/tour-invites";
 import { TourProvider } from "@/help/components/tour-provider";
+import { HelpPalette } from "@/help/components/palette";
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -384,7 +385,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <BrandingStyle theme={theme} />
       <AdminDataProvider>
         <AdminHelpProvider>
-        <TourProvider>
+          <TourProvider>
+          <HelpPalette />
           <div className="min-h-dvh bg-ink text-white admin-shell">
           <OrgStatusBanner />
           {/* Sidebar desktop */}

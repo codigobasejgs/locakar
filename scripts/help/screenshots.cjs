@@ -182,6 +182,10 @@ const SHOTS = [
   { file: "settings/whatsapp", path: "/admin/settings#integracoes", scroll: 900 },
   { file: "settings/push", path: "/admin/settings#preferencias", scroll: 500 },
   { file: "platform/overview", path: "/plataforma/admin" },
+  { file: "help/home", path: "/admin/ajuda" },
+  { file: "help/contextual", path: "/admin/pagamentos", click: "[aria-label='Abrir ajuda sobre esta página']" },
+  { file: "help/search", path: "/admin/ajuda", fill: ["input[type=search]", "cliente mandou comprovante pix"] },
+  { file: "help/glossary", path: "/admin/ajuda/glossario" },
 ];
 
 async function waitForServer(url, ms = 180000) {
@@ -234,7 +238,13 @@ if (require.main === module) (async () => {
   try {
     browser = await chromium.launch({ executablePath: CHROME });
     const ctx = await browser.newContext({ viewport: { width: D.w, height: D.h }, deviceScaleFactor: 1 });
-    await ctx.addInitScript(() => { try { localStorage.setItem("locakar-admin-theme", "dark"); } catch { /* ok */ } });
+    // Tema fixo e convites do tour já dispensados: nada aparece por cima das telas capturadas.
+    await ctx.addInitScript(({ user, org }) => {
+      try {
+        localStorage.setItem("locakar-admin-theme", "dark");
+        localStorage.setItem(`locakar:tour:v1:${user}:${org}`, JSON.stringify({ tours: {}, prompted: ["dashboard", "requests", "rentals", "reservations", "vehicles", "monitoring", "clients", "payments", "finance", "expenses", "maintenance", "fines", "notes", "incidents", "security", "reports", "settings-empresa", "settings-aparencia", "settings-equipe", "settings-textos", "settings-contratos", "settings-pagamentos", "settings-integracoes", "settings-preferencias"], welcome: "later" }));
+      } catch { /* ok */ }
+    }, { user: USER.id, org: ORG });
     await ctx.route("**/*", adminRoutes);
     const page = await ctx.newPage();
     await login(page);
@@ -245,6 +255,7 @@ if (require.main === module) (async () => {
       await page.evaluate(() => document.fonts?.ready);
       await page.waitForTimeout(1500);
       if (s.click) { await page.locator(s.click).first().click({ timeout: 8000 }).catch(() => console.warn(`  (sem ${s.click})`)); await page.waitForTimeout(900); }
+      if (s.fill) { await page.locator(s.fill[0]).first().fill(s.fill[1]).catch(() => console.warn(`  (sem ${s.fill[0]})`)); await page.waitForTimeout(700); }
       if (s.scroll) { await page.mouse.wheel(0, s.scroll); await page.waitForTimeout(500); }
       const target = s.clip ? page.locator(s.clip).first() : null;
       const png = target && (await target.count()) ? await target.screenshot() : await page.screenshot();

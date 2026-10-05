@@ -6,15 +6,36 @@
     "category": "primeiros-passos",
     "audience": "admin",
     "permission": "read",
-    "keywords": ["inicio", "painel", "dashboard", "menu", "sidebar", "navegacao", "comecar"],
-    "aliases": ["como comecar", "visao geral do sistema", "aprender a usar o sistema", "primeiro acesso"],
-    "routes": ["/admin"],
-    "sources": ["src/app/admin/page.tsx", "src/components/admin/admin-shell.tsx", "src/components/admin/nav.ts"],
+    "keywords": [
+      "inicio",
+      "painel",
+      "dashboard",
+      "menu",
+      "sidebar",
+      "navegacao",
+      "comecar"
+    ],
+    "aliases": [
+      "como comecar",
+      "visao geral do sistema",
+      "aprender a usar o sistema",
+      "primeiro acesso"
+    ],
+    "routes": [
+      "/admin"
+    ],
+    "sources": [
+      "src/app/admin/page.tsx",
+      "src/components/admin/admin-shell.tsx",
+      "src/components/admin/nav.ts"
+    ],
     "minutes": 4,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Estar logado no painel administrativo com uma conta autorizada."],
+    "prerequisites": [
+      "Estar logado no painel administrativo com uma conta autorizada."
+    ],
     "steps": [
       {
         "title": "Acesse o painel",
@@ -51,7 +72,11 @@
         "answer": "Na barra lateral à esquerda. Em telas de celular ou tablet, toque no ícone de menu (três barras) no canto superior esquerdo para abrir o menu."
       }
     ],
-    "related": ["onboarding-checklist-locadora", "configurar-empresa-dados", "cadastrar-veiculo"],
+    "related": [
+      "onboarding-checklist-locadora",
+      "configurar-empresa-dados",
+      "cadastrar-veiculo"
+    ],
     "result": "Você conhece a organização básica do sistema e está pronto para configurar sua empresa."
   },
   {
@@ -61,15 +86,33 @@
     "category": "primeiros-passos",
     "audience": "admin",
     "permission": "settings",
-    "keywords": ["onboarding", "passos", "implantacao", "configuracao inicial", "comeco"],
-    "aliases": ["passo a passo para comecar", "como implantar minha locadora", "configurar do zero"],
-    "routes": ["/admin", "/admin/settings"],
-    "sources": ["src/components/admin/onboarding-card.tsx", "src/app/admin/settings/page.tsx"],
+    "keywords": [
+      "onboarding",
+      "passos",
+      "implantacao",
+      "configuracao inicial",
+      "comeco"
+    ],
+    "aliases": [
+      "passo a passo para comecar",
+      "como implantar minha locadora",
+      "configurar do zero"
+    ],
+    "routes": [
+      "/admin",
+      "/admin/settings"
+    ],
+    "sources": [
+      "src/components/admin/onboarding-card.tsx",
+      "src/app/admin/settings/page.tsx"
+    ],
     "minutes": 5,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Perfil de Proprietário (owner) ou Administrador (admin)."],
+    "prerequisites": [
+      "Perfil de Proprietário (owner) ou Administrador (admin)."
+    ],
     "steps": [
       {
         "title": "1. Dados da empresa",
@@ -114,7 +157,11 @@
         "answer": "Sim, a qualquer momento na aba Aparência de Configurações."
       }
     ],
-    "related": ["configurar-empresa-dados", "configurar-identidade-visual", "cadastrar-veiculo"],
+    "related": [
+      "configurar-empresa-dados",
+      "configurar-identidade-visual",
+      "cadastrar-veiculo"
+    ],
     "result": "Sua locadora fica pronta para operar, gerar contratos e receber pagamentos com a sua marca."
   },
   {
@@ -124,15 +171,35 @@
     "category": "primeiros-passos",
     "audience": "admin",
     "permission": "operate",
-    "keywords": ["jornada", "fluxo", "ciclo", "locacao completa", "passo a passo geral"],
-    "aliases": ["como funciona uma locacao", "processo completo de aluguel", "fluxo de atendimento"],
-    "routes": ["/admin/rentals", "/admin/requests", "/admin/rentals/[id]"],
-    "sources": ["src/app/admin/requests/page.tsx", "src/app/admin/rentals/[id]/page.tsx", "src/components/admin/inspection-panel.tsx"],
+    "keywords": [
+      "jornada",
+      "fluxo",
+      "ciclo",
+      "locacao completa",
+      "passo a passo geral"
+    ],
+    "aliases": [
+      "como funciona uma locacao",
+      "processo completo de aluguel",
+      "fluxo de atendimento"
+    ],
+    "routes": [
+      "/admin/rentals",
+      "/admin/requests",
+      "/admin/rentals/[id]"
+    ],
+    "sources": [
+      "src/app/admin/requests/page.tsx",
+      "src/app/admin/rentals/[id]/page.tsx",
+      "src/components/admin/inspection-panel.tsx"
+    ],
     "minutes": 6,
     "difficulty": "Iniciante",
     "updated": "2026-10-02",
     "version": 1,
-    "prerequisites": ["Veículo disponível cadastrado e cliente criado ou pedido recebido pelo app."],
+    "prerequisites": [
+      "Veículo disponível cadastrado e cliente criado ou pedido recebido pelo app."
+    ],
     "steps": [
       {
         "title": "Passo 1 — Entrada do pedido",
@@ -178,7 +245,118 @@
         "answer": "Sim, pelo aplicativo na opção 'Meu veículo > Vistoria pelo app'. A equipe pode conferir as fotos enviadas."
       }
     ],
-    "related": ["aprovar-solicitacao-locacao", "gerar-assinar-contrato", "vistoria-entrega-devolucao"],
+    "related": [
+      "aprovar-solicitacao-locacao",
+      "gerar-assinar-contrato",
+      "vistoria-entrega-devolucao"
+    ],
     "result": "Você domina todas as etapas do atendimento e sabe exatamente o que fazer em cada momento."
+  },
+  {
+    "slug": "usar-central-de-ajuda",
+    "title": "Como usar a Central de Ajuda, o glossário e o manual",
+    "description": "Pesquisar dúvidas, abrir a ajuda da tela atual, acompanhar o treinamento, imprimir tutoriais e falar com o suporte.",
+    "category": "primeiros-passos",
+    "audience": "admin",
+    "permission": "read",
+    "difficulty": "Iniciante",
+    "keywords": [
+      "ajuda",
+      "tutorial",
+      "treinamento",
+      "manual",
+      "glossario",
+      "pdf",
+      "imprimir",
+      "suporte"
+    ],
+    "aliases": [
+      "onde tiro duvidas",
+      "como pesquisar duvida",
+      "atalho ctrl k",
+      "manual em pdf",
+      "falar com suporte"
+    ],
+    "routes": [
+      "/admin/ajuda",
+      "/admin/ajuda/glossario",
+      "/admin/ajuda/manual"
+    ],
+    "sources": [
+      "src/help/components/home.tsx",
+      "src/help/components/contextual.tsx",
+      "src/help/components/palette.tsx",
+      "src/help/components/manual.tsx",
+      "src/help/components/glossary.tsx",
+      "src/help/components/ui.tsx"
+    ],
+    "minutes": 3,
+    "updated": "2026-10-03",
+    "version": 1,
+    "prerequisites": [
+      "Estar logado no painel. Cada perfil vê só os tutoriais das ações que pode fazer."
+    ],
+    "steps": [
+      {
+        "title": "Pesquise sua dúvida",
+        "text": "No menu, clique em Ajuda e Treinamento e escreva a dúvida do seu jeito (ex.: \"cliente mandou comprovante pix\"). A busca entende sinônimos, falta de acento e pequenos erros de digitação. Em qualquer tela do painel, Ctrl + K (ou Cmd + K no Mac) abre a mesma busca sem sair da tela.",
+        "image": "/help/screenshots/help/search.webp",
+        "caption": "Busca da Central de Ajuda",
+        "markers": [
+          {
+            "x": 58.9,
+            "y": 35.9,
+            "label": "Escreva a dúvida"
+          },
+          {
+            "x": 58.9,
+            "y": 59,
+            "label": "Abra o tutorial mais adequado"
+          }
+        ]
+      },
+      {
+        "title": "Ajuda da tela atual",
+        "text": "Em qualquer tela, clique em Ajuda no topo. Abre a lista de tutoriais e dúvidas frequentes daquela tela, sem precisar procurar.",
+        "image": "/help/screenshots/help/contextual.webp",
+        "caption": "Ajuda sobre a tela de Pagamentos"
+      },
+      {
+        "title": "Siga o treinamento",
+        "text": "Em Treinamentos os tutoriais estão em sequência por assunto. No fim de cada tutorial, clique em Marcar como concluído. A página inicial da Central mostra seu progresso e o botão Continuar leva ao passo em que você parou. O progresso fica salvo neste aparelho, separado por pessoa e por locadora."
+      },
+      {
+        "title": "Glossário e manual completo",
+        "text": "Glossário explica termos (caução, baixa, FIPE...) e o significado de cada status exatamente como aparece nas telas. Manual completo junta todos os tutoriais do seu perfil em uma página: clique em Imprimir ou salvar em PDF e escolha Salvar como PDF.",
+        "image": "/help/screenshots/help/glossary.webp",
+        "caption": "Glossário e status"
+      },
+      {
+        "title": "Avalie e peça ajuda",
+        "text": "No fim de cada tutorial, responda se ele ajudou; se não ajudou, conte o que faltou. Se ainda precisar, use Ainda precisa de ajuda? para falar com o suporte pelo WhatsApp."
+      }
+    ],
+    "tips": [
+      "Copie a mensagem de erro que apareceu na tela e cole na busca: o artigo \"Por que não consigo...?\" explica cada uma."
+    ],
+    "warnings": [],
+    "problems": [
+      {
+        "question": "Não encontro um tutorial que outra pessoa da equipe vê.",
+        "answer": "Os tutoriais seguem o seu perfil de acesso. Quem é Operador, por exemplo, não vê os tutoriais de configurações. Peça ao Proprietário ou Administrador."
+      }
+    ],
+    "faq": [
+      {
+        "question": "A ajuda funciona sem internet de IA?",
+        "answer": "Sim. Busca, tutoriais, FAQ, glossário e manual funcionam sempre. O assistente que responde perguntas só aparece quando a locadora configurou uma chave de IA."
+      }
+    ],
+    "related": [
+      "primeiros-passos-visao-geral",
+      "por-que-nao-consigo",
+      "onboarding-checklist-locadora"
+    ],
+    "result": "Você encontra o tutorial certo, acompanha o próprio treinamento e sabe como chegar ao suporte quando precisar."
   }
 ]

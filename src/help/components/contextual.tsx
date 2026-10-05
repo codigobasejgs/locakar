@@ -33,6 +33,9 @@ export function ContextualHelpButton() {
     if (open && tours && !catalog) void tours.loadCatalog().then((c) => setCatalog(c.tours));
   }, [open, tours, catalog]);
 
+  // FAQ só dos artigos desta tela (no máximo 4), sem repetir pergunta.
+  const faq = [...new Map(matches.flatMap((a) => a.faq).map((f) => [f.question, f])).values()].slice(0, 4);
+
   if (inHelp) return null;
 
   const run = (id: string, mode: "quick" | "full", resume = false) => {
@@ -147,6 +150,20 @@ export function ContextualHelpButton() {
                   </Link>
                 );
               })}
+            </div>
+          )}
+
+          {faq.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-white">Dúvidas frequentes desta tela</p>
+              <div className="divide-y divide-line rounded-xl border border-line bg-surface text-xs">
+                {faq.map((f, i) => (
+                  <details key={i} className="group p-3">
+                    <summary className="cursor-pointer font-medium text-zinc-200 group-open:text-white">{f.question}</summary>
+                    <p className="mt-1.5 text-muted leading-relaxed">{f.answer}</p>
+                  </details>
+                ))}
+              </div>
             </div>
           )}
 

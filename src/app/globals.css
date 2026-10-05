@@ -283,4 +283,14 @@ body {
   body { background: #fff; color: #000; }
   .no-print, .tour-root { display: none !important; }
   .print-area { padding: 0 !important; margin: 0 !important; }
+
+  /* Central de Ajuda: artigo e manual legíveis em papel/PDF (texto escuro, sem cartões escuros). */
+  .admin-shell:has(.help-article, .help-manual) { background: #fff !important; }
+  .admin-shell:has(.help-article, .help-manual) > div { padding-left: 0 !important; }
+  .help-article, .help-manual { max-width: none !important; color: #111 !important; font-size: 11pt; }
+  .help-article *, .help-manual * { color: #111 !important; background: transparent !important; border-color: #ccc !important; box-shadow: none !important; }
+  .help-article .help-marker, .help-manual .help-marker { background: #c026d3 !important; color: #fff !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .help-article img, .help-manual img { max-height: 9cm !important; page-break-inside: avoid; }
+  .help-article a, .help-manual a { text-decoration: none; }
+  .break-after-page { break-after: page; }
 }

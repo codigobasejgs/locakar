@@ -3,7 +3,9 @@ import type { OrgRole } from "@/types";
 
 export interface HelpQuestion { question: string; answer: string }
 export interface HelpField { name: string; required: boolean; description: string; example?: string }
-export interface HelpStep { title: string; text: string; fields?: HelpField[]; image?: string; caption?: string }
+/** Marcador sobre o screenshot, em % da imagem (0–100). A imagem original não é alterada. */
+export interface HelpMarker { x: number; y: number; label: string }
+export interface HelpStep { title: string; text: string; fields?: HelpField[]; image?: string; caption?: string; markers?: HelpMarker[] }
 export interface HelpArticle {
   slug: string;
   title: string;

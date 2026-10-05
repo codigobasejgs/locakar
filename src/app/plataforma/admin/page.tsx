@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select } from "@/components/ui/form";
 import { ROLE_LABEL } from "@/lib/permissions";
+import { articles } from "@/help";
 import { PLATFORM } from "@/lib/platform";
 import type { OrgRole, OrgStatus } from "@/types";
 
@@ -42,6 +43,13 @@ interface Data {
   admins: Admin[];
   config: { trial_days: number; grace_days: number };
   audit: AuditItem[];
+  help: HelpReport | null;
+}
+interface HelpReport {
+  views: { article: string; n: number }[];
+  feedback: { article: string; yes: number; no: number; comments: string[] | null }[];
+  zeroResults: { query: string; n: number }[];
+  searches: number;
 }
 
 const STATUS: Record<OrgStatus, { label: string; tone: "success" | "warning" | "danger" | "neutral" }> = {
@@ -250,6 +258,7 @@ export default function SuperAdminPage() {
               <Admins admins={data.admins} me={data.me} run={run} />
             </div>
             <AuditList audit={data.audit} orgs={data.organizations} />
+            <HelpInsights report={data.help} />
           </>
         )}
       </div>
@@ -430,6 +439,56 @@ function Admins({ admins, me, run }: { admins: Admin[]; me: string; run: Run }) 
       <div className="mt-3 flex gap-2">
         <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e-mail de uma conta cadastrada" aria-label="E-mail do novo Super Admin" />
         <Button variant="outline" onClick={async () => (await run({ action: "add_admin", email }, "Super Admin adicionado.")) && setEmail("")}>Adicionar</Button>
+      </div>
+    </section>
+  );
+}
+
+/** Central de Ajuda (30 dias, todas as locadoras, sem identificar pessoas): o que ler, o que falta escrever. */
+function HelpInsights({ report }: { report: HelpReport | null }) {
+  const title = (slug: string) => articles.find((a) => a.slug === slug)?.title ?? slug;
+  if (!report) {
+    return (
+      <section className="rounded-2xl border border-line bg-surface p-5 text-xs text-muted">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-white"><LifeBuoy className="size-4 text-muted" /> Central de Ajuda</h2>
+        <p className="mt-2">Métricas indisponíveis. Rode a migração <code>20261015000000_help_analytics.sql</code>.</p>
+      </section>
+    );
+  }
+  const unhelpful = report.feedback.filter((f) => f.no > 0);
+  return (
+    <section className="rounded-2xl border border-line bg-surface p-5 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-sm font-semibold"><LifeBuoy className="size-4 text-muted" /> Central de Ajuda · últimos 30 dias</h2>
+        <span className="text-xs text-muted">{report.searches} buscas · {report.zeroResults.reduce((n, z) => n + z.n, 0)} sem resultado</span>
+      </div>
+      <div className="grid gap-4 text-xs lg:grid-cols-3">
+        <div>
+          <h3 className="font-semibold text-white">Mais lidos</h3>
+          <ol className="mt-2 space-y-1 text-zinc-300">
+            {report.views.slice(0, 8).map((v) => <li key={v.article} className="flex justify-between gap-2"><span className="truncate">{title(v.article)}</span><span className="tabular-nums text-muted">{v.n}</span></li>)}
+            {!report.views.length && <li className="text-muted">Sem dados.</li>}
+          </ol>
+        </div>
+        <div>
+          <h3 className="font-semibold text-white">Buscas sem resultado (criar artigo)</h3>
+          <ol className="mt-2 space-y-1 text-zinc-300">
+            {report.zeroResults.slice(0, 10).map((z) => <li key={z.query} className="flex justify-between gap-2"><span className="truncate">&quot;{z.query}&quot;</span><span className="tabular-nums text-muted">{z.n}</span></li>)}
+            {!report.zeroResults.length && <li className="text-muted">Nenhuma.</li>}
+          </ol>
+        </div>
+        <div>
+          <h3 className="font-semibold text-white">&quot;Não ajudou&quot; (revisar)</h3>
+          <ul className="mt-2 space-y-2 text-zinc-300">
+            {unhelpful.slice(0, 6).map((f) => (
+              <li key={f.article}>
+                <p className="flex justify-between gap-2"><span className="truncate">{title(f.article)}</span><span className="tabular-nums text-muted">👍 {f.yes} · 👎 {f.no}</span></p>
+                {f.comments?.slice(0, 2).map((c, i) => <p key={i} className="truncate text-[11px] text-muted">“{c}”</p>)}
+              </li>
+            ))}
+            {!unhelpful.length && <li className="text-muted">Nenhuma avaliação negativa.</li>}
+          </ul>
+        </div>
       </div>
     </section>
   );
