@@ -32,17 +32,21 @@ export function TourInvites() {
   const [catalog, setCatalog] = useState<TourDef[] | null>(null);
   const route = useCurrentRoute(pathname);
 
-  const canWelcome = Boolean(tours?.loaded && !tours.state.welcome && isNew && (access.role === "owner" || access.role === "admin"));
+  const owner = access.role === "owner" || access.role === "admin";
+  const canWelcome = Boolean(tours?.loaded && !tours.state.welcome && isNew && owner);
+  // Convite por tela: para quem já passou pelas boas-vindas e para quem nunca as recebe
+  // (locadora já em uso, funcionários). Espera saber se a conta é nova para não sobrepor as boas-vindas.
+  const welcomeSettled = Boolean(tours?.state.welcome) || (isNew !== null && !(isNew && owner));
   const pageTours = useMemo(() => (catalog ? toursForRoute(catalog, route, access) : []), [catalog, route, access]);
   const pageTour = pageTours[0];
   const seen = Boolean(pageTour && tours?.state.tours[pageTour.id]);
-  const canPrompt = Boolean(tours?.loaded && tours.state.welcome && pageTour && !seen && !tours.state.prompted.includes(pageTour.id) && !tours.running);
+  const canPrompt = Boolean(tours?.loaded && welcomeSettled && pageTour && !seen && !tours.state.prompted.includes(pageTour.id) && !tours.running);
 
   // O catálogo só é carregado quando há chance de convite.
   useEffect(() => {
     if (!tours || !tours.loaded || catalog) return;
-    if (canWelcome || tours.state.welcome) void tours.loadCatalog().then((c) => setCatalog(c.tours));
-  }, [tours, catalog, canWelcome]);
+    if (canWelcome || welcomeSettled) void tours.loadCatalog().then((c) => setCatalog(c.tours));
+  }, [tours, catalog, canWelcome, welcomeSettled]);
 
   if (!tours || tours.running || pathname.startsWith("/admin/ajuda")) return null;
   if (canWelcome && catalog) {

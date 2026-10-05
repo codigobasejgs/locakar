@@ -199,10 +199,9 @@ const startFromHelp = async (page, path, button) => {
       // Demo já tem frota: convite de boas-vindas não aparece; o convite da tela aparece uma vez.
       await page.goto(`${BASE}/admin/vehicles`);
       const prompt = page.locator("aside", { hasText: "Quer aprender a usar esta área?" });
-      assert.equal(await page.locator("#tour-welcome-title").count(), 0, "conta em uso não recebe boas-vindas");
-      await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ tours: {}, prompted: [], welcome: "later" })), Object.keys(skipWelcome())[0]);
-      await page.reload();
+      // Locadora já em uso, sem nada salvo: sem boas-vindas, mas o convite da tela aparece.
       await prompt.waitFor({ timeout: 15000 });
+      assert.equal(await page.locator("#tour-welcome-title").count(), 0, "conta em uso não recebe boas-vindas");
       await prompt.locator("button[aria-label='Agora não']").click();
       await page.reload();
       await page.waitForTimeout(2500);
