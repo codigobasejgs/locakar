@@ -8,7 +8,9 @@ import type { OrgBranding, OrgRole, OrgTexts } from "@/types";
 
 export const dynamic = "force-dynamic";
 
-/** Upload de imagem de marca: PNG, JPG ou WebP até 1 MB. SVG rejeitado (XSS). */
+/** Upload de imagem de marca: PNG, JPG ou WebP até 4 MB. SVG rejeitado (XSS).
+ * ponytail: abaixo do limite de corpo da Vercel (~4,5 MB); para arquivos maiores, usar upload direto com URL assinada.
+ */
 const BRAND_MIMES: Record<string, string> = {
   png: "image/png",
   jpg: "image/jpeg",
@@ -17,7 +19,7 @@ const BRAND_MIMES: Record<string, string> = {
 };
 
 function checkImage(bytes: Uint8Array): "png" | "jpg" | "webp" {
-  if (bytes.length > 1024 * 1024) throw new HttpError(413, "Imagem muito grande (máximo 1 MB).");
+  if (bytes.length > 4 * 1024 * 1024) throw new HttpError(413, "Imagem muito grande (máximo 4 MB).");
   if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "png";
   if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpg";
   if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) return "webp";

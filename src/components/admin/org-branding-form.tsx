@@ -34,7 +34,7 @@ function BrandingForm({ org }: { org: Organization }) {
   const uploadLogo = async (slot: "logo" | "logoLight" | "logoCompact" | "favicon", e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 1024 * 1024) return toast.error("Imagem muito grande (máximo 1 MB).");
+    if (file.size > 4 * 1024 * 1024) return toast.error("Imagem muito grande (máximo 4 MB).");
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (ext === "svg") return toast.error("SVG não permitido por segurança. Use PNG, JPG ou WebP.");
     setUploading(slot);
