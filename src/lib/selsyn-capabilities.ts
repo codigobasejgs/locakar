@@ -40,8 +40,9 @@ export const INTEGRATION_LABEL: Record<SelsynIntegrationStatus, string> = {
   AUTH_ERROR: "Autenticação recusada (401)", FORBIDDEN: "Consultas recusadas (403)", PROVIDER_UNAVAILABLE: "Não foi possível consultar o fornecedor",
 };
 export function supportReport(results: SelsynProbe[], environment: string, checkedAt: string) {
-  return ["SELSYN — diagnóstico LOCAKAR", `Ambiente: ${environment}`, `Data/hora: ${checkedAt}`, "Contrato local derivado; OpenAPI oficial atual ainda não confirmado.", ...results.map(r => {
+  return ["SELSYN — diagnóstico LOCAKAR", `Ambiente: ${environment}`, `Data/hora: ${checkedAt}`, "Contrato: OpenAPI Selsyn 3.0.1 / Swagger 3.0.0 (cópia de 06/10/2026). Requests conferem com o contrato: servidor /keek/rest/, GET, security api-key-cliente = x-api-key na query.", ...results.map(r => {
     const op = SELSYN_OPERATIONS[r.operation];
-    return `${r.group} | ${r.operation} | GET ${op?.path ?? "não catalogado"} | HTTP ${r.httpStatus ?? "não obtido"} | ${r.code}`;
-  }), "Solicitação: confirmar tipo/escopo da credencial, security scheme e permissão de leitura das operações acima.", "HTTP 403 não comprova sozinho chave válida sem permissão.", "Comandos físicos: NÃO EXECUTADOS / DESABILITADOS."].join("\n");
+    const body = r.diagnostics?.providerBody === undefined ? "" : ` | resposta: ${JSON.stringify(r.diagnostics.providerBody).slice(0, 300)}`;
+    return `${r.group} | ${r.operation} | GET /keek/rest${op?.path ?? " não catalogado"} | auth: api-key-cliente (x-api-key na query) | HTTP ${r.httpStatus ?? "não obtido"} | ${r.code}${body}`;
+  }), "Favor confirmar: 1) se a chave é de Cliente (api-key-cliente) e não de Operador/Monitor/Grupo; 2) se está ativa; 3) se possui acesso de leitura a Consulta Nível Cliente (aovivo) e Monitoramento Nível Cliente; 4) quais módulos precisam ser habilitados.", "HTTP 403 não comprova sozinho chave válida sem permissão.", "Comandos físicos: NÃO EXECUTADOS / DESABILITADOS."].join("\n");
 }

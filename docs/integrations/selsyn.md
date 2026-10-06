@@ -103,6 +103,23 @@ AUTHENTICATION_FAILED: fornecedor 401; PROVIDER_FORBIDDEN: fornecedor 403 (não 
 
 **Fora da Selsyn.** `ERR_BLOCKED_BY_CLIENT` em `static.cloudflareinsights.com` vem de bloqueador do navegador; o código não injeta esse beacon. A imagem 400 não vem do monitoramento (que não renderiza imagens); provável Next/Image com URL externa de veículo sem `images.remotePatterns` — falta a URL exata para corrigir.
 
+## Auditoria de autenticação — fase 2 (2026-10-06)
+
+**Contrato.** Cópia fiel do OpenAPI do fornecedor em `docs/vendor/selsyn/openapi.json` (arquivo baixado pelo cliente em 06/10/2026, 218 operações; OpenAPI 3.0.1, info.version 3.0.0, servers `/keek/rest/`). Não é usado em runtime; `check-selsyn` falha se o catálogo divergir dele. A página oficial continuou inacessível deste ambiente (timeout), então a origem é o download do cliente, não captura direta.
+
+**securitySchemes.** `api-key-cliente`: x-api-key na query (chave do cadastro de Cliente) · `api-key-monitor`: x-api-key na query (monitor conveniado) · `api-key-grupo`: x-api-key na query (grupo de rastreáveis) · `x-api-key`: header (cadastro de Operador) · `token`: header `x-r2f-auth` (via GET /login).
+
+| Operação | Path | Security aceito | LOCAKAR envia |
+|---|---|---|---|
+| aovivo | GET /keek/rest/posicao/v2/aovivo | api-key-cliente | x-api-key na query |
+| integracaoAoVivo | GET /keek/rest/v1/integracao/posicao | cliente, grupo ou monitor | x-api-key na query |
+| intergacaoListTipoAlerta | GET /keek/rest/v1/integracao/alerta/tipo | cliente, grupo ou monitor | x-api-key na query |
+| gdrAovivo | GET /keek/rest/v1/integracao/gdr/posicao/aovivo | cliente, grupo ou monitor | x-api-key na query |
+
+**Diferenças:** nenhuma em host, base path, path, método, local/nome da credencial ou parâmetros (todos opcionais). `SELSYN_ORGANIZATION_ID` é só configuração interna LOCAKAR (isolamento) e nunca é enviado à Selsyn.
+
+**Conclusão.** Request confere com o contrato. As quatro famílias recusam com 403, inclusive `aovivo`, que só aceita chave de Cliente. Isso é compatível com chave de outro tipo (Operador, que vai no header), chave inativa ou sem módulo liberado — o contrato documenta só respostas `default`, então a distinção depende do corpo do 403 (agora capturado e sanitizado) e da Selsyn. Autenticação **não** foi alterada por tentativa.
+
 ## Inventário técnico
 A tabela a seguir é gerada do catálogo oficial. Todos implementados no catálogo/API/formulários; chamadas reais pendentes de ambiente e fornecedor. Ver schemas completos em `src/lib/selsyn-contracts.json`.
 

@@ -1,5 +1,5 @@
 import "server-only";
-import { buildSelsynRequest, providerError, sanitizeSelsyn, SELSYN_BASE, SelsynError, validateSelsynResponse, type Json, type SelsynDiagnostics } from "../selsyn";
+import { buildSelsynRequest, providerError, providerErrorBody, sanitizeSelsyn, SELSYN_BASE, SelsynError, validateSelsynResponse, type Json, type SelsynDiagnostics } from "../selsyn";
 
 export interface SelsynFile { name: string; mime: string; base64: string }
 /** Transporte único, testável com fetch simulado; não registra URLs que contenham a credencial. */
@@ -17,7 +17,11 @@ export async function fetchSelsyn(operationId: string, input: Record<string, unk
     diagnostics.contentType = res.headers.get("content-type")?.split(";")[0].trim().slice(0, 100) ?? null;
     const requestId = res.headers.get("x-request-id") ?? res.headers.get("x-correlation-id");
     diagnostics.requestId = requestId && /^[A-Za-z0-9_-]{1,100}$/.test(requestId) && !requestId.includes(key) ? requestId : null;
-    if (!res.ok) throw providerError(res.status);
+    if (!res.ok) {
+      const err = providerError(res.status);
+      (diagnostics as SelsynDiagnostics).providerBody = providerErrorBody(await res.text().catch(() => ""), key);
+      throw err;
+    }
     if (Number(res.headers.get("content-length")) > 8 * 1024 * 1024) throw new SelsynError("RESPONSE_TOO_LARGE", "Consulta muito grande. Reduza o período ou o tamanho da página.", 424);
     const reader = res.body?.getReader(); const chunks: Uint8Array[] = []; let bytes = 0;
     if (reader) while (true) {

@@ -21,6 +21,8 @@ export const normalizeIdentifier = (s: string) => s.toUpperCase().replace(/[^A-Z
 export interface SelsynDiagnostics {
   operationId: string; method: "GET"; pathname: string; timestamp: string;
   httpStatus: number | null; contentType: string | null; requestId: string | null; durationMs: number;
+  /** Corpo de erro do fornecedor, sanitizado e truncado: mensagem/código exatamente como retornados. */
+  providerBody?: Json;
 }
 export class SelsynError extends Error {
   diagnostics?: SelsynDiagnostics;
@@ -115,6 +117,13 @@ export function validateSelsynResponse(operationId: string, value: unknown): Jso
     if (schema?.type === "object" && schema.properties && value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length && !Object.keys(value).some(k => Object.hasOwn(schema.properties!, k))) bad();
   }
   return value as Json;
+}
+
+/** Corpo de erro do fornecedor: só JSON pequeno, sanitizado, sem chave; nada é inventado. */
+export function providerErrorBody(text: string, secret: string): Json | undefined {
+  const trimmed = text.slice(0, 4000).trim();
+  if (!trimmed) return undefined;
+  try { return sanitizeSelsyn(JSON.parse(trimmed) as Json, secret); } catch { return sanitizeSelsyn(trimmed.slice(0, 500), secret); }
 }
 
 /** Remove chaves secretas e referências com credenciais, inclusive na resposta técnica. */

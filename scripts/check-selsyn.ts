@@ -76,6 +76,14 @@ assert.equal(providerError(404).code, "PROVIDER_NOT_FOUND");
 assert.equal(providerError(429).code, "PROVIDER_RATE_LIMITED"); assert.equal(providerError(429).retryable, true);
 assert.equal(providerError(503).code, "PROVIDER_UNAVAILABLE"); assert.equal(providerError(503).retryable, true);
 assert.equal(providerError(403).retryable, false); assert.equal(providerError(401).retryable, false);
+await assert.rejects(fetchSelsyn("aovivo", {}, secret, responseFetch(new Response(JSON.stringify({ message: "Acesso negado", key: secret }), { status: 403, headers: { "content-type": "application/json" } }))), e => e instanceof SelsynError && JSON.stringify(e.diagnostics?.providerBody).includes("Acesso negado") && !JSON.stringify(e.diagnostics).includes(secret));
+// Contrato oficial salvo: operações do catálogo existem com mesmo método/path; as 4 sondas usam api-key-cliente (x-api-key na query).
+const spec = JSON.parse(readFileSync("docs/vendor/selsyn/openapi.json", "utf8"));
+assert.equal(spec.components.securitySchemes["api-key-cliente"].in, "query"); assert.equal(spec.components.securitySchemes["api-key-cliente"].name, "x-api-key");
+const specOps = new Map<string, { method: string; path: string; security: Record<string, unknown>[] }>();
+for (const [path, methods] of Object.entries(spec.paths as Record<string, Record<string, { operationId?: string; security?: Record<string, unknown>[] }>>)) for (const [method, o] of Object.entries(methods)) if (o?.operationId) specOps.set(o.operationId, { method, path, security: o.security ?? [] });
+for (const [id, op] of Object.entries(SELSYN_OPERATIONS)) { const s = specOps.get(id); assert.ok(s, `${id} ausente no OpenAPI`); assert.equal(s!.method, "get", id); assert.equal(s!.path, op.path, id); assert.ok(s!.security.some(x => "api-key-cliente" in x), `${id} aceita api-key-cliente`); }
+assert.equal(specOps.get("gdrActivateOutput")?.method, "put"); assert.ok(!Object.hasOwn(SELSYN_OPERATIONS, "gdrActivateOutput"), "comando fora do catálogo");
 await assert.rejects(fetchSelsyn("gdrAovivo", {}, secret, responseFetch(new Response("{}", { status: 403, headers: { "content-type": "application/json", "x-request-id": "req-123" } }))), e => e instanceof SelsynError && e.diagnostics?.httpStatus === 403 && e.diagnostics.requestId === "req-123" && e.diagnostics.pathname === "/keek/rest/v1/integracao/gdr/posicao/aovivo" && !JSON.stringify(e.diagnostics).includes(secret));
 
 // ---------- Matriz de capabilities: parcial, sem herdar permissões não testadas ----------
