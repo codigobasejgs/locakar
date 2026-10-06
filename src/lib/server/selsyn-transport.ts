@@ -1,5 +1,5 @@
 import "server-only";
-import { validImei } from "../selsyn-command";
+import { validImei, type CommandExecution } from "../selsyn-command";
 import { buildSelsynRequest, providerError, providerErrorBody, sanitizeSelsyn, SELSYN_BASE, SelsynError, validateSelsynResponse, type Json, type SelsynDiagnostics } from "../selsyn";
 
 export interface SelsynFile { name: string; mime: string; base64: string }
@@ -71,7 +71,7 @@ export async function fetchSelsyn(operationId: string, input: Record<string, unk
   }
 }
 
-export interface CommandReceipt { id: string; status: string | null; returnedAt: string | null }
+export interface CommandReceipt { id: string; status: string | null; returnedAt: string | null; deviceId: string | null }
 /** PUT físico isolado do catálogo GET. Sem retry: timeout pode ter sido entregue. */
 export async function sendSelsynCommand(action: "lock" | "unlock", identifier: string, imei: string, key: string, send: typeof fetch = fetch): Promise<CommandReceipt> {
   if (action !== "lock" && action !== "unlock") throw new SelsynError("INVALID_INPUT", "Comando não permitido.");
@@ -93,9 +93,44 @@ export async function sendSelsynCommand(action: "lock" | "unlock", identifier: s
     const id = typeof raw?.id === "number" && Number.isSafeInteger(raw.id) ? String(raw.id) : typeof raw?.id === "string" && /^\d+$/.test(raw.id) ? raw.id : null;
     if (!id) throw new SelsynError("COMMAND_UNCERTAIN", "A Selsyn não confirmou o identificador do comando. Não repita.", 424);
     const status = raw.status && typeof raw.status === "object" ? (raw.status as { key?: unknown }).key : null;
-    return { id, status: typeof status === "string" && /^[A-Za-z0-9_-]{1,80}$/.test(status) && !status.includes(key) ? status : null, returnedAt: typeof raw.returnDate === "string" && Number.isFinite(Date.parse(raw.returnDate)) ? raw.returnDate : null };
+    return { id, status: typeof status === "string" && /^[A-Za-z0-9_-]{1,80}$/.test(status) && !status.includes(key) ? status : null, returnedAt: typeof raw.returnDate === "string" && Number.isFinite(Date.parse(raw.returnDate)) ? raw.returnDate : null, deviceId: typeof raw.deviceId === "number" && Number.isSafeInteger(raw.deviceId) && raw.deviceId > 0 ? String(raw.deviceId) : typeof raw.deviceId === "string" && /^[1-9]\d{0,18}$/.test(raw.deviceId) ? raw.deviceId : null };
   } catch (e) {
     if (e instanceof SelsynError) throw e;
     throw new SelsynError("COMMAND_UNCERTAIN", "O comando pode ter sido entregue, mas não houve confirmação. Não repita; confira com a Selsyn.", 504);
+  }
+}
+
+
+/** Consulta autenticada por TOKEN, não API Key. Nunca faz login nem dispara PUT como fallback. */
+export async function getSelsynCommandExecution(trackableId: string, deviceId: string, action: "lock" | "unlock", token: string, send: typeof fetch = fetch): Promise<CommandExecution> {
+  if (!token) throw new SelsynError("TOKEN_REQUIRED", "Configure SELSYN_ACCESS_TOKEN no servidor com um token Selsyn autorizado. A API Key não substitui esse token.", 409);
+  if (/[\r\n]/.test(token) || token.trim() !== token) throw new SelsynError("INVALID_TOKEN_FORMAT", "Token contém espaços externos ou quebra de linha.", 409);
+  if (![trackableId, deviceId].every(v => /^[1-9]\d{0,18}$/.test(v) && BigInt(v) <= BigInt("9223372036854775807")) || !["lock","unlock"].includes(action)) throw new SelsynError("INVALID_INPUT", "Identificação inválida para consulta do comando.");
+  const type = action === "lock" ? "LOCK" : "UNLOCK";
+  const url = new URL(`intervencao/comando/${trackableId}/${deviceId}/${type}`, SELSYN_BASE);
+  try {
+    const res = await send(url, { method: "GET", headers: { Accept: "application/json", "x-r2f-auth": token }, signal: AbortSignal.timeout(12000), redirect: "error", cache: "no-store" });
+    const reader = res.body?.getReader(); const parts: Uint8Array[] = []; let length = 0;
+    if (reader) while (true) {
+      const { value, done } = await reader.read(); if (done) break;
+      length += value.length;
+      if (length > 32000) { await reader.cancel(); throw new SelsynError("RESPONSE_TOO_LARGE", "Resposta de execução excedeu o limite. Comando não alterado.", 424); }
+      parts.push(value);
+    }
+    if (res.status === 401 || res.status === 403) throw new SelsynError("TOKEN_AUTH_FAILED", "A Selsyn recusou o token de consulta de execução. Confira validade e permissão; nenhum comando foi reenviado.", 424, res.status);
+    if (!res.ok) throw providerError(res.status);
+    let raw: unknown;
+    try { raw = JSON.parse(Buffer.concat(parts).toString("utf8")); } catch { throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Resposta de execução inválida. Registro pendente preservado.", 424); }
+    const obj = (v: unknown): Record<string, unknown> => v && typeof v === "object" && !Array.isArray(v) ? v as Record<string, unknown> : {};
+    const id = (v: unknown): string | null => typeof v === "number" && Number.isSafeInteger(v) && v > 0 ? String(v) : typeof v === "string" && /^[1-9]\d{0,18}$/.test(v) && BigInt(v) <= BigInt("9223372036854775807") ? v : null;
+    const field = (v: unknown): string | null => typeof v === "string" && /^[A-Za-z0-9_-]{1,80}$/.test(v) && !v.includes(token) ? v : null;
+    const date = (v: unknown): string | null => typeof v === "string" && Number.isFinite(Date.parse(v)) ? v : null;
+    const c = obj(raw); const device = obj(c.dispositivo);
+    const commandId = id(c.id);
+    if (!commandId) throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Identificador do comando ausente ou inválido.", 424);
+    return { id: commandId, deviceId: id(c.deviceId), imei: id(device.identificador), trackableId: id(obj(device.rastreavel).key), type: field(obj(c.type).key), status: field(obj(c.status).key), sentAt: date(c.sendDate), returnedAt: date(c.returnDate), result: typeof c.result === "string" ? String(sanitizeSelsyn(c.result, token)).slice(0, 300) : null };
+  } catch (e) {
+    if (e instanceof SelsynError) throw e;
+    throw new SelsynError("COMMAND_CHECK_UNAVAILABLE", "Não foi possível consultar a execução. Comando pendente preservado; não repetir.", 503);
   }
 }

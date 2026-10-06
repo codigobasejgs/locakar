@@ -10,8 +10,8 @@ import { useOrganization } from "@/hooks/use-organization";
 import { can } from "@/lib/permissions";
 
 type Action = "lock" | "unlock" | "imei";
-type Command = { id: string; action: string; status: string; created_at: string; error_code: string | null };
-type State = { enabled: boolean; imeiConfigured: boolean; imeiLast4: string | null; commands: Command[] };
+type Command = { id: string; action: string; status: string; created_at: string; error_code: string | null; provider_command_id?: string | null; provider_status?: string | null; provider_returned_at?: string | null; last_checked_at?: string | null; reconciliation_error?: string | null };
+type State = { enabled: boolean; imeiConfigured: boolean; imeiLast4: string | null; commands: Command[]; executionTokenConfigured: boolean };
 const LABEL: Record<string, string> = { reserved: "Validação pendente", sending: "Envio iniciado", accepted: "Recebido pela Selsyn; aguardando execução", confirmed: "Estado confirmado pela telemetria", rejected: "Não enviado ou rejeitado", unknown: "Resultado incerto — não repetir" };
 
 /** Configura IMEI e envia uma intenção por UUID; senha nunca persiste no navegador. */
@@ -75,7 +75,7 @@ export function VehicleLockControl({ vehicleId, plate, locked, lockEnabled, onDo
     if (busy) return;
     setBusy(true); setError(null);
     try { const result = await call({ action: "check", confirmPlate: plate }); toast.message(result.message); await load(); onDone?.(); }
-    catch (e) { setError((e as Error).message); }
+    catch (e) { setError((e as Error).message); await load().catch(() => {}); }
     finally { setBusy(false); }
   };
   const plateOk = confirmPlate.toUpperCase().replace(/[^A-Z0-9]/g, "") === plate.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -85,11 +85,12 @@ export function VehicleLockControl({ vehicleId, plate, locked, lockEnabled, onDo
       <Button size="sm" variant="outline" disabled={busy || !state || pending} onClick={() => open("imei")}><Settings2 />Cadastrar IMEI</Button>
       <Button size="sm" variant="outline" disabled={busy || !state?.enabled || !state.imeiConfigured || pending || lockEnabled !== true} onClick={() => open("lock")}><Lock />Bloquear</Button>
       <Button size="sm" variant="outline" disabled={busy || !state?.enabled || !state.imeiConfigured || pending} onClick={() => open("unlock")}><LockOpen />Desbloquear</Button>
-      <Button size="sm" variant="ghost" disabled={busy} onClick={check}><RefreshCw />Verificar comando</Button>
+      <Button size="sm" variant="ghost" disabled={busy} onClick={check}><RefreshCw />Consultar execução do comando</Button>
     </div>
     {state && !state.enabled && <p className="text-xs text-muted">Comandos desativados no servidor. Cadastro do IMEI permanece disponível.</p>}
+    {state && !state.executionTokenConfigured && <p className="text-xs text-amber-300">Consulta de execução aguardando SELSYN_ACCESS_TOKEN no servidor. Esse token é diferente da API Key; não o envie por chat.</p>}
     {pending && <p className="text-xs text-amber-300">Comando pendente ou incerto. Verifique o estado; não envie novamente. Se não houver confirmação, consulte o painel ou suporte Selsyn.</p>}
-    {state?.commands.length ? <details className="text-xs"><summary className="cursor-pointer">Histórico de comandos</summary><ul className="mt-2 grid gap-1">{state.commands.map(c => <li key={c.id}>{new Date(c.created_at).toLocaleString("pt-BR")} · {c.action === "lock" ? "Bloqueio" : "Desbloqueio"} · {LABEL[c.status] ?? c.status}{c.error_code ? ` (${c.error_code})` : ""}</li>)}</ul></details> : null}
+    {state?.commands.length ? <details className="text-xs"><summary className="cursor-pointer">Histórico de comandos</summary><ul className="mt-2 grid gap-1">{state.commands.map(c => <li key={c.id}>{new Date(c.created_at).toLocaleString("pt-BR")} · {c.action === "lock" ? "Bloqueio" : "Desbloqueio"} · {LABEL[c.status] ?? c.status}{c.error_code ? ` (${c.error_code})` : ""}{c.provider_command_id && <span className="block text-muted">Selsyn #{c.provider_command_id} · {c.provider_status ?? "estado não informado"} · retorno {c.provider_returned_at ? new Date(c.provider_returned_at).toLocaleString("pt-BR") : "não confirmado"}</span>}{c.last_checked_at && <span className="block text-muted">Consulta em {new Date(c.last_checked_at).toLocaleString("pt-BR")}{c.reconciliation_error ? ` · ${c.reconciliation_error}` : ""}</span>}</li>)}</ul></details> : null}
     {error && <p role="alert" className="text-xs text-red-400">{error}</p>}
     <Dialog open={!!action} onOpenChange={o => !o && close()} title={action === "imei" ? "Cadastrar IMEI do veículo" : action === "lock" ? "Bloquear veículo?" : "Desbloquear veículo?"} description="Somente proprietário/administrador. Sua identidade é confirmada novamente e a ação fica registrada."
       footer={<><Button variant="ghost" disabled={busy} onClick={close}>Voltar</Button><Button variant={action === "lock" ? "danger" : "primary"} disabled={busy || !plateOk || !password || (action === "imei" ? !/^\d{15}$/.test(imei) : reason.trim().length < 5)} onClick={send}>{busy ? "Confirmando…" : action === "imei" ? "Salvar IMEI" : "Enviar comando"}</Button></>}>

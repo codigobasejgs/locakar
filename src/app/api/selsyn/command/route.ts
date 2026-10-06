@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
 import { mapTrackedVehicle, normalizeIdentifier, SelsynError } from "@/lib/selsyn";
-import { validImei, validateLockSafety } from "@/lib/selsyn-command";
+import { assertCommandExecution, validImei, validateLockSafety } from "@/lib/selsyn-command";
 import { assertSelsynTenant, querySelsyn, readSelsynBody, selsynErrorResponse, selsynResponse } from "@/lib/server/selsyn";
 import { requireCommandOrigin, reauthenticateCommand } from "@/lib/server/selsyn-command";
-import { sendSelsynCommand } from "@/lib/server/selsyn-transport";
+import { getSelsynCommandExecution, sendSelsynCommand } from "@/lib/server/selsyn-transport";
 import { requireOrg, scoped } from "@/lib/server/org-context";
 import { requireStaff } from "@/lib/server/supabase";
 import { serviceDb } from "@/lib/server/push";
@@ -11,7 +11,7 @@ import { audit } from "@/lib/server/tenant";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 const enabled = () => process.env.SELSYN_COMMANDS_ENABLED === "true";
-const history = (vehicleId: string) => serviceDb().from("selsyn_commands").select("id,action,status,reason,provider_command_id,provider_status,provider_returned_at,error_code,created_at,sent_at,finished_at").eq("vehicle_id", vehicleId).order("created_at", { ascending: false }).limit(10);
+const history = (vehicleId: string) => serviceDb().from("selsyn_commands").select("id,action,status,reason,provider_command_id,provider_status,provider_returned_at,provider_device_id,last_checked_at,reconciliation_error,error_code,created_at,sent_at,finished_at").eq("vehicle_id", vehicleId).order("created_at", { ascending: false }).limit(10);
 
 export const GET = scoped(async function GET(request: Request) {
   try {
@@ -22,7 +22,7 @@ export const GET = scoped(async function GET(request: Request) {
     if (!v) throw new SelsynError("NOT_FOUND", "Veículo não encontrado.", 404);
     const result = await history(v.id);
     if (result.error) throw new SelsynError("DATABASE_NOT_READY", "Aplique a migration Selsyn de comandos.", 503);
-    return selsynResponse({ enabled: enabled(), imeiConfigured: validImei(v.selsyn_imei), imeiLast4: v.selsyn_imei?.slice(-4) ?? null, commands: result.data });
+    return selsynResponse({ enabled: enabled(), imeiConfigured: validImei(v.selsyn_imei), imeiLast4: v.selsyn_imei?.slice(-4) ?? null, commands: result.data, executionTokenConfigured: Boolean(process.env.SELSYN_ACCESS_TOKEN) });
   } catch (e) { return selsynErrorResponse(e); }
 });
 
@@ -49,21 +49,29 @@ export const POST = scoped(async function POST(request: Request) {
       return selsynResponse({ ok: true, imeiLast4: body.imei.slice(-4) });
     }
     if (action === "check") {
-      const { data: pending, error: pendingError } = await history(v.id);
-      if (pendingError) throw new SelsynError("DATABASE_NOT_READY", "Não foi possível consultar os comandos.", 503);
-      const c = pending?.find(p => p.status === "accepted");
-      if (c?.sent_at) {
-        const live = await querySelsyn(userId, "aovivoPorRastreavel", { rastreavelId: v.selsyn_rastreavel_id });
+      const { data: c, error: pendingError } = await db.from("selsyn_commands").select("*").eq("vehicle_id", v.id).in("status", ["accepted","unknown","sending","reserved"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (pendingError) throw new SelsynError("DATABASE_NOT_READY", "Aplique a migration de reconciliação Selsyn.", 503);
+      if (!c) return selsynResponse({ commands: (await history(v.id)).data, message: "Não há comando pendente para consultar." });
+      if (!c.provider_command_id || !c.sent_at) throw new SelsynError("COMMAND_ID_UNAVAILABLE", "Envio sem identificador confirmado. Não correlacionar ao último comando por suposição; confira com a Selsyn.", 409);
+      if (!process.env.SELSYN_ACCESS_TOKEN) throw new SelsynError("TOKEN_REQUIRED", "Configure SELSYN_ACCESS_TOKEN no servidor para consultar execução. A API Key de Cliente não substitui esse token.", 409);
+      const checkedAt = new Date().toISOString();
+      try {
+        if (c.trackable_id !== v.selsyn_rastreavel_id || c.imei !== v.selsyn_imei || normalizeIdentifier(c.identifier) !== normalizeIdentifier(v.plate)) throw new SelsynError("VEHICLE_MISMATCH", "Vínculo atual diferente do snapshot do comando.", 409);
+        const live = await querySelsyn(userId, "aovivoPorRastreavel", { rastreavelId: c.trackable_id });
         const tracked = mapTrackedVehicle(live.data);
-        const time = tracked.position?.time ? Date.parse(tracked.position.time) : NaN;
-        if (c.provider_returned_at && tracked.id === v.selsyn_rastreavel_id && normalizeIdentifier(tracked.identifier) === normalizeIdentifier(v.plate) && time > Math.max(Date.parse(c.sent_at), Date.parse(c.provider_returned_at)) && time <= Date.now() + 5000 && tracked.locked === (c.action === "lock")) {
-          const { error: confirmed } = await db.from("selsyn_commands").update({ status: "confirmed", finished_at: new Date().toISOString() }).eq("id", c.id).eq("status", "accepted");
-          if (confirmed) throw new SelsynError("DATABASE_NOT_READY", "Não foi possível registrar a confirmação.", 503);
-        }
+        if (tracked.id !== c.trackable_id || normalizeIdentifier(tracked.identifier) !== normalizeIdentifier(c.identifier) || !tracked.deviceId) throw new SelsynError("COMMAND_IDENTITY_UNVERIFIED", "A consulta de posição não confirmou o dispositivo do vínculo.", 409);
+        const execution = await getSelsynCommandExecution(c.trackable_id, tracked.deviceId, c.action, process.env.SELSYN_ACCESS_TOKEN);
+        assertCommandExecution(execution, { id: c.provider_command_id, deviceId: tracked.deviceId, imei: c.imei, trackableId: c.trackable_id, action: c.action, sentAt: c.sent_at, historicalDeviceId: c.provider_device_id });
+        // Não inferir sucesso de SENT, returnDate ou enum desconhecido. Guardar evidência e aguardar homologação dos estados finais.
+        const { error: saved } = await db.from("selsyn_commands").update({ provider_status: execution.status, provider_returned_at: execution.returnedAt, provider_device_id: execution.deviceId, provider_result: execution.result, last_checked_at: checkedAt, reconciliation_error: execution.returnedAt ? "TERMINAL_STATUS_UNVERIFIED" : null }).eq("id", c.id).eq("provider_command_id", execution.id).in("status", ["accepted","unknown","sending","reserved"]).select("id").single();
+        if (saved) throw new SelsynError("DATABASE_NOT_READY", "Não foi possível registrar a consulta de execução.", 503);
+        const result = await history(v.id);
+        if (result.error) throw new SelsynError("DATABASE_NOT_READY", "Não foi possível carregar o histórico.", 503);
+        return selsynResponse({ commands: result.data, message: execution.returnedAt ? `Comando ${execution.id}: retorno registrado; status ${execution.status ?? "não informado"}. A semântica final ainda precisa de confirmação; nenhum comando foi reenviado.` : `Comando ${execution.id}: status ${execution.status ?? "não informado"}; dispositivo ainda sem retorno confirmado.` });
+      } catch (e) {
+        await db.from("selsyn_commands").update({ last_checked_at: checkedAt, reconciliation_error: e instanceof SelsynError ? e.code : "COMMAND_CHECK_UNAVAILABLE" }).eq("id", c.id);
+        throw e;
       }
-      const result = await history(v.id);
-      if (result.error) throw new SelsynError("DATABASE_NOT_READY", "Não foi possível carregar o histórico de comandos.", 503);
-      return selsynResponse({ commands: result.data, message: "Estado consultado. A confirmação exige retorno do dispositivo e telemetria posterior. Se a Selsyn não fornecer o retorno, confirme com o suporte antes de qualquer nova ação." });
     }
     const commandAction = action === "lock" ? "lock" : action === "unlock" ? "unlock" : null;
     if (!commandAction) throw new SelsynError("INVALID_INPUT", "Comando não permitido.");
@@ -92,7 +100,7 @@ export const POST = scoped(async function POST(request: Request) {
       if (sending) throw new SelsynError("DATABASE_NOT_READY", "Não foi possível persistir a intenção de envio.", 503);
       dispatched = true;
       const receipt = await sendSelsynCommand(commandAction, normalizeIdentifier(v.plate), v.selsyn_imei, process.env.SELSYN_API_KEY ?? "");
-      const { error: saved } = await db.from("selsyn_commands").update({ status: "accepted", provider_command_id: receipt.id, provider_status: receipt.status, provider_returned_at: receipt.returnedAt }).eq("id", id);
+      const { error: saved } = await db.from("selsyn_commands").update({ status: "accepted", provider_command_id: receipt.id, provider_status: receipt.status, provider_returned_at: receipt.returnedAt, provider_device_id: receipt.deviceId }).eq("id", id);
       if (saved) throw new SelsynError("COMMAND_UNCERTAIN", "A Selsyn recebeu o comando, mas o registro falhou. Não repita.", 503);
       await audit({ actorType: "staff", actorId: userId, action: "selsyn.command_received", entity: "vehicles", entityId: v.id, details: { commandId: id, action, providerId: receipt.id } });
       return selsynResponse({ commandId: id, status: "accepted", message: "Comando recebido pela Selsyn. Execução física ainda não confirmada; atualize o estado." });

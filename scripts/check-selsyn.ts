@@ -2,8 +2,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { buildSelsynRequest, coordinatesValid, localDateToUtc, mapTrackedVehicle, providerError, sanitizeSelsyn, SELSYN_OPERATIONS, SelsynError, trackingId, trackingTotals, validateSelsynResponse } from "../src/lib/selsyn";
-import { fetchSelsyn, sendSelsynCommand } from "../src/lib/server/selsyn-transport";
-import { validImei, validateLockSafety } from "../src/lib/selsyn-command";
+import { fetchSelsyn, getSelsynCommandExecution, sendSelsynCommand } from "../src/lib/server/selsyn-transport";
+import { assertCommandExecution, validImei, validateLockSafety } from "../src/lib/selsyn-command";
 import { requireCommandOrigin } from "../src/lib/server/selsyn-command";
 import { capabilityMatrix, integrationStatus, supportReport, type SelsynProbe } from "../src/lib/selsyn-capabilities";
 
@@ -138,7 +138,7 @@ const fakePut: typeof fetch = (async (url: string | URL | Request, init?: Reques
   assert.equal(new URL(String(url)).search, "");
   return Response.json({ id: 123, status: { key: "PENDING" }, returnDate: null, usuario: "não deve sair" });
 }) as typeof fetch;
-assert.deepEqual(await sendSelsynCommand("lock", "ABC1D23", "866557080755830", secret, fakePut), { id: "123", status: "PENDING", returnedAt: null });
+assert.deepEqual(await sendSelsynCommand("lock", "ABC1D23", "866557080755830", secret, fakePut), { id: "123", status: "PENDING", returnedAt: null, deviceId: null });
 assert.equal(puts, 1);
 let timeouts = 0;
 await assert.rejects(sendSelsynCommand("unlock", "ABC1D23", "866557080755830", secret, (async () => { timeouts++; throw new DOMException("timeout", "TimeoutError"); }) as typeof fetch), e => e instanceof SelsynError && e.code === "COMMAND_UNCERTAIN");
@@ -158,4 +158,33 @@ assert.throws(() => validateLockSafety({ ...safe, position: { ...safe.position!,
 assert.throws(() => validateLockSafety({ ...safe, position: { ...safe.position!, time: "2026-10-06T19:58:00.000Z" } }, "ABC1D23", now), /60 segundos/);
 assert.throws(() => validateLockSafety({ ...safe, position: undefined }, "ABC1D23", now), /60 segundos/);
 assert.throws(() => validateLockSafety(safe, "XYZ1D23", now), /placa/);
+// Reconciliação é GET com TOKEN, nunca PUT nem API Key como fallback.
+const token = "token-autorizado-ficticio";
+let executionGets = 0;
+const commandFixture = { id: 2396, deviceId: 12345, type: { key: "UNLOCK" }, status: { key: "SENT" }, sendDate: "2026-10-06T19:54:30.574Z", returnDate: null, result: null, usuario: "PII descartada", dispositivo: { identificador: 866557080755830, rastreavel: { key: "916" } } };
+const getExecution: typeof fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+  executionGets++;
+  assert.equal(init?.method, "GET");
+  assert.equal(new URL(String(url)).pathname, "/keek/rest/intervencao/comando/916/12345/UNLOCK");
+  assert.equal(new Headers(init?.headers).get("x-r2f-auth"), token);
+  assert.equal(new Headers(init?.headers).get("x-api-key"), null);
+  assert.equal(new URL(String(url)).search, "");
+  return Response.json(commandFixture);
+}) as typeof fetch;
+const execution = await getSelsynCommandExecution("916", "12345", "unlock", token, getExecution);
+assert.equal(executionGets, 1);
+assert.equal(execution.id, "2396"); assert.equal(execution.status, "SENT"); assert.equal(execution.returnedAt, null);
+assert.ok(!JSON.stringify(execution).includes("usuario") && !JSON.stringify(execution).includes(token));
+const expected = { id: "2396", deviceId: "12345", imei: "866557080755830", trackableId: "916", action: "unlock" as const, sentAt: "2026-10-06T19:54:30.574Z" };
+assert.doesNotThrow(() => assertCommandExecution(execution, expected, now));
+for (const mismatch of [{ ...execution, id: "2397" }, { ...execution, type: "LOCK" }, { ...execution, deviceId: "777" }, { ...execution, imei: "111" }, { ...execution, sentAt: "2026-10-05T19:54:30.574Z" }]) assert.throws(() => assertCommandExecution(mismatch, expected, now), SelsynError);
+await assert.rejects(getSelsynCommandExecution("916", "12345", "unlock", "", getExecution), e => e instanceof SelsynError && e.code === "TOKEN_REQUIRED");
+assert.equal(executionGets, 1, "sem token não faz request");
+await assert.rejects(getSelsynCommandExecution("916", "12345", "unlock", token, responseFetch(new Response(token, { status: 403 }))), e => e instanceof SelsynError && e.code === "TOKEN_AUTH_FAILED" && !e.message.includes(token));
+await assert.rejects(getSelsynCommandExecution("916", "12345", "unlock", token, responseFetch(new Response("x".repeat(33000)))), e => e instanceof SelsynError && e.code === "RESPONSE_TOO_LARGE");
+await assert.rejects(getSelsynCommandExecution("916", "12345", "unlock", token, responseFetch(new Response("<html>"))), e => e instanceof SelsynError && e.code === "INVALID_PROVIDER_RESPONSE");
+assert.ok(commandRoute.includes("getSelsynCommandExecution"));
+assert.ok(!commandRoute.includes('status: "confirmed"'), "sem enum terminal comprovado a reconciliação não libera comando novo");
+const upgrade = readFileSync("supabase/migrations/20261020000000_selsyn_command_reconciliation.sql", "utf8");
+assert.ok(upgrade.includes("add column if not exists provider_returned_at") && !/delete|truncate|drop table/i.test(upgrade));
 console.log("✓ selsyn offline check ok (sem chamadas reais nem comandos físicos)");

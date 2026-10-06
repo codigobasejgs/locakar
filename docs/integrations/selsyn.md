@@ -171,6 +171,18 @@ A implementação está no código, mas **não foi homologada fisicamente**. Nen
 
 **Homologação pendente:** autenticação real, INSERT/UPDATE/RPC no Supabase, concorrência em PostgreSQL e ciclo físico acompanhado. PostgreSQL local instalado está incompleto (`dict_snowball` ausente), impedindo executar migration em banco isolado; verificações SQL da suíte são estruturais, não homologação de concorrência. Build local também bloqueado pelo download Google Fonts. Não habilitar produção como “100% garantido”.
 
+## Reconciliação de comandos — correção posterior (06/10/2026)
+
+`Verificar comando` passa a consultar `getLastCommandExecution`, GET `/intervencao/comando/{idRastreavel}/{deviceId}/{LOCK|UNLOCK}`, sem reenviar lock/unlock. Requer `SELSYN_ACCESS_TOKEN` server-only em header `x-r2f-auth`; API Key não serve de fallback. Configuração ausente/expirada é informada sem revelar token. Login automático/refresh não implementados: `/login` documenta x-user-auth sem formato e tokens sem schema; não inventar senha/hash/campo de resposta.
+
+Aplicar a migration complementar `20261020000000_selsyn_command_reconciliation.sql`, que acrescenta `provider_returned_at` mesmo a uma tabela já existente e registra snapshot de dispositivo, última consulta, resultado resumido e erro de correlação. Não apaga comandos pendentes.
+
+Cada consulta procura o pendente diretamente no ledger escopado (não só nas últimas 10 entradas). Compara ID do comando, LOCK/UNLOCK, dispositivo, vínculo, IMEI e horário de envio; respostas de outro comando não alteram o registro. Comando histórico sem deviceId persistido exige vínculo/IMEI explícitos no retorno `dispositivo`; não preenche snapshot por dedução de IMEI=ID. Novos envios guardam o deviceId retornado no recibo.
+
+O OpenAPI não enumera status terminais: `SENT`/returnDate nulo continua pendente. Mesmo retorno existente com status sem semântica comprovada é registrado com `TERMINAL_STATUS_UNVERIFIED`; não marca confirmed nem remove a trava. Timeout de GET preserva o estado do envio original. UI mostra ID Selsyn, status e retorno reais, última consulta, erro e presença do token.
+
+**Pendente de contrato/credencial real:** autenticação autorizada por token, mapeamento de estados finais/resultados e correlação completa do comando2396. Testes são fixtures, sem acesso a conta/segredos. `solicitarPosicao` é PUT físico separado, não ativado por refresh; permanece indisponível até validar token/dispositivo e fluxo idempotente. Não remover stale-position nem reenviar2396 para resolver pendência.
+
 ## Inventário técnico
 A tabela a seguir é gerada do catálogo oficial. Todos implementados no catálogo/API/formulários; chamadas reais pendentes de ambiente e fornecedor. Ver schemas completos em `src/lib/selsyn-contracts.json`.
 
