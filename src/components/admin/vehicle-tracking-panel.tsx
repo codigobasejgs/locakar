@@ -43,12 +43,6 @@ export function TrackingDetails({ tracked, localOdometer }: { tracked: TrackedVe
 
 export function VehicleTrackingPanel({ vehicle }: { vehicle: { id: string; plate?: string; selsynRastreavelId?: string; odometer?: number } }) {
   const [data, setData] = useState<TrackedVehicle | null>(null);
-  const [commandsEnabled, setCommandsEnabled] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    fetch("/api/selsyn/status", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(s => alive && setCommandsEnabled(s?.commandsEnabled === true)).catch(() => {});
-    return () => { alive = false; };
-  }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const refresh = async () => {
@@ -61,7 +55,7 @@ export function VehicleTrackingPanel({ vehicle }: { vehicle: { id: string; plate
     finally { setBusy(false); }
   };
   return <Card className="grid gap-4 p-4"><h3 className="font-semibold">Rastreamento</h3>
-    {!vehicle.selsynRastreavelId ? <p className="text-sm text-muted">Este veículo ainda não possui rastreador vinculado.</p> : <><p className="text-xs text-muted">Selsyn #{vehicle.selsynRastreavelId}</p>{data && <TrackingDetails tracked={data} localOdometer={vehicle.odometer} />}{commandsEnabled && data && vehicle.plate && <VehicleLockControl vehicleId={vehicle.id} plate={vehicle.plate} locked={data.locked} lockEnabled={data.lockEnabled} onDone={refresh} />}<Button variant="outline" disabled={busy} onClick={refresh}>{busy ? "Consultando…" : "Atualizar posição"}</Button></>}
+    {!vehicle.selsynRastreavelId ? <p className="text-sm text-muted">Este veículo ainda não possui rastreador vinculado.</p> : <><p className="text-xs text-muted">Selsyn #{vehicle.selsynRastreavelId}</p>{data && <TrackingDetails tracked={data} localOdometer={vehicle.odometer} />}{data && vehicle.plate && <VehicleLockControl vehicleId={vehicle.id} plate={vehicle.plate} locked={data.locked} lockEnabled={data.lockEnabled} onDone={refresh} />}<Button variant="outline" disabled={busy} onClick={refresh}>{busy ? "Consultando…" : "Atualizar posição"}</Button></>}
     {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
     <Link className="text-sm text-brand-soft hover:underline" href={`/admin/monitoring?vehicle=${encodeURIComponent(vehicle.id)}`}>Abrir central de rastreamento</Link>
   </Card>;

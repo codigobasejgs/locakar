@@ -9,6 +9,6 @@ export const GET = scoped(async function GET() {
       db.from("vehicles").select("id,selsyn_rastreavel_id,selsyn_identificador").limit(1),
     ]);
     const tenantReady = selsynTenantReady();
-    return selsynResponse({ configured: Boolean(process.env.SELSYN_API_KEY) && tenantReady, tenantReady, databaseReady: !error && !vehiclesError, refreshSeconds: selsynRefreshSeconds(), lastRequest: data ?? null, contractVerified: true, commandsEnabled: false });
+    return selsynResponse({ configured: Boolean(process.env.SELSYN_API_KEY) && tenantReady, tenantReady, databaseReady: !error && !vehiclesError, refreshSeconds: selsynRefreshSeconds(), lastRequest: data ?? null, contractVerified: true, commandsEnabled: process.env.SELSYN_COMMANDS_ENABLED === "true" });
   } catch (e) { return selsynErrorResponse(e); }
 });

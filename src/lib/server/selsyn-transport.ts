@@ -1,4 +1,5 @@
 import "server-only";
+import { validImei } from "../selsyn-command";
 import { buildSelsynRequest, providerError, providerErrorBody, sanitizeSelsyn, SELSYN_BASE, SelsynError, validateSelsynResponse, type Json, type SelsynDiagnostics } from "../selsyn";
 
 export interface SelsynFile { name: string; mime: string; base64: string }
@@ -67,5 +68,34 @@ export async function fetchSelsyn(operationId: string, input: Record<string, unk
     const cause = (e as { cause?: { code?: unknown } })?.cause?.code;
     const net = typeof cause === "string" && /^[A-Z0-9_]{2,40}$/.test(cause) ? cause : "NETWORK";
     throw new SelsynError("PROVIDER_UNREACHABLE", `Não foi possível conectar ao servidor Selsyn (${net}). Verifique se o acesso está liberado para o servidor LOCAKAR.`, 503);
+  }
+}
+
+export interface CommandReceipt { id: string; status: string | null; returnedAt: string | null }
+/** PUT físico isolado do catálogo GET. Sem retry: timeout pode ter sido entregue. */
+export async function sendSelsynCommand(action: "lock" | "unlock", identifier: string, imei: string, key: string, send: typeof fetch = fetch): Promise<CommandReceipt> {
+  if (action !== "lock" && action !== "unlock") throw new SelsynError("INVALID_INPUT", "Comando não permitido.");
+  if (!/^[A-Z0-9]{5,10}$/.test(identifier) || !validImei(imei)) throw new SelsynError("INVALID_INPUT", "Placa ou IMEI inválidos.");
+  if (!key || /[\s"']/.test(key)) throw new SelsynError("NOT_CONFIGURED", "Credencial Selsyn inválida ou ausente.", 503);
+  const url = new URL(`v1/integracao/gdr/${action === "lock" ? "bloqueio" : "desbloqueio"}/${identifier}/${imei}`, SELSYN_BASE);
+  try {
+    const res = await send(url, { method: "PUT", headers: { Accept: "application/json", "x-api-key": key }, signal: AbortSignal.timeout(15000), redirect: "error", cache: "no-store" });
+    const reader = res.body?.getReader(); const parts: Uint8Array[] = []; let length = 0;
+    if (reader) while (true) {
+      const { value, done } = await reader.read(); if (done) break;
+      length += value.length;
+      if (length > 32000) { await reader.cancel(); throw new SelsynError("COMMAND_UNCERTAIN", "Resposta do comando excedeu o limite. Não repita; confira com a Selsyn.", 424); }
+      parts.push(value);
+    }
+    if (!res.ok) throw providerError(res.status);
+    let raw: Record<string, unknown>;
+    try { raw = JSON.parse(Buffer.concat(parts).toString("utf8")); } catch { throw new SelsynError("COMMAND_UNCERTAIN", "Resposta do comando inválida. Não repita; confira com a Selsyn.", 424); }
+    const id = typeof raw?.id === "number" && Number.isSafeInteger(raw.id) ? String(raw.id) : typeof raw?.id === "string" && /^\d+$/.test(raw.id) ? raw.id : null;
+    if (!id) throw new SelsynError("COMMAND_UNCERTAIN", "A Selsyn não confirmou o identificador do comando. Não repita.", 424);
+    const status = raw.status && typeof raw.status === "object" ? (raw.status as { key?: unknown }).key : null;
+    return { id, status: typeof status === "string" && /^[A-Za-z0-9_-]{1,80}$/.test(status) && !status.includes(key) ? status : null, returnedAt: typeof raw.returnDate === "string" && Number.isFinite(Date.parse(raw.returnDate)) ? raw.returnDate : null };
+  } catch (e) {
+    if (e instanceof SelsynError) throw e;
+    throw new SelsynError("COMMAND_UNCERTAIN", "O comando pode ter sido entregue, mas não houve confirmação. Não repita; confira com a Selsyn.", 504);
   }
 }

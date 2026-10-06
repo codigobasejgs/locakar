@@ -156,6 +156,21 @@ Correções: mapa histórico lê `content.posicoes`; filtros usam o rastreável 
 
 Contrato documenta `gdrLock` PUT `/v1/integracao/gdr/bloqueio/{identificador}/{imei}` e `gdrUnlock` PUT `/v1/integracao/gdr/desbloqueio/{identificador}/{imei}`, resposta `ComandoDto`. **Nenhum PUT executado**. `deviceId` da posição não prova o IMEI exigido: ainda falta confirmação do fornecedor. Rota de comando responde `COMMANDS_DISABLED`, status expõe `commandsEnabled:false`; UI permanece oculta. Não há transporte de comando ativo. Antes de liberar: IMEI vinculado verificado, reautenticação, reserva/idempotência atômicas, auditoria obrigatória, posição <=60s, velocidade0 e igniçãofalse, testes mockados e homologação supervisionada com veículo parado. Não prometer 100% sem essa homologação.
 
+## Bloqueio/desbloqueio — implementação com guardas (06/10/2026)
+
+A implementação está no código, mas **não foi homologada fisicamente**. Nenhum comando foi enviado durante desenvolvimento/testes.
+
+1. Aplicar `20261019000000_selsyn_commands.sql`: coluna `vehicles.selsyn_imei`, proteção contra edição direta, ledger service-role-only `selsyn_commands` e RPC atômica por veículo/request UUID. A migration não preenche IMEI nem envia comandos.
+2. Dono/administrador abre o card do veículo, `Cadastrar IMEI`, confere a associação no painel Selsyn, digita IMEI, placa e senha. Para SIH7H03/916 o usuário informou `866557080755830`; não é usado como config global ou inferido de deviceId.
+3. Após validar cadastro e proteções, habilitar `SELSYN_COMMANDS_ENABLED=true` no servidor. Por padrão false. Se faltar migration/IMEI, falha fechada.
+4. `Bloquear`/`Desbloquear`: mesma origem, papel owner/admin, confirmação de senha em cliente Auth isolado, identidade igual, MFA se já configurado, até 5 confirmações/10min, placa, motivo, UUID estável. Senha nunca armazenada/logada.
+5. Reserva SQL trava veículo, valida org/ator, snapshot de vínculo/IMEI, deduplica UUID e impede concorrência/cooldown. Estados reserved/sending/accepted/unknown impedem comandos novos e alteração de vínculo. Falhas incertas não são repetidas nem descartadas por tempo.
+6. Para bloquear: posição<=60s, placa/ID certos, lockEnabledtrue, speed0, ignitionfalse e não offline. Não relaxar por conveniência. Desbloquear não exige o predicado de posição, mas não ignora comandos incertos.
+7. PUT fixo gdrLock/gdrUnlock com x-api-key header. Nunca gdrActivateOutput ou outro acionamento. Resposta mostra apenas ID/status resumidos; HTTP200 não confirma execução. Sem retry.
+8. `Verificar comando`: GET autoritativo de posição. Só confirma comando aceito quando há returnDate do dispositivo e telemetria posterior compatível. Sem returnDate/status conclusivo, permanece pendente e exige suporte Selsyn — não liberar automaticamente comando contrário que possa ultrapassar um comando atrasado.
+
+**Homologação pendente:** autenticação real, INSERT/UPDATE/RPC no Supabase, concorrência em PostgreSQL e ciclo físico acompanhado. PostgreSQL local instalado está incompleto (`dict_snowball` ausente), impedindo executar migration em banco isolado; verificações SQL da suíte são estruturais, não homologação de concorrência. Build local também bloqueado pelo download Google Fonts. Não habilitar produção como “100% garantido”.
+
 ## Inventário técnico
 A tabela a seguir é gerada do catálogo oficial. Todos implementados no catálogo/API/formulários; chamadas reais pendentes de ambiente e fornecedor. Ver schemas completos em `src/lib/selsyn-contracts.json`.
 
