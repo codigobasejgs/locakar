@@ -45,6 +45,17 @@ export async function fetchSelsyn(operationId: string, input: Record<string, unk
     }
     let raw: unknown;
     try { raw = body.toString("utf8").trim() ? JSON.parse(body.toString("utf8")) : null; } catch { throw new SelsynError("INVALID_PROVIDER_RESPONSE", "A Selsyn retornou um formato não documentado para esta consulta/exportação.", 424); }
+    // Relatórios: a Selsyn devolve o PDF/XLSX em base64 dentro de content (verificado em 06/10/2026).
+    const content = raw && typeof raw === "object" ? (raw as { content?: unknown }).content : undefined;
+    if (typeof content === "string" && content.length > 100 && /^[A-Za-z0-9+/=\s]+$/.test(content.slice(0, 400))) {
+      const bytes = Buffer.from(content, "base64");
+      const kind = bytes.subarray(0, 5).toString("latin1") === "%PDF-" ? ["pdf", "application/pdf"] : bytes[0] === 0x50 && bytes[1] === 0x4b ? ["xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] : null;
+      if (kind) {
+        if (bytes.length > 8 * 1024 * 1024) throw new SelsynError("RESPONSE_TOO_LARGE", "Arquivo maior que o limite de 8 MB. Reduza o período.", 424);
+        if (bytes.includes(Buffer.from(key)) || bytes.includes(Buffer.from(encodeURIComponent(key)))) throw new SelsynError("UNSAFE_EXPORT", "A exportação contém referência sensível e não pode ser entregue.", 424);
+        return { data: null, file: { name: `selsyn-${operationId}.${kind[0]}`, mime: kind[1], base64: bytes.toString("base64") }, diagnostics: { ...diagnostics, durationMs: Date.now() - started } };
+      }
+    }
     return { data: sanitizeSelsyn(validateSelsynResponse(operationId, raw), key), diagnostics: { ...diagnostics, durationMs: Date.now() - started } };
   } catch (e) {
     if (e instanceof SelsynError) {

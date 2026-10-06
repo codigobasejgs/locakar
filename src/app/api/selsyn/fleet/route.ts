@@ -1,4 +1,4 @@
-import { normalizeIdentifier, record, trackingPoint, SelsynError, type TrackedVehicle } from "@/lib/selsyn";
+import { mapTrackedVehicle, record, SelsynError, type TrackedVehicle } from "@/lib/selsyn";
 import { assertSelsynTenant, querySelsyn, readSelsynBody, selsynErrorResponse, selsynResponse, selsynStaff } from "@/lib/server/selsyn";
 import { scoped } from "@/lib/server/org-context";
 export const dynamic = "force-dynamic";
@@ -15,14 +15,16 @@ export const POST = scoped(async function POST(request: Request) {
     let fleet: TrackedVehicle[] = [];
     let providerError: { code: string; message: string; httpStatus: number | null; retryable: boolean } | null = null;
     try {
-      // DTO explícito no catálogo existente; a consulta de monitoramento não exige GDR.
-      const result = await querySelsyn(userId, "integracaoAoVivo", {}, body.requestId);
-      if (!Array.isArray(result.data)) throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Posições não retornadas como lista.", 424);
-      fleet = local.flatMap(v => {
-        const raw = result.data instanceof Array ? result.data.find(p => typeof record(p).identificador === "string" && normalizeIdentifier(String(record(p).identificador)) === normalizeIdentifier(v.selsyn_identificador || v.plate)) : undefined;
-        if (!raw || !v.selsyn_rastreavel_id) return [];
-        const p = record(raw);
-        return [{ id: v.selsyn_rastreavel_id, identifier: String(p.identificador), sensors: [], position: trackingPoint({ latitude: p.latitude, longitude: p.longitude, time: p.dataHora, speed: p.velocidade, ignition: p.ignicao }, v.selsyn_rastreavel_id, v.plate), communicatedAt: typeof p.dataComunicacao === "string" ? p.dataComunicacao : undefined }];
+      // Consulta Nível Cliente: uma chamada traz posição, sensores e estado de bloqueio de todos os rastreáveis da chave.
+      const result = await querySelsyn(userId, "aovivo", { format: "JSON" }, body.requestId);
+      const items = record(record(result.data).content).items;
+      if (!Array.isArray(items)) throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Posições não retornadas como lista.", 424);
+      // Só rastreáveis vinculados a veículos desta locadora; o resto da conta nunca sai do servidor.
+      const linked = new Map(local.flatMap(v => v.selsyn_rastreavel_id ? [[String(v.selsyn_rastreavel_id), v] as const] : []));
+      fleet = items.flatMap(raw => {
+        const id = String(record(raw).id ?? "");
+        if (!linked.has(id)) return [];
+        try { return [mapTrackedVehicle(raw)]; } catch { return []; }
       });
     } catch (e) {
       if (!(e instanceof SelsynError)) throw e;

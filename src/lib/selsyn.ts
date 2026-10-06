@@ -19,7 +19,7 @@ export const trackingId = (v: unknown): string | null => {
 export const normalizeIdentifier = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
 export interface SelsynDiagnostics {
-  operationId: string; method: "GET"; pathname: string; timestamp: string;
+  operationId: string; method: "GET" | "PUT"; pathname: string; timestamp: string;
   httpStatus: number | null; contentType: string | null; requestId: string | null; durationMs: number;
   /** Corpo de erro do fornecedor, sanitizado e truncado: mensagem/código exatamente como retornados. */
   providerBody?: Json;
@@ -31,7 +31,7 @@ export class SelsynError extends Error {
 export function providerError(status: number) {
   if (status === 401) return new SelsynError("AUTHENTICATION_FAILED", "A Selsyn recusou a autenticação (HTTP 401). Confirme o tipo e a validade da credencial.", 424, status);
   if (status === 403) return new SelsynError("PROVIDER_FORBIDDEN", "A Selsyn recusou esta consulta (HTTP 403). O status sozinho não distingue chave inválida, escopo ou política do fornecedor.", 424, status);
-  if (status === 404) return new SelsynError("PROVIDER_NOT_FOUND", "Nenhum resultado foi encontrado na Selsyn.", 404, status);
+  if (status === 404) return new SelsynError("PROVIDER_NOT_FOUND", "Nenhum resultado foi encontrado na Selsyn (ex.: veículo sem sensor cadastrado ou período sem dados).", 404, status);
   if (status === 429) return new SelsynError("PROVIDER_RATE_LIMITED", "Limite temporário da Selsyn atingido. Aguarde antes de consultar novamente.", 429, status, true);
   if (status === 400 || status === 422) return new SelsynError("INVALID_INPUT", "A Selsyn recusou os parâmetros desta consulta.", 422, status);
   return new SelsynError("PROVIDER_UNAVAILABLE", `Serviço Selsyn indisponível (HTTP ${status}).`, 424, status, status >= 500);
@@ -143,7 +143,7 @@ export interface TrackingPoint { id: string; label: string; latitude: number; lo
 export interface TrackedVehicle {
   id: string; identifier: string; description?: string; status?: string; offline?: boolean;
   position?: TrackingPoint; communicatedAt?: string; battery?: number; batteryUnit?: string;
-  power?: number; powerUnit?: string; deviceId?: string; satellites?: number; distanceCounter?: number; address?: string;
+  power?: number; powerUnit?: string; deviceId?: string; lockEnabled?: boolean; locked?: boolean; satellites?: number; distanceCounter?: number; address?: string;
   sensors: { id?: number; description?: string; value?: string; unit?: string }[];
 }
 export const coordinatesValid = (lat: unknown, lng: unknown): boolean => typeof lat === "number" && Number.isFinite(lat) && lat >= -90 && lat <= 90 && typeof lng === "number" && Number.isFinite(lng) && lng >= -180 && lng <= 180;
@@ -162,6 +162,8 @@ export function mapTrackedVehicle(v: unknown): TrackedVehicle {
   return {
     id, identifier: raw.identificador, description: text(raw.descricao), status: text(raw.status),
     offline: typeof raw.offLine === "boolean" ? raw.offLine : undefined,
+    lockEnabled: typeof raw.bloqueioHabilitado === "boolean" ? raw.bloqueioHabilitado : undefined,
+    locked: typeof raw.lock === "boolean" ? raw.lock : typeof pos.locked === "boolean" ? pos.locked : undefined,
     position: trackingPoint(pos, id, raw.identificador), communicatedAt: text(raw.timeUltimaComunicacao),
     battery: num(pos.battery), batteryUnit: text(pos.batteryUnit), power: num(pos.power), powerUnit: text(pos.powerUnit),
     deviceId: trackingId(pos.deviceId) ?? undefined, satellites: num(pos.satellite), distanceCounter: num(pos.distance), address: text(record(pos.endereco).descricao),

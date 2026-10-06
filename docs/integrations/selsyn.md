@@ -133,6 +133,29 @@ Teste controlado via túnel SOCKS (IP 150.230.226.76), somente leitura, mesma ch
 
 Controles: sem chave e chave inválida = 403 com o mesmo corpo `{"message":"Acesso não autorizado."}`. A especificação oficial (`/keek/rest/openapi.json`, referenciada por `documentacao.html`) é idêntica à cópia salva e diz query — divergência do fornecedor, não do código. **Correção:** o transporte envia a chave só no header `x-api-key` (também tira a chave da URL). Testado numa operação de cada família; demais operações seguem o mesmo esquema documental.
 
+## Validação real de recursos — 06/10/2026
+
+Consultas GET pelo túnel SOCKS autorizado, rastreável 916, período de 24 horas; sem gravar chave/telemetria em arquivos:
+
+| Recurso | Operação | Resultado |
+|---|---|---|
+| Posição e estado | aovivoPorRastreavel / integracaoAoVivoPorPlaca / aovivo | 200; posição, data, velocidade, ignição, bloqueio habilitado |
+| Histórico | listHistoricoPosicaoPorRastreavel | 200; content.posicoes, 802 registros na consulta |
+| Relatório de posições | relatorioHistoricoPosicao | 200; conteúdo JSON |
+| Paradas | relatorioHistoricoParada | 200 |
+| Histórico de sensores | relatorioHistoricoSensor | 404; `Registro não encontrado { Sensor }`; snapshot atual contém zero sensores. Cadastro/disponibilidade de sensor requer confirmação do fornecedor. |
+| Situação atual | relatorioSituacaoAtual | 200; PDF base64 em content, 55 KB; decoder agora entrega arquivo |
+| Alertas | listAlerta | 200; 38 registros no período |
+| Relatório de eventos | relatorioEvento | 200 |
+| Últimos alertas | integracaoAlerta | 200; lista vazia |
+| Tipos de alerta | intergacaoListTipoAlerta | 200; 147 tipos |
+
+Correções: mapa histórico lê `content.posicoes`; filtros usam o rastreável selecionado inclusive no parâmetro `rastreavel`; menus escondem consultas globais sem escopo; frota usa `aovivo.content.items` para sensores/estado; relatório com PDF base64 convertido em download com limite e checagem de segredo. Atualização automática opt-in a cada 30 segundos por padrão, respeita aba visível e desliga após erro. `SELSYN_POSITION_REFRESH_SECONDS` existente continua prevalecendo (se 120, permanece 120); não é streaming nem altera o intervalo do rastreador.
+
+### Bloqueio e desbloqueio — pendentes de homologação
+
+Contrato documenta `gdrLock` PUT `/v1/integracao/gdr/bloqueio/{identificador}/{imei}` e `gdrUnlock` PUT `/v1/integracao/gdr/desbloqueio/{identificador}/{imei}`, resposta `ComandoDto`. **Nenhum PUT executado**. `deviceId` da posição não prova o IMEI exigido: ainda falta confirmação do fornecedor. Rota de comando responde `COMMANDS_DISABLED`, status expõe `commandsEnabled:false`; UI permanece oculta. Não há transporte de comando ativo. Antes de liberar: IMEI vinculado verificado, reautenticação, reserva/idempotência atômicas, auditoria obrigatória, posição <=60s, velocidade0 e igniçãofalse, testes mockados e homologação supervisionada com veículo parado. Não prometer 100% sem essa homologação.
+
 ## Inventário técnico
 A tabela a seguir é gerada do catálogo oficial. Todos implementados no catálogo/API/formulários; chamadas reais pendentes de ambiente e fornecedor. Ver schemas completos em `src/lib/selsyn-contracts.json`.
 

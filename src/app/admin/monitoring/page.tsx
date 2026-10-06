@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/page-header";
 import { SelsynResult } from "@/components/admin/selsyn-result";
 import { selsynPost, TrackingDetails } from "@/components/admin/vehicle-tracking-panel";
+import { VehicleLockControl } from "@/components/admin/vehicle-lock-control";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState, StatCard } from "@/components/ui/card";
@@ -17,7 +18,7 @@ const TrackingMap = dynamic(() => import("@/components/admin/tracking-map").then
 type Tab = "fleet" | "history" | "sensors" | "alerts" | "reports" | "links";
 interface LocalVehicle { id: string; name: string; plate: string; image: string; odometer?: number; selsyn_rastreavel_id?: string; selsyn_identificador?: string }
 interface FleetResult { fleet: TrackedVehicle[]; vehicles: LocalVehicle[]; suggestions: { rastreavelId: string; vehicleId: string | null }[]; queriedAt: string; providerError?: { code: string; message: string; httpStatus: number | null; retryable: boolean } | null }
-interface Status { configured: boolean; databaseReady: boolean; refreshSeconds: number; lastRequest?: { operation_id: string; status: string; error_code?: string; created_at: string } | null }
+interface Status { configured: boolean; databaseReady: boolean; refreshSeconds: number; commandsEnabled?: boolean; lastRequest?: { operation_id: string; status: string; error_code?: string; created_at: string } | null }
 interface Result { data: Json; queriedAt: string; requestId: string; file?: { name: string; mime: string; base64: string } }
 const TABS: [Tab, string][] = [["fleet", "Frota e mapa"], ["history", "Histórico"], ["sensors", "Sensores"], ["alerts", "Alertas"], ["reports", "Relatórios"], ["links", "Vínculos"]];
 const label: Record<string, string> = { dataInicial: "Data/hora inicial", dataFinal: "Data/hora final", format: "Formato", sensorId: "ID do sensor", rastreavelId: "ID do rastreável", idRastreavel: "ID do rastreável", identificador: "Identificador / placa", size: "Registros por página", page: "Página (começa em 0)", turnoInicial: "Turno: início", turnoFinal: "Turno: fim", turnoDoisInicial: "Segundo turno: início", turnoDoisFinal: "Segundo turno: fim", endereco: "Incluir endereço retornado", sumario: "Somente sumário", limiteVelocidade: "Limite de velocidade", tipoParada: "Tipo de parada", statusSensor: "Estado do sensor" };
@@ -66,7 +67,7 @@ export default function MonitoringPage() {
 
   useEffect(() => {
     if (!auto || !ready || tab !== "fleet") return;
-    const timer = window.setInterval(() => { if (document.visibilityState === "visible") void synchronize(); }, (status?.refreshSeconds ?? 120) * 1000);
+    const timer = window.setInterval(() => { if (document.visibilityState === "visible") void synchronize(); }, (status?.refreshSeconds ?? 30) * 1000);
     return () => window.clearInterval(timer);
   }, [auto, ready, tab, synchronize, status?.refreshSeconds]);
 
@@ -75,7 +76,11 @@ export default function MonitoringPage() {
     setOperation(t === "history" ? "listHistoricoPosicaoPorRastreavel" : t === "sensors" ? "relatorioHistoricoSensor" : t === "alerts" ? "listAlerta" : "relatorioSituacaoAtual");
   };
   const chooseOperation = (id: string) => { setOperation(id); setValues({}); setResult(null); };
-  const operations = Object.entries(SELSYN_OPERATIONS).filter(([id]) => tab === "history" ? /HistoricoPosicao|HistoricoParada|HistoricoSatelital/.test(id) : tab === "sensors" ? /Sensor|Periferico/.test(id) : tab === "alerts" ? /Alerta|Alertas|Evento/.test(id) : true);
+  const operations = Object.entries(SELSYN_OPERATIONS).filter(([id, op]) => {
+    const scoped = op.parameters.some(p => ["rastreavelId", "idRastreavel", "rastreavel", "identificador"].includes(p.name));
+    if (!scoped) return false;
+    return tab === "history" ? /HistoricoPosicao|HistoricoParada|HistoricoSatelital/.test(id) : tab === "sensors" ? /Sensor|Periferico/.test(id) : tab === "alerts" ? /Alerta|Alertas|Evento/.test(id) : op.path.startsWith("/relatorio/");
+  });
   const definition = SELSYN_OPERATIONS[operation];
   // sensorId path/query: um campo visual, o client envia ambas as posições oficiais.
   const fields = definition ? [...new Map(definition.parameters.map(p => [p.name, p])).values()] : [];
@@ -87,7 +92,7 @@ export default function MonitoringPage() {
     try {
       const parameters: Record<string, unknown> = {};
       for (const p of fields) {
-        const val = values[p.name] ?? (["rastreavelId", "idRastreavel"].includes(p.name) ? selected : p.name === "identificador" ? active?.identifier : p.default === undefined ? "" : String(p.default));
+        const val = values[p.name] ?? (["rastreavelId", "idRastreavel", "rastreavel"].includes(p.name) ? selected : p.name === "identificador" ? active?.identifier : p.default === undefined ? "" : String(p.default));
         if (!val) { if (p.required) throw new Error(`Informe ${label[p.name] ?? p.name}.`); continue; }
         parameters[p.name] = p.format?.includes("HH:mm:ss") ? localDateToUtc(val) : val;
       }
@@ -106,7 +111,7 @@ export default function MonitoringPage() {
     finally { setBusy(false); pending.current = false; }
   };
   const historyPositions = (() => {
-    const r = record(result?.data); const positions = r.posicoes;
+    const r = record(result?.data); const content = record(r.content); const positions = content.posicoes ?? r.posicoes;
     return Array.isArray(positions) ? positions.flatMap((v, i) => { const p = trackingPoint(v, String(i), active?.identifier ?? "Posição"); return p ? [p] : []; }) : [];
   })();
 
@@ -129,11 +134,12 @@ export default function MonitoringPage() {
     {!fleet && ["fleet", "links"].includes(tab) ? <Card><EmptyState title="Nenhuma consulta realizada" description="Sincronize para carregar a frota da locadora e a última posição dos veículos vinculados. A consulta utiliza a API real e pode consumir limites da sua conta." /></Card> : <>
       {tab === "fleet" && fleet && <>
         <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-5"><StatCard label="Com posição" value={totals.tracked} icon={CarFront} /><StatCard label="Em movimento" value={totals.moving} icon={Route} /><StatCard label="Parados" value={totals.stopped} icon={Radio} /><StatCard label="Offline (fornecedor)" value={totals.offline} icon={TriangleAlert} /><StatCard label="Sem velocidade" value={totals.unknown} icon={Satellite} /></div>
-        <div className="mb-4 flex flex-wrap justify-between gap-2 text-xs text-muted"><p>Consultado em {new Date(fleet.queriedAt).toLocaleString("pt-BR")}. Posições podem estar desatualizadas.</p><Checkbox checked={auto} disabled={!!fleet.providerError} onChange={e => setAuto(e.target.checked)} label={`Atualizar posição a cada ${status?.refreshSeconds ?? 120}s (aba visível)`} /></div>
+        <div className="mb-4 flex flex-wrap justify-between gap-2 text-xs text-muted"><p>Consultado em {new Date(fleet.queriedAt).toLocaleString("pt-BR")}. Posições podem estar desatualizadas.</p><Checkbox checked={auto} disabled={!!fleet.providerError} onChange={e => setAuto(e.target.checked)} label={`Tempo real: atualizar a cada ${status?.refreshSeconds ?? 30}s (aba visível)`} /></div>
         <TrackingMap points={fleet.fleet.flatMap(v => v.position ? [v.position] : [])} />
+        <p className="mt-2 text-xs text-muted">Atualização periódica da última posição recebida, não transmissão contínua. O rastreador pode enviar posições em intervalo diferente. Use o horário da posição para conferir.</p>
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{fleet.fleet.map(v => {
           const l = fleet.vehicles.find(l => l.selsyn_rastreavel_id === v.id);
-          return <Card key={v.id} className="grid gap-4 p-4"><div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0"><h3 className="break-words font-semibold">{l?.name ?? v.description ?? v.identifier}</h3><p className="text-xs text-muted">{v.identifier} · Selsyn #{v.id}</p></div><Badge tone={v.offline ? "warning" : "neutral"}>{v.offline === undefined ? "Estado não informado" : v.offline ? "Offline" : "Online"}</Badge></div><TrackingDetails tracked={v} localOdometer={l?.odometer} /><Button size="sm" variant="outline" onClick={() => { setSelected(v.id); setCurrentTab("history"); }}>Histórico e relatórios</Button></Card>;
+          return <Card key={v.id} className="grid gap-4 p-4"><div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0"><h3 className="break-words font-semibold">{l?.name ?? v.description ?? v.identifier}</h3><p className="text-xs text-muted">{v.identifier} · Selsyn #{v.id}</p></div><Badge tone={v.offline ? "warning" : "neutral"}>{v.offline === undefined ? "Estado não informado" : v.offline ? "Offline" : "Online"}</Badge></div><TrackingDetails tracked={v} localOdometer={l?.odometer} />{l && status?.commandsEnabled && <VehicleLockControl vehicleId={l.id} plate={l.plate} locked={v.locked} lockEnabled={v.lockEnabled} onDone={synchronize} />}<Button size="sm" variant="outline" onClick={() => { setSelected(v.id); setCurrentTab("history"); }}>Histórico e relatórios</Button></Card>;
         })}</div>
         {fleet.vehicles.filter(v => !fleet.fleet.some(r => r.id === v.selsyn_rastreavel_id)).map(v => <Card key={v.id} className="mt-3 p-4"><h3 className="font-semibold">{v.name} · {v.plate}</h3><p className="text-sm text-muted">{!v.selsyn_rastreavel_id ? "Rastreamento não vinculado" : fleet.providerError?.httpStatus === 403 ? "A credencial Selsyn não possui acesso a esta consulta." : "Não foi possível obter a última posição deste vínculo."}</p></Card>)}
         {!fleet.vehicles.length && <p className="mt-4 text-sm text-muted">Nenhum veículo cadastrado nesta locadora.</p>}
@@ -146,14 +152,14 @@ export default function MonitoringPage() {
           <p className="text-xs text-muted">Datas e horas no fuso do dispositivo ({Intl.DateTimeFormat().resolvedOptions().timeZone}); enviadas à Selsyn em UTC. Relatórios só por solicitação manual, sem repetição automática.</p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{fields.map(p => {
             const isTime = p.format?.includes("HH:mm:ss"); const isDate = p.format === "yyyy-MM-dd";
-            const value = values[p.name] ?? (["idRastreavel", "rastreavelId"].includes(p.name) ? selected : p.name === "identificador" ? active?.identifier ?? "" : p.default === undefined ? "" : String(p.default));
+            const value = values[p.name] ?? (["idRastreavel", "rastreavelId", "rastreavel"].includes(p.name) ? selected : p.name === "identificador" ? active?.identifier ?? "" : p.default === undefined ? "" : String(p.default));
             const options = p.type === "boolean" ? [{ value: "true", label: "Sim" }, { value: "false", label: "Não" }] : p.enum?.filter(v => v !== null).map(v => ({ value: String(v), label: String(v) }));
             return <Field key={p.name} label={label[p.name] ?? p.name} htmlFor={`tracking-${p.name}`} required={p.required} hint={p.description || undefined}>{options?.length ? <Select id={`tracking-${p.name}`} value={value} placeholder={p.required ? "Selecione" : "Padrão do fornecedor"} onChange={e => setValues(v => ({ ...v, [p.name]: e.target.value }))} options={options} /> : <Input id={`tracking-${p.name}`} value={value} type={isTime ? "datetime-local" : isDate ? "date" : "text"} inputMode={p.type === "number" || p.type === "integer" ? "numeric" : undefined} required={p.required} onChange={e => setValues(v => ({ ...v, [p.name]: e.target.value }))} />}</Field>;
           })}</div>
           <Button disabled={busy || !ready} onClick={query}>{busy ? "Consultando…" : "Consultar"}</Button>
         </Card>
         {result && <Card className="grid gap-4 p-4 sm:p-6"><h2 className="font-semibold">Resultado — Selsyn</h2><p className="break-all text-xs text-muted">{new Date(result.queriedAt).toLocaleString("pt-BR")} · Consulta {result.requestId}</p>{historyPositions.length > 0 && <TrackingMap points={historyPositions} route />}
-          {definition?.response.$ref?.endsWith("/ReportResultDto") && <p className="rounded-lg border border-line p-3 text-xs text-muted">O fornecedor documenta o conteúdo deste relatório como objeto sem estrutura definida. Arquivos/links de exportação e estados assíncronos só serão interpretados após confirmação do formato real. A chave nunca será incluída em downloads.</p>}
+          {definition?.response.$ref?.endsWith("/ReportResultDto") && <p className="rounded-lg border border-line p-3 text-xs text-muted">Dados retornados pela Selsyn. Relatórios em PDF/XLSX aparecem no botão de download; o PDF de Situação atual é o formato fornecido automaticamente.</p>}
           {result.file ? <Button variant="outline" onClick={download}>Baixar arquivo retornado pela Selsyn{result.file.mime === "text/html" ? " (HTML como texto seguro)" : ""}</Button> : <SelsynResult value={result.data} />}<details className="min-w-0"><summary className="cursor-pointer text-xs text-muted">Ver resposta técnica sanitizada</summary><pre className="mt-2 max-h-96 overflow-auto rounded-lg bg-surface p-3 text-xs">{JSON.stringify(result.data, null, 2)}</pre></details>
         </Card>}
       </div>}

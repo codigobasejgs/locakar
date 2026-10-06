@@ -7,7 +7,7 @@ import { requireOrg } from "@/lib/server/org-context";
 import { serviceDb } from "@/lib/server/push";
 import { audit } from "@/lib/server/tenant";
 
-export const selsynRefreshSeconds = () => Math.max(60, Math.min(3600, Number(process.env.SELSYN_POSITION_REFRESH_SECONDS) || 120));
+export const selsynRefreshSeconds = () => Math.max(30, Math.min(3600, Number(process.env.SELSYN_POSITION_REFRESH_SECONDS) || 30));
 export async function selsynStaff() {
   const { userId } = await requireStaff("operate");
   return { db: serviceDb(), userId };

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { buildSelsynRequest, coordinatesValid, localDateToUtc, mapTrackedVehicle, providerError, sanitizeSelsyn, SELSYN_OPERATIONS, SelsynError, trackingId, trackingTotals, validateSelsynResponse } from "../src/lib/selsyn";
 import { fetchSelsyn } from "../src/lib/server/selsyn-transport";
+import { validateLockSafety } from "../src/lib/selsyn-command";
 import { capabilityMatrix, integrationStatus, supportReport, type SelsynProbe } from "../src/lib/selsyn-capabilities";
 
 const dates = { dataInicial: "2026-10-01T00:00:00.000Z", dataFinal: "2026-10-01T01:00:00.000Z" };
@@ -107,4 +108,25 @@ assert.ok(report.includes("gdrAovivo") && report.includes("HTTP 403") && report.
 assert.ok(!/x-api-key=|SELSYN_API_KEY=/.test(report), "relatório nunca carrega credencial");
 const sql = readFileSync("supabase/migrations/20261007000000_selsyn_tracking.sql", "utf8");
 assert.ok(sql.includes("pg_advisory_xact_lock")); assert.ok(sql.includes("enable row level security")); assert.ok(sql.includes("from public,anon,authenticated"));
-console.log("✓ selsyn offline check ok (sem chamadas reais)");
+// PDF em base64 dentro de content: o formato real de Situação atual.
+const encodedPdf = Buffer.from("%PDF-1.7\n" + "fixture ".repeat(30)).toString("base64");
+const embedded = await fetchSelsyn("relatorioSituacaoAtual", { idRastreavel: "123" }, secret, responseFetch(Response.json({ content: encodedPdf, status: { key: "SUCCESS" } })));
+assert.equal(embedded.file?.mime, "application/pdf");
+assert.equal(Buffer.from(embedded.file!.base64, "base64").subarray(0, 5).toString(), "%PDF-");
+const leakingPdf = Buffer.from("%PDF-1.7\n" + secret + "fixture ".repeat(30)).toString("base64");
+await assert.rejects(fetchSelsyn("relatorioSituacaoAtual", { idRastreavel: "123" }, secret, responseFetch(Response.json({ content: leakingPdf }))), e => e instanceof SelsynError && e.code === "UNSAFE_EXPORT");
+assert.deepEqual(mapTrackedVehicle({ id: 123, identificador: "ABC1D23", bloqueioHabilitado: true, lock: false }).lockEnabled, true);
+const commandRoute = readFileSync("src/app/api/selsyn/command/route.ts", "utf8");
+assert.ok(commandRoute.includes("COMMANDS_DISABLED"));
+assert.ok(!commandRoute.includes("sendSelsynCommand"), "não existe execução física antes de homologação");
+assert.ok(readFileSync("src/app/api/selsyn/status/route.ts", "utf8").includes("commandsEnabled: false"));
+const now = Date.parse("2026-10-06T20:00:00.000Z");
+const safe = mapTrackedVehicle({ id: 123, identificador: "ABC1D23", bloqueioHabilitado: true, offLine: false, ultimaPosicao: { latitude: 0, longitude: 0, time: "2026-10-06T19:59:30.000Z", speed: 0, ignition: false } });
+assert.doesNotThrow(() => validateLockSafety(safe, "ABC1D23", now));
+assert.throws(() => validateLockSafety({ ...safe, lockEnabled: undefined }, "ABC1D23", now), /habilitado/);
+assert.throws(() => validateLockSafety({ ...safe, position: { ...safe.position!, speed: 1 } }, "ABC1D23", now), /velocidade zero/);
+assert.throws(() => validateLockSafety({ ...safe, position: { ...safe.position!, ignition: true } }, "ABC1D23", now), /ignição desligada/);
+assert.throws(() => validateLockSafety({ ...safe, position: { ...safe.position!, time: "2026-10-06T19:58:00.000Z" } }, "ABC1D23", now), /60 segundos/);
+assert.throws(() => validateLockSafety({ ...safe, position: undefined }, "ABC1D23", now), /60 segundos/);
+assert.throws(() => validateLockSafety(safe, "XYZ1D23", now), /placa/);
+console.log("✓ selsyn offline check ok (sem chamadas reais nem comandos físicos)");
