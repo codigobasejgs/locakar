@@ -1,16 +1,22 @@
 import "server-only";
-import { buildSelsynRequest, providerError, sanitizeSelsyn, SELSYN_BASE, SelsynError, validateSelsynResponse, type Json } from "../selsyn";
+import { buildSelsynRequest, providerError, sanitizeSelsyn, SELSYN_BASE, SelsynError, validateSelsynResponse, type Json, type SelsynDiagnostics } from "../selsyn";
 
 export interface SelsynFile { name: string; mime: string; base64: string }
 /** Transporte único, testável com fetch simulado; não registra URLs que contenham a credencial. */
-export async function fetchSelsyn(operationId: string, input: Record<string, unknown>, key: string, send: typeof fetch = fetch): Promise<{ data: Json; file?: SelsynFile }> {
+export async function fetchSelsyn(operationId: string, input: Record<string, unknown>, key: string, send: typeof fetch = fetch): Promise<{ data: Json; file?: SelsynFile; diagnostics: SelsynDiagnostics }> {
   if (!key) throw new SelsynError("NOT_CONFIGURED", "Configure SELSYN_API_KEY no backend para consultar.", 503);
   const { path, query } = buildSelsynRequest(operationId, input);
   const url = new URL(path.replace(/^\//, ""), SELSYN_BASE);
   url.search = query.toString();
   url.searchParams.set("x-api-key", key);
+  const started = Date.now();
+  const diagnostics = { operationId, method: "GET" as const, pathname: url.pathname, timestamp: new Date().toISOString(), httpStatus: null as number | null, contentType: null as string | null, requestId: null as string | null, durationMs: 0 };
   try {
-    const res = await send(url, { method: "GET", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(20000), redirect: "error", cache: "no-store" });
+    const res = await send(url, { method: "GET", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(12000), redirect: "error", cache: "no-store" });
+    diagnostics.httpStatus = res.status;
+    diagnostics.contentType = res.headers.get("content-type")?.split(";")[0].trim().slice(0, 100) ?? null;
+    const requestId = res.headers.get("x-request-id") ?? res.headers.get("x-correlation-id");
+    diagnostics.requestId = requestId && /^[A-Za-z0-9_-]{1,100}$/.test(requestId) && !requestId.includes(key) ? requestId : null;
     if (!res.ok) throw providerError(res.status);
     if (Number(res.headers.get("content-length")) > 8 * 1024 * 1024) throw new SelsynError("RESPONSE_TOO_LARGE", "Consulta muito grande. Reduza o período ou o tamanho da página.", 424);
     const reader = res.body?.getReader(); const chunks: Uint8Array[] = []; let bytes = 0;
@@ -30,13 +36,16 @@ export async function fetchSelsyn(operationId: string, input: Record<string, unk
     if (format === "HTML" && mime === "text/html") extension = "html";
     if (extension) {
       if (body.includes(Buffer.from(key)) || body.includes(Buffer.from(encodeURIComponent(key)))) throw new SelsynError("UNSAFE_EXPORT", "A exportação contém referência sensível e não pode ser entregue.", 424);
-      return { data: null, file: { name: `selsyn-${operationId}.${extension}`, mime: mime!, base64: body.toString("base64") } };
+      return { data: null, file: { name: `selsyn-${operationId}.${extension}`, mime: mime!, base64: body.toString("base64") }, diagnostics: { ...diagnostics, durationMs: Date.now() - started } };
     }
     let raw: unknown;
     try { raw = body.toString("utf8").trim() ? JSON.parse(body.toString("utf8")) : null; } catch { throw new SelsynError("INVALID_PROVIDER_RESPONSE", "A Selsyn retornou um formato não documentado para esta consulta/exportação.", 424); }
-    return { data: sanitizeSelsyn(validateSelsynResponse(operationId, raw), key) };
+    return { data: sanitizeSelsyn(validateSelsynResponse(operationId, raw), key), diagnostics: { ...diagnostics, durationMs: Date.now() - started } };
   } catch (e) {
-    if (e instanceof SelsynError) throw e;
+    if (e instanceof SelsynError) {
+      e.diagnostics = { ...diagnostics, durationMs: Date.now() - started };
+      throw e;
+    }
     if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) throw new SelsynError("TIMEOUT", "A Selsyn demorou para responder. Não houve nova tentativa automática.", 504);
     // Só o código de rede (ex.: UND_ERR_CONNECT_TIMEOUT, ENOTFOUND); nunca a URL, que contém a credencial.
     const cause = (e as { cause?: { code?: unknown } })?.cause?.code;

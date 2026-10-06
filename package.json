@@ -15,7 +15,8 @@
     "help:screenshots": "node scripts/help/screenshots.cjs",
     "help:e2e": "node scripts/help/e2e-tours.cjs",
     "check:signature": "node scripts/check-signature.cjs",
-    "autentique:smoke": "node scripts/autentique-smoke.cjs"
+    "autentique:smoke": "node scripts/autentique-smoke.cjs",
+    "selsyn:diagnose": "node scripts/selsyn-diagnose.cjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

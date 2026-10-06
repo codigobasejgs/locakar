@@ -18,15 +18,21 @@ export const trackingId = (v: unknown): string | null => {
 };
 export const normalizeIdentifier = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
+export interface SelsynDiagnostics {
+  operationId: string; method: "GET"; pathname: string; timestamp: string;
+  httpStatus: number | null; contentType: string | null; requestId: string | null; durationMs: number;
+}
 export class SelsynError extends Error {
-  constructor(public readonly code: string, message: string, public readonly status = 400) { super(message); }
+  diagnostics?: SelsynDiagnostics;
+  constructor(public readonly code: string, message: string, public readonly status = 400, public readonly providerStatus?: number, public readonly retryable = false) { super(message); }
 }
 export function providerError(status: number) {
-  if (status === 401 || status === 403) return new SelsynError("PROVIDER_FORBIDDEN", `A credencial Selsyn não permite esta consulta (HTTP ${status}). Confira chave/permissões com o fornecedor.`, 424);
-  if (status === 404) return new SelsynError("NOT_FOUND", "Nenhum resultado foi encontrado na Selsyn.", 404);
-  if (status === 429) return new SelsynError("RATE_LIMITED", "Limite temporário da Selsyn atingido. Aguarde antes de consultar novamente.", 429);
-  if (status === 400 || status === 422) return new SelsynError("INVALID_INPUT", "A Selsyn recusou os parâmetros desta consulta.", 422);
-  return new SelsynError("PROVIDER_ERROR", `Serviço Selsyn indisponível (HTTP ${status}).`, 424);
+  if (status === 401) return new SelsynError("AUTHENTICATION_FAILED", "A Selsyn recusou a autenticação (HTTP 401). Confirme o tipo e a validade da credencial.", 424, status);
+  if (status === 403) return new SelsynError("PROVIDER_FORBIDDEN", "A Selsyn recusou esta consulta (HTTP 403). O status sozinho não distingue chave inválida, escopo ou política do fornecedor.", 424, status);
+  if (status === 404) return new SelsynError("PROVIDER_NOT_FOUND", "Nenhum resultado foi encontrado na Selsyn.", 404, status);
+  if (status === 429) return new SelsynError("PROVIDER_RATE_LIMITED", "Limite temporário da Selsyn atingido. Aguarde antes de consultar novamente.", 429, status, true);
+  if (status === 400 || status === 422) return new SelsynError("INVALID_INPUT", "A Selsyn recusou os parâmetros desta consulta.", 422, status);
+  return new SelsynError("PROVIDER_UNAVAILABLE", `Serviço Selsyn indisponível (HTTP ${status}).`, 424, status, status >= 500);
 }
 
 /** Validação contra o catálogo oficial. Rejeita URL, headers, método e qualquer campo não documentado. */

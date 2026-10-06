@@ -1,11 +1,12 @@
 import { normalizeIdentifier, record, SelsynError, trackingId } from "@/lib/selsyn";
-import { querySelsyn, readSelsynBody, selsynErrorResponse, selsynResponse, selsynStaff } from "@/lib/server/selsyn";
-import { audit } from "@/lib/server/tenant";
+import { querySelsyn, readSelsynBody, selsynErrorResponse, selsynResponse, selsynStaff, assertSelsynTenant } from "@/lib/server/selsyn";
 import { scoped } from "@/lib/server/org-context";
+import { audit } from "@/lib/server/tenant";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 export const POST = scoped(async function POST(request: Request) {
   try {
+    assertSelsynTenant();
     const { db, userId } = await selsynStaff();
     const body = await readSelsynBody(request);
     if (Object.keys(body).some(k => !["vehicleId", "rastreavelId", "identifier", "requestId", "unlink"].includes(k)) || typeof body.vehicleId !== "string") throw new SelsynError("INVALID_INPUT", "Veículo inválido.");
@@ -17,7 +18,8 @@ export const POST = scoped(async function POST(request: Request) {
     else {
       const id = trackingId(body.rastreavelId);
       if (!id || typeof body.identifier !== "string" || normalizeIdentifier(body.identifier) !== normalizeIdentifier(vehicle.plate)) throw new SelsynError("INVALID_INPUT", "A placa do rastreável precisa corresponder à placa deste veículo.");
-      const result = await querySelsyn(userId, "gdrFindRastreavelPorIdentificador", { identificador: body.identifier }, body.requestId);
+      // Consulta Nível Cliente por ID (read-only); não depende de Gerenciamento de Risco.
+      const result = await querySelsyn(userId, "aovivoPorRastreavel", { rastreavelId: id }, body.requestId);
       const r = record(result.data);
       if (trackingId(r.id) !== id || typeof r.identificador !== "string" || normalizeIdentifier(r.identificador) !== normalizeIdentifier(vehicle.plate)) throw new SelsynError("INVALID_INPUT", "A Selsyn não confirmou este vínculo.");
       patch = { selsyn_rastreavel_id: id, selsyn_identificador: r.identificador, selsyn_linked_at: new Date().toISOString() };

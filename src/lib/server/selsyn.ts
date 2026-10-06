@@ -12,9 +12,14 @@ export async function selsynStaff() {
   const { userId } = await requireStaff("operate");
   return { db: serviceDb(), userId };
 }
+// ponytail: uma credencial de runtime pertence a uma locadora; use configuração cifrada por tenant para ampliar.
+export const selsynTenantReady = () => process.env.SELSYN_ORGANIZATION_ID === requireOrg().org.id;
+export function assertSelsynTenant() {
+  if (!selsynTenantReady()) throw new SelsynError("TENANT_NOT_CONFIGURED", "Vincule a credencial de runtime à sua locadora com SELSYN_ORGANIZATION_ID no servidor.", 409);
+}
 export function selsynResponse(value: unknown, status = 200) { return Response.json(value, { status, headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } }); }
 export function selsynErrorResponse(e: unknown) {
-  if (e instanceof SelsynError) return selsynResponse({ error: e.message, code: e.code }, e.status);
+  if (e instanceof SelsynError) return selsynResponse({ error: e.message, code: e.code, provider: "SELSYN", providerStatus: e.providerStatus ?? e.diagnostics?.httpStatus ?? null, retryable: e.retryable, diagnostics: e.diagnostics }, e.status);
   if (e instanceof HttpError) return selsynResponse({ error: e.message, code: "ACCESS_ERROR" }, e.status);
   // Não registrar exceção/fetch request: a URL do fornecedor contém credencial na query.
   console.error("[selsyn] INTERNAL_ERROR");
@@ -40,7 +45,9 @@ export async function readSelsynBody(request: Request): Promise<Record<string, u
 
 /** Único transporte Selsyn. Chave cliente na QUERY, conforme securitySchemes (operador é diferente). */
 export async function querySelsyn(userId: string, operationId: string, input: Record<string, unknown>, requestId: unknown = randomUUID()) {
+  assertSelsynTenant();
   const key = process.env.SELSYN_API_KEY;
+  if (key && /[\s"']/.test(key)) throw new SelsynError("INVALID_CREDENTIAL_FORMAT", "A credencial contém espaço, quebra de linha ou aspas. Corrija o valor no servidor; a chave não foi alterada automaticamente.", 409);
   if (!key) throw new SelsynError("NOT_CONFIGURED", "Configure SELSYN_API_KEY no backend para consultar.", 503);
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(requestId))) throw new SelsynError("INVALID_INPUT", "Identificador de consulta inválido.");
   const id = String(requestId);
@@ -50,6 +57,11 @@ export async function querySelsyn(userId: string, operationId: string, input: Re
   const { data: reservation, error } = await db.rpc("reserve_selsyn_request", { p_org: requireOrg().org.id, p_id: id, p_operator: userId, p_operation: operationId, p_hash: hash });
   if (error) throw new SelsynError("DATABASE_NOT_READY", "Aplique a migration Selsyn no Supabase antes de consultar.", 503);
   if (reservation !== "reserved") throw new SelsynError(reservation === "limited" ? "RATE_LIMITED" : "DUPLICATE_REQUEST", reservation === "limited" ? "Limite interno de consultas atingido. Aguarde um minuto." : "Uma consulta já foi enviada. Aguarde sua conclusão.", reservation === "limited" ? 429 : 409);
+  const { data: recent } = await db.from("selsyn_requests").select("error_code,finished_at").eq("operation_id", operationId).eq("status", "error").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (recent?.finished_at && ["PROVIDER_RATE_LIMITED", "PROVIDER_UNAVAILABLE", "TIMEOUT", "PROVIDER_UNREACHABLE"].includes(recent.error_code) && Date.now() - Date.parse(recent.finished_at) < 60_000) {
+    await db.from("selsyn_requests").update({ status: "error", error_code: "BACKOFF", finished_at: new Date().toISOString() }).eq("id", id);
+    throw new SelsynError("BACKOFF", "Aguarde um minuto após falha transitória antes de consultar novamente.", 429, undefined, true);
+  }
   const started = Date.now();
   await audit({ actorType: "staff", actorId: userId, action: "selsyn.started", entity: "selsyn_requests", entityId: id, details: { operation: operationId } });
   console.info("[selsyn] started", { id, operation: operationId });
@@ -58,14 +70,14 @@ export async function querySelsyn(userId: string, operationId: string, input: Re
     const duration = Date.now() - started;
     const { error: finishError } = await db.from("selsyn_requests").update({ status: "success", duration_ms: duration, finished_at: new Date().toISOString() }).eq("id", id);
     if (finishError) throw new SelsynError("INTERNAL_ERROR", "Não foi possível registrar o resultado da consulta.", 500);
-    await audit({ actorType: "staff", actorId: userId, action: "selsyn.completed", entity: "selsyn_requests", entityId: id, details: { operation: operationId, durationMs: duration } });
+    await audit({ actorType: "staff", actorId: userId, action: "selsyn.completed", entity: "selsyn_requests", entityId: id, details: { operation: operationId, durationMs: duration, diagnostics: response.diagnostics } });
     console.info("[selsyn] completed", { id, operation: operationId, durationMs: duration });
     return { ...response, requestId: id, queriedAt: new Date().toISOString() };
   } catch (e) {
     const safe = e instanceof SelsynError ? e : e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError") ? new SelsynError("TIMEOUT", "A Selsyn demorou para responder. Não houve nova tentativa automática.", 504) : new SelsynError("PROVIDER_UNREACHABLE", "Não foi possível conectar ao servidor Selsyn.", 503);
     await db.from("selsyn_requests").update({ status: "error", error_code: safe.code, duration_ms: Date.now() - started, finished_at: new Date().toISOString() }).eq("id", id);
     await audit({ actorType: "staff", actorId: userId, action: "selsyn.error", entity: "selsyn_requests", entityId: id, details: { operation: operationId, code: safe.code, durationMs: Date.now() - started } });
-    console.warn("[selsyn] error", { id, operation: operationId, code: safe.code });
+    console.warn("[selsyn] error", { id, operation: operationId, code: safe.code, diagnostics: safe.diagnostics });
     throw safe;
   }
 }

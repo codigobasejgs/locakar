@@ -15,6 +15,7 @@ export async function selsynPost<T>(path: string, body: Record<string, unknown>,
 const time = (s?: string) => s && Number.isFinite(Date.parse(s)) ? new Date(s).toLocaleString("pt-BR") : "Não informado";
 
 export function TrackingDetails({ tracked, localOdometer }: { tracked: TrackedVehicle; localOdometer?: number }) {
+  const [now] = useState(() => Date.now());
   return <div className="grid min-w-0 gap-3 text-sm">
     <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
       {([
@@ -30,6 +31,7 @@ export function TrackingDetails({ tracked, localOdometer }: { tracked: TrackedVe
         ["Hodômetro LOCAKAR", localOdometer !== undefined ? `${localOdometer.toLocaleString("pt-BR")} km` : "Não informado"],
       ] as [string, string | number][]).map(([k, v]) => <div key={k} className="min-w-0"><dt className="text-xs text-muted">{k}</dt><dd className="break-words font-medium">{v}</dd></div>)}
     </dl>
+    {tracked.position?.time && Number.isFinite(Date.parse(tracked.position.time)) && now - Date.parse(tracked.position.time) > 300_000 && <p className="text-xs text-amber-300">Última posição recebida há {Math.floor((now - Date.parse(tracked.position.time)) / 60_000)} minutos; não é posição ao vivo.</p>}
     {tracked.sensors.length > 0 && <div className="grid gap-2"><p className="text-xs font-semibold text-muted">Sensores retornados</p>{tracked.sensors.map((s, i) => <p key={i}>{s.description ?? `Sensor ${s.id ?? i + 1}`}: {s.value ?? "Não informado"} {s.unit ?? ""}</p>)}</div>}
   </div>;
 }

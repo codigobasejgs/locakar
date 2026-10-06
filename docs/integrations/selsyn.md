@@ -17,8 +17,8 @@ Arquivos novos:
 - `src/lib/server/selsyn.ts`: autorização, reserva, auditoria e respostas seguras.
 - `src/lib/server/selsyn-transport.ts`: único transporte externo, testável com fetch simulado.
 - `src/app/api/selsyn/status/route.ts`: status local, sem consultar fornecedor.
-- `src/app/api/selsyn/fleet/route.ts`: descoberta de frota/posições com sugestões por placa.
-- `src/app/api/selsyn/link/route.ts`: confirmar/remover vínculo; confirmação valida cadastro no fornecedor.
+- `src/app/api/selsyn/fleet/route.ts`: frota da LOCAKAR (Supabase) + última posição dos veículos vinculados via `integracaoAoVivo`; falha do fornecedor volta em `providerError` sem derrubar a frota.
+- `src/app/api/selsyn/link/route.ts`: confirmar/remover vínculo pelo ID rastreável informado; valida com `aovivoPorRastreavel` (read-only) e exige placa igual.
 - `src/app/api/selsyn/query/[operationId]/route.ts`: catálogo fechado de consultas; não aceita URL, método ou headers fornecidos pelo navegador.
 - `src/app/admin/monitoring/page.tsx`: central Rastreamento.
 - `src/components/admin/{tracking-map,vehicle-tracking-panel,selsyn-result,selsyn-settings}.tsx`.
@@ -29,6 +29,7 @@ Alterados: navegação/rotas, tipos FleetVehicle, detalhes de veículos, seção
 
 ## Configuração
 - `SELSYN_API_KEY`: secret exclusivamente backend/Vercel.
+- `SELSYN_ORGANIZATION_ID`: uuid da locadora dona da chave. Sem ele (ou em outra locadora) todas as rotas Selsyn respondem `TENANT_NOT_CONFIGURED` — a chave é global e o fornecedor não conhece as locadoras.
 - `SELSYN_POSITION_REFRESH_SECONDS`: 120s por padrão, mínimo interno 60s, máximo 3600s; valor efetivamente usado pela UI.
 - Sem campo de chave no Admin. Configurações mostra presença da credencial, migration, intervalo e última consulta/erro.
 
@@ -74,7 +75,33 @@ Sensor detalhado requer sensorId no path e query: um campo visual envia o mesmo 
 5. Homologue uma exportação essencial e a estrutura de content. Não varra IDs nem dispare dezenas de consultas.
 
 ## Erros públicos
-NOT_CONFIGURED: secret ausente; DATABASE_NOT_READY: migration/RPC; PROVIDER_FORBIDDEN: permissão do fornecedor; DUPLICATE_REQUEST: consulta repetida/em andamento; RATE_LIMITED: quota interna/fornecedor; TIMEOUT: sem nova tentativa automática; INVALID_PROVIDER_RESPONSE: formato divergente. Logs não incluem chave, URL autenticada ou corpo da resposta.
+AUTHENTICATION_FAILED: fornecedor 401; PROVIDER_FORBIDDEN: fornecedor 403 (não prova, sozinho, chave válida sem permissão); PROVIDER_NOT_FOUND: 404; PROVIDER_RATE_LIMITED: 429 (retryable); PROVIDER_UNAVAILABLE: outros/5xx (5xx retryable); BACKOFF: falha transitória há menos de 60s; TENANT_NOT_CONFIGURED: chave não pertence a esta locadora; VEHICLE_SCOPE_REQUIRED: consulta sem rastreável vinculado à locadora; INVALID_CREDENTIAL_FORMAT: espaço/quebra/aspas na chave. Demais: NOT_CONFIGURED: secret ausente; DATABASE_NOT_READY: migration/RPC; DUPLICATE_REQUEST: consulta repetida/em andamento; RATE_LIMITED: quota interna/fornecedor; TIMEOUT: sem nova tentativa automática; INVALID_PROVIDER_RESPONSE: formato divergente. Logs não incluem chave, URL autenticada ou corpo da resposta.
+
+## Auditoria 2026-10-06 (read-only)
+
+**Fonte do contrato.** A página oficial não respondeu deste ambiente (DNS 34.49.128.194, conexão HTTPS com timeout/ECONNREFUSED). O único contrato disponível é o OpenAPI fornecido pelo cliente (resumido em `selsyn-contracts.json`, sem `servers`/`securitySchemes` e sem data/hash de origem). Por isso **URL, header e parâmetros não foram alterados**.
+
+**Causa do 403 — o que a evidência permite afirmar.** As quatro chamadas batem com o contrato arquivado: base `/keek/rest/`, `GET`, `x-api-key` na query (`api-key-cliente`), sem parâmetros obrigatórios. Isso descarta, contra esse contrato, URL errada (A), header errado (B) e parâmetro incorreto (F). Restam chave inválida (D), chave válida sem permissão (E) ou mudança no contrato oficial atual (C/G). As responses documentadas são só `default`, então 403 não separa D de E. Conclusão: **pedir à Selsyn** confirmação do tipo/escopo da chave e permissão de leitura das operações abaixo.
+
+| Família | operationId | GET (base /keek/rest) | Resultado relatado |
+|---|---|---|---|
+| Gerenciamento de Risco - V1 | gdrAovivo | /v1/integracao/gdr/posicao/aovivo | 403 |
+| Monitoramento Nível Cliente - V1 | integracaoAoVivo | /v1/integracao/posicao | 403 |
+| Consulta Nível Cliente - V1 | aovivo | /posicao/v2/aovivo | 403 |
+| Monitoramento Nível Cliente - V1 | intergacaoListTipoAlerta | /v1/integracao/alerta/tipo | 403 |
+
+**Correções locais (independentes do contrato).**
+- 401 e 403 deixaram de ser o mesmo erro; 404/429/5xx com códigos próprios; `retryable` e metadados seguros (operação, path sem query, HTTP, content-type, request ID, duração) — nunca a chave.
+- `/fleet` não depende mais de GDR e parte dos veículos da LOCAKAR; erro do fornecedor não derruba a página e desliga o auto-refresh.
+- Isolamento: chave global presa a `SELSYN_ORGANIZATION_ID`; `/query` só aceita rastreável/placa vinculados à locadora; listagens globais bloqueadas.
+- Migration `20261018000000_selsyn_readonly_guard.sql`: colunas de vínculo só mudam pelo backend.
+- Diagnóstico: `Diagnosticar acesso Selsyn` (permissão `integrations`), orçamento de 38 s, matriz de capabilities (não testado = desconhecido), relatório sem credencial para o suporte.
+- Backoff de 60 s após 429/5xx/timeout; sem retry automático em 401/403.
+- `npm run selsyn:diagnose`: manual, fora de CI, com credencial **substituta** autorizada.
+
+**Comandos físicos.** `gdrActivateOutput` e qualquer bloqueio/saída/acionamento **não estão no catálogo, não foram executados e continuam desabilitados**. O contrato desta operação não pôde ser lido (documentação oficial inacessível).
+
+**Fora da Selsyn.** `ERR_BLOCKED_BY_CLIENT` em `static.cloudflareinsights.com` vem de bloqueador do navegador; o código não injeta esse beacon. A imagem 400 não vem do monitoramento (que não renderiza imagens); provável Next/Image com URL externa de veículo sem `images.remotePatterns` — falta a URL exata para corrigir.
 
 ## Inventário técnico
 A tabela a seguir é gerada do catálogo oficial. Todos implementados no catálogo/API/formulários; chamadas reais pendentes de ambiente e fornecedor. Ver schemas completos em `src/lib/selsyn-contracts.json`.

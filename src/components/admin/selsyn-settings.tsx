@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { INTEGRATION_LABEL, type SelsynProbe, type SelsynIntegrationStatus, type CapabilityStatus } from "@/lib/selsyn-capabilities";
 
+type Diagnosis = { results: SelsynProbe[]; status: SelsynIntegrationStatus; checkedAt: string; report: string; capabilities: { id: string; label: string; status: CapabilityStatus }[] };
+const CAPABILITY_LABEL: Record<CapabilityStatus, string> = { AVAILABLE: "Disponível (operação testada)", FORBIDDEN: "Acesso recusado (403)", AUTH_ERROR: "Autenticação recusada (401)", UNAVAILABLE: "Não disponível nesta consulta", UNKNOWN: "Não testado" };
 export function SelsynSettings() {
-  const [status, setStatus] = useState<{ configured: boolean; databaseReady: boolean; refreshSeconds: number; lastRequest?: { operation_id: string; status: string; error_code?: string; created_at: string } | null } | null>(null);
+  const [status, setStatus] = useState<{ configured: boolean; tenantReady: boolean; databaseReady: boolean; refreshSeconds: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [probe, setProbe] = useState<{ operation: string; label: string; group: string; ok: boolean; code: string }[] | null>(null);
+  const [probe, setProbe] = useState<Diagnosis | null>(null);
   const [probing, setProbing] = useState(false);
   const diagnose = async () => {
     if (probing) return;
@@ -15,7 +18,7 @@ export function SelsynSettings() {
       const r = await fetch("/api/selsyn/diagnostic", { method: "POST", cache: "no-store" });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(`${j.error ?? "Falha no diagnóstico."} [${j.code ?? r.status}]`);
-      setProbe(j.results);
+      setProbe(j);
     } catch (e) { setError((e as Error).message); }
     finally { setProbing(false); }
   };
@@ -25,12 +28,19 @@ export function SelsynSettings() {
     return () => { alive = false; };
   }, []);
   return <div className="grid gap-3 sm:col-span-2">
-    <p className="font-semibold">{!status ? "Verificando…" : status.configured && status.databaseReady ? "Configurada (consulta real ainda depende da permissão do fornecedor)" : "Configuração incompleta"}</p>
-    <p className="text-sm text-muted">A chave é configurada exclusivamente como SELSYN_API_KEY no ambiente do backend. Não cole a credencial neste painel. Sem comandos de bloqueio ou acionamento.</p>
-    {status && <p className="text-xs text-muted">Credencial no servidor: {status.configured ? "presente" : "ausente"} · Banco: {status.databaseReady ? "preparado" : "migration pendente"} · Atualização opcional: {status.refreshSeconds}s</p>}
-    {status?.lastRequest && <p className="text-xs text-muted">Última consulta: {new Date(status.lastRequest.created_at).toLocaleString("pt-BR")} · {status.lastRequest.operation_id} · {status.lastRequest.status}{status.lastRequest.error_code ? ` (${status.lastRequest.error_code})` : ""}</p>}
-    <button type="button" onClick={diagnose} disabled={probing || !status?.configured} className="justify-self-start rounded-lg border border-line px-3 py-1.5 text-sm font-semibold disabled:opacity-50">{probing ? "Verificando permissões…" : "Verificar permissões da chave (4 consultas)"}</button>
-    {probe && <ul className="grid gap-1 text-xs">{probe.map(p => <li key={p.operation}><span className={p.ok ? "text-emerald-400" : "text-red-400"}>{p.ok ? "Permitido" : p.code}</span> · {p.label} <span className="text-muted">({p.group})</span></li>)}</ul>}
+    <p className="font-semibold">{probe ? INTEGRATION_LABEL[probe.status] : !status ? "Verificando…" : status.configured ? INTEGRATION_LABEL.CONFIGURED : "Não configurada para esta locadora"}</p>
+    <p className="text-sm text-muted">Credencial exclusivamente no servidor (SELSYN_API_KEY), vinculada à locadora por SELSYN_ORGANIZATION_ID. Comandos físicos desabilitados.</p>
+    {status && <p className="text-xs text-muted">Credencial desta locadora: {status.configured ? "presente" : "ausente ou não vinculada"} · Banco: {status.databaseReady ? "tabelas e vínculos disponíveis" : "migration pendente"} · Atualização opcional: {status.refreshSeconds}s</p>}
+    {status && !status.tenantReady && <p className="text-xs text-amber-300">Defina SELSYN_ORGANIZATION_ID no servidor com o ID da organização dona da chave. Acesso global bloqueado para proteger as demais locadoras.</p>}
+    <p className="text-xs text-muted">O catálogo local não contém o OpenAPI completo. Autenticação e contrato oficial atuais ainda precisam de confirmação do fornecedor.</p>
+    <button type="button" onClick={diagnose} disabled={probing || !status?.configured || !status.databaseReady} className="justify-self-start rounded-lg border border-line px-3 py-1.5 text-sm font-semibold disabled:opacity-50">{probing ? "Diagnosticando acesso…" : "Diagnosticar acesso Selsyn"}</button>
+    {probe && <>
+      <p className="text-xs text-muted">Diagnóstico em {new Date(probe.checkedAt).toLocaleString("pt-BR")}. Recursos não consultados permanecem desconhecidos.</p>
+      <ul className="grid gap-2 text-sm">{probe.capabilities.map(p => <li key={p.id} className="flex flex-wrap justify-between gap-2"><span>{p.label}</span><span className={p.status === "AVAILABLE" ? "text-emerald-400" : p.status === "UNKNOWN" ? "text-muted" : "text-amber-300"}>{CAPABILITY_LABEL[p.status]}</span></li>)}</ul>
+      <details className="text-xs"><summary className="cursor-pointer">Detalhes técnicos das operações</summary><ul className="mt-2 grid gap-2">{probe.results.map(p => <li key={p.operation}><strong>{p.operation}</strong> · {p.group} · HTTP {p.httpStatus ?? "não obtido"} · {p.code}{p.diagnostics && <span className="block break-all text-muted">GET {p.diagnostics.pathname} · {p.diagnostics.durationMs} ms · {p.diagnostics.contentType ?? "sem content-type"}</span>}</li>)}</ul></details>
+      <button type="button" className="justify-self-start text-sm font-semibold text-brand-soft" onClick={async () => { try { await navigator.clipboard.writeText(probe.report); } catch { setError("Não foi possível copiar. Selecione o relatório abaixo."); } }}>Copiar relatório para suporte Selsyn</button>
+      <details className="text-xs"><summary className="cursor-pointer">Relatório sem credencial</summary><pre className="mt-2 whitespace-pre-wrap break-words">{probe.report}</pre></details>
+    </>}
     {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
     <Link href="/admin/monitoring" className="text-sm font-semibold text-brand-soft hover:underline">Abrir Rastreamento</Link>
   </div>;

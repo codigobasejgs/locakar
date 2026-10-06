@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { buildSelsynRequest, coordinatesValid, localDateToUtc, mapTrackedVehicle, providerError, sanitizeSelsyn, SELSYN_OPERATIONS, SelsynError, trackingId, trackingTotals, validateSelsynResponse } from "../src/lib/selsyn";
 import { fetchSelsyn } from "../src/lib/server/selsyn-transport";
+import { capabilityMatrix, integrationStatus, supportReport, type SelsynProbe } from "../src/lib/selsyn-capabilities";
 
 const dates = { dataInicial: "2026-10-01T00:00:00.000Z", dataFinal: "2026-10-01T01:00:00.000Z" };
 assert.equal(Object.keys(SELSYN_OPERATIONS).length, 53);
@@ -60,7 +61,38 @@ assert.ok(pdf.file?.name.endsWith(".pdf"));
 await assert.rejects(fetchSelsyn("relatorioHistoricoSensor", { ...dates, idRastreavel: "123", format: "HTML" }, secret, responseFetch(new Response(`<html>${secret}</html>`, { headers: { "content-type": "text/html" } }))), e => e instanceof SelsynError && e.code === "UNSAFE_EXPORT");
 // Catálogo não contém operações de escrita; guardas nas rotas e na migration estão presentes.
 for (const op of Object.values(SELSYN_OPERATIONS)) assert.ok(!/intervencao|bloqueio|desbloqueio|saida\/ativar/.test(op.path));
-for (const p of ["status/route.ts", "fleet/route.ts", "link/route.ts", "diagnostic/route.ts", "query/[operationId]/route.ts"]) assert.ok(readFileSync(`src/app/api/selsyn/${p}`, "utf8").includes("await selsynStaff()"));
+for (const p of ["status/route.ts", "fleet/route.ts", "link/route.ts", "query/[operationId]/route.ts"]) assert.ok(readFileSync(`src/app/api/selsyn/${p}`, "utf8").includes("await selsynStaff()"));
+assert.ok(readFileSync("src/app/api/selsyn/diagnostic/route.ts", "utf8").includes(`requireStaff("integrations")`), "diagnóstico só para quem gerencia integrações");
+for (const p of ["fleet/route.ts", "link/route.ts", "diagnostic/route.ts"]) assert.ok(readFileSync(`src/app/api/selsyn/${p}`, "utf8").includes("assertSelsynTenant()"), `${p}: credencial presa à locadora dona`);
+assert.ok(readFileSync("src/lib/server/selsyn.ts", "utf8").includes("assertSelsynTenant();"), "querySelsyn fail-closed fora da locadora dona");
+assert.ok(!readFileSync("src/app/api/selsyn/fleet/route.ts", "utf8").includes("gdrAovivo"), "frota não depende de GDR");
+assert.ok(readFileSync("src/app/api/selsyn/query/[operationId]/route.ts", "utf8").includes("VEHICLE_SCOPE_REQUIRED"), "consulta exige rastreável vinculado");
+assert.ok(readFileSync("supabase/migrations/20261018000000_selsyn_readonly_guard.sql", "utf8").includes("vehicles_selsyn_link_guard"), "vínculo só pelo backend");
+
+// ---------- Erros: 401 ≠ 403 ≠ 404 ≠ 429 ≠ 5xx ----------
+assert.equal(providerError(401).code, "AUTHENTICATION_FAILED");
+assert.equal(providerError(403).code, "PROVIDER_FORBIDDEN");
+assert.equal(providerError(404).code, "PROVIDER_NOT_FOUND");
+assert.equal(providerError(429).code, "PROVIDER_RATE_LIMITED"); assert.equal(providerError(429).retryable, true);
+assert.equal(providerError(503).code, "PROVIDER_UNAVAILABLE"); assert.equal(providerError(503).retryable, true);
+assert.equal(providerError(403).retryable, false); assert.equal(providerError(401).retryable, false);
+await assert.rejects(fetchSelsyn("gdrAovivo", {}, secret, responseFetch(new Response("{}", { status: 403, headers: { "content-type": "application/json", "x-request-id": "req-123" } }))), e => e instanceof SelsynError && e.diagnostics?.httpStatus === 403 && e.diagnostics.requestId === "req-123" && e.diagnostics.pathname === "/keek/rest/v1/integracao/gdr/posicao/aovivo" && !JSON.stringify(e.diagnostics).includes(secret));
+
+// ---------- Matriz de capabilities: parcial, sem herdar permissões não testadas ----------
+const probe = (operation: string, ok: boolean, httpStatus: number | null, code = ok ? "OK" : "PROVIDER_FORBIDDEN"): SelsynProbe => ({ operation, label: operation, group: SELSYN_OPERATIONS[operation].group, ok, code, httpStatus });
+const partial = [probe("aovivo", true, 200), probe("integracaoAoVivo", true, 200), probe("intergacaoListTipoAlerta", false, 403), probe("gdrAovivo", false, 403)];
+const matrix = capabilityMatrix(partial);
+assert.equal(matrix.find(c => c.id === "SELSYN_READ_POSITION")?.status, "AVAILABLE");
+assert.equal(matrix.find(c => c.id === "SELSYN_READ_GDR")?.status, "FORBIDDEN");
+assert.equal(matrix.find(c => c.id === "SELSYN_READ_HISTORY")?.status, "UNKNOWN", "histórico não testado continua desconhecido");
+assert.equal(integrationStatus(true, partial), "CONNECTED_PARTIAL");
+assert.equal(integrationStatus(true, partial.map(p => ({ ...p, ok: false, httpStatus: 403, code: "PROVIDER_FORBIDDEN" }))), "FORBIDDEN");
+assert.equal(integrationStatus(true, [probe("aovivo", false, 401, "AUTHENTICATION_FAILED")]), "AUTH_ERROR");
+assert.equal(integrationStatus(true, []), "CONFIGURED");
+assert.equal(integrationStatus(false, partial), "NOT_CONFIGURED");
+const report = supportReport(partial, "teste", "2026-10-06T00:00:00.000Z");
+assert.ok(report.includes("gdrAovivo") && report.includes("HTTP 403") && report.includes("NÃO EXECUTADOS"));
+assert.ok(!/x-api-key=|SELSYN_API_KEY=/.test(report), "relatório nunca carrega credencial");
 const sql = readFileSync("supabase/migrations/20261007000000_selsyn_tracking.sql", "utf8");
 assert.ok(sql.includes("pg_advisory_xact_lock")); assert.ok(sql.includes("enable row level security")); assert.ok(sql.includes("from public,anon,authenticated"));
 console.log("✓ selsyn offline check ok (sem chamadas reais)");
