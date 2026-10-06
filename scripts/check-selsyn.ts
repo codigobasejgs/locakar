@@ -63,7 +63,11 @@ await assert.rejects(fetchSelsyn("relatorioHistoricoSensor", { ...dates, idRastr
 for (const op of Object.values(SELSYN_OPERATIONS)) assert.ok(!/intervencao|bloqueio|desbloqueio|saida\/ativar/.test(op.path));
 for (const p of ["status/route.ts", "fleet/route.ts", "link/route.ts", "query/[operationId]/route.ts"]) assert.ok(readFileSync(`src/app/api/selsyn/${p}`, "utf8").includes("await selsynStaff()"));
 assert.ok(readFileSync("src/app/api/selsyn/diagnostic/route.ts", "utf8").includes(`requireStaff("integrations")`), "diagnóstico só para quem gerencia integrações");
-for (const p of ["fleet/route.ts", "link/route.ts", "diagnostic/route.ts"]) assert.ok(readFileSync(`src/app/api/selsyn/${p}`, "utf8").includes("assertSelsynTenant()"), `${p}: credencial presa à locadora dona`);
+for (const p of ["fleet/route.ts", "link/route.ts", "diagnostic/route.ts"]) {
+  const src = readFileSync(`src/app/api/selsyn/${p}`, "utf8");
+  const auth = Math.max(src.indexOf("await selsynStaff()"), src.indexOf("await requireStaff("));
+  assert.ok(auth > 0 && src.indexOf("assertSelsynTenant()") > auth, `${p}: tenant checado depois de definir a locadora (senão 500)`);
+}
 assert.ok(readFileSync("src/lib/server/selsyn.ts", "utf8").includes("assertSelsynTenant();"), "querySelsyn fail-closed fora da locadora dona");
 assert.ok(!readFileSync("src/app/api/selsyn/fleet/route.ts", "utf8").includes("gdrAovivo"), "frota não depende de GDR");
 assert.ok(readFileSync("src/app/api/selsyn/query/[operationId]/route.ts", "utf8").includes("VEHICLE_SCOPE_REQUIRED"), "consulta exige rastreável vinculado");

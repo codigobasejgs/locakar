@@ -21,8 +21,8 @@ export function selsynResponse(value: unknown, status = 200) { return Response.j
 export function selsynErrorResponse(e: unknown) {
   if (e instanceof SelsynError) return selsynResponse({ error: e.message, code: e.code, provider: "SELSYN", providerStatus: e.providerStatus ?? e.diagnostics?.httpStatus ?? null, retryable: e.retryable, diagnostics: e.diagnostics }, e.status);
   if (e instanceof HttpError) return selsynResponse({ error: e.message, code: "ACCESS_ERROR" }, e.status);
-  // Não registrar exceção/fetch request: a URL do fornecedor contém credencial na query.
-  console.error("[selsyn] INTERNAL_ERROR");
+  // Só nome e mensagem curta, sem URLs.
+  console.error("[selsyn] INTERNAL_ERROR", e instanceof Error ? { name: e.name, message: e.message.replace(/https?:\/\/\S+/g, "[url]").slice(0, 160) } : typeof e);
   return selsynResponse({ error: "Não foi possível realizar a consulta.", code: "INTERNAL_ERROR" }, 500);
 }
 export async function readSelsynBody(request: Request): Promise<Record<string, unknown>> {
@@ -43,7 +43,7 @@ export async function readSelsynBody(request: Request): Promise<Record<string, u
   return body as Record<string, unknown>;
 }
 
-/** Único transporte Selsyn. Chave cliente na QUERY, conforme securitySchemes (operador é diferente). */
+/** Único transporte Selsyn. Chave no header x-api-key (a API real recusa a chave na query). */
 export async function querySelsyn(userId: string, operationId: string, input: Record<string, unknown>, requestId: unknown = randomUUID()) {
   assertSelsynTenant();
   const key = process.env.SELSYN_API_KEY;

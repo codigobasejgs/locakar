@@ -6,8 +6,9 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 export const POST = scoped(async function POST(request: Request) {
   try {
-    assertSelsynTenant();
+    // selsynStaff define a locadora da requisição; a checagem de tenant precisa vir depois.
     const { db, userId } = await selsynStaff();
+    assertSelsynTenant();
     const body = await readSelsynBody(request);
     if (Object.keys(body).some(k => !["vehicleId", "rastreavelId", "identifier", "requestId", "unlink"].includes(k)) || typeof body.vehicleId !== "string") throw new SelsynError("INVALID_INPUT", "Veículo inválido.");
     const { data: vehicle, error: loadError } = await db.from("vehicles").select("id,plate,selsyn_rastreavel_id").eq("id", body.vehicleId).maybeSingle();
