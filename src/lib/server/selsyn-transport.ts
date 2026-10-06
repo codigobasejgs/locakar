@@ -8,11 +8,12 @@ export async function fetchSelsyn(operationId: string, input: Record<string, unk
   const { path, query } = buildSelsynRequest(operationId, input);
   const url = new URL(path.replace(/^\//, ""), SELSYN_BASE);
   url.search = query.toString();
-  url.searchParams.set("x-api-key", key);
   const started = Date.now();
   const diagnostics = { operationId, method: "GET" as const, pathname: url.pathname, timestamp: new Date().toISOString(), httpStatus: null as number | null, contentType: null as string | null, requestId: null as string | null, durationMs: 0 };
   try {
-    const res = await send(url, { method: "GET", headers: { Accept: "application/json" }, signal: AbortSignal.timeout(12000), redirect: "error", cache: "no-store" });
+    // O OpenAPI documenta api-key-cliente na query, mas a API em produção responde 403 nesse formato e 200
+    // com a mesma chave no header x-api-key (testado em 06/10/2026 nas 4 operações). Header também tira a chave da URL.
+    const res = await send(url, { method: "GET", headers: { Accept: "application/json", "x-api-key": key }, signal: AbortSignal.timeout(12000), redirect: "error", cache: "no-store" });
     diagnostics.httpStatus = res.status;
     diagnostics.contentType = res.headers.get("content-type")?.split(";")[0].trim().slice(0, 100) ?? null;
     const requestId = res.headers.get("x-request-id") ?? res.headers.get("x-correlation-id");

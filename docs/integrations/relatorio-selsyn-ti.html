@@ -1,0 +1,195 @@
+<title>Relatório Selsyn 403</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f6f7f9;--surface:#ffffff;--ink:#14181f;--muted:#5b6474;--line:#dfe3ea;
+  --accent:#1f5fbf;--accent-soft:#e8f0fc;--warn:#9a5b00;--warn-soft:#fff4e0;
+  --bad:#b4232c;--bad-soft:#fdecee;--ok:#1d7a46;--ok-soft:#e7f6ee;--code:#f0f2f6;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--bg:#0f1318;--surface:#161b22;--ink:#e6e9ef;--muted:#9aa3b2;--line:#2a313c;
+  --accent:#7aa7ef;--accent-soft:#1a2738;--warn:#f0b45a;--warn-soft:#2b2214;--bad:#f2848a;--bad-soft:#2d1719;
+  --ok:#6fd19c;--ok-soft:#14261d;--code:#1d232c;}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--bg:#0f1318;--surface:#161b22;--ink:#e6e9ef;--muted:#9aa3b2;--line:#2a313c;
+  --accent:#7aa7ef;--accent-soft:#1a2738;--warn:#f0b45a;--warn-soft:#2b2214;--bad:#f2848a;--bad-soft:#2d1719;
+  --ok:#6fd19c;--ok-soft:#14261d;--code:#1d232c;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:16px;padding-block:32px 64px}
+main{max-width:860px;margin:0 auto;display:grid;gap:28px}
+h1,h2,h3{text-wrap:balance;line-height:1.25;margin:0}
+h1{font-size:1.75rem;font-weight:700}
+h2{font-size:1.2rem;font-weight:600;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:1rem;font-weight:600}
+p{margin:0;max-width:68ch}
+section{display:grid;gap:14px}
+.eyebrow{font:500 .75rem/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:.9rem}
+.callout{border-radius:10px;padding:14px 16px;background:var(--accent-soft);border-left:4px solid var(--accent)}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn)}
+.callout.bad{background:var(--bad-soft);border-color:var(--bad)}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.86em}
+code{background:var(--code);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font:13px/1.55 "IBM Plex Mono",ui-monospace,monospace}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.88rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font:500 .75rem/1.6 "IBM Plex Mono",monospace;padding:0 7px;border-radius:999px}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+dl{display:grid;grid-template-columns:minmax(150px,max-content) 1fr;gap:6px 18px;margin:0}
+dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere}
+ol,ul{margin:0;padding-left:1.3rem;display:grid;gap:8px}
+.hyp{display:grid;gap:6px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.hyp p{color:var(--muted)}
+.codeblock{display:grid;gap:6px}
+.codehead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+button{font:500 .8rem "IBM Plex Sans",sans-serif;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:4px 10px;cursor:pointer}
+button:hover{border-color:var(--accent);color:var(--accent)}
+footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padding-top:14px}
+@media (max-width:520px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style>
+
+<main>
+  <header style="display:grid;gap:10px">
+    <span class="eyebrow">LocaKar · Integração Selsyn API · Somente leitura</span>
+    <h1>HTTP 403 “Acesso não autorizado” nas consultas da LocaKar</h1>
+    <div class="meta">
+      <span>Ambiente: produção</span>
+      <span>Testes: 06/10/2026 13:35:26 e 13:44:27 (BRT) · 16:35:26 e 16:44:27 UTC</span>
+      <span>Contato: equipe LocaKar</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>Atualização — causa encontrada</h2>
+    <div class="callout bad"><p><strong>A mesma chave funciona no header e falha na query.</strong> Teste de 06/10/2026, somente leitura, das quatro operações: chave em <code>?x-api-key=</code> (como diz o OpenAPI, esquema <code>api-key-cliente</code>) responde <strong>403</strong>; chave no header <code>x-api-key</code> responde <strong>200</strong>. A especificação oficial em <code>/keek/rest/openapi.json</code> continua informando query. A LocaKar passou a enviar no header.</p></div>
+    <p><strong>Pedido à Selsyn:</strong> confirmar se o envio no header é o correto para chaves de Cliente e, se for, corrigir o <code>in: "query"</code> de <code>api-key-cliente</code> no OpenAPI (ou reativar a leitura pela query).</p>
+  </section>
+
+  <section>
+    <h2>1. Resumo</h2>
+    <p>A equipe Selsyn informou que testou a chave e a API respondeu corretamente. Nas chamadas feitas pelo servidor da LocaKar, a mesma API responde <strong>HTTP 403</strong> com o corpo <code>{"message":"Acesso não autorizado."}</code> em todas as operações testadas, inclusive em <code>aovivo</code> (Integração Consulta Nível Cliente).</p>
+    <div class="callout">
+      <p><strong>Objetivo deste relatório:</strong> encontrar a diferença entre o teste feito pela Selsyn e a requisição enviada pela LocaKar. Abaixo estão a requisição exata (chave mascarada), as respostas recebidas e as perguntas que permitem fechar a causa.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Requisição enviada pela LocaKar</h2>
+    <p>Chamada servidor-a-servidor (o navegador do usuário nunca chama a Selsyn). Exemplo da operação <code>aovivo</code>:</p>
+    <pre>GET https://api.appselsyn.com.br/keek/rest/posicao/v2/aovivo?format=JSON&amp;x-api-key=[CHAVE]
+Accept: application/json
+(sem Authorization, sem cookies, sem corpo)</pre>
+    <dl>
+      <dt>Método</dt><dd>GET</dd>
+      <dt>Servidor / base path</dt><dd><code>https://api.appselsyn.com.br</code> + <code>/keek/rest/</code></dd>
+      <dt>Credencial</dt><dd>Parâmetro de query <code>x-api-key</code> (security scheme <code>api-key-cliente</code>)</dd>
+      <dt>Codificação da chave</dt><dd>Codificada em URL (padrão). Os caracteres <code>=</code> do fim da chave seguem como <code>%3D%3D</code>.</dd>
+      <dt>Outros headers</dt><dd>Apenas os padrão do <code>fetch</code> do Node.js (inclui User-Agent padrão do Node).</dd>
+      <dt>Redirecionamento</dt><dd>Não seguido (um redirect resultaria em erro, não em 403).</dd>
+      <dt>Origem</dt><dd>Funções serverless da Vercel (Node.js), região padrão do projeto (provavelmente EUA, a confirmar), IP de saída dinâmico.</dd>
+      <dt>Credencial usada</dt><dd>52 caracteres · SHA-256 (12 primeiros hex) <code>63905b531982</code> da chave que nos foi informada.</dd>
+    </dl>
+    <p class="mono" style="color:var(--muted);font-size:.85rem">Para comparar sem expor a chave: <code>printf '%s' 'CHAVE' | sha256sum</code> deve começar com <code>63905b531982</code>.</p>
+  </section>
+
+  <section>
+    <h2>3. Respostas recebidas</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Grupo (tag)</th><th>operationId</th><th>Caminho (GET)</th><th>Security aceito (OpenAPI)</th><th>Resultado</th></tr></thead>
+        <tbody>
+          <tr><td>Consulta Nível Cliente - V1</td><td><code>aovivo</code></td><td><code>/keek/rest/posicao/v2/aovivo</code></td><td>api-key-cliente</td><td><span class="pill bad">403</span> 297 ms</td></tr>
+          <tr><td>Monitoramento Nível Cliente - V1</td><td><code>integracaoAoVivo</code></td><td><code>/keek/rest/v1/integracao/posicao</code></td><td>cliente, grupo ou monitor</td><td><span class="pill bad">403</span> 22 ms</td></tr>
+          <tr><td>Monitoramento Nível Cliente - V1</td><td><code>intergacaoListTipoAlerta</code></td><td><code>/keek/rest/v1/integracao/alerta/tipo</code></td><td>cliente, grupo ou monitor</td><td><span class="pill bad">403</span> 20 ms</td></tr>
+          <tr><td>Gerenciamento de Risco - V1</td><td><code>gdrAovivo</code></td><td><code>/keek/rest/v1/integracao/gdr/posicao/aovivo</code></td><td>cliente, grupo ou monitor</td><td><span class="pill bad">403</span> 22 ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Corpo de todas as respostas: <code>{"message":"Acesso não autorizado."}</code> · Content-Type: <code>application/json</code>. Nenhuma operação exige parâmetro obrigatório; foram enviadas sem filtros.</p>
+  </section>
+
+  <section>
+    <h2>4. O que já conferimos</h2>
+    <ul>
+      <li><strong>Contrato:</strong> OpenAPI 3.0.1, “Selsyn Tecnologia - Swagger” versão 3.0.0, baixado pelo botão <em>Download</em> de <code>api.appselsyn.com.br/documentacao.html</code> em 06/10/2026 (SHA-256 <code>d06039d103ead008…</code>, 218 operações).</li>
+      <li><strong>servers:</strong> <code>/keek/rest/</code>.</li>
+      <li><strong>securitySchemes:</strong>
+        <code>api-key-cliente</code>, <code>api-key-monitor</code> e <code>api-key-grupo</code> (todos <code>x-api-key</code> na query);
+        <code>x-api-key</code> no header (cadastro de Operador); <code>token</code> no header <code>x-r2f-auth</code> (via <code>GET /login</code>).</li>
+      <li><strong>Comparação:</strong> servidor, base path, caminho, método, nome e local da credencial e parâmetros da LocaKar conferem com o contrato para as quatro operações.</li>
+      <li><strong>Formato da chave no servidor:</strong> sem espaços, quebras de linha ou aspas (o sistema bloqueia antes de chamar se houver).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>5. Diferenças possíveis entre o teste Selsyn e o da LocaKar</h2>
+    <div class="hyp"><h3>A. Local da chave: query × header</h3><p>Se o teste da Selsyn enviou a chave no <strong>header</strong> <code>x-api-key</code> (esquema de Operador), ele pode funcionar em endpoints de Operador e falhar nos endpoints de Cliente, que esperam a chave na <strong>query</strong>.</p></div>
+    <div class="hyp"><h3>B. Codificação da chave na URL</h3><p>A chave termina em <code>==</code>. Enviamos <code>%3D%3D</code> (codificação padrão de URL). Se o servidor ou gateway comparar o texto bruto sem decodificar, a chave não confere.</p></div>
+    <div class="hyp"><h3>C. Restrição de origem (IP / região)</h3><p>As chamadas saem de servidores da Vercel, provavelmente nos EUA, com IP dinâmico. Se houver lista de IPs liberados ou bloqueio por região, um teste feito do Brasil ou da rede Selsyn passa e o nosso não.</p></div>
+    <div class="hyp"><h3>D. Tipo ou escopo da chave</h3><p>A chave pode ser de outro cadastro (Operador, Monitor, Grupo) ou do cliente certo sem o módulo de API habilitado para estes grupos.</p></div>
+    <div class="hyp"><h3>E. Endpoint diferente</h3><p>O teste pode ter usado outro endpoint (por exemplo, de Operador ou de Token) em que a chave é válida.</p></div>
+  </section>
+
+  <section>
+    <h2>6. Teste para reproduzir exatamente a nossa chamada</h2>
+    <p>Rodar do lado Selsyn, trocando <code>SUA_CHAVE</code>. Se o 1 responder 403 e o 2 responder 200, a causa é a codificação (B). Se os dois responderem 200 aí e 403 para nós, a causa é a origem (C).</p>
+    <div class="codeblock">
+      <div class="codehead"><strong>1. Igual à LocaKar (chave codificada)</strong><button type="button" data-copy="c1">Copiar</button></div>
+      <pre id="c1">curl -i -G 'https://api.appselsyn.com.br/keek/rest/posicao/v2/aovivo' \
+  --data-urlencode 'format=JSON' \
+  --data-urlencode 'x-api-key=SUA_CHAVE' \
+  -H 'Accept: application/json'</pre>
+    </div>
+    <div class="codeblock">
+      <div class="codehead"><strong>2. Chave sem codificação</strong><button type="button" data-copy="c2">Copiar</button></div>
+      <pre id="c2">curl -i 'https://api.appselsyn.com.br/keek/rest/posicao/v2/aovivo?format=JSON&amp;x-api-key=SUA_CHAVE' \
+  -H 'Accept: application/json'</pre>
+    </div>
+    <div class="codeblock">
+      <div class="codehead"><strong>3. Chave no header (só para comparar)</strong><button type="button" data-copy="c3">Copiar</button></div>
+      <pre id="c3">curl -i 'https://api.appselsyn.com.br/keek/rest/posicao/v2/aovivo?format=JSON' \
+  -H 'x-api-key: SUA_CHAVE' -H 'Accept: application/json'</pre>
+    </div>
+  </section>
+
+  <section>
+    <h2>7. Perguntas para a TI da Selsyn</h2>
+    <ol>
+      <li>Qual endpoint, método e ferramenta foram usados no teste que funcionou? Podem enviar o comando (curl/Postman) com a chave mascarada?</li>
+      <li>No teste, a chave foi enviada na <strong>query</strong> (<code>?x-api-key=</code>) ou no <strong>header</strong> <code>x-api-key</code>?</li>
+      <li>A chave é do tipo <code>api-key-cliente</code> (cadastro de Cliente)? O SHA-256 dela começa com <code>63905b531982</code>?</li>
+      <li>Existe restrição por IP, região ou lista de origens liberadas? Se sim, como liberar chamadas vindas da Vercel (IP dinâmico)?</li>
+      <li>A API aceita a chave codificada em URL (<code>%3D</code>) na query?</li>
+      <li>Nos logs da Selsyn, qual o motivo do 403 nas chamadas de 06/10/2026 às 16:35:26 e 16:44:27 UTC para <code>/keek/rest/posicao/v2/aovivo</code>?</li>
+      <li>Quais grupos de API essa chave pode acessar (Consulta Nível Cliente, Monitoramento Nível Cliente, Gerenciamento de Risco)?</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>8. Escopo e segurança</h2>
+    <ul>
+      <li>A LocaKar usa a API <strong>somente para leitura</strong>: posição, histórico, sensores e relatórios.</li>
+      <li>Nenhum comando foi executado: <code>gdrActivateOutput</code>, bloqueio, desbloqueio, saídas e acionamentos estão fora do sistema.</li>
+      <li>A chave fica só no servidor e nunca aparece em logs, telas ou neste relatório.</li>
+    </ul>
+  </section>
+
+  <footer>Relatório gerado pela equipe LocaKar em 06/10/2026 a partir do diagnóstico de produção.</footer>
+</main>
+
+<script>
+document.querySelectorAll("button[data-copy]").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var el = document.getElementById(b.getAttribute("data-copy"));
+    var text = el.textContent;
+    var done = function () { b.textContent = "Copiado"; setTimeout(function () { b.textContent = "Copiar"; }, 1500); };
+    var fallback = function () { var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Selecionado"; };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+});
+</script>

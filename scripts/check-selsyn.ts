@@ -40,8 +40,8 @@ const fake: typeof fetch = (async (url: string | URL | Request, init?: RequestIn
   const u = new URL(String(url));
   assert.equal(u.origin, "https://api.appselsyn.com.br");
   assert.equal(u.pathname, "/keek/rest/relatorio/sensor/historico/123");
-  assert.equal(u.searchParams.get("x-api-key"), secret);
-  assert.equal(new Headers(init?.headers).get("x-api-key"), null);
+  assert.equal(u.searchParams.get("x-api-key"), null, "chave fora da URL");
+  assert.equal(new Headers(init?.headers).get("x-api-key"), secret, "chave no header (comportamento real da API)");
   assert.equal(init?.method, "GET"); assert.equal(init?.redirect, "error"); assert.equal(init?.cache, "no-store");
   assert.ok(init?.signal);
   return Response.json({ content: { rows: [], echo: secret }, id: 1, status: { key: "TEST", value: "Teste offline" } });

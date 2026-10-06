@@ -120,6 +120,19 @@ AUTHENTICATION_FAILED: fornecedor 401; PROVIDER_FORBIDDEN: fornecedor 403 (não 
 
 **Conclusão.** Request confere com o contrato. As quatro famílias recusam com 403, inclusive `aovivo`, que só aceita chave de Cliente. Isso é compatível com chave de outro tipo (Operador, que vai no header), chave inativa ou sem módulo liberado — o contrato documenta só respostas `default`, então a distinção depende do corpo do 403 (agora capturado e sanitizado) e da Selsyn. Autenticação **não** foi alterada por tentativa.
 
+## Causa raiz do 403 (2026-10-06, confirmada)
+
+Teste controlado via túnel SOCKS (IP 150.230.226.76), somente leitura, mesma chave:
+
+| Operação | Chave na query (contrato) | Chave no header x-api-key |
+|---|---|---|
+| aovivo | 403 | 200 |
+| integracaoAoVivo | 403 | 200 |
+| intergacaoListTipoAlerta | 403 | 200 |
+| gdrAovivo | 403 | 200 |
+
+Controles: sem chave e chave inválida = 403 com o mesmo corpo `{"message":"Acesso não autorizado."}`. A especificação oficial (`/keek/rest/openapi.json`, referenciada por `documentacao.html`) é idêntica à cópia salva e diz query — divergência do fornecedor, não do código. **Correção:** o transporte envia a chave só no header `x-api-key` (também tira a chave da URL). Testado numa operação de cada família; demais operações seguem o mesmo esquema documental.
+
 ## Inventário técnico
 A tabela a seguir é gerada do catálogo oficial. Todos implementados no catálogo/API/formulários; chamadas reais pendentes de ambiente e fornecedor. Ver schemas completos em `src/lib/selsyn-contracts.json`.
 
