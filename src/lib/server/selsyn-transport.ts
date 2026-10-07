@@ -101,36 +101,52 @@ export async function sendSelsynCommand(action: "lock" | "unlock", identifier: s
 }
 
 
-/** Consulta autenticada por TOKEN, não API Key. Nunca faz login nem dispara PUT como fallback. */
-export async function getSelsynCommandExecution(trackableId: string, deviceId: string, action: "lock" | "unlock", token: string, send: typeof fetch = fetch): Promise<CommandExecution> {
-  if (!token) throw new SelsynError("TOKEN_REQUIRED", "Configure SELSYN_ACCESS_TOKEN no servidor com um token Selsyn autorizado. A API Key não substitui esse token.", 409);
+export interface SelsynTokenContext { portal?: boolean; namespace?: string | null }
+function executionFromJson(raw: unknown, token: string): CommandExecution {
+  const obj = (v: unknown): Record<string, unknown> => v && typeof v === "object" && !Array.isArray(v) ? v as Record<string, unknown> : {};
+  const id = (v: unknown): string | null => typeof v === "number" && Number.isSafeInteger(v) && v > 0 ? String(v) : typeof v === "string" && /^[1-9]\d{0,18}$/.test(v) && BigInt(v) <= BigInt("9223372036854775807") ? v : null;
+  const field = (v: unknown): string | null => typeof v === "string" && /^[A-Za-z0-9_-]{1,80}$/.test(v) && !v.includes(token) ? v : null;
+  const date = (v: unknown): string | null => typeof v === "string" && Number.isFinite(Date.parse(v)) ? v : null;
+  const c = obj(raw); const device = obj(c.dispositivo);
+  const commandId = id(c.id);
+  if (!commandId) throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Identificador do comando ausente ou inválido.", 424);
+  return { id: commandId, deviceId: id(c.deviceId), imei: id(device.identificador), trackableId: id(obj(device.rastreavel).key), type: field(obj(c.type).key), status: field(obj(c.status).key), sentAt: date(c.sendDate), returnedAt: date(c.returnDate), result: typeof c.result === "string" ? String(sanitizeSelsyn(c.result, token)).slice(0, 300) : null };
+}
+async function tokenGet(path: string, token: string, context: SelsynTokenContext, send: typeof fetch, limit = 32000): Promise<unknown> {
+  if (!token) throw new SelsynError("TOKEN_REQUIRED", "Conecte a conta Rastreame em Configurações. A API Key não substitui o token de sessão.", 409);
   if (/[\r\n]/.test(token) || token.trim() !== token) throw new SelsynError("INVALID_TOKEN_FORMAT", "Token contém espaços externos ou quebra de linha.", 409);
-  if (![trackableId, deviceId].every(v => /^[1-9]\d{0,18}$/.test(v) && BigInt(v) <= BigInt("9223372036854775807")) || !["lock","unlock"].includes(action)) throw new SelsynError("INVALID_INPUT", "Identificação inválida para consulta do comando.");
-  const type = action === "lock" ? "LOCK" : "UNLOCK";
-  const url = new URL(`intervencao/comando/${trackableId}/${deviceId}/${type}`, SELSYN_BASE);
+  if (context.namespace && !/^[A-Za-z0-9_.-]{1,120}$/.test(context.namespace)) throw new SelsynError("INVALID_NAMESPACE", "Base da sessão inválida.", 409);
+  const url = new URL(path, context.portal ? "https://rastreame.com.br/keek/rest/" : SELSYN_BASE);
   try {
-    const res = await send(url, { method: "GET", headers: { Accept: "application/json", "x-r2f-auth": token }, signal: AbortSignal.timeout(12000), redirect: "error", cache: "no-store" });
+    const res = await send(url, { method: "GET", headers: { Accept: "application/json", "x-r2f-auth": token, ...(context.namespace ? { "x-r2f-ns": context.namespace } : {}) }, signal: AbortSignal.timeout(12000), redirect: "error", cache: "no-store" });
     const reader = res.body?.getReader(); const parts: Uint8Array[] = []; let length = 0;
     if (reader) while (true) {
       const { value, done } = await reader.read(); if (done) break;
       length += value.length;
-      if (length > 32000) { await reader.cancel(); throw new SelsynError("RESPONSE_TOO_LARGE", "Resposta de execução excedeu o limite. Comando não alterado.", 424); }
+      if (length > limit) { await reader.cancel(); throw new SelsynError("RESPONSE_TOO_LARGE", "Resposta de execução excedeu o limite. Comando não alterado.", 424); }
       parts.push(value);
     }
-    if (res.status === 401 || res.status === 403) throw new SelsynError("TOKEN_AUTH_FAILED", "A Selsyn recusou o token de consulta de execução. Confira validade e permissão; nenhum comando foi reenviado.", 424, res.status);
+    if (res.status === 401 || res.status === 403) throw new SelsynError("TOKEN_AUTH_FAILED", "O portal recusou a sessão de consulta. Confira validade, base e permissão; nenhum comando foi reenviado.", 424, res.status);
     if (!res.ok) throw providerError(res.status);
-    let raw: unknown;
-    try { raw = JSON.parse(Buffer.concat(parts).toString("utf8")); } catch { throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Resposta de execução inválida. Registro pendente preservado.", 424); }
-    const obj = (v: unknown): Record<string, unknown> => v && typeof v === "object" && !Array.isArray(v) ? v as Record<string, unknown> : {};
-    const id = (v: unknown): string | null => typeof v === "number" && Number.isSafeInteger(v) && v > 0 ? String(v) : typeof v === "string" && /^[1-9]\d{0,18}$/.test(v) && BigInt(v) <= BigInt("9223372036854775807") ? v : null;
-    const field = (v: unknown): string | null => typeof v === "string" && /^[A-Za-z0-9_-]{1,80}$/.test(v) && !v.includes(token) ? v : null;
-    const date = (v: unknown): string | null => typeof v === "string" && Number.isFinite(Date.parse(v)) ? v : null;
-    const c = obj(raw); const device = obj(c.dispositivo);
-    const commandId = id(c.id);
-    if (!commandId) throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Identificador do comando ausente ou inválido.", 424);
-    return { id: commandId, deviceId: id(c.deviceId), imei: id(device.identificador), trackableId: id(obj(device.rastreavel).key), type: field(obj(c.type).key), status: field(obj(c.status).key), sentAt: date(c.sendDate), returnedAt: date(c.returnDate), result: typeof c.result === "string" ? String(sanitizeSelsyn(c.result, token)).slice(0, 300) : null };
+    try { return JSON.parse(Buffer.concat(parts).toString("utf8")); } catch { throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Resposta de execução inválida. Registro pendente preservado.", 424); }
   } catch (e) {
     if (e instanceof SelsynError) throw e;
     throw new SelsynError("COMMAND_CHECK_UNAVAILABLE", "Não foi possível consultar a execução. Comando pendente preservado; não repetir.", 503);
   }
+}
+const providerIdValid = (v: string) => /^[1-9]\d{0,18}$/.test(v) && BigInt(v) <= BigInt("9223372036854775807");
+/** GET oficial de execução: nunca PUT/login automático como fallback. */
+export async function getSelsynCommandExecution(trackableId: string, deviceId: string, action: "lock" | "unlock", token: string, send: typeof fetch = fetch, context: SelsynTokenContext = {}): Promise<CommandExecution> {
+  if (![trackableId, deviceId].every(providerIdValid) || !["lock","unlock"].includes(action)) throw new SelsynError("INVALID_INPUT", "Identificação inválida para consulta do comando.");
+  return executionFromJson(await tokenGet(`intervencao/comando/${trackableId}/${deviceId}/${action === "lock" ? "LOCK" : "UNLOCK"}`, token, context, send), token);
+}
+/** Histórico GET observado no JS público do portal; busca o ID exato, nunca assume que o último é nosso. */
+export async function getSelsynCommandFromHistory(deviceId: string, commandId: string, token: string, send: typeof fetch = fetch, context: SelsynTokenContext = {}): Promise<CommandExecution> {
+  if (![deviceId, commandId].every(providerIdValid)) throw new SelsynError("INVALID_INPUT", "Dispositivo/comando inválidos.");
+  const raw = await tokenGet(`comando/${deviceId}`, token, context, send, 256000);
+  const rows = Array.isArray(raw) ? raw : raw && typeof raw === "object" && Array.isArray((raw as { content?: unknown }).content) ? (raw as { content: unknown[] }).content : null;
+  if (!rows) throw new SelsynError("INVALID_PROVIDER_RESPONSE", "Formato do histórico de comandos desconhecido.", 424);
+  const matched = rows.filter(v => v && typeof v === "object" && String((v as { id?: unknown }).id) === commandId);
+  if (matched.length !== 1) throw new SelsynError("COMMAND_HISTORY_NOT_FOUND", "ID registrado não foi encontrado uma única vez no histórico. Pendência preservada.", 409);
+  return executionFromJson(matched[0], token);
 }

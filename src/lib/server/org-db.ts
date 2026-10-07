@@ -9,7 +9,7 @@ export const TENANT_TABLES = new Set([
   "tenant_inspections", "tenant_documents", "rental_requests",
   "payment_transactions", "asaas_config", "asaas_customers", "asaas_webhook_events",
   "notifications", "client_push_subscriptions", "vehicle_fipe_history", "audit_log", "selsyn_requests", "settings",
-  "signature_provider_config", "contract_signature_processes", "contract_signers", "signature_events", "selsyn_commands",
+  "signature_provider_config", "contract_signature_processes", "contract_signers", "signature_events", "selsyn_commands", "selsyn_session",
 ]);
 
 const ORG = Symbol.for("locakar.organizationId");

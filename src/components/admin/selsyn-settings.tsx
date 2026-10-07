@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SelsynSessionSettings } from "./selsyn-session-settings";
 import { useEffect, useState } from "react";
 import { INTEGRATION_LABEL, type SelsynProbe, type SelsynIntegrationStatus, type CapabilityStatus } from "@/lib/selsyn-capabilities";
 
@@ -29,7 +30,7 @@ export function SelsynSettings() {
   }, []);
   return <div className="grid gap-3 sm:col-span-2">
     <p className="font-semibold">{probe ? INTEGRATION_LABEL[probe.status] : !status ? "Verificando…" : status.configured ? INTEGRATION_LABEL.CONFIGURED : "Não configurada para esta locadora"}</p>
-    <p className="text-sm text-muted">Credencial exclusivamente no servidor (SELSYN_API_KEY), vinculada à locadora por SELSYN_ORGANIZATION_ID. Comandos físicos desabilitados.</p>
+    <p className="text-sm text-muted">Credencial exclusivamente no servidor (SELSYN_API_KEY), vinculada à locadora por SELSYN_ORGANIZATION_ID. Comandos físicos exigem habilitação e confirmação separadas; conectar sessão não envia ações.</p>
     {status && <p className="text-xs text-muted">Credencial desta locadora: {status.configured ? "presente" : "ausente ou não vinculada"} · Banco: {status.databaseReady ? "tabelas e vínculos disponíveis" : "migration pendente"} · Atualização opcional: {status.refreshSeconds}s</p>}
     {status && !status.tenantReady && <p className="text-xs text-amber-300">Defina SELSYN_ORGANIZATION_ID no servidor com o ID da organização dona da chave. Acesso global bloqueado para proteger as demais locadoras.</p>}
     <p className="text-xs text-muted">Contrato: OpenAPI Selsyn 3.0.1 (Swagger 3.0.0) salvo em 06/10/2026 — operações conferidas. A chave vai no header x-api-key (a API real recusa a chave na query, apesar do contrato).</p>
@@ -43,6 +44,7 @@ export function SelsynSettings() {
       <details className="text-xs"><summary className="cursor-pointer">Relatório sem credencial</summary><pre className="mt-2 whitespace-pre-wrap break-words">{probe.report}</pre></details>
     </>}
     {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+    <SelsynSessionSettings />
     <Link href="/admin/monitoring" className="text-sm font-semibold text-brand-soft hover:underline">Abrir Rastreamento</Link>
   </div>;
 }

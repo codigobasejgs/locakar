@@ -183,6 +183,32 @@ O OpenAPI não enumera status terminais: `SENT`/returnDate nulo continua pendent
 
 **Pendente de contrato/credencial real:** autenticação autorizada por token, mapeamento de estados finais/resultados e correlação completa do comando2396. Testes são fixtures, sem acesso a conta/segredos. `solicitarPosicao` é PUT físico separado, não ativado por refresh; permanece indisponível até validar token/dispositivo e fluxo idempotente. Não remover stale-position nem reenviar2396 para resolver pendência.
 
+## Inspeção pública do Rastreame — 07/10/2026
+
+Pesquisa pelo túnel de rede autorizado, somente HTML/JavaScript públicos, **sem login, CPF, senha, cookie ou comando físico**. Fontes: `https://rastreame.com.br/`, `/runtime-config.js`, `/assets/index-Dt82KT5n.js` (SHA256 `1bdb6a4096898f1019210028d8ecc49f6c4a738f584f4ecae031ffcbd8b26050`).
+
+- O frontend atual usa `POST /auth/rest/login/v2/keek/{timezone}`, não o `GET /keek/rest/login` do OpenAPI arquivado. A representação literal do authorization é base64 de `login + '&#58;' + senha + '&#58;' + origin`; não tratar esses separadores como ':' por decodificação HTML fora do contrato JavaScript.
+- A sessão usa `accessToken`, `refreshToken`, `loginExpireAt`, `accessTokenExpireAt`. Requests autenticados levam `X-r2f-Auth: accessToken` e opcionalmente `X-r2f-Ns` da base selecionada.
+- Renovação no frontend usa `POST /auth/rest/login/v2/refresh/?versao=2000`, authorization formado com login/refreshToken/origem. Ainda não implementado em LocaKar: exige credenciais substitutas autorizadas e armazenamento seguro dos tokens rotativos; não usar credenciais expostas no chat.
+- Histórico do portal usa GET `/keek/rest/comando/{deviceId}`, acompanhamento usa GET `/keek/rest/intervencao/comando/{idRastreavel}/{deviceId}/{tipo}`. Caminho público observado não prova permissão da conta LocaKar nem resposta de2396.
+- O mapa atualiza lock otimisticamente após aceitar PUT. A UI de histórico considera result preenchido ou mais de120s para parar polling; cores reconhecem SUCCESS/OK, ERROR/FAIL e SENT/PENDING. Isso é comportamento de interface, não garantia de entrega ou autorização para limpar ledger de LocaKar por tempo.
+
+Correções pequenas de diagnóstico: exibir HTTP401/403 do fornecedor, distinguir status histórico preservado de consulta atual que falhou, trocar mensagem antiga de confirmação por telemetria. Nenhuma autenticação ou operação física executada. `TOKEN_AUTH_FAILED` permanece causa aberta: token incorreto/expirado, permissão, origem/namespace dependem de resposta autenticada válida; não afirmar qual delas sem evidência.
+
+## Sessão Rastreame renovável — 07/10/2026
+
+Implementação baseada no protocolo do JS público inspecionado, sem login real nesta sessão:
+
+1. Aplicar `20261021000000_selsyn_session.sql`. Ela cria `selsyn_session` service-role-only e RPCs de lease/CAS por locadora. Não envia comandos nem apaga o ledger.
+2. Configurar `SELSYN_ENCRYPTION_KEY` (32 bytes base64) na Vercel e fazer redeploy.
+3. Em Configurações → Integrações → Selsyn, dono/administrador clica **Conectar / reconectar Rastreame**, informa login e **senha nova** (a exposta no chat deve ser trocada) e confirma a própria senha do LocaKar. Namespace só se a conta exigir base selecionada.
+4. Login: `POST https://rastreame.com.br/auth/rest/login/v2/keek/America@Recife`, sem corpo, `authorization` = base64 Latin1 de `login&#58;senha&#58;https://rastreame.com.br` (separador literal). Refresh: `POST /auth/rest/login/v2/refresh/?versao=2000` com o refreshToken no lugar da senha. A senha não é armazenada; só login, access e refresh cifrados.
+5. Renovação automática quando o access expira em menos de 60 s. Lease SQL garante um refresh por vez; resposta tardia não sobrescreve sessão mais nova. Timeout/falha após enviar o refresh marca `reauth_required` em vez de repetir o token possivelmente consumido.
+6. Consulta de execução usa `X-r2f-Auth` (e `X-r2f-Ns` quando configurado) em `https://rastreame.com.br/keek/rest/`. Se o último comando do tipo não for o registrado, busca o ID exato no histórico `GET /keek/rest/comando/{deviceId}`; nunca assume o último.
+7. Datas de expiração aceitas só em ISO com fuso. Outro formato retorna `SESSION_RESPONSE_UNSUPPORTED` sem salvar tokens; ajustar só com a resposta real observada.
+
+**Não resolvido sem homologação:** semântica final de status/result. SUCCESS/OK/cores do portal ficam registrados, mas não liberam a trava sozinhos. Pendência2396 continua até confirmação real; nada é reenviado nem limpo por tempo.
+
 ## Inventário técnico
 A tabela a seguir é gerada do catálogo oficial. Todos implementados no catálogo/API/formulários; chamadas reais pendentes de ambiente e fornecedor. Ver schemas completos em `src/lib/selsyn-contracts.json`.
 

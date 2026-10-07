@@ -2,9 +2,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { buildSelsynRequest, coordinatesValid, localDateToUtc, mapTrackedVehicle, providerError, sanitizeSelsyn, SELSYN_OPERATIONS, SelsynError, trackingId, trackingTotals, validateSelsynResponse } from "../src/lib/selsyn";
-import { fetchSelsyn, getSelsynCommandExecution, sendSelsynCommand } from "../src/lib/server/selsyn-transport";
+import { fetchSelsyn, getSelsynCommandExecution, getSelsynCommandFromHistory, sendSelsynCommand } from "../src/lib/server/selsyn-transport";
 import { assertCommandExecution, validImei, validateLockSafety } from "../src/lib/selsyn-command";
 import { requireCommandOrigin } from "../src/lib/server/selsyn-command";
+import { authenticatePortal, parsePortalSession, portalAuthorization } from "../src/lib/server/selsyn-session";
 import { capabilityMatrix, integrationStatus, supportReport, type SelsynProbe } from "../src/lib/selsyn-capabilities";
 
 const dates = { dataInicial: "2026-10-01T00:00:00.000Z", dataFinal: "2026-10-01T01:00:00.000Z" };
@@ -183,7 +184,42 @@ assert.equal(executionGets, 1, "sem token não faz request");
 await assert.rejects(getSelsynCommandExecution("916", "12345", "unlock", token, responseFetch(new Response(token, { status: 403 }))), e => e instanceof SelsynError && e.code === "TOKEN_AUTH_FAILED" && !e.message.includes(token));
 await assert.rejects(getSelsynCommandExecution("916", "12345", "unlock", token, responseFetch(new Response("x".repeat(33000)))), e => e instanceof SelsynError && e.code === "RESPONSE_TOO_LARGE");
 await assert.rejects(getSelsynCommandExecution("916", "12345", "unlock", token, responseFetch(new Response("<html>"))), e => e instanceof SelsynError && e.code === "INVALID_PROVIDER_RESPONSE");
+// Sessão: protocolo literal do JS público, sem rede real, sem credencial real e sem decodificar &#58; como ':'.
+const fakeLogin = "usuario.teste", fakeSecret = "senha-ficticia";
+assert.equal(Buffer.from(portalAuthorization(fakeLogin, fakeSecret), "base64").toString("latin1"), "usuario.teste&#58;senha-ficticia&#58;https://rastreame.com.br");
+assert.throws(() => portalAuthorization("usuário", "senha😀"), SelsynError);
+const futureAccess = "2026-10-07T13:30:00.000Z", futureLogin = "2026-10-08T13:00:00.000Z";
+const portalSession = { accessToken: "access-token-ficticio", refreshToken: "refresh-token-ficticio", accessTokenExpireAt: futureAccess, loginExpireAt: futureLogin };
+assert.deepEqual(parsePortalSession(portalSession, Date.parse("2026-10-07T13:00:00.000Z")), { accessToken: "access-token-ficticio", refreshToken: "refresh-token-ficticio", accessExpiresAt: futureAccess, loginExpiresAt: futureLogin });
+assert.throws(() => parsePortalSession({ ...portalSession, accessTokenExpireAt: 1791336600 }), /formato validado/);
+let authCalls = 0;
+const authFetch: typeof fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+  authCalls++;
+  assert.equal(String(url), "https://rastreame.com.br/auth/rest/login/v2/refresh/?versao=2000");
+  assert.equal(init?.method, "POST"); assert.equal(init?.body, undefined); assert.equal(init?.redirect, "error");
+  assert.equal(new Headers(init?.headers).get("authorization"), portalAuthorization(fakeLogin, "refresh-antigo"));
+  return Response.json({ ...portalSession, accessTokenExpireAt: "2027-10-07T13:30:00.000Z", loginExpireAt: "2027-10-08T13:00:00.000Z", usuario: "PII descartada" });
+}) as typeof fetch;
+assert.equal((await authenticatePortal("refresh", fakeLogin, "refresh-antigo", authFetch)).refreshToken, "refresh-token-ficticio");
+assert.equal(authCalls, 1, "refresh nunca é repetido automaticamente");
+await assert.rejects(authenticatePortal("login", fakeLogin, fakeSecret, (async () => { throw new DOMException("timeout", "TimeoutError"); }) as typeof fetch), e => e instanceof SelsynError && e.code === "SESSION_ROTATION_UNCERTAIN");
+await assert.rejects(authenticatePortal("login", fakeLogin, fakeSecret, responseFetch(Response.json({ accessToken: "x" }))), e => e instanceof SelsynError && e.code === "SESSION_RESPONSE_UNSUPPORTED");
+const sessionSql = readFileSync("supabase/migrations/20261021000000_selsyn_session.sql", "utf8");
+assert.ok(sessionSql.includes("lease_until > now()") && sessionSql.includes("revision=p_revision") && sessionSql.includes("ROTATION_UNCERTAIN"));
+assert.ok(sessionSql.includes("revoke all on public.selsyn_session from public, anon, authenticated"));
+let namespacedGets = 0;
+const historyFetch: typeof fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+  namespacedGets++;
+  assert.equal(init?.method, "GET");
+  assert.equal(String(url), "https://rastreame.com.br/keek/rest/comando/12345");
+  assert.equal(new Headers(init?.headers).get("x-r2f-ns"), "base-autorizada");
+  return Response.json([{ ...commandFixture, id: 2397 }, commandFixture]);
+}) as typeof fetch;
+assert.equal((await getSelsynCommandFromHistory("12345", "2396", token, historyFetch, { portal: true, namespace: "base-autorizada" })).id, "2396");
+assert.equal(namespacedGets, 1);
+await assert.rejects(getSelsynCommandFromHistory("12345", "2396", token, responseFetch(Response.json([commandFixture, commandFixture])), { portal: true }), e => e instanceof SelsynError && e.code === "COMMAND_HISTORY_NOT_FOUND");
 assert.ok(commandRoute.includes("getSelsynCommandExecution"));
+assert.ok(commandRoute.includes("selsynExecutionCredentials"));
 assert.ok(!commandRoute.includes('status: "confirmed"'), "sem enum terminal comprovado a reconciliação não libera comando novo");
 const upgrade = readFileSync("supabase/migrations/20261020000000_selsyn_command_reconciliation.sql", "utf8");
 assert.ok(upgrade.includes("add column if not exists provider_returned_at") && !/delete|truncate|drop table/i.test(upgrade));
