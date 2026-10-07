@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { mapTrackedVehicle, normalizeIdentifier, SelsynError } from "@/lib/selsyn";
-import { assertCommandExecution, validImei, validateLockSafety } from "@/lib/selsyn-command";
+import { assertCommandExecution, commandExecutionSucceeded, validImei, validateLockSafety } from "@/lib/selsyn-command";
 import { assertSelsynTenant, querySelsyn, readSelsynBody, selsynErrorResponse, selsynResponse } from "@/lib/server/selsyn";
 import { requireCommandOrigin, reauthenticateCommand } from "@/lib/server/selsyn-command";
 import { getSelsynCommandExecution, getSelsynCommandFromHistory, sendSelsynCommand } from "@/lib/server/selsyn-transport";
@@ -65,12 +65,13 @@ export const POST = scoped(async function POST(request: Request) {
         let execution = await getSelsynCommandExecution(c.trackable_id, tracked.deviceId, c.action, credentials.token, fetch, credentials);
         if (execution.id !== c.provider_command_id && credentials.portal) execution = await getSelsynCommandFromHistory(tracked.deviceId, c.provider_command_id, credentials.token, fetch, credentials);
         assertCommandExecution(execution, { id: c.provider_command_id, deviceId: tracked.deviceId, imei: c.imei, trackableId: c.trackable_id, action: c.action, sentAt: c.sent_at, historicalDeviceId: c.provider_device_id });
-        // Cores SUCCESS/OK no frontend do fornecedor não homologam resultado físico. Guardar evidência sem liberar a trava.
-        const { error: saved } = await db.from("selsyn_commands").update({ provider_status: execution.status, provider_returned_at: execution.returnedAt, provider_device_id: execution.deviceId, provider_result: execution.result, last_checked_at: checkedAt, reconciliation_error: execution.returnedAt ? "TERMINAL_STATUS_UNVERIFIED" : null }).eq("id", c.id).eq("provider_command_id", execution.id).in("status", ["accepted","unknown","sending","reserved"]).select("id").single();
+        // Só a resposta real homologada de UNLOCK, após assert de identidade/horários, encerra a intenção.
+        const succeeded = commandExecutionSucceeded(execution, c.action);
+        const { error: saved } = await db.from("selsyn_commands").update({ ...(succeeded ? { status: "confirmed", finished_at: checkedAt, error_code: null } : {}), provider_status: execution.status, provider_returned_at: execution.returnedAt, provider_device_id: execution.deviceId, provider_result: execution.result, last_checked_at: checkedAt, reconciliation_error: !succeeded && execution.returnedAt ? "TERMINAL_STATUS_UNVERIFIED" : null }).eq("id", c.id).eq("provider_command_id", execution.id).in("status", ["accepted","unknown","sending","reserved"]).select("id").single();
         if (saved) throw new SelsynError("DATABASE_NOT_READY", "Não foi possível registrar a consulta de execução.", 503);
         const result = await history(v.id);
         if (result.error) throw new SelsynError("DATABASE_NOT_READY", "Não foi possível carregar o histórico.", 503);
-        return selsynResponse({ commands: result.data, message: execution.returnedAt ? `Comando ${execution.id}: retorno registrado; status ${execution.status ?? "não informado"}. A semântica final ainda precisa de confirmação; nenhum comando foi reenviado.` : `Comando ${execution.id}: status ${execution.status ?? "não informado"}; dispositivo ainda sem retorno confirmado.` });
+        return selsynResponse({ commands: result.data, message: succeeded ? `Desbloqueio ${execution.id} confirmado pelo retorno do dispositivo. Pendência encerrada; nenhum comando foi reenviado.` : execution.returnedAt ? `Comando ${execution.id}: retorno registrado; status ${execution.status ?? "não informado"}. A semântica final ainda precisa de confirmação; nenhum comando foi reenviado.` : `Comando ${execution.id}: status ${execution.status ?? "não informado"}; dispositivo ainda sem retorno confirmado.` });
       } catch (e) {
         await db.from("selsyn_commands").update({ last_checked_at: checkedAt, reconciliation_error: e instanceof SelsynError ? e.code : "COMMAND_CHECK_UNAVAILABLE" }).eq("id", c.id);
         throw e;

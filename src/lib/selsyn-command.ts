@@ -16,6 +16,15 @@ export function validateLockSafety(tracked: TrackedVehicle, plate: string, now =
 }
 
 
+/** Resultado de UNLOCK homologado pela resposta real do comando 2396; não generaliza para LOCK. */
+export function commandExecutionSucceeded(execution: CommandExecution, action: "lock" | "unlock") {
+  const sent = execution.sentAt ? Date.parse(execution.sentAt) : NaN;
+  const returned = execution.returnedAt ? Date.parse(execution.returnedAt) : NaN;
+  return action === "unlock" && execution.type === "UNLOCK" && execution.status === "SUCCESS"
+    && execution.result?.trim() === "Relayer disable OK!"
+    && Number.isFinite(sent) && Number.isFinite(returned) && returned >= sent;
+}
+
 export interface CommandExecution {
   id: string; deviceId: string | null; imei: string | null; trackableId: string | null;
   type: string | null; status: string | null; sentAt: string | null; returnedAt: string | null; result: string | null;

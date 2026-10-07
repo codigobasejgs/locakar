@@ -209,6 +209,12 @@ Implementação baseada no protocolo do JS público inspecionado, sem login real
 
 **Não resolvido sem homologação:** semântica final de status/result. SUCCESS/OK/cores do portal ficam registrados, mas não liberam a trava sozinhos. Pendência2396 continua até confirmação real; nada é reenviado nem limpo por tempo.
 
+## Resposta real de desbloqueio — 07/10/2026
+
+O usuário forneceu a evidência persistida do comando2396: `provider_status=SUCCESS`, `provider_returned_at=2026-10-06T19:54:33Z`, `provider_result=Relayer disable OK!`, actionunlock. A consulta de reconciliação já havia validado identidade, tipo, dispositivo, vínculo e horários antes de persistir esses campos. Essa combinação exata é agora reconhecida por `commandExecutionSucceeded` para UNLOCK. Após nova consulta autorizada e `assertCommandExecution`, a intenção passa a `confirmed`, limpa reconciliation_error e encerra a pendência sem reenviar PUT.
+
+SENT, retorno ausente, resultado desconhecido, identidade divergente e outro tipo continuam pendentes. Não generalizar a resposta de UNLOCK para LOCK. A segurança de bloqueio (posição<=60s, velocidade0, igniçãofalse) não mudou. Alteração de código somente; não editar2396 manualmente no SQL.
+
 ## Inventário técnico
 A tabela a seguir é gerada do catálogo oficial. Todos implementados no catálogo/API/formulários; chamadas reais pendentes de ambiente e fornecedor. Ver schemas completos em `src/lib/selsyn-contracts.json`.
 
