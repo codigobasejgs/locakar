@@ -29,6 +29,7 @@ import {
   newId,
   todayISO,
 } from "@/lib/utils";
+import { clientKmLabel, clientKmPeriod, clientRegistrationDate } from "@/lib/client-display";
 import type { Client, DocType } from "@/types";
 
 type Draft = {
@@ -41,6 +42,8 @@ type Draft = {
   cnhExpiry: string;
   kmDaily: string;
   kmMonthly: string;
+  kmWeekly: string;
+  kmPeriod: "daily" | "weekly" | "monthly";
   email: string;
   phone: string;
   backupPhone: string;
@@ -68,6 +71,8 @@ const empty = (): Draft => ({
   cnhExpiry: "",
   kmDaily: "",
   kmMonthly: "",
+  kmWeekly: "",
+  kmPeriod: "daily",
   email: "",
   phone: "",
   backupPhone: "",
@@ -91,10 +96,12 @@ const toDraft = (c: Client): Draft => ({
   cpf: c.cpf,
   rg: c.rg ?? "",
   cnhNumber: c.cnhNumber ?? "",
-  cnhCategory: c.cnhCategory ?? "B",
+  cnhCategory: c.cnhCategory ?? "",
   cnhExpiry: c.cnhExpiry ?? "",
-  kmDaily: c.kmDaily ? String(c.kmDaily) : "",
-  kmMonthly: c.kmMonthly ? String(c.kmMonthly) : "",
+  kmDaily: c.kmDaily != null ? String(c.kmDaily) : "",
+  kmMonthly: c.kmMonthly != null ? String(c.kmMonthly) : "",
+  kmWeekly: c.kmWeekly != null ? String(c.kmWeekly) : "",
+  kmPeriod: clientKmPeriod(c),
   email: c.email ?? "",
   phone: c.phone,
   backupPhone: c.backupPhone ?? "",
@@ -190,6 +197,7 @@ export default function ClientsPage() {
       .filter(Boolean)
       .join(" · ");
 
+    for (const value of [draft.kmDaily, draft.kmWeekly, draft.kmMonthly]) if (value !== "" && (!Number.isSafeInteger(Number(value)) || Number(value) < 0)) return void toast.error("Informe uma estimativa de KM inteira e não negativa.");
     crud.save({
       id: crud.editing?.id ?? newId(),
       code: crud.editing?.code ?? Math.max(0, ...clients.map((c) => c.code)) + 1,
@@ -199,10 +207,12 @@ export default function ClientsPage() {
       cpf: draft.cpf.trim(),
       rg: strOrUndef(draft.rg),
       cnhNumber: strOrUndef(draft.cnhNumber),
-      cnhCategory: strOrUndef(draft.cnhCategory),
+      ...(crud.editing?.cnhCategory !== undefined ? { cnhCategory: crud.editing.cnhCategory } : {}),
       cnhExpiry: strOrUndef(draft.cnhExpiry),
-      kmDaily: draft.kmDaily ? Number(draft.kmDaily) : undefined,
-      kmMonthly: draft.kmMonthly ? Number(draft.kmMonthly) : undefined,
+      kmDaily: draft.kmDaily !== "" ? Number(draft.kmDaily) : undefined,
+      kmMonthly: draft.kmMonthly !== "" ? Number(draft.kmMonthly) : undefined,
+      kmWeekly: draft.kmWeekly !== "" ? Number(draft.kmWeekly) : undefined,
+      kmPeriod: draft.kmPeriod,
       email: strOrUndef(draft.email.toLowerCase()),
       phone: draft.phone.trim(),
       backupPhone: strOrUndef(draft.backupPhone),
@@ -269,7 +279,7 @@ export default function ClientsPage() {
       header: "KM Previsto",
       cell: (c) => (
         <span className="text-xs text-zinc-300 tabular-nums">
-          {c.kmMonthly ? `${c.kmMonthly.toLocaleString("pt-BR")} km/mês` : c.kmDaily ? `${c.kmDaily} km/dia` : "—"}
+          {clientKmLabel(c)}
         </span>
       ),
     },
@@ -289,7 +299,7 @@ export default function ClientsPage() {
       key: "reg",
       header: "Cadastro",
       sortValue: (c) => c.registeredAt,
-      cell: (c) => formatDate(c.registeredAt),
+      cell: (c) => clientRegistrationDate(c),
     },
   ];
 
@@ -368,8 +378,8 @@ export default function ClientsPage() {
           <p data-tour="clients-form-identity" className="text-xs font-semibold uppercase tracking-wider text-brand-soft">1. Identificação</p>
         </div>
 
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <label className="text-xs font-semibold uppercase tracking-wide text-muted">Tipo de documento *</label>
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
+          <div className="grid gap-1"><label className="text-xs font-semibold uppercase tracking-wide text-muted">Tipo de documento *</label>
           <div className="flex gap-2">
             <button
               type="button"
@@ -391,8 +401,13 @@ export default function ClientsPage() {
             >
               Pessoa Jurídica (CNPJ)
             </button>
-          </div>
+          </div></div>
+          <span className="text-xs text-muted">Cadastro: {clientRegistrationDate(crud.editing)}</span>
         </div>
+
+        <Field label={draft.docType === "cnpj" ? "Razão social" : "Nome completo"} htmlFor="f-name" required className="sm:col-span-2">
+          <Input {...bind("name")} required autoComplete="off" placeholder="Nome do titular" />
+        </Field>
 
         <Field label={draft.docType === "cnpj" ? "CNPJ" : "CPF"} htmlFor="f-cpf" required>
           <Input
@@ -403,16 +418,9 @@ export default function ClientsPage() {
           />
         </Field>
 
-        <Field label="Nome completo / Razão social" htmlFor="f-name" required>
-          <Input {...bind("name")} required autoComplete="off" placeholder="Nome do titular" />
-        </Field>
 
         <Field label="RG / Órgão emissor" htmlFor="f-rg">
           <Input {...bind("rg")} placeholder="00.000.000-0 SSP/SP" />
-        </Field>
-
-        <Field label="Data de cadastro" htmlFor="f-registeredAt">
-          <Input {...bind("registeredAt")} type="date" />
         </Field>
 
         {/* Seção 2: Habilitação e CNH Digital */}
@@ -420,32 +428,12 @@ export default function ClientsPage() {
           <p data-tour="clients-form-cnh" className="text-xs font-semibold uppercase tracking-wider text-brand-soft">2. Habilitação & CNH Digital</p>
         </div>
 
-        <Field label="Nº Registro CNH" htmlFor="f-cnhNumber">
+        <Field label="Nº Registro CNH" htmlFor="f-cnhNumber" className="sm:col-span-2">
           <Input {...bind("cnhNumber", (v) => v.replace(/\D/g, "").slice(0, 15))} placeholder="00000000000" inputMode="numeric" />
         </Field>
 
-        <Field label="Categoria CNH" htmlFor="f-cnhCategory">
-          <Select
-            {...bind("cnhCategory")}
-            options={[
-              { value: "B", label: "B (Carro)" },
-              { value: "AB", label: "AB (Carro e Moto)" },
-              { value: "A", label: "A (Moto)" },
-              { value: "C", label: "C (Caminhão)" },
-              { value: "D", label: "D (Ônibus/Van)" },
-              { value: "E", label: "E (Articulado)" },
-            ]}
-          />
-        </Field>
-
-        <Field label="Vencimento CNH" htmlFor="f-cnhExpiry">
-          <Input {...bind("cnhExpiry")} type="date" />
-        </Field>
-
-        <Field label="1ª habilitação" htmlFor="f-firstLicenseDate">
-          <Input {...bind("firstLicenseDate")} type="date" max={today} />
-        </Field>
-
+        <Field label="1ª habilitação" htmlFor="f-firstLicenseDate"><Input {...bind("firstLicenseDate")} type="date" max={today} /></Field>
+        <Field label="Vencimento CNH" htmlFor="f-cnhExpiry"><Input {...bind("cnhExpiry")} type="date" /></Field>
         {/* Anexo CNH Digital (PDF exportado do CDT) */}
         <div className="rounded-xl border border-line bg-surface p-4 sm:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -479,14 +467,8 @@ export default function ClientsPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-brand-soft">3. Previsão de KM Médio com o Veículo</p>
         </div>
 
-        <Field label="KM Médio por dia" htmlFor="f-kmDaily" hint="Estimativa de uso diário">
-          <Input {...bind("kmDaily")} type="number" min={0} placeholder="Ex.: 80" />
-        </Field>
-
-        <Field label="KM Médio por mês" htmlFor="f-kmMonthly" hint="Estimativa de uso mensal">
-          <Input {...bind("kmMonthly")} type="number" min={0} placeholder="Ex.: 2500" />
-        </Field>
-
+        <Field label="Período da estimativa" htmlFor="f-kmPeriod"><Select {...bind("kmPeriod")} options={[{ value: "daily", label: "Diário" }, { value: "weekly", label: "Semanal" }, { value: "monthly", label: "Mensal" }]} /></Field>
+        <Field label="KM Estimada" htmlFor="f-kmEstimated"><Input id="f-kmEstimated" type="number" min={0} step={1} value={draft.kmPeriod === "weekly" ? draft.kmWeekly : draft.kmPeriod === "monthly" ? draft.kmMonthly : draft.kmDaily} onChange={e => set(draft.kmPeriod === "weekly" ? "kmWeekly" : draft.kmPeriod === "monthly" ? "kmMonthly" : "kmDaily", e.target.value)} /></Field>
         {/* Seção 4: Contatos */}
         <div className="mt-2 border-b border-line pb-2 sm:col-span-2">
           <p data-tour="clients-form-contacts" className="text-xs font-semibold uppercase tracking-wider text-brand-soft">4. Contatos</p>
@@ -571,12 +553,12 @@ export default function ClientsPage() {
                 { label: "Telefone reserva", value: v.backupPhone },
                 { label: "E-mail", value: v.email },
                 { label: "Nº CNH", value: v.cnhNumber },
-                { label: "Categoria CNH", value: v.cnhCategory },
                 { label: "Vencimento CNH", value: v.cnhExpiry ? formatDate(v.cnhExpiry) : undefined },
-                { label: "KM Médio diário", value: v.kmDaily ? `${v.kmDaily} km/dia` : undefined },
-                { label: "KM Médio mensal", value: v.kmMonthly ? `${v.kmMonthly.toLocaleString("pt-BR")} km/mês` : undefined },
+                { label: "KM Médio diário", value: v.kmDaily != null ? `${v.kmDaily} km/dia` : undefined },
+                { label: "KM Médio semanal", value: v.kmWeekly != null ? `${v.kmWeekly} km/semana` : undefined },
+                { label: "KM Médio mensal", value: v.kmMonthly != null ? `${v.kmMonthly.toLocaleString("pt-BR")} km/mês` : undefined },
                 { label: "Endereço completo", value: v.address || [v.street, v.number, v.neighborhood, v.city && `${v.city}/${v.state}`, v.cep].filter(Boolean).join(", "), wide: true },
-                { label: "Data de cadastro", value: formatDate(v.registeredAt) },
+                { label: "Data de cadastro", value: clientRegistrationDate(v) },
                 { label: "Observações", value: v.notes, wide: true },
               ]}
             />

@@ -10,6 +10,8 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     ".next-help/**",
+    // Checkouts de agentes não fazem parte da aplicação atual.
+    ".claude/worktrees/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
@@ -17,6 +19,8 @@ const eslintConfig = defineConfig([
     "apps/**",
     // Bundle web gerado por `npm run build:locatario`.
     "public/locatario/**",
+    // Workers/WASM gerados a partir de dependências versionadas, não código autoral.
+    "public/vendor/crlv/**",
   ]),
 ]);
 

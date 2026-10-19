@@ -145,7 +145,7 @@ export const operacao: TourDef[] = [
       { id: "actions", title: "Ver, editar ou excluir", content: "Abra os detalhes para ver a CNH anexada e o histórico de locações daquele cliente.", target: "clients-row-actions", optional: true },
       { id: "new", title: "Novo cliente", content: "Clique para cadastrar. Vamos abrir o formulário só para conhecer.", target: "clients-new", quick: true },
       { id: "identity", title: "1. Identificação", content: "Escolha Pessoa Física (CPF) ou Jurídica (CNPJ). Documento e nome são obrigatórios. Use exatamente o CPF do contrato: é ele que liga o cliente ao aplicativo.", target: "clients-form-identity", click: "clients-new", dialog: true, quick: true },
-      { id: "cnh", title: "2. Habilitação", content: "Número, categoria e vencimento da CNH, e o PDF da CNH Digital. O vencimento gera alertas antes de expirar.", target: "clients-form-cnh", click: "clients-new", dialog: true },
+      { id: "cnh", title: "2. Habilitação", content: "Número, primeira habilitação e vencimento da CNH, e o PDF da CNH Digital. O vencimento gera alertas antes de expirar.", target: "clients-form-cnh", click: "clients-new", dialog: true },
       { id: "contacts", title: "4. Contatos", content: "O telefone principal (WhatsApp) é obrigatório: é por ele que saem contratos e cobranças. O e-mail também recebe contrato e comprovantes.", target: "clients-form-contacts", click: "clients-new", dialog: true, quick: true },
       { id: "address", title: "5. Endereço", content: "Digite o CEP para preencher o endereço automaticamente. Observações internas não aparecem para o cliente. Feche com Cancelar para não salvar.", target: "clients-form-address", click: "clients-new", dialog: true },
     ],

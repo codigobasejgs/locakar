@@ -499,7 +499,7 @@
     "faq": [
       {
         "question": "Valor de compra e Valor FIPE são a mesma coisa?",
-        "answer": "Não. O 'Valor Pago / Investido' é o que sua locadora pagou na aquisição. O 'Valor FIPE' é a cotação média de mercado calculada mensalmente pela Fundação Instituto de Pesquisas Econômicas."
+        "answer": "Não. O 'Valor da compra' é o que sua locadora pagou na aquisição. O 'Valor FIPE' é a cotação média de mercado calculada mensalmente pela Fundação Instituto de Pesquisas Econômicas."
       }
     ],
     "related": [

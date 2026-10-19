@@ -1,13 +1,17 @@
 "use client";
 
 import { CheckCircle2, ExternalLink, FileText, Image as ImageIcon, Plus, Trash2, Upload, X } from "lucide-react";
-import Image from "next/image";
-import { useState } from "react";
+import { VehiclePhoto } from "@/components/ui/vehicle-photo";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DeleteDialog, FormDialog } from "@/components/admin/crud-dialogs";
-import { FipePicker, fipeApi } from "@/components/admin/fipe-picker";
+import { fipeApi } from "@/components/admin/fipe-picker";
+import { VehicleFipeAuto } from "@/components/admin/vehicle-fipe-auto";
+import { VehicleCatalogField } from "@/components/admin/vehicle-catalog-field";
+import { fipeSelectionValid, vehicleFipeIdentity } from "@/lib/vehicle-fipe";
+import { normalizeFuel, VEHICLE_FUELS } from "@/lib/vehicle-input";
 import { VehicleFipePanel } from "@/components/admin/vehicle-fipe-panel";
-import { FIPE_TYPES, type FipeInput, type FipeDetail } from "@/lib/fipe";
+import { type FipeInput, type FipeDetail } from "@/lib/fipe";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { VehicleTrackingPanel } from "@/components/admin/vehicle-tracking-panel";
 import { DataTable, type Column } from "@/components/admin/data-table";
@@ -19,7 +23,7 @@ import { Field, Input, Select } from "@/components/ui/form";
 import { useAdminData } from "@/hooks/use-admin-data";
 import { numOrUndef, numToStr, strOrUndef, useCrud } from "@/hooks/use-crud";
 import { VEHICLE_STATUS, statusOptions } from "@/lib/constants";
-import { parseCrlvPdf } from "@/lib/crlv";
+import { crlvFields, parseCrlvPdf } from "@/lib/crlv";
 import { getSupabase } from "@/lib/supabase/client";
 import { orgPath } from "@/lib/org-path";
 import { formatCurrency, formatDate, isValidPlate, maskPlate, newId } from "@/lib/utils";
@@ -48,7 +52,7 @@ type Draft = {
   year: string;
   yearModel: string;
   fuel: string;
-  fipeSelection?: { detail: FipeDetail; parameters: FipeInput };
+  fipeSelection?: { detail: FipeDetail; parameters: FipeInput; identity: string };
   renavam: string;
   chassis: string;
   odometer: string;
@@ -66,7 +70,7 @@ const empty = (): Draft => ({
   vehicleType: "Carro",
   brand: "",
   model: "",
-  year: String(new Date().getFullYear()),
+  year: "",
   yearModel: "",
   fuel: "Flex",
   renavam: "",
@@ -86,7 +90,7 @@ const toDraft = (v: FleetVehicle): Draft => ({
   vehicleType: v.vehicleType || "Carro",
   brand: v.brand || "",
   model: v.model || "",
-  year: String(v.year || new Date().getFullYear()),
+  year: v.year ? String(v.year) : "",
   yearModel: v.yearModel ?? "",
   fuel: v.fuel,
   renavam: v.renavam ?? "",
@@ -107,7 +111,15 @@ export default function VehiclesPage() {
   const { draft, bind, set } = crud;
   const vehicles = data!.vehicles;
 
-  const [showFipe, setShowFipe] = useState(false);
+  const [crlvMessage, setCrlvMessage] = useState("Aguardando arquivo.");
+  const generation = useRef(0);
+  const reading = useRef<AbortController | null>(null);
+  const latestDraft = useRef(draft);
+  useEffect(() => { latestDraft.current = draft; }, [draft]);
+  const openNew = () => { generation.current++; reading.current?.abort(); setReadingPdf(false); crud.openNew(); setCrlvMessage("Aguardando arquivo."); };
+  const openEdit = (v: FleetVehicle) => { generation.current++; reading.current?.abort(); setReadingPdf(false); crud.openEdit(v); setCrlvMessage("Aguardando arquivo."); };
+  const changeOpen = (open: boolean) => { if (!open) { generation.current++; reading.current?.abort(); } crud.setFormOpen(open); };
+  useEffect(() => () => reading.current?.abort(), []);
   const [readingPdf, setReadingPdf] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [uploadingCrlv, setUploadingCrlv] = useState(false);
@@ -116,32 +128,35 @@ export default function VehiclesPage() {
   const handleCrlvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setReadingPdf(true);
+    const requestGeneration = generation.current;
+    const before = latestDraft.current;
+    const controller = new AbortController(); reading.current?.abort(); reading.current = controller;
+    setReadingPdf(true); setCrlvMessage("Processando documento…");
     try {
-      const parsed = await parseCrlvPdf(file);
-      if (parsed.plate) set("plate", maskPlate(parsed.plate));
-      if (parsed.renavam) set("renavam", parsed.renavam);
-      if (parsed.year) set("year", String(parsed.year));
-      if (parsed.yearModel) set("yearModel", parsed.yearModel);
-      if (parsed.brand) set("brand", parsed.brand);
-      if (parsed.model) set("model", parsed.model);
-      if (parsed.vehicleType) set("vehicleType", parsed.vehicleType);
-
-      // Salva o documento no bucket privado 'documentos'
-      const ext = file.name.split(".").pop() || "pdf";
-      const path = await orgPath(`crlv/${parsed.plate || "doc"}_${Date.now()}.${ext}`);
-      const { error: uploadError } = await getSupabase()
-        .storage.from("documentos")
-        .upload(path, file, { upsert: true });
-      if (uploadError) throw uploadError;
+      const parsed = await parseCrlvPdf(file, { signal: controller.signal, onProgress: setCrlvMessage });
+      if (controller.signal.aborted || generation.current !== requestGeneration) return;
+      const patch: Partial<Draft> = {};
+      for (const key of ["renavam","brand","model","vehicleType","fuel","chassis","color","yearModel"] as const) if (parsed[key]) patch[key] = parsed[key]!;
+      if (parsed.plate) patch.plate = maskPlate(parsed.plate);
+      if (parsed.year) patch.year = String(parsed.year);
+      const fields = crlvFields(parsed);
+      const changed = Object.keys(patch).some(key => latestDraft.current[key as keyof Draft] !== before[key as keyof Draft]);
+      if (changed) { setCrlvMessage("Dados encontrados, mas o formulário mudou durante a leitura. Importe novamente para não sobrescrever alterações."); return; }
+      crud.setDraft(prev => ({ ...prev, ...patch, fipeSelection: undefined }));
+      setCrlvMessage(`Dados encontrados: ${fields.join(", ")}. Confira os campos antes de salvar.`);
+      const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
+      const path = await orgPath(`crlv/${newId()}.${ext}`);
+      const { error } = await getSupabase().storage.from("documentos").upload(path, file, { upsert: false });
+      if (controller.signal.aborted || generation.current !== requestGeneration) return;
+      if (error) { toast.warning("Dados lidos, mas o documento não foi anexado. Tente anexá-lo novamente."); return; }
       set("crlvUrl", path);
-
-      toast.success("CRLV importado com sucesso! Dados preenchidos automaticamente.");
-    } catch {
-      toast.error("Não foi possível ler o arquivo. Você pode preencher os dados manualmente.");
-    }
-    setReadingPdf(false);
-    e.target.value = "";
+      toast.success(`CRLV: ${fields.length} campos identificados. Revise os dados preenchidos.`);
+    } catch (err) {
+      if (!controller.signal.aborted && generation.current === requestGeneration) {
+        setCrlvMessage((err as Error).message || "Erro ao processar documento.");
+        toast.error((err as Error).message || "Não foi possível ler o documento. Preencha manualmente.");
+      }
+    } finally { if (generation.current === requestGeneration) setReadingPdf(false); e.target.value = ""; }
   };
 
   // Upload avulso ou substituição do Documento CRLV
@@ -165,23 +180,29 @@ export default function VehiclesPage() {
 
   // Upload de Múltiplas Fotos do Veículo
   const handlePhotosUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const requestGeneration = generation.current;
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
     setUploadingPhotos(true);
     try {
       const newUrls: string[] = [];
       for (const file of files) {
-        const ext = file.name.split(".").pop() || "jpg";
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) throw new Error("Use JPG, PNG ou WebP de até 8 MB.");
+        const bitmap = await createImageBitmap(file); const pixels = bitmap.width * bitmap.height; bitmap.close();
+        if (pixels > 32_000_000) throw new Error("Imagem muito grande. Reduza a resolução antes de anexar.");
+        if (generation.current !== requestGeneration) return;
+        const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
         const path = await orgPath(`${draft.plate || "veiculo"}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`);
         const { error } = await getSupabase().storage.from("veiculos").upload(path, file, { upsert: true });
         if (error) throw error;
         const { data: pub } = getSupabase().storage.from("veiculos").getPublicUrl(path);
         if (pub?.publicUrl) newUrls.push(pub.publicUrl);
       }
-      set("photos", [...draft.photos, ...newUrls]);
+      if (generation.current !== requestGeneration) return;
+      crud.setDraft(prev => ({ ...prev, photos: [...prev.photos, ...newUrls] }));
       toast.success(`${newUrls.length} foto(s) adicionada(s)!`);
-    } catch {
-      toast.error("Falha no envio de fotos. Tente novamente.");
+    } catch (err) {
+      toast.error((err as Error).message || "Falha no envio de fotos. Tente novamente.");
     }
     setUploadingPhotos(false);
     e.target.value = "";
@@ -238,8 +259,8 @@ export default function VehiclesPage() {
     const brandName = draft.brand.trim();
     const modelName = draft.model.trim();
     const fullName = `${brandName} ${modelName}`;
-    if (draft.fipeSelection && (brandName !== draft.fipeSelection.detail.brand || draft.yearModel !== String(draft.fipeSelection.detail.modelYear) && draft.fipeSelection.detail.modelYear !== 32000 || draft.vehicleType !== FIPE_TYPES[draft.fipeSelection.detail.type].label || draft.fuel !== draft.fipeSelection.detail.fuel)) { toast.error("Os dados mudaram após a seleção FIPE. Selecione a versão novamente ou preencha manualmente."); return; }
-    const mainImage = draft.photos[0] || crud.editing?.image || "/logos/locakar-circular.png";
+    const selection = draft.fipeSelection && fipeSelectionValid(draft, draft.fipeSelection) ? draft.fipeSelection : undefined;
+    const mainImage = draft.photos[0] || "/logos/locakar-circular.png";
 
     if (crud.editing?.fipe && [draft.brand.trim() !== crud.editing.brand, draft.model.trim() !== crud.editing.model, yearNum !== crud.editing.year, draft.yearModel !== (crud.editing.yearModel ?? ""), draft.vehicleType !== crud.editing.vehicleType, draft.fuel !== crud.editing.fuel].some(Boolean) && !confirm("A identidade do veículo mudou. O vínculo FIPE atual será removido; o histórico ficará preservado. Continuar?")) return;
     const id = crud.editing?.id ?? newId();
@@ -272,8 +293,8 @@ export default function VehiclesPage() {
       ipvaStatus: crud.editing?.ipvaStatus || "open",
       licensingStatus: crud.editing?.licensingStatus || "open",
     });
-    if (saved && draft.fipeSelection && isSupabaseEnabled) {
-      try { await fipeApi("vehicles", { action: "link", vehicleId: id, parameters: draft.fipeSelection.parameters }); await reload("vehicles", id); toast.success("FIPE vinculada ao veículo."); }
+    if (saved && selection && isSupabaseEnabled) {
+      try { await fipeApi("vehicles", { action: "link", vehicleId: id, parameters: selection.parameters }); await reload("vehicles", id); toast.success("FIPE vinculada ao veículo."); }
       catch(e) { toast.error(`Veículo salvo, mas a FIPE não foi vinculada: ${(e as Error).message}`); }
     }
   };
@@ -286,10 +307,9 @@ export default function VehiclesPage() {
       cell: (v) => (
         <div className="flex items-center gap-3">
           <div className="relative h-11 w-16 shrink-0 overflow-hidden rounded-lg border border-line bg-surface">
-            <Image
+            <VehiclePhoto
               src={v.photos?.[0] || v.image || "/logos/locakar-circular.png"}
               alt={v.name}
-              fill
               sizes="64px"
               className="object-contain p-1"
             />
@@ -363,7 +383,7 @@ export default function VehiclesPage() {
         title="Veículos"
         description="Gestão completa da frota: cadastro, documentos, fotos e manutenção."
         actions={
-          <Button data-tour="vehicles-new" onClick={() => { setShowFipe(false); crud.openNew(); }}>
+          <Button data-tour="vehicles-new" onClick={openNew}>
             <Plus /> Novo veículo
           </Button>
         }
@@ -390,7 +410,7 @@ export default function VehiclesPage() {
           },
         ]}
         onView={crud.setViewing}
-        onEdit={crud.openEdit}
+        onEdit={openEdit}
         onDelete={crud.setDeleting}
       />
 
@@ -398,7 +418,7 @@ export default function VehiclesPage() {
       <FormDialog
         tour="vehicles-form"
         open={crud.formOpen}
-        onOpenChange={crud.setFormOpen}
+        onOpenChange={changeOpen}
         title={crud.editing ? `Editar veículo · ${crud.editing.plate}` : "Novo veículo"}
         description="Preencha os dados do veículo da frota."
         onSubmit={submit}
@@ -418,17 +438,18 @@ export default function VehiclesPage() {
               <span>{readingPdf ? "Lendo documento..." : "Importar CRLV-e"}</span>
               <input
                 type="file"
-                accept="application/pdf,image/jpeg,image/png,image/webp"
+                accept="application/pdf,image/jpeg,image/png"
                 className="sr-only"
                 disabled={readingPdf}
                 onChange={handleCrlvUpload}
               />
             </label>
           </div>
+          <p role="status" className="mt-2 text-xs text-muted">{crlvMessage}</p>
         </div>
 
         {/* 1. PLACA */}
-        <Field label="1. Placa" htmlFor="f-plate" required hint="Padrão Mercosul (ABC1D23) ou tradicional (ABC1234)">
+        <Field label="Placa" htmlFor="f-plate" required hint="Padrão Mercosul (ABC1D23) ou tradicional (ABC1234)">
           <Input
             {...bind("plate", maskPlate)}
             placeholder="ABC1D23"
@@ -438,12 +459,8 @@ export default function VehiclesPage() {
           />
         </Field>
 
-        <div data-tour="vehicles-form-fipe" className="grid gap-2 sm:col-span-2"><Button type="button" variant="outline" onClick={() => { toast.message("Consulta por placa não configurada. Localize o veículo pela Tabela FIPE ou preencha manualmente."); setShowFipe(true); }}>Consultar veículo</Button><Button type="button" variant="ghost" onClick={() => { setShowFipe(!showFipe); if(showFipe) set("fipeSelection", undefined); }}>{showFipe ? "Preencher manualmente" : "Buscar na FIPE"}</Button></div>
-        {showFipe && <FipePicker initialType={draft.vehicleType === "Moto" ? "motorcycles" : "cars"} onUse={(d,p) => { set("vehicleType", FIPE_TYPES[d.type].label); set("brand", d.brand); if (!draft.model.trim()) set("model", d.model); if(d.modelYear !== 32000) set("yearModel", String(d.modelYear)); set("fuel", d.fuel); set("fipeSelection", { detail: d, parameters: p }); toast.success("Versão selecionada. Fabricação, Renavam, chassi e compra continuam manuais."); }} />}
-        {draft.fipeSelection && <p className="text-xs text-muted sm:col-span-2">Versão FIPE: {draft.fipeSelection.detail.model} · código {draft.fipeSelection.detail.code}. Ano modelo: {draft.yearModel || "Zero KM"}; fabricação é o campo 5.</p>}
-
         {/* 2. TIPO DE VEÍCULO */}
-        <Field label="2. Tipo de Veículo" htmlFor="f-vehicleType" required>
+        <Field label="Tipo de veículo" htmlFor="f-vehicleType" required className="sm:col-span-2">
           <Select
             {...bind("vehicleType")}
             options={[...VEHICLE_TYPES, "Caminhão"].map((t) => ({ value: t, label: t }))}
@@ -451,49 +468,28 @@ export default function VehiclesPage() {
           />
         </Field>
 
-        {/* 3. MARCA */}
-        <Field label="3. Marca" htmlFor="f-brand" required hint="Ex.: Fiat, Renault, Chevrolet, Honda, Yamaha, Toyota...">
-          <Input
-            id="f-brand"
-            name="brand"
-            value={draft.brand}
-            onChange={(e) => set("brand", e.target.value)}
-            placeholder="Ex.: Fiat, Honda, Toyota..."
-            required
-          />
-
+        <Field label="Fabricante" htmlFor="f-brand" required>
+          <VehicleCatalogField kind="brand" type={draft.vehicleType} value={draft.brand} onChange={v => set("brand", v)} id="f-brand" />
         </Field>
-
-        {/* 4. MODELO */}
-        <Field label="4. Modelo" htmlFor="f-model" required hint="Ex.: Mobi, Kwid, Onix, HB20, CG 160, Factor...">
-          <Input
-            id="f-model"
-            name="model"
-            value={draft.model}
-            onChange={(e) => set("model", e.target.value)}
-            placeholder="Ex.: Mobi, Kwid, CG 160..."
-            required
-          />
+        <Field label="Modelo" htmlFor="f-model" required>
+          <VehicleCatalogField kind="model" type={draft.vehicleType} brand={draft.brand} value={draft.model} onChange={v => set("model", v)} id="f-model" />
         </Field>
-
         {/* 5. ANO */}
-        <Field label="5. Ano de Fabricação" htmlFor="f-year" required hint="Ano do veículo (1950 até atual + 2)">
-          {draft.yearModel && <p className="text-xs text-muted">Ano modelo selecionado: {draft.yearModel} (diferente da fabricação).</p>}
+        <Field label="Ano de fabricação" htmlFor="f-year" required hint="Ano do veículo (1950 até atual + 2)">
           <Input
             {...bind("year")}
             type="number"
             min={1950}
             max={new Date().getFullYear() + 2}
-            placeholder={String(new Date().getFullYear())}
+            placeholder="Ano de fabricação"
             required
           />
         </Field>
 
-        {crud.editing?.fipe && <p className="text-xs text-muted sm:col-span-2">Vínculo FIPE atual: {crud.editing.fipe.version} · ano modelo {crud.editing.fipe.modelYear}. Alterar marca, modelo, fabricação, ano modelo, tipo ou combustível invalida o vínculo e preserva o histórico.</p>}
-        <div className="grid grid-cols-2 gap-3 sm:col-span-2"><Field label="Ano modelo (opcional)" htmlFor="f-yearModel" hint="FIPE utiliza ano modelo, não fabricação."><Input {...bind("yearModel")} inputMode="numeric" /></Field><Field label="Combustível" htmlFor="f-fuel"><Input {...bind("fuel")} /></Field></div>
-
+        <Field label="Ano modelo" htmlFor="f-yearModel" hint="Ano modelo é diferente do ano de fabricação."><Input {...bind("yearModel")} inputMode="numeric" /></Field>
+        <Field label="Combustível" htmlFor="f-fuel" className="sm:col-span-2"><Select {...bind("fuel")} options={[...new Set([...VEHICLE_FUELS, draft.fuel])].filter(Boolean).map(value => ({ value, label: value }))} /></Field>
         {/* 6. RENAVAM */}
-        <Field label="6. Renavam" htmlFor="f-renavam" hint="Código Renavam (apenas números)">
+        <Field label="Renavam" htmlFor="f-renavam" hint="Código Renavam (apenas números)">
           <Input
             {...bind("renavam", (x) => x.replace(/\D/g, "").slice(0, 11))}
             placeholder="00000000000"
@@ -503,7 +499,7 @@ export default function VehiclesPage() {
         </Field>
 
         {/* 7. CHASSI */}
-        <Field label="7. Chassi" htmlFor="f-chassis" hint="Número de identificação do chassi (17 caracteres)">
+        <Field label="Chassi" htmlFor="f-chassis" hint="Número de identificação do chassi (17 caracteres)">
           <Input
             id="f-chassis"
             name="chassis"
@@ -516,7 +512,7 @@ export default function VehiclesPage() {
         </Field>
 
         {/* 8. HODÔMETRO */}
-        <Field label="8. Hodômetro (KM atual)" htmlFor="f-odometer" required hint="Quilometragem atual do veículo">
+        <Field label="Hodômetro (KM atual)" htmlFor="f-odometer" required hint="Quilometragem atual do veículo">
           <Input
             id="f-odometer"
             name="odometer"
@@ -532,7 +528,7 @@ export default function VehiclesPage() {
         </Field>
 
         {/* 9. COR */}
-        <Field label="9. Cor" htmlFor="f-color" hint="Ex.: Branco, Preto, Prata, Vermelho...">
+        <Field label="Cor" htmlFor="f-color" hint="Ex.: Branco, Preto, Prata, Vermelho...">
           <Input
             id="f-color"
             name="color"
@@ -549,17 +545,17 @@ export default function VehiclesPage() {
         </Field>
 
         {/* 10. VENCIMENTO DO LICENCIAMENTO */}
-        <Field label="10. Vencimento do Licenciamento" htmlFor="f-licensingDueDate" hint="Data limite para o licenciamento anual">
+        <Field label="Vencimento do licenciamento" htmlFor="f-licensingDueDate" className="sm:col-span-2" hint="Data limite para o licenciamento anual">
           <Input {...bind("licensingDueDate")} type="date" />
         </Field>
 
         {/* 11. DATA DA COMPRA */}
-        <Field label="11. Data da Compra" htmlFor="f-purchaseDate" hint="Data de aquisição pela locadora">
+        <Field label="Data da compra" htmlFor="f-purchaseDate" hint="Data de aquisição pela locadora">
           <Input {...bind("purchaseDate")} type="date" />
         </Field>
 
         {/* 12. VALOR (VALOR DE COMPRA) */}
-        <Field label="12. Valor Pago / Investido (R$)" htmlFor="f-purchaseValue" hint="Valor de compra do veículo (R$)">
+        <Field label="Valor da compra (R$)" htmlFor="f-purchaseValue" hint="Valor de compra do veículo (R$)">
           <Input
             {...bind("purchaseValue")}
             type="number"
@@ -569,11 +565,15 @@ export default function VehiclesPage() {
           />
         </Field>
 
+        <VehicleFipeAuto vehicle={draft} existing={!!crud.editing?.fipe} onMatch={(detail, parameters, identity) => {
+          if (vehicleFipeIdentity(latestDraft.current) !== identity) return;
+          crud.setDraft(prev => ({ ...prev, fuel: normalizeFuel(prev.fuel), fipeSelection: { detail, parameters, identity } }));
+        }} />
         {/* 13. FOTOS DO VEÍCULO (Múltiplas Fotos) */}
         <div data-tour="vehicles-form-photos" className="rounded-xl border border-line bg-surface p-4 sm:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-white">13. Fotos do Veículo</p>
+              <p className="text-sm font-semibold text-white">Fotos do veículo</p>
               <p className="text-xs text-muted">
                 Envie fotos em boa qualidade (Frente, Traseira, Laterais, Interior, Hodômetro). A primeira foto será a foto principal.
               </p>
@@ -596,8 +596,7 @@ export default function VehiclesPage() {
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
               {draft.photos.map((url, idx) => (
                 <div key={idx} className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-line bg-ink">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={url} alt={`Foto ${idx + 1}`} className="size-full object-cover" />
+                  <VehiclePhoto src={url} alt={`Foto ${idx + 1}`} sizes="120px" className="object-cover" />
                   {idx === 0 && (
                     <span className="absolute bottom-1 left-1 rounded bg-magenta/90 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
                       Principal
@@ -624,7 +623,7 @@ export default function VehiclesPage() {
         <div data-tour="vehicles-form-document" className="rounded-xl border border-line bg-surface p-4 sm:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-white">14. Documento do Veículo (CRLV)</p>
+              <p className="text-sm font-semibold text-white">Documento do veículo (CRLV)</p>
               <p className="text-xs text-muted">
                 Anexe o CRLV em PDF ou imagem (JPG/PNG). O documento fica protegido no armazenamento seguro da locadora.
               </p>
@@ -634,7 +633,7 @@ export default function VehiclesPage() {
               <span>{uploadingCrlv ? "Enviando..." : draft.crlvUrl ? "Substituir documento" : "Anexar documento"}</span>
               <input
                 type="file"
-                accept="application/pdf,image/jpeg,image/png,image/webp"
+                accept="application/pdf,image/jpeg,image/png"
                 className="sr-only"
                 disabled={uploadingCrlv}
                 onChange={handleDocumentDirectUpload}
@@ -683,16 +682,14 @@ export default function VehiclesPage() {
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {v.photos.map((src, idx) => (
                     <div key={idx} className="relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-surface">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={src} alt={`Foto ${idx + 1}`} className="size-full object-cover" />
+                      <VehiclePhoto src={src} alt={`Foto ${idx + 1}`} sizes="(min-width: 640px) 25vw, 50vw" className="object-cover" />
                     </div>
                   ))}
                 </div>
               </div>
             ) : v.image ? (
               <div className="relative aspect-[16/9] max-h-56 overflow-hidden rounded-xl border border-line bg-surface">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={v.image} alt={v.name} className="size-full object-contain p-2" />
+                <VehiclePhoto src={v.image} alt={v.name} sizes="640px" className="object-contain p-2" />
               </div>
             ) : null}
 

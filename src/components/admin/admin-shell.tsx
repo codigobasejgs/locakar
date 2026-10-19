@@ -1,11 +1,12 @@
 "use client";
 
-import { Bell, Check, ExternalLink, LogOut, Menu, Moon, ShieldCheck, Sun, X } from "lucide-react";
+import { Bell, Check, ExternalLink, LogOut, Menu, Moon, ShieldCheck, Smartphone, Sun, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Toaster } from "sonner";
+import { DropdownMenu } from "radix-ui";
 import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
 import { AdminDataProvider, useAdminData } from "@/hooks/use-admin-data";
@@ -62,38 +63,29 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function SidebarFooter() {
-  // Link só para Super Admin (o acesso real é conferido de novo pela API).
+  return <div className="border-t border-line p-3"><InstallButton appName="Gestão" size="sm" variant="ghost" label="Instalar app de gestão" className="w-full justify-start px-3 sm:hidden" /></div>;
+}
+
+function UserMenu({ email }: { email: string | null }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [superAdmin, setSuperAdmin] = useState(false);
   useEffect(() => {
     if (!isSupabaseEnabled) return;
-    getSupabase().rpc("is_platform_admin").then(({ data }) => setSuperAdmin(data === true));
+    let alive = true;
+    getSupabase().rpc("is_platform_admin").then(({ data }) => { if (alive) setSuperAdmin(data === true); });
+    return () => { alive = false; };
   }, []);
-  return (
-    <div className="space-y-1 border-t border-line p-3">
-      <InstallButton appName="LOCAKAR Gestão" size="sm" variant="ghost" label="Instalar app de gestão" className="w-full justify-start px-3 sm:hidden" />
-      {superAdmin && (
-        <Link href="/plataforma/admin" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-blue-300 hover:bg-white/[0.04] hover:text-white">
-          <ShieldCheck className="size-4" aria-hidden /> Super Admin
-        </Link>
-      )}
-      <Link
-        href={ROUTES.home}
-        className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-white"
-      >
-        <ExternalLink className="size-4" aria-hidden /> Ver site
-      </Link>
-      <button
-        type="button"
-        onClick={async () => {
-          await authService.signOut();
-          window.location.assign(ROUTES.login);
-        }}
-        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-zinc-400 hover:bg-white/[0.04] hover:text-white"
-      >
-        <LogOut className="size-4" aria-hidden /> Sair
-      </button>
-    </div>
-  );
+  const itemClass = "flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-white outline-none data-[highlighted]:bg-surface";
+  return <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+    <DropdownMenu.Trigger asChild><button type="button" onClick={e => { if (e.detail === 0) setMenuOpen(true); }} data-tour="topbar-user-menu" aria-label={`Abrir menu do usuário: ${email ?? "Administrador"}`} className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-magenta to-brand-deep text-xs font-bold uppercase focus-visible:outline-magenta">{(email ?? "A").charAt(0)}</button></DropdownMenu.Trigger>
+    <DropdownMenu.Portal><DropdownMenu.Content align="end" sideOffset={8} className="z-50 min-w-52 max-w-[calc(100vw-2rem)] rounded-xl border border-line bg-panel p-2 shadow-xl">
+      <DropdownMenu.Label className="truncate px-3 py-2 text-xs text-muted">{email ?? "Usuário"}</DropdownMenu.Label>
+      <DropdownMenu.Item asChild><Link href={ROUTES.incidents} data-tour="user-menu-incidents" className={itemClass}><Smartphone className="size-4" />App do locatário</Link></DropdownMenu.Item>
+      {superAdmin && <><DropdownMenu.Item asChild><Link href="/plataforma/admin" className={itemClass}><ShieldCheck className="size-4" />Super Admin</Link></DropdownMenu.Item><DropdownMenu.Item asChild><Link href={ROUTES.home} className={itemClass}><ExternalLink className="size-4" />Ver site</Link></DropdownMenu.Item></>}
+      <DropdownMenu.Separator className="my-1 h-px bg-line" />
+      <DropdownMenu.Item className={itemClass} onSelect={async () => { await authService.signOut(); window.location.assign(ROUTES.login); }}><LogOut className="size-4" />Sair</DropdownMenu.Item>
+    </DropdownMenu.Content></DropdownMenu.Portal>
+  </DropdownMenu.Root>;
 }
 
 const SEVERITY_DOT: Record<string, string> = {
@@ -282,13 +274,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
       <div data-tour="topbar-bell">
         <AlertsBell />
       </div>
-      <div
-        className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-magenta to-brand-deep text-xs font-bold uppercase"
-        title={email ?? "Administrador"}
-        aria-label={`Usuário: ${email ?? "Administrador"}`}
-      >
-        {(email ?? "A").charAt(0)}
-      </div>
+      <UserMenu email={email} />
     </header>
   );
 }

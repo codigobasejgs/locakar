@@ -14,7 +14,7 @@ import {
   TriangleAlert,
   Wallet,
 } from "lucide-react";
-import Image from "next/image";
+import { VehiclePhoto } from "@/components/ui/vehicle-photo";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { DonutChart, MoneyAreaChart, SimpleBarChart } from "@/components/admin/charts";
@@ -213,7 +213,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-3">
                         {v.image && (
                           <div className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-line bg-white/5">
-                            <Image src={v.image} alt={v.name} fill sizes="40px" className="object-contain p-0.5" />
+                            <VehiclePhoto src={v.image} alt={v.name} sizes="40px" className="object-contain p-0.5" />
                           </div>
                         )}
                         <div>

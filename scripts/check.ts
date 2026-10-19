@@ -276,7 +276,7 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
 // CRLV e Filtros de Período do Dashboard
 {
   const { parseCrlvText } = await import("../src/lib/crlv");
-  const { presetDateRange, dashboardExecutiveTotals, vehicle360 } = await import("../src/lib/analytics");
+  const { presetDateRange } = await import("../src/lib/analytics");
   const crlv = parseCrlvText("CERTIFICADO CRLV-e PLACA: RMN7I15 CÓDIGO RENAVAM: 01284729184 ANO FABRICAÇÃO: 2021 ANO MODELO: 2022 MARCA/MODELO: FIAT/MOBI COMBUSTÍVEL: FLEX");
   assert.equal(crlv.plate, "RMN7I15");
   assert.equal(crlv.renavam, "01284729184");
@@ -284,6 +284,33 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
   assert.equal(crlv.yearModel, "2022");
   assert.equal(crlv.name, "FIAT/MOBI");
 
+  // Layout CRLV-e Digital (CDT/SENATRAN): coordenadas reais do PDF, valores sintéticos.
+  const { crlvLayoutText } = await import("../src/lib/crlv");
+  const it = (str: string, x: number, y: number) => ({ str, transform: [1, 0, 0, 1, x, y] });
+  const digital = parseCrlvText(crlvLayoutText([
+    it("CÓDIGO RENAVAM", 31, 746.7), it("00000000191", 31.1, 733), it("PLACA", 31, 720.4), it("EXERCÍCIO", 102.7, 720.4), it("ABC1D23", 31.1, 706.8), it("2026", 102.6, 706.8),
+    it("ANO FABRICAÇÃO", 31, 694.2), it("ANO MODELO", 102.7, 694.2), it("2020", 31.1, 680.5), it("2021", 102.6, 680.5),
+    it("MARCA / MODELO / VERSÃO", 31, 564.2), it("RENAULT/KWID ZEN", 31.1, 541.4), it("10MT", 133.1, 541.4), it("ESPÉCIE / TIPO", 31, 528.9), it("PASSAGEIRO AUTOMOVEL", 31.1, 506.2),
+    it("PLACA ANTERIOR / UF", 31, 493.7), it("CHASSI", 130.4, 493.7), it("*******/**", 31.1, 470.9), it("9BWZZZ377VT004251", 130.6, 470.9),
+    it("COR PREDOMINANTE", 31, 458.4), it("COMBUSTÍVEL", 102.4, 458.4), it("BRANCA", 31.1, 435.7), it("ALCOOL/GASOLINA", 102.6, 435.7),
+  ]));
+  assert.deepEqual([digital.plate, digital.renavam, digital.year, digital.yearModel, digital.brand, digital.model, digital.fuel, digital.chassis, digital.color, digital.vehicleType],
+    ["ABC1D23", "00000000191", 2020, "2021", "RENAULT", "KWID ZEN 10MT", "Flex", "9BWZZZ377VT004251", "BRANCA", "Carro"]);
+  // Foto/PDF escaneado: forma real do OCR (rótulo acima, ruído ao lado, O no lugar de 0), valores sintéticos.
+  const ocr = parseCrlvText([
+    "CÓDIGO RENAVAM E AEE Na 2h STIOR : x.", "00000000191 [Re EAD AREA So o PoTENCIWCLNDRADA", "PCA BreRCCO CANAS Não 0 :  70CV/999 1.16",
+    "ABC1DO3 2026 Ec Ao Rec ENE ao o Momo | em", "ANOFABRCAÇÃO — | ANO MODELO ENE É B4DA4020206486 1.16 2 o5P", "2020 2021 Ereh TUR a ARA S i caRRocERA —",
+    "MARCA / MODELO / VERSÃO : ASSINADO DIGITALMENTE PELO DETRAN", "RENAULT/KWID ZEN 10MT | ( DADOS DO SEGURO DPVAT", "ESPÉCIE / TIPO 1 | car TARI DATA", "da. + [Dcomunica [7] PARCELADO",
+    "PASSAGEIRO AUTOMOVEL DM PR o", "PLACA ANTERIOR / UF Cass 1 | FUNDONACIONAL", "AARRRAA (RA 9BWZZZ377VTOO4251 HO RSA", "CORPREDOMINANTE | COMBUSTÍVEL 1 | REPASSE",
+    "à | PepsTAMENTO NACIONAL DE", "BRANCA ALCOOL/GASOLINA MN * *",
+  ].join("\n"));
+  assert.deepEqual([ocr.plate, ocr.renavam, ocr.year, ocr.yearModel, ocr.brand, ocr.model, ocr.fuel, ocr.chassis, ocr.color, ocr.vehicleType],
+    ["ABC1D03", "00000000191", 2020, "2021", "RENAULT", "KWID ZEN 10MT", "Flex", "9BWZZZ377VT004251", "BRANCA", "Carro"]);
+  const { fipeModelCandidates } = await import("../src/lib/vehicle-fipe");
+  const kwid = [{ code: "8023", name: "KWID Zen 1.0 Flex 12V 5p Mec." }, { code: "8022", name: "KWID Life 1.0 Flex 12V 5p Mec." }, { code: "1", name: "Mobility" }];
+  assert.deepEqual(fipeModelCandidates(kwid, "KWID ZEN 10MT").map(m => m.code), ["8023"], "sufixo DETRAN não impede casar a versão FIPE");
+  assert.deepEqual(fipeModelCandidates(kwid, "KWID").map(m => m.code), ["8023", "8022"], "ambíguo vai para escolha do usuário");
+  assert.deepEqual(fipeModelCandidates(kwid, "Mobi"), [], "token inteiro: Mobi não casa Mobility");
   const today = "2026-10-15";
   const rMonth = presetDateRange("this_month", today);
   assert.equal(rMonth.from, "2026-10-01");

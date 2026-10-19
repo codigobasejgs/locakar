@@ -42,7 +42,7 @@ for (const t of tours) {
 }
 
 /* ---------- Ações seguras: o tour só clica em abrir, aba ou detalhes ---------- */
-const safeClick = /^([a-z-]+-(new|view)|settings-tab-[a-z]+|incidents-tab-[a-z]+|nav-open-menu)$/;
+const safeClick = /^([a-z-]+-(new|view)|settings-tab-[a-z]+|incidents-tab-[a-z]+|nav-open-menu|topbar-user-menu)$/;
 for (const t of tours) for (const s of t.steps) if (s.click) assert.ok(safeClick.test(s.click), `${t.id}/${s.id}: clique não permitido (${s.click})`);
 
 /* ---------- Rotas reais ---------- */

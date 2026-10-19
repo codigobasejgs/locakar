@@ -5,8 +5,8 @@ import { Select } from "@/components/ui/form";
 import { SearchChoice } from "@/components/ui/search-choice";
 import { FIPE_TYPES, type FipeDetail, type FipeInput, type FipeOption, type FipeOperation, type FipeType } from "@/lib/fipe";
 import { formatCurrency } from "@/lib/utils";
-export async function fipeApi<T>(path: string, body: Record<string, unknown>): Promise<T> {
- const r = await fetch(`/api/fipe/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), cache: "no-store" });
+export async function fipeApi<T>(path: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<T> {
+ const r = await fetch(`/api/fipe/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), cache: "no-store", signal });
  const j = await r.json(); if (!r.ok) throw new Error(j.error ?? "Falha na consulta FIPE."); return j;
 }
 export function FipePicker({ initialType = "cars", onUse }: { initialType?: FipeType; onUse: (detail: FipeDetail, parameters: FipeInput) => void }) {

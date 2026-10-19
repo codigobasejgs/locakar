@@ -72,6 +72,9 @@ export interface Client {
   rg?: string;
   kmDaily?: number;
   kmMonthly?: number;
+  kmWeekly?: number;
+  kmPeriod?: "daily" | "weekly" | "monthly";
+  createdAt?: string;
   cep?: string;
   state?: string;
   city?: string;

@@ -33,6 +33,7 @@ export function useCrud<K extends CollectionKey, D>(
 
   return {
     draft,
+    setDraft,
     set,
     bind,
     formOpen,

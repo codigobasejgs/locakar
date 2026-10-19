@@ -71,36 +71,36 @@
         "text": "Preencha os campos obrigatórios indicados com asterisco:",
         "fields": [
           {
-            "name": "1. Placa",
+            "name": "Placa",
             "required": true,
             "description": "Placa no padrão Mercosul (ABC1D23) ou tradicional (ABC1234).",
             "example": "ABC1D23"
           },
           {
-            "name": "2. Tipo de Veículo",
+            "name": "Tipo de veículo",
             "required": true,
-            "description": "Selecione Carro, Moto, Van, Caminhão, Utilitário ou Ônibus."
+            "description": "Selecione Carro, Moto ou Caminhão."
           },
           {
-            "name": "3. Marca",
+            "name": "Fabricante",
             "required": true,
             "description": "Fabricante do veículo.",
             "example": "Fiat, Renault, Chevrolet, Honda"
           },
           {
-            "name": "4. Modelo",
+            "name": "Modelo",
             "required": true,
             "description": "Modelo e versão comercial.",
             "example": "Mobi Like 1.0, Kwid Zen, Onix"
           },
           {
-            "name": "5. Ano de Fabricação",
+            "name": "Ano de fabricação",
             "required": true,
             "description": "Ano de fabricação (de 1950 até atual + 2).",
             "example": "2024"
           },
           {
-            "name": "8. Hodômetro (KM atual)",
+            "name": "Hodômetro (KM atual)",
             "required": true,
             "description": "Quilometragem atual registrada no painel do carro.",
             "example": "45230"
@@ -126,7 +126,7 @@
             "description": "Data limite para o pagamento anual do licenciamento."
           },
           {
-            "name": "Valor Pago / Investido (R$)",
+            "name": "Valor da compra (R$)",
             "required": false,
             "description": "Valor de aquisição pela locadora para cálculo de patrimônio e retorno."
           }

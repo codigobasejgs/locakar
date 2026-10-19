@@ -10,7 +10,7 @@ import {
   TriangleAlert,
   Wrench,
 } from "lucide-react";
-import Image from "next/image";
+import { VehiclePhoto } from "@/components/ui/vehicle-photo";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge, StatusBadge } from "@/components/ui/badge";
@@ -64,10 +64,9 @@ export function Vehicle360Dialog({ vehicle, data, today, dashboardRange, onClose
           <div className="flex items-center gap-4">
             {vehicle.image && (
               <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-line bg-white/5">
-                <Image
+                <VehiclePhoto
                   src={vehicle.image}
                   alt={vehicle.name}
-                  fill
                   sizes="80px"
                   className="object-contain p-1"
                 />

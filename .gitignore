@@ -48,3 +48,5 @@ next-env.d.ts
 
 !.env.example
 .next-help/
+# Workers/modelos gerados de dependências versionadas por predev/prebuild.
+/public/vendor/crlv/
