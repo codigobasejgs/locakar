@@ -22,6 +22,8 @@ const eslintConfig = defineConfig([
     // Workers/WASM gerados a partir de dependências versionadas, não código autoral.
     "public/vendor/crlv/**",
   ]),
+  // Microserviço Node puro (sem React): regras de hooks não se aplicam a useMultiFileAuthState.
+  { files: ["services/**"], rules: { "react-hooks/rules-of-hooks": "off" } },
 ]);
 
 export default eslintConfig;

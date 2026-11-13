@@ -1,0 +1,17 @@
+# Container próprio do Copiloto. Não compartilha rede, volume nem porta com a Evolution API.
+services:
+  locakar-whaileys:
+    build: .
+    container_name: locakar-whaileys
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:${HOST_PORT:-8790}:8790"
+    volumes:
+      - whaileys-sessions:/data/sessions
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+volumes:
+  whaileys-sessions:

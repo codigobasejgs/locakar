@@ -1,0 +1,13 @@
+{
+  "name": "locakar-whaileys-api",
+  "private": true,
+  "type": "module",
+  "main": "index.mjs",
+  "engines": { "node": ">=22" },
+  "scripts": { "start": "node index.mjs" },
+  "dependencies": {
+    "pino": "9.6.0",
+    "qrcode": "1.5.4",
+    "whaileys": "6.5.1"
+  }
+}

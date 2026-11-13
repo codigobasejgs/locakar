@@ -2,6 +2,7 @@
 
 import {
   BellRing,
+  Bot,
   Building2,
   CreditCard,
   FileSignature,
@@ -24,6 +25,7 @@ import { toast } from "sonner";
 import { AsaasSettings } from "@/components/admin/asaas-settings";
 import { AutentiqueSettings } from "@/components/admin/autentique-settings";
 import { ContractTemplatesManager } from "@/components/admin/contract-templates-manager";
+import { CopilotSettings } from "@/components/admin/copilot-settings";
 import { FipeSettings } from "@/components/admin/fipe-settings";
 import { InfinitePaySettingsFields } from "@/components/admin/infinitepay-settings";
 import { OrgBrandingForm } from "@/components/admin/org-branding-form";
@@ -339,6 +341,9 @@ export default function SettingsPage() {
             </Section>
             <Section tour="settings-whatsapp" icon={MessageCircle} title="WhatsApp das notificações" description="Número que envia contratos, termos, comprovantes, multas e alertas automáticos aos clientes.">
               <WhatsAppConnection />
+            </Section>
+            <Section tour="settings-copilot" icon={Bot} title="Copiloto LocaKar IA (WhatsApp com botões)" description="Administre a locadora pelo WhatsApp: cobranças, baixas, despesas, manutenções e relatórios por botões e listas. IA só quando você escolher.">
+              <CopilotSettings />
             </Section>
             <Section tour="settings-email" icon={Mail} title="E-mails" description="Envio pelo Resend: contratos, termos de entrega/devolução, comprovantes e multas.">
               <p className="text-sm text-zinc-300 sm:col-span-2">
