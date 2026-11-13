@@ -14,6 +14,9 @@ assert.deepEqual(parseMessage({ interactiveResponseMessage: { nativeFlowResponse
 assert.deepEqual(parseMessage({ ephemeralMessage: { message: { conversation: " menu " } } }), { kind: "text", text: "menu" });
 assert.deepEqual(parseMessage({ extendedTextMessage: { text: "2" } }, ["confirm_action:x", "cancel_action:x"]), { kind: "action", id: "cancel_action:x" }, "número digitado vira o botão");
 assert.deepEqual(parseMessage({ extendedTextMessage: { text: "7" } }, ["a"]), { kind: "text", text: "7" });
+assert.deepEqual(parseMessage({ conversation: "Confirmar" }, ["confirm_action:x", "cancel_action:x"]), { kind: "action", id: "confirm_action:x" }, "palavra digitada vira o botão");
+assert.deepEqual(parseMessage({ conversation: "não" }, ["confirm_action:x", "cancel_action:x"]), { kind: "action", id: "cancel_action:x" });
+assert.deepEqual(parseMessage({ conversation: "confirmar" }, ["menu"]), { kind: "text", text: "confirmar" }, "sem card pendente não inventa ação");
 assert.equal(parseMessage({ audioMessage: { mimetype: "audio/ogg" } }).kind, "audio");
 assert.equal(parseMessage({ documentMessage: { mimetype: "application/pdf" } }).kind, "document");
 assert.equal(parseMessage({ protocolMessage: {} }).kind, "ignored");

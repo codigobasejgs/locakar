@@ -26,6 +26,10 @@ export function parseMessage(raw: unknown, numbered: string[] = []): CopilotEven
   if (!text) return { kind: "ignored" };
   const n = /^\d{1,2}$/.test(text) ? Number(text) : 0;
   if (n >= 1 && n <= numbered.length) return { kind: "action", id: numbered[n - 1] };
+  // "Confirmar"/"Sim" e "Cancelar"/"Não" digitados valem como o botão do último card.
+  const word = /^(confirmar|confirmo|sim)$/i.test(text) ? "confirm_action:" : /^(cancelar|cancela|n[ãa]o)$/i.test(text) ? "cancel_action:" : null;
+  const typed = word && numbered.find((id) => id.startsWith(word));
+  if (typed) return { kind: "action", id: typed };
   return { kind: "text", text: text.slice(0, 1000) };
 }
 
