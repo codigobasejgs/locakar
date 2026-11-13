@@ -1,7 +1,8 @@
-// Motor Whaileys do Copiloto LocaKar: sessões WhatsApp por locadora, envio de botões/listas e
-// repasse assinado (HMAC) das mensagens recebidas. Paralelo à Evolution API, sem tocar nela.
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { mkdir, rm } from "node:fs/promises";
+// Motor Whaileys: API própria de WhatsApp com botões/listas, várias instâncias, cada uma com
+// webhook, segredo e token próprios. Paralelo à Evolution API, sem tocar nela.
+// Compatível com o Copiloto LocaKar: instâncias locakar_copilot_* usam WEBHOOK_URL/SECRET do .env.
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { join } from "node:path";
 import whaileys from "whaileys";
@@ -13,38 +14,57 @@ const { default: makeWASocket, Browsers, DisconnectReason, downloadMediaMessage,
 const { API_KEY, WEBHOOK_URL, WEBHOOK_SECRET } = process.env;
 const PORT = Number(process.env.PORT || 8790);
 const DATA = process.env.DATA_DIR || "/data/sessions";
-if (!API_KEY || API_KEY.length < 24 || !WEBHOOK_URL || !WEBHOOK_SECRET || WEBHOOK_SECRET.length < 32) {
-  console.error("Configure API_KEY (>=24), WEBHOOK_URL e WEBHOOK_SECRET (>=32).");
+// Cadastro dentro do volume já montado (não exige mudar o compose nem mover sessões pareadas).
+const REGISTRY = join(DATA, ".instances.json");
+if (!API_KEY || API_KEY.length < 24) {
+  console.error("Configure API_KEY (>=24 caracteres).");
   process.exit(1);
 }
 
-const KEY = /^locakar_copilot_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const LEGACY = /^locakar_copilot_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const NAME = /^[a-z0-9][a-z0-9_-]{2,62}$/;
 const MEDIA = { audioMessage: 8, imageMessage: 8, documentMessage: 8 }; // MB
 const DOC_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
 const logger = pino({ level: "silent" });
-const sessions = new Map(); // key -> { sock, state, qr, me }
-// ponytail: anti-loop em memória (10 min); reinício perde o cache, mas o LocaKar também deduplica pelo id no banco.
+const sessions = new Map(); // nome -> { sock, state, qr, pairing, me }
+// ponytail: anti-loop em memória (10 min); reinício perde o cache, o sistema cliente deduplica pelo id.
 const sent = new Map();
 const remember = (id) => { sent.set(id, Date.now() + 600_000); for (const [k, t] of sent) if (t < Date.now()) sent.delete(k); };
 
-const safeEq = (a, b) => { const x = createHash("sha256").update(a).digest(), y = createHash("sha256").update(b).digest(); return timingSafeEqual(x, y); };
+const sha = (s) => createHash("sha256").update(s).digest();
+const safeEq = (a, b) => timingSafeEqual(sha(a), sha(b));
 const json = (res, status, body) => { res.writeHead(status, { "content-type": "application/json" }); res.end(JSON.stringify(body)); };
+const fail = (status, message) => Object.assign(new Error(message), { status });
 
-async function post(body) {
+/* ---------- Cadastro de instâncias (arquivo no volume; token guardado só como hash) ---------- */
+let registry = {}; // nome -> { webhookUrl, webhookSecret, tokenHash, createdAt }
+async function loadRegistry() { try { registry = JSON.parse(await readFile(REGISTRY, "utf8")); } catch { registry = {}; } }
+async function saveRegistry() { const tmp = `${REGISTRY}.tmp`; await writeFile(tmp, JSON.stringify(registry, null, 1), { mode: 0o600 }); await rename(tmp, REGISTRY); }
+
+function config(name) {
+  if (registry[name]) return registry[name];
+  if (LEGACY.test(name) && WEBHOOK_URL && WEBHOOK_SECRET) return { webhookUrl: WEBHOOK_URL, webhookSecret: WEBHOOK_SECRET, legacy: true };
+  return null;
+}
+const validUrl = (u) => { try { const x = new URL(u); return x.protocol === "https:" || (x.protocol === "http:" && /^(localhost|127\.0\.0\.1)$/.test(x.hostname)); } catch { return false; } };
+
+/* ---------- Webhook ---------- */
+async function post(cfg, body) {
   const raw = JSON.stringify(body), ts = String(Date.now());
-  const sig = createHmac("sha256", WEBHOOK_SECRET).update(`${ts}.${raw}`).digest("hex");
+  const sig = createHmac("sha256", cfg.webhookSecret).update(`${ts}.${raw}`).digest("hex");
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const r = await fetch(WEBHOOK_URL, { method: "POST", headers: { "content-type": "application/json", "x-whaileys-timestamp": ts, "x-whaileys-signature": sig }, body: raw, signal: AbortSignal.timeout(15_000) });
+      const r = await fetch(cfg.webhookUrl, { method: "POST", headers: { "content-type": "application/json", "x-whaileys-timestamp": ts, "x-whaileys-signature": sig }, body: raw, signal: AbortSignal.timeout(15_000) });
       if (r.status < 500) return;
     } catch { /* tenta de novo */ }
     await new Promise((s) => setTimeout(s, 1000 * 2 ** attempt));
   }
 }
 
-async function forward(key, s, msg) {
+async function forward(name, s, msg) {
+  const cfg = config(name);
   const jid = msg.key?.remoteJid || "";
-  if (!msg.message || !msg.key?.id || sent.has(msg.key.id)) return;
+  if (!cfg || !msg.message || !msg.key?.id || sent.has(msg.key.id)) return;
   if (/@(g\.us|broadcast|newsletter)$/.test(jid) || jid === "status@broadcast") return;
   const inner = msg.message.ephemeralMessage?.message || msg.message.viewOnceMessage?.message || msg.message.viewOnceMessageV2?.message || msg.message;
   const type = Object.keys(MEDIA).find((t) => inner[t]);
@@ -57,21 +77,22 @@ async function forward(key, s, msg) {
       try {
         const buf = await downloadMediaMessage(msg, "buffer", {}, { logger, reuploadRequest: s.sock.updateMediaMessage });
         if (buf.length <= MEDIA[type] * 1024 * 1024) media = { mimetype: mime, data: buf.toString("base64") };
-      } catch { /* sem mídia: o LocaKar responde que não conseguiu ler */ }
+      } catch { /* sem mídia: o sistema cliente avisa o usuário */ }
     }
   }
-  await post({ instanceKey: key, me: s.me, key: msg.key, message: inner, pushName: msg.pushName ?? null, media });
+  await post(cfg, { instanceKey: name, me: s.me, key: msg.key, message: inner, pushName: msg.pushName ?? null, media });
 }
 
-async function start(key, phone) {
-  const existing = sessions.get(key);
+/* ---------- Sessão WhatsApp ---------- */
+async function start(name, phone) {
+  const existing = sessions.get(name);
   if (existing?.sock && existing.state !== "closed") return existing;
-  const dir = join(DATA, key);
+  const dir = join(DATA, name);
   await mkdir(dir, { recursive: true });
   const { state, saveCreds } = await useMultiFileAuthState(dir);
-  const sock = makeWASocket({ auth: state, logger, browser: Browsers.ubuntu("LocaKar Copiloto"), markOnlineOnConnect: false, syncFullHistory: false, printQRInTerminal: false });
+  const sock = makeWASocket({ auth: state, logger, browser: Browsers.ubuntu("Whaileys API"), markOnlineOnConnect: false, syncFullHistory: false, printQRInTerminal: false });
   const s = { sock, state: "connecting", qr: null, pairing: null, me: null };
-  sessions.set(key, s);
+  sessions.set(name, s);
   sock.ev.on("creds.update", saveCreds);
   sock.ev.on("connection.update", async (u) => {
     if (u.qr) s.qr = await QRCode.toDataURL(u.qr).catch(() => null);
@@ -79,13 +100,13 @@ async function start(key, phone) {
     if (u.connection === "close") {
       const code = u.lastDisconnect?.error?.output?.statusCode;
       s.state = "closed";
-      if (code === DisconnectReason.loggedOut) { sessions.delete(key); await rm(dir, { recursive: true, force: true }); }
-      else setTimeout(() => start(key).catch(() => {}), code === DisconnectReason.restartRequired ? 500 : 5000);
+      if (code === DisconnectReason.loggedOut) { sessions.delete(name); await rm(dir, { recursive: true, force: true }); }
+      else if (config(name)) setTimeout(() => start(name).catch(() => {}), code === DisconnectReason.restartRequired ? 500 : 5000);
     }
   });
   sock.ev.on("messages.upsert", ({ messages, type }) => {
     if (type !== "notify" && type !== "append") return;
-    for (const m of messages) forward(key, s, m).catch(() => {});
+    for (const m of messages) forward(name, s, m).catch(() => {});
   });
   if (phone && !state.creds.registered) {
     await new Promise((r) => setTimeout(r, 1500));
@@ -94,17 +115,28 @@ async function start(key, phone) {
   return s;
 }
 
-const status = (key) => {
-  const s = sessions.get(key);
-  return { state: s?.state ?? "disconnected", qr: s?.qr ?? null, pairingCode: s?.pairing ?? null, me: s?.me ?? null };
+async function stop(name) {
+  const s = sessions.get(name);
+  await s?.sock.logout().catch(() => {});
+  s?.sock.end?.(undefined);
+  sessions.delete(name);
+  await rm(join(DATA, name), { recursive: true, force: true });
+}
+
+const status = (name) => {
+  const s = sessions.get(name);
+  return { instance: name, state: s?.state ?? "disconnected", qr: s?.qr ?? null, pairingCode: s?.pairing ?? null, me: s?.me ?? null };
 };
 
-async function send(key, body) {
-  const s = sessions.get(key);
-  if (s?.state !== "open") throw Object.assign(new Error("Sessão desconectada."), { status: 409 });
-  const to = String(body.to || "");
-  if (!/^\d{10,15}@s\.whatsapp\.net$|^\d{5,20}@lid$/.test(to)) throw Object.assign(new Error("Destino inválido."), { status: 400 });
+async function send(name, body) {
+  const s = sessions.get(name);
+  if (s?.state !== "open") throw fail(409, "Sessão desconectada.");
+  const raw = String(body.to || "");
+  // Aceita número puro (5511999999999) ou JID completo.
+  const to = /^\d{10,15}$/.test(raw) ? `${raw}@s.whatsapp.net` : raw;
+  if (!/^\d{10,15}@s\.whatsapp\.net$|^\d{5,20}@lid$/.test(to)) throw fail(400, "Destino inválido.");
   const text = String(body.text || "").slice(0, 4000);
+  if (!text) throw fail(400, "Texto obrigatório.");
   let content = { text };
   if (Array.isArray(body.sections) && body.sections.length) {
     content = { text, buttonText: String(body.buttonText || "Abrir opções").slice(0, 20), title: String(body.title || "").slice(0, 60), footer: body.footer ? String(body.footer).slice(0, 60) : undefined,
@@ -114,40 +146,85 @@ async function send(key, body) {
   }
   let msg;
   try { msg = await s.sock.sendMessage(to, content); }
-  catch { msg = await s.sock.sendMessage(to, { text }); } // fallback: o texto já traz as opções numeradas
+  catch { msg = await s.sock.sendMessage(to, { text }); } // fallback: texto puro (o cliente deve numerar as opções no texto)
   remember(msg.key.id);
   return { messageId: msg.key.id };
 }
 
+/* ---------- Autorização ---------- */
+const isAdmin = (k) => safeEq(k, API_KEY);
+function canUse(name, k) {
+  if (isAdmin(k)) return true; // admin e o LocaKar (legado) usam a API_KEY
+  const cfg = registry[name];
+  return Boolean(cfg?.tokenHash && k && safeEq(sha(k).toString("hex"), cfg.tokenHash));
+}
+
+async function readBody(req) {
+  let raw = "";
+  for await (const c of req) { raw += c; if (raw.length > 64_000) throw fail(413, "payload"); }
+  try { return raw ? JSON.parse(raw) : {}; } catch { throw fail(400, "JSON inválido."); }
+}
+
 const server = createServer(async (req, res) => {
   try {
-    if (req.url === "/health") return json(res, 200, { ok: true });
-    if (!safeEq(String(req.headers["x-api-key"] || ""), API_KEY)) return json(res, 401, { error: "unauthorized" });
-    const m = req.url.match(/^\/sessions\/([^/?]+)(\/(connect|send))?$/);
-    if (!m || !KEY.test(m[1])) return json(res, 404, { error: "not found" });
-    const key = m[1];
-    let body = {};
-    if (req.method === "POST") {
-      let raw = "";
-      for await (const c of req) { raw += c; if (raw.length > 64_000) return json(res, 413, { error: "payload" }); }
-      body = raw ? JSON.parse(raw) : {};
+    const url = new URL(req.url, "http://x");
+    if (url.pathname === "/health") return json(res, 200, { ok: true, instances: sessions.size });
+    const key = String(req.headers["x-api-key"] || "");
+
+    // Administração: criar/listar/remover instâncias (somente API_KEY).
+    if (url.pathname === "/instances") {
+      if (!isAdmin(key)) return json(res, 401, { error: "unauthorized" });
+      if (req.method === "GET") return json(res, 200, Object.keys(registry).map((n) => ({ instance: n, webhookUrl: registry[n].webhookUrl, createdAt: registry[n].createdAt, state: sessions.get(n)?.state ?? "disconnected" })));
+      if (req.method === "POST") {
+        const body = await readBody(req);
+        const name = String(body.name || "");
+        if (!NAME.test(name) || LEGACY.test(name)) throw fail(400, "Nome inválido: 3-63 caracteres, minúsculas, números, _ ou -.");
+        if (registry[name]) throw fail(409, "Instância já existe. Use PATCH /instances/<nome> para trocar o webhook.");
+        if (!validUrl(body.webhookUrl)) throw fail(400, "webhookUrl precisa ser https.");
+        const token = randomBytes(32).toString("hex"), webhookSecret = randomBytes(32).toString("hex");
+        registry[name] = { webhookUrl: body.webhookUrl, webhookSecret, tokenHash: sha(token).toString("hex"), createdAt: new Date().toISOString() };
+        await saveRegistry();
+        // Token e segredo aparecem uma única vez: guarde no .env do sistema cliente.
+        return json(res, 201, { instance: name, token, webhookSecret, webhookUrl: body.webhookUrl });
+      }
+      return json(res, 405, { error: "method" });
     }
-    if (req.method === "GET" && !m[2]) return json(res, 200, status(key));
+    const adm = url.pathname.match(/^\/instances\/([^/]+)$/);
+    if (adm) {
+      if (!isAdmin(key)) return json(res, 401, { error: "unauthorized" });
+      const name = adm[1];
+      if (!registry[name]) return json(res, 404, { error: "not found" });
+      if (req.method === "DELETE") { await stop(name); delete registry[name]; await saveRegistry(); return json(res, 200, { ok: true }); }
+      if (req.method === "PATCH") {
+        const body = await readBody(req);
+        if (body.webhookUrl !== undefined && !validUrl(body.webhookUrl)) throw fail(400, "webhookUrl precisa ser https.");
+        if (body.webhookUrl) registry[name].webhookUrl = body.webhookUrl;
+        const out = { instance: name, webhookUrl: registry[name].webhookUrl };
+        if (body.rotateToken) { const token = randomBytes(32).toString("hex"); registry[name].tokenHash = sha(token).toString("hex"); out.token = token; }
+        if (body.rotateSecret) { registry[name].webhookSecret = randomBytes(32).toString("hex"); out.webhookSecret = registry[name].webhookSecret; }
+        await saveRegistry();
+        return json(res, 200, out);
+      }
+      return json(res, 405, { error: "method" });
+    }
+
+    // Operação da sessão: admin/LocaKar com API_KEY; demais sistemas com o token da própria instância.
+    const m = url.pathname.match(/^\/sessions\/([^/]+)(\/(connect|send))?$/);
+    if (!m) return json(res, 404, { error: "not found" });
+    const name = m[1];
+    if (!config(name)) return json(res, 404, { error: "not found" });
+    if (!canUse(name, key)) return json(res, 401, { error: "unauthorized" });
+    if (req.method === "GET" && !m[2]) return json(res, 200, status(name));
     if (req.method === "POST" && m[3] === "connect") {
+      const body = await readBody(req);
       const phone = body.phone ? String(body.phone).replace(/\D/g, "") : undefined;
-      if (phone && !/^\d{12,13}$/.test(phone)) return json(res, 400, { error: "Telefone inválido." });
-      await start(key, phone);
+      if (phone && !/^\d{12,13}$/.test(phone)) throw fail(400, "Telefone inválido (55 + DDD + número).");
+      await start(name, phone);
       await new Promise((r) => setTimeout(r, 2500));
-      return json(res, 200, status(key));
+      return json(res, 200, status(name));
     }
-    if (req.method === "POST" && m[3] === "send") return json(res, 200, await send(key, body));
-    if (req.method === "DELETE" && !m[2]) {
-      const s = sessions.get(key);
-      await s?.sock.logout().catch(() => {});
-      sessions.delete(key);
-      await rm(join(DATA, key), { recursive: true, force: true });
-      return json(res, 200, { ok: true });
-    }
+    if (req.method === "POST" && m[3] === "send") return json(res, 200, await send(name, await readBody(req)));
+    if (req.method === "DELETE" && !m[2]) { await stop(name); return json(res, 200, { ok: true }); }
     return json(res, 405, { error: "method" });
   } catch (e) {
     json(res, e.status || 500, { error: e.status ? e.message : "erro interno" });
@@ -155,7 +232,7 @@ const server = createServer(async (req, res) => {
 });
 
 // Reabre as sessões já pareadas ao subir o container.
-const { readdir } = await import("node:fs/promises");
 await mkdir(DATA, { recursive: true });
-for (const k of await readdir(DATA)) if (KEY.test(k)) start(k).catch(() => {});
+await loadRegistry();
+for (const k of await readdir(DATA)) if (!k.startsWith(".") && config(k)) start(k).catch(() => {});
 server.listen(PORT, "0.0.0.0", () => console.log(`whaileys-api na porta ${PORT}`));
