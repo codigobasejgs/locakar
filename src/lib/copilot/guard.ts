@@ -35,6 +35,27 @@ export function guard(key: IncomingKey, me: SessionMe, adminPhones: string[]): G
   return allowed ? { ok: true, who: "manager", phone: allowed, replyTo: remote } : { ok: false, reason: "não autorizado" };
 }
 
+export type Route =
+  | { to: "copilot"; who: "self" | "manager"; phone: string; replyTo: string }
+  | { to: "customer"; phone: string; replyTo: string }
+  | { to: "ignore"; reason: string; lidOnly?: boolean };
+
+/**
+ * Para onde vai cada mensagem da instância (decisão pura, testável):
+ * gestor/self-chat → Copiloto; cliente ou visitante (não fromMe, com número real) → autoatendimento se ligado;
+ * fromMe para terceiro (dono conversando com cliente) → nunca respondido.
+ */
+export function routeMessage(key: IncomingKey, me: SessionMe, adminPhones: string[], customerBot: boolean): Route {
+  const g = guard(key, me, adminPhones);
+  if (g.ok) return { to: "copilot", ...g };
+  if (g.reason !== "não autorizado") return { to: "ignore", reason: g.reason, lidOnly: g.reason === "remetente sem número" };
+  if (!customerBot) return { to: "ignore", reason: "autoatendimento desligado" };
+  // "não autorizado" só ocorre com mensagem recebida, número real e diferente do próprio: é cliente/visitante.
+  const remote = key.remoteJid ?? "";
+  const pnJid = isPn(remote) ? remote : isPn(key.senderPn) ? key.senderPn : key.remoteJidAlt;
+  return { to: "customer", phone: jidUser(pnJid), replyTo: remote };
+}
+
 export type Capability = "read" | "write" | "media" | "ai_text";
 /** Nível 1 = leitura; 2 = + escrita com confirmação; 3 = + mídia. IA só no modo híbrido. */
 export function allowed(cfg: { level: number; mode: "buttons" | "hybrid"; aiAvailable: boolean }, cap: Capability) {

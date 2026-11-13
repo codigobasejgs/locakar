@@ -10,7 +10,7 @@ import { isSupabaseEnabled } from "@/lib/supabase/env";
 
 type Card = { text: string; buttons?: { id: string; title: string }[]; sections?: { rows: { id: string; title: string; description?: string }[] }[] };
 interface State {
-  config: { enabled: boolean; mode: "buttons" | "hybrid"; level: number; adminPhones: string[] };
+  config: { enabled: boolean; mode: "buttons" | "hybrid"; level: number; adminPhones: string[]; customerBot: boolean; customerRate: number };
   aiAvailable: boolean;
   session: { engine: boolean; state?: string; qr?: string | null; pairingCode?: string | null; me?: { id: string | null } | null; error?: string };
 }
@@ -126,6 +126,13 @@ export function CopilotSettings() {
         <Field label="Gestores autorizados (um por linha)" htmlFor="cp-phones" className="sm:col-span-2" hint="Além da conversa com você mesmo, só estes números podem usar o Copiloto. Nenhum outro número recebe dados.">
           <Textarea id="cp-phones" value={phones} onChange={(e) => setPhones(e.target.value)} placeholder="(11) 99999-9999" />
         </Field>
+        <div className="grid gap-3 rounded-xl border border-line p-4 sm:col-span-2">
+          <Checkbox label="Autoatendimento de clientes neste número (pagar, 2ª via, locação e app oficial)" checked={draft.customerBot} onChange={(e) => setDraft({ ...draft, customerBot: e.target.checked })} />
+          <p className="text-xs text-muted">Clientes e visitantes que escreverem para o número do Copiloto recebem menus com botões, sem IA. Gestores e a conversa com você mesmo continuam no Copiloto. Dados pessoais só após os 4 primeiros dígitos do CPF.</p>
+          <Field label="Máximo de respostas por hora para cada cliente" htmlFor="cp-rate" hint="Protege o chip contra bloqueio (5 a 200).">
+            <Input id="cp-rate" type="number" min={5} max={200} value={draft.customerRate} onChange={(e) => setDraft({ ...draft, customerRate: Number(e.target.value) })} className="max-w-32" />
+          </Field>
+        </div>
         <Button className="justify-self-start" disabled={busy} onClick={() => act({ action: "save", ...draft, adminPhones: phones.split(/[\n,;]/).map((p) => p.trim()).filter(Boolean) }, "Copiloto salvo.")}>Salvar Copiloto</Button>
       </div>
 
@@ -136,6 +143,8 @@ export function CopilotSettings() {
 
 /** Simulador: mesmo fluxo do WhatsApp, sempre em modo de teste (nada é gravado nem enviado). */
 function Simulator() {
+  const [as, setAs] = useState<"manager" | "customer">("manager");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [log, setLog] = useState<{ me: boolean; text: string; card?: Card }[]>([]);
   const [session, setSession] = useState<unknown>(null);
   const [text, setText] = useState("menu");
@@ -145,7 +154,7 @@ function Simulator() {
     setBusy(true);
     setLog((l) => [...l, { me: true, text: label }]);
     try {
-      const j = await api<{ replies: Card[]; session: unknown }>({ action: "simulate", session, ...body });
+      const j = await api<{ replies: Card[]; session: unknown }>({ action: "simulate", session, as, phone: customerPhone, ...body });
       setSession(j.session);
       setLog((l) => [...l, ...j.replies.map((c) => ({ me: false, text: c.text, card: c }))]);
     } catch (e) { setLog((l) => [...l, { me: false, text: `⚠️ ${(e as Error).message}` }]); }
@@ -163,7 +172,11 @@ function Simulator() {
 
   return (
     <div className="grid gap-3 rounded-xl border border-line p-4">
-      <p className="text-sm font-semibold">Simulador do Copiloto <Badge tone="info">Teste — nada é gravado</Badge></p>
+      <p className="text-sm font-semibold">Simulador <Badge tone="info">Teste — nada é gravado nem enviado</Badge></p>
+      <div className="flex flex-wrap items-end gap-2">
+        <Select aria-label="Simular como" value={as} options={[{ value: "manager", label: "Como gestor (Copiloto)" }, { value: "customer", label: "Como cliente (autoatendimento)" }]} onChange={(e) => { setAs(e.target.value as "manager" | "customer"); setLog([]); setSession(null); }} className="max-w-64" />
+        {as === "customer" && <Input aria-label="Telefone do cliente para simular" placeholder="Telefone de um cliente cadastrado" inputMode="tel" value={customerPhone} onChange={(e) => { setCustomerPhone(e.target.value); setSession(null); }} className="max-w-60" />}
+      </div>
       <div className="max-h-96 space-y-2 overflow-y-auto rounded-lg bg-black/20 p-3" aria-live="polite">
         {!log.length && <p className="text-xs text-muted">Digite “menu” para começar.</p>}
         {log.map((m, i) => (

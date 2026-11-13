@@ -1,6 +1,7 @@
 import { jidUser } from "@/lib/copilot/guard";
 import { parseMessage } from "@/lib/copilot/parse";
 import { loadCopilotConfig, runCopilot, toCard } from "@/lib/server/copilot";
+import { runCustomerBot } from "@/lib/server/customer-bot";
 import { copilotAiKey } from "@/lib/server/copilot-ai";
 import { scoped } from "@/lib/server/org-context";
 import { serviceDb } from "@/lib/server/push";
@@ -28,7 +29,7 @@ export const GET = scoped(async function GET() {
     await requireStaff("integrations");
     const cfg = await loadCopilotConfig();
     const ai = await copilotAiKey();
-    return Response.json({ config: { enabled: cfg.enabled, mode: cfg.mode, level: cfg.level, adminPhones: cfg.admin_phones }, aiAvailable: Boolean(ai), aiProvider: ai?.provider ?? null, session: await state(cfg.instance_key) });
+    return Response.json({ config: { enabled: cfg.enabled, mode: cfg.mode, level: cfg.level, adminPhones: cfg.admin_phones, customerBot: Boolean(cfg.customer_bot_enabled), customerRate: cfg.customer_rate_per_hour ?? 30 }, aiAvailable: Boolean(ai), aiProvider: ai?.provider ?? null, session: await state(cfg.instance_key) });
   } catch (e) {
     return errorResponse(e);
   }
@@ -46,9 +47,11 @@ export const POST = scoped(async function POST(request: Request) {
       if (![1, 2, 3].includes(level) || (mode !== "buttons" && mode !== "hybrid")) throw new HttpError(400, "Nível ou modo inválido.");
       const phones = Array.isArray(body.adminPhones) ? body.adminPhones.map((p) => toWhatsAppNumber(String(p))) : [];
       if (phones.some((p) => !p) || phones.length > 10) throw new HttpError(400, "Informe até 10 telefones válidos com DDD.");
-      const { error } = await db.from("copilot_config").update({ enabled: Boolean(body.enabled), level, mode, admin_phones: [...new Set(phones as string[])], updated_at: new Date().toISOString() }).eq("instance_key", cfg.instance_key);
+      const rate = Number(body.customerRate ?? 30);
+      if (!Number.isInteger(rate) || rate < 5 || rate > 200) throw new HttpError(400, "Limite de respostas por hora: entre 5 e 200.");
+      const { error } = await db.from("copilot_config").update({ enabled: Boolean(body.enabled), level, mode, admin_phones: [...new Set(phones as string[])], customer_bot_enabled: Boolean(body.customerBot), customer_rate_per_hour: rate, updated_at: new Date().toISOString() }).eq("instance_key", cfg.instance_key);
       if (error) throw new HttpError(409, "Não foi possível salvar.");
-      await audit({ actorType: "staff", actorId: userId, action: "copilot.config_saved", entity: "copilot_config", details: { level, mode, enabled: Boolean(body.enabled), phones: phones.length }, ip: clientIp(request) });
+      await audit({ actorType: "staff", actorId: userId, action: "copilot.config_saved", entity: "copilot_config", details: { level, mode, enabled: Boolean(body.enabled), phones: phones.length, customerBot: Boolean(body.customerBot), rate }, ip: clientIp(request) });
       // Motor resolve LID → número só dos gestores cadastrados (WhatsApp esconde o número em alguns contatos).
       if (isWhaileysEnabled()) await whaileysKnownPhones(cfg.instance_key, [...new Set(phones as string[])]).catch(() => {});
       return Response.json({ ok: true });
@@ -66,6 +69,13 @@ export const POST = scoped(async function POST(request: Request) {
       const session = prev && typeof prev.step === "string" && prev.data && typeof prev.data === "object" ? { step: prev.step.slice(0, 40), data: prev.data as Record<string, unknown> } : { step: "menu", data: {} };
       const opts = Array.isArray(session.data.opts) ? (session.data.opts as unknown[]).map(String) : [];
       // Simulador: sempre dry-run; nada é gravado nem enviado.
+      if (body.as === "customer") {
+        const testPhone = toWhatsAppNumber(String(body.phone ?? ""));
+        if (!testPhone) throw new HttpError(400, "Informe o telefone de um cliente cadastrado para simular.");
+        const cs = prev && typeof prev.step === "string" ? { step: prev.step.slice(0, 40), data: (prev.data as Record<string, unknown>) ?? {}, clientId: typeof (prev as { clientId?: unknown }).clientId === "string" ? (prev as { clientId: string }).clientId : null, verified: Boolean((prev as { verified?: unknown }).verified), locked: false } : undefined;
+        const out = await runCustomerBot(parseMessage(message, opts), testPhone, cfg, { media, dryRun: true, session: cs, transport: async (c) => { replies.push(c); } });
+        return Response.json({ replies, session: out.session });
+      }
       const sim = await runCopilot(parseMessage(message, opts), { ok: true, who: "self", phone, replyTo: "" }, { media, dryRun: true, session, transport: async (c) => { replies.push(c); } });
       return Response.json({ replies, session: sim.session });
     }

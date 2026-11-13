@@ -16,7 +16,12 @@ import type { Client, CompanySettings, FleetVehicle, Rental } from "@/types";
 import { interpret, copilotAiKey } from "./copilot-ai";
 import { instanceKeyFor, whaileysSend, type OutgoingCard } from "./whaileys";
 
-export interface CopilotConfig { organization_id: string; enabled: boolean; mode: "buttons" | "hybrid"; level: number; admin_phones: string[]; instance_key: string; connected_jid: string | null; connected_lid: string | null }
+export interface CopilotConfig {
+  organization_id: string; enabled: boolean; mode: "buttons" | "hybrid"; level: number; admin_phones: string[]; instance_key: string;
+  connected_jid: string | null; connected_lid: string | null;
+  /** Autoatendimento do locatário (migration 20261024). Ausente = desligado. */
+  customer_bot_enabled?: boolean; charge_buttons_enabled?: boolean; customer_rate_per_hour?: number;
+}
 
 export async function loadCopilotConfig(): Promise<CopilotConfig> {
   const org = requireOrg().org.id;
