@@ -103,6 +103,7 @@ curl -s http://127.0.0.1:8790/health
 - O `.env` contém `API_KEY`, além de `WEBHOOK_URL` e `WEBHOOK_SECRET`, usados só pelas instâncias legadas `locakar_copilot_*`, e `HOST_PORT=8790`.
 - O cadastro das instâncias fica em `/data/sessions/.instances.json`, no volume `whaileys-sessions`.
 - A porta só escuta em `127.0.0.1`. A exposição pública passa pelo túnel Cloudflare `tubarao-ssh` (hostname `copilot.tubaraoemprestimo.com.br` → `localhost:8790`).
+- Diagnóstico: `DEBUG_EVENTS=1` no `.env` registra só o formato de cada evento recebido (motivo de descarte, tipo, 4 últimos dígitos), sem conteúdo. Ligue apenas para investigar e desligue em seguida. Falhas de repasse sempre aparecem como `forward-error` em `docker logs`.
 - Cada número conectado ocupa memória. O limite atual é `mem_limit: 512m`; aumente com muitas instâncias.
 
 ## Limites

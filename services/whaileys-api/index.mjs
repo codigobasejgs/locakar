@@ -25,7 +25,8 @@ const LEGACY = /^locakar_copilot_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}
 const NAME = /^[a-z0-9][a-z0-9_-]{2,62}$/;
 const MEDIA = { audioMessage: 8, imageMessage: 8, documentMessage: 8 }; // MB
 const DOC_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
-const logger = pino({ level: "silent" });
+// WA_LOG_LEVEL (ex.: "debug") só para diagnóstico; padrão silencioso. Nunca deixar ligado: pode logar metadados.
+const logger = pino({ level: process.env.WA_LOG_LEVEL || "silent" });
 const sessions = new Map(); // nome -> { sock, state, qr, pairing, me }
 // ponytail: anti-loop em memória (10 min); reinício perde o cache, o sistema cliente deduplica pelo id.
 const sent = new Map();
@@ -84,14 +85,22 @@ async function resolvePn(s, lidJid, known) {
 async function forward(name, s, msg) {
   const cfg = config(name);
   const jid = msg.key?.remoteJid || "";
-  if (!cfg || !msg.message || !msg.key?.id || sent.has(msg.key.id)) return;
-  if (/@(g\.us|broadcast|newsletter)$/.test(jid) || jid === "status@broadcast") return;
+  const why = !cfg ? "sem-config" : !msg.message ? "sem-conteudo" : !msg.key?.id ? "sem-id" : sent.has(msg.key.id) ? "eco-proprio" : /@(g\.us|broadcast|newsletter)$/.test(jid) || jid === "status@broadcast" ? "grupo/status" : null;
+  if (why) {
+    if (process.env.DEBUG_EVENTS === "1") console.log(JSON.stringify({ ev: "drop", why, remote: jid ? `${jid.split("@")[1]}…${jid.split("@")[0].split(":")[0].slice(-4)}` : "-", fromMe: !!msg.key?.fromMe }));
+    return;
+  }
   // Remetente só com LID: completa senderPn se for um número que o sistema cliente declarou conhecer.
   if (/@lid$/.test(jid) && !msg.key.fromMe && !/@s\.whatsapp\.net$/.test(msg.key.senderPn || "") && cfg.knownPhones?.length) {
     const pn = await resolvePn(s, jid, cfg.knownPhones).catch(() => null);
     if (pn) msg.key.senderPn = `${pn}@s.whatsapp.net`;
   }
   const inner = msg.message.ephemeralMessage?.message || msg.message.viewOnceMessage?.message || msg.message.viewOnceMessageV2?.message || msg.message;
+  // DEBUG_EVENTS=1: formato do evento, sem conteúdo nem número completo (diagnóstico de LID).
+  if (process.env.DEBUG_EVENTS === "1") {
+    const tail = (j) => (j ? `${j.split("@")[1] ?? "?"}…${j.split("@")[0].split(":")[0].slice(-4)}` : "-");
+    console.log(JSON.stringify({ ev: "in", inst: name.slice(-6), remote: tail(jid), fromMe: !!msg.key.fromMe, senderPn: tail(msg.key.senderPn), senderLid: tail(msg.key.senderLid), known: cfg.knownPhones?.length ?? 0, type: Object.keys(inner)[0] }));
+  }
   const type = Object.keys(MEDIA).find((t) => inner[t]);
   let media;
   if (type) {
@@ -131,7 +140,7 @@ async function start(name, phone) {
   });
   sock.ev.on("messages.upsert", ({ messages, type }) => {
     if (type !== "notify" && type !== "append") return;
-    for (const m of messages) forward(name, s, m).catch(() => {});
+    for (const m of messages) forward(name, s, m).catch((e) => console.error(JSON.stringify({ ev: "forward-error", error: String(e?.message ?? e).slice(0, 200) })));
   });
   if (phone && !state.creds.registered) {
     await new Promise((r) => setTimeout(r, 1500));
