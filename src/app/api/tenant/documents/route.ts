@@ -1,6 +1,6 @@
-import { notifyStaff, serviceDb } from "@/lib/server/push";
 import { HttpError } from "@/lib/server/supabase";
-import { audit, filesExist, readBody, safePath, tenantOptions, tenantRoute } from "@/lib/server/tenant";
+import { filesExist, readBody, safePath, tenantOptions, tenantRoute } from "@/lib/server/tenant";
+import { submitDocument } from "@/lib/server/tenant-actions";
 import { DOCUMENT_KIND } from "@/lib/tenant";
 
 /**
@@ -35,35 +35,12 @@ export const GET = tenantRoute(async (_request, { db }) => {
   };
 });
 
-export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
+export const POST = tenantRoute(async (request, { clientId, ip }) => {
   const body = await readBody(request);
-  const kind = typeof body.kind === "string" && body.kind in DOCUMENT_KIND ? body.kind : null;
-  if (!kind) throw new HttpError(422, "Tipo de documento inválido.");
+  if (!(typeof body.kind === "string" && body.kind in DOCUMENT_KIND)) throw new HttpError(422, "Tipo de documento inválido.");
   const path = safePath(body.path, `${clientId}/`);
   if (!(await filesExist("documentos", [path]))) throw new HttpError(422, "O arquivo não chegou. Envie de novo.");
-
-  const { data: created, error } = await serviceDb()
-    .from("tenant_documents")
-    .insert({ client_id: clientId, kind, path })
-    .select("id")
-    .single();
-  if (error) {
-    if (error.code === "23505") throw new HttpError(409, "Este documento já está em análise. Aguarde a conferência.");
-    throw new HttpError(500, "Não foi possível registrar o documento.");
-  }
-
-  await audit({ actorType: "client", actorId: clientId, action: "document.submitted", entity: "tenant_documents", entityId: created.id, details: { kind }, ip });
-  const { data: profile } = await db.from("tenant_profile").select("name").single();
-  await notifyStaff([
-    {
-      type: "document.submitted",
-      category: "documents",
-      severity: "info",
-      title: `Documento enviado: ${DOCUMENT_KIND[kind]}`,
-      body: `${profile?.name ?? "Cliente"} enviou pelo app. Confira em Clientes.`,
-      url: "/admin/incidents?tab=documentos",
-      dedupeKey: `tenant_document:${created.id}`,
-    },
-  ]);
-  return { ok: true, id: created.id };
+  // Mesmas regras do WhatsApp (tenant-actions): um em análise por tipo, auditoria e aviso à equipe.
+  const r = await submitDocument({ clientId, kind: body.kind, path, ip, via: "app" });
+  return { ok: true, id: r.id };
 });

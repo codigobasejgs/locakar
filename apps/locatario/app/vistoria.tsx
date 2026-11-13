@@ -71,7 +71,27 @@ export default function VistoriaScreen() {
   useEffect(() => {
     if (!rental || loaded.current) return;
     loaded.current = true;
-    readCache<Draft>(draftKey).then((saved) => setDraft(saved ?? emptyDraft(rental.id, kind)));
+    (async () => {
+      const base = (await readCache<Draft>(draftKey)) ?? emptyDraft(rental.id, kind);
+      // Fotos já enviadas pelo WhatsApp: entram no rascunho com o mesmo requestId e caminho (nada é reenviado).
+      const wa = await api<{ draft: { requestId: string; photos: { slot: string; path: string; url: string }[] } | null }>(
+        `/api/tenant/inspections?draft=${encodeURIComponent(rental.id)}&kind=${kind}`,
+      ).then((r) => r.draft).catch(() => null);
+      const same = base.requestId === wa?.requestId;
+      if (!wa || (!same && Object.keys(base.uploaded).length)) return setDraft(base);
+      const photos = { ...base.photos };
+      const uploaded = same ? { ...base.uploaded } : {};
+      for (const p of wa.photos) {
+        const old = photos[p.slot];
+        if (same && old && uploaded[old] !== p.path) continue; // trocada no app: mantém a do celular
+        if (old) delete uploaded[old];
+        photos[p.slot] = p.url; // link temporário renovado a cada abertura
+        uploaded[p.url] = p.path;
+      }
+      const next = { ...base, requestId: wa.requestId, photos, uploaded };
+      writeCache(draftKey, next);
+      setDraft(next);
+    })();
   }, [rental, draftKey, kind]);
 
   const update = (patch: Partial<Draft>) =>

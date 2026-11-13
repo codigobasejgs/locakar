@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, Clock, ExternalLink, Eye, FileCheck, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, ExternalLink, Eye, FileCheck, MessageCircle, XCircle } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -53,7 +54,78 @@ const STATUS_CONFIG = {
   correction_requested: { label: "Ajuste solicitado", tone: "brand" as const },
 };
 
+interface Lead { id: string; phone: string; name: string; vehicleName: string | null; startDate: string | null; endDate: string | null; status: "new" | "contacted" | "converted" | "discarded"; createdAt: string; updatedAt: string }
+
+const LEAD_STATUS = {
+  new: { label: "Novo", tone: "warning" as const },
+  contacted: { label: "Em contato", tone: "brand" as const },
+  converted: { label: "Virou cliente", tone: "success" as const },
+  discarded: { label: "Descartado", tone: "neutral" as const },
+};
+
+/** Visitantes que pediram "Quero alugar" no WhatsApp (sem cadastro): a equipe chama e acompanha. */
+function LeadsPanel() {
+  const [leads, setLeads] = useState<Lead[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    tenantAdminGet<{ leads: Lead[] }>("view=leads").then((r) => alive && setLeads(r?.leads ?? []));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const setStatus = async (lead: Lead, status: Lead["status"]) => {
+    setBusy(lead.id);
+    try {
+      await tenantAdminPost({ action: "lead.status", id: lead.id, status });
+      setLeads((l) => l?.map((x) => (x.id === lead.id ? { ...x, status } : x)) ?? null);
+      toast.success("Interessado atualizado.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+    setBusy(null);
+  };
+
+  if (!leads) return <Card><EmptyState title="Carregando interessados..." /></Card>;
+  if (!leads.length) return <Card><EmptyState title="Nenhum interessado ainda" description="Quem tocar em “Quero alugar” no WhatsApp do Copiloto aparece aqui." /></Card>;
+  return (
+    <Card>
+      <ul className="divide-y divide-line">
+        {leads.map((l) => (
+          <li key={l.id} className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-display font-semibold text-white">{l.name}</p>
+                <Badge tone={LEAD_STATUS[l.status].tone}>{LEAD_STATUS[l.status].label}</Badge>
+              </div>
+              <p className="mt-1 text-sm text-zinc-300">
+                {l.vehicleName ?? "Sem carro escolhido"}
+                {l.startDate ? ` · ${formatDate(l.startDate)}${l.endDate ? ` a ${formatDate(l.endDate)}` : ""}` : ""}
+              </p>
+              <p className="mt-0.5 text-[11px] text-zinc-500">Recebido em {when(l.createdAt)}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a href={`https://wa.me/${l.phone}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm text-white hover:bg-white/5">
+                <MessageCircle className="size-4" /> Chamar no WhatsApp
+              </a>
+              {(["contacted", "converted", "discarded"] as const).filter((s) => s !== l.status).map((s) => (
+                <Button key={s} size="sm" variant="outline" disabled={busy === l.id} onClick={() => setStatus(l, s)}>
+                  {LEAD_STATUS[s].label}
+                </Button>
+              ))}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
 function RequestsContent() {
+  const params = useSearchParams();
+  const [tab, setTab] = useState<"requests" | "leads">(params.get("tab") === "leads" ? "leads" : "requests");
   const { settings } = useAdminData();
   const [requests, setRequests] = useState<AdminRentalRequest[] | null>(null);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
@@ -181,6 +253,14 @@ function RequestsContent() {
         <StatCard label="Total recebidas" value={total} icon={FileCheck} />
       </div>
 
+      <div role="tablist" className="mb-4 flex flex-wrap items-center gap-2">
+        <Button role="tab" aria-selected={tab === "requests"} size="sm" variant={tab === "requests" ? "primary" : "outline"} onClick={() => setTab("requests")}>Solicitações do app</Button>
+        <Button role="tab" aria-selected={tab === "leads"} size="sm" variant={tab === "leads" ? "primary" : "outline"} onClick={() => setTab("leads")}>
+          <MessageCircle className="size-4" /> Interessados (WhatsApp)
+        </Button>
+      </div>
+
+      {tab === "leads" ? <LeadsPanel /> : (<>
       <div data-tour="requests-filters" className="mb-4 flex flex-wrap items-center gap-2">
         {(
           [
@@ -254,6 +334,7 @@ function RequestsContent() {
           </ul>
         )}
       </Card>
+      </>)}
 
       {/* Modal de Análise Completa de Documentos */}
       <Dialog

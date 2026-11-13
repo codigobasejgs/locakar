@@ -10,7 +10,7 @@ import { isSupabaseEnabled } from "@/lib/supabase/env";
 
 type Card = { text: string; buttons?: { id: string; title: string }[]; sections?: { rows: { id: string; title: string; description?: string }[] }[] };
 interface State {
-  config: { enabled: boolean; mode: "buttons" | "hybrid"; level: number; adminPhones: string[]; customerBot: boolean; customerRate: number };
+  config: { enabled: boolean; mode: "buttons" | "hybrid"; level: number; adminPhones: string[]; customerBot: boolean; chargeButtons: boolean; customerRate: number };
   aiAvailable: boolean;
   session: { engine: boolean; state?: string; qr?: string | null; pairingCode?: string | null; me?: { id: string | null } | null; error?: string };
 }
@@ -127,8 +127,10 @@ export function CopilotSettings() {
           <Textarea id="cp-phones" value={phones} onChange={(e) => setPhones(e.target.value)} placeholder="(11) 99999-9999" />
         </Field>
         <div className="grid gap-3 rounded-xl border border-line p-4 sm:col-span-2">
-          <Checkbox label="Autoatendimento de clientes neste número (pagar, 2ª via, locação e app oficial)" checked={draft.customerBot} onChange={(e) => setDraft({ ...draft, customerBot: e.target.checked })} />
+          <Checkbox label="Autoatendimento de clientes neste número (pagar, locação, ocorrência, documentos, vistoria, reserva, contrato e app oficial)" checked={draft.customerBot} onChange={(e) => setDraft({ ...draft, customerBot: e.target.checked })} />
           <p className="text-xs text-muted">Clientes e visitantes que escreverem para o número do Copiloto recebem menus com botões, sem IA. Gestores e a conversa com você mesmo continuam no Copiloto. Dados pessoais só após os 4 primeiros dígitos do CPF.</p>
+          <Checkbox label="Cobrança com botões por este número ([Pagar Pix] [Cartão] [Abrir App])" disabled={!draft.customerBot} checked={draft.customerBot && draft.chargeButtons} onChange={(e) => setDraft({ ...draft, chargeButtons: e.target.checked })} />
+          <p className="text-xs text-muted">Só das 8h às 20h e com o WhatsApp do Copiloto conectado. Fora disso, ou se falhar, a cobrança sai pela Evolution como sempre.</p>
           <Field label="Máximo de respostas por hora para cada cliente" htmlFor="cp-rate" hint="Protege o chip contra bloqueio (5 a 200).">
             <Input id="cp-rate" type="number" min={5} max={200} value={draft.customerRate} onChange={(e) => setDraft({ ...draft, customerRate: Number(e.target.value) })} className="max-w-32" />
           </Field>

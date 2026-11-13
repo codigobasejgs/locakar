@@ -29,7 +29,7 @@ export const GET = scoped(async function GET() {
     await requireStaff("integrations");
     const cfg = await loadCopilotConfig();
     const ai = await copilotAiKey();
-    return Response.json({ config: { enabled: cfg.enabled, mode: cfg.mode, level: cfg.level, adminPhones: cfg.admin_phones, customerBot: Boolean(cfg.customer_bot_enabled), customerRate: cfg.customer_rate_per_hour ?? 30 }, aiAvailable: Boolean(ai), aiProvider: ai?.provider ?? null, session: await state(cfg.instance_key) });
+    return Response.json({ config: { enabled: cfg.enabled, mode: cfg.mode, level: cfg.level, adminPhones: cfg.admin_phones, customerBot: Boolean(cfg.customer_bot_enabled), chargeButtons: Boolean(cfg.charge_buttons_enabled), customerRate: cfg.customer_rate_per_hour ?? 30 }, aiAvailable: Boolean(ai), aiProvider: ai?.provider ?? null, session: await state(cfg.instance_key) });
   } catch (e) {
     return errorResponse(e);
   }
@@ -49,9 +49,9 @@ export const POST = scoped(async function POST(request: Request) {
       if (phones.some((p) => !p) || phones.length > 10) throw new HttpError(400, "Informe até 10 telefones válidos com DDD.");
       const rate = Number(body.customerRate ?? 30);
       if (!Number.isInteger(rate) || rate < 5 || rate > 200) throw new HttpError(400, "Limite de respostas por hora: entre 5 e 200.");
-      const { error } = await db.from("copilot_config").update({ enabled: Boolean(body.enabled), level, mode, admin_phones: [...new Set(phones as string[])], customer_bot_enabled: Boolean(body.customerBot), customer_rate_per_hour: rate, updated_at: new Date().toISOString() }).eq("instance_key", cfg.instance_key);
+      const { error } = await db.from("copilot_config").update({ enabled: Boolean(body.enabled), level, mode, admin_phones: [...new Set(phones as string[])], customer_bot_enabled: Boolean(body.customerBot), charge_buttons_enabled: Boolean(body.customerBot) && Boolean(body.chargeButtons), customer_rate_per_hour: rate, updated_at: new Date().toISOString() }).eq("instance_key", cfg.instance_key);
       if (error) throw new HttpError(409, "Não foi possível salvar.");
-      await audit({ actorType: "staff", actorId: userId, action: "copilot.config_saved", entity: "copilot_config", details: { level, mode, enabled: Boolean(body.enabled), phones: phones.length, customerBot: Boolean(body.customerBot), rate }, ip: clientIp(request) });
+      await audit({ actorType: "staff", actorId: userId, action: "copilot.config_saved", entity: "copilot_config", details: { level, mode, enabled: Boolean(body.enabled), phones: phones.length, customerBot: Boolean(body.customerBot), chargeButtons: Boolean(body.chargeButtons), rate }, ip: clientIp(request) });
       // Motor resolve LID → número só dos gestores cadastrados (WhatsApp esconde o número em alguns contatos).
       if (isWhaileysEnabled()) await whaileysKnownPhones(cfg.instance_key, [...new Set(phones as string[])]).catch(() => {});
       return Response.json({ ok: true });

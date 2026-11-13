@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { billingOf, chargeFor, PERIOD_UNIT } from "@/lib/billing";
-import { handleCustomer, type CustomerConfig, type CustomerPorts, type CustomerSession, type OpenInstallment } from "@/lib/customer-bot/flow";
+import { chargeButtons, handleCustomer, type CustomerConfig, type CustomerPorts, type CustomerSession, type OpenInstallment } from "@/lib/customer-bot/flow";
 import { matchClients } from "@/lib/customer-bot/identify";
 import type { CopilotEvent } from "@/lib/copilot/parse";
 import { normalizeHandle } from "@/lib/infinitepay";
@@ -10,13 +10,16 @@ import { bankSlipLine, createCharge, loadAsaasConfig, pixQrCode, readyForCharges
 import { createReceiptCheckout } from "@/lib/server/infinitepay";
 import { brand, requireOrg, siteUrl } from "@/lib/server/org-context";
 import { loadSettings, notifyStaff, serviceDb } from "@/lib/server/push";
+import { signatureLink, signedFile } from "@/lib/server/signature/service";
+import { SignatureError } from "@/lib/server/signature/types";
 import { HttpError } from "@/lib/server/supabase";
 import { audit } from "@/lib/server/tenant";
-import { daysBetween, formatCurrency, formatDate, todaySP } from "@/lib/utils";
+import { cancelReservation, createIncident, requestReservation, submitDocument } from "@/lib/server/tenant-actions";
+import { daysBetween, formatCurrency, formatDate, todaySP, toWhatsAppNumber } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
 import type { Rental } from "@/types";
 import { toCard, type CopilotConfig } from "./copilot";
-import { whaileysSend, type OutgoingCard } from "./whaileys";
+import { isWhaileysEnabled, whaileysSend, whaileysStatus, type OutgoingCard } from "./whaileys";
 
 /** Link do App Oficial da locadora (mesmo padrão da página pública /l/<slug>). */
 export const appUrlFor = () => `${siteUrl()}/locatario?org=${brand().slug ?? ""}`;
@@ -136,6 +139,115 @@ function ports(phone: string, dryRun: boolean): CustomerPorts {
       await notifyStaff([{ type: "payment.receipt_submitted", category: "payments", severity: "warning", title: "Novo comprovante (WhatsApp)", body: `${c?.name ?? "Cliente"} · ${formatCurrency(amount)} · vencimento ${formatDate(inst.dueDate)}`, url: "/admin/finance", dedupeKey: `payment_receipt:${created.id}` }]);
       return { amount };
     },
+
+    /* ---------- Etapa 2 ---------- */
+    async rentals(clientId) {
+      const { data } = await db.from("rentals").select("id,status,start_date,end_date,km_start,vehicle_id").eq("client_id", clientId).neq("status", "cancelled").order("start_date", { ascending: false }).limit(10);
+      const rows = data ?? [];
+      if (!rows.length) return [];
+      const ids = rows.map((r) => r.id as string);
+      const vehicleIds = [...new Set(rows.map((r) => r.vehicle_id as string))];
+      const active = rows.filter((r) => ["active", "late", "pending"].includes(r.status as string)).map((r) => r.vehicle_id as string);
+      const [vs, maint, fines, contracts] = await Promise.all([
+        db.from("vehicles").select("id,name,plate,odometer").in("id", vehicleIds),
+        // Igual à view do app: só do carro atual, sem custo nem fornecedor.
+        active.length ? db.from("maintenance").select("vehicle_id,date,description,status").in("vehicle_id", active).order("date", { ascending: false }).limit(10) : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+        db.from("fines").select("vehicle_id,infraction_date,description,amount,status,due_date").eq("client_id", clientId).order("infraction_date", { ascending: false }).limit(20),
+        db.from("contracts").select("rental_id,status,contract_signature_processes(id,status,created_at)").in("rental_id", ids).neq("status", "cancelled"),
+      ]);
+      const vehicle = new Map((vs.data ?? []).map((v) => [v.id as string, { name: v.name as string, plate: v.plate as string, odometer: (v.odometer as number | null) ?? null }]));
+      const contractOf = new Map<string, { processId: string; status: string }>();
+      for (const c of contracts.data ?? []) {
+        const p = ((c.contract_signature_processes ?? []) as { id: string; status: string; created_at: string }[]).sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+        if (p && !contractOf.has(c.rental_id as string)) contractOf.set(c.rental_id as string, { processId: p.id, status: p.status });
+      }
+      return rows.map((r) => ({
+        id: r.id as string,
+        status: r.status as string,
+        startDate: r.start_date as string,
+        endDate: r.end_date as string,
+        kmStart: (r.km_start as number | null) ?? null,
+        vehicle: vehicle.get(r.vehicle_id as string) ?? null,
+        maintenance: (maint.data ?? []).filter((m) => m.vehicle_id === r.vehicle_id).map((m) => ({ date: m.date as string, description: m.description as string, status: m.status as string })),
+        fines: (fines.data ?? []).filter((f) => f.vehicle_id === r.vehicle_id).map((f) => ({ infractionDate: f.infraction_date as string, description: f.description as string, amount: Number(f.amount), status: f.status as string, dueDate: f.due_date as string })),
+        contract: contractOf.get(r.id as string) ?? null,
+      }));
+    },
+    async upload(clientId, bucket, media, folder) {
+      const bytes = Buffer.from(media.data, "base64");
+      const kind = proofKind(bytes);
+      const okKind = kind === "jpg" || kind === "png" || (kind === "pdf" && bucket === "documentos");
+      if (!okKind) throw new HttpError(422, bucket === "documentos" ? "Envie foto (JPG/PNG) ou PDF de até 7 MB." : "Envie uma foto (JPG/PNG) de até 7 MB.");
+      if (dryRun) return `${clientId}/simulacao.${kind}`;
+      let path: string;
+      if (bucket === "vistorias") {
+        // folder = <rentalId>/app/<requestId>/<slot>_<n>: mesmo caminho que o App usa (ele reaproveita estas fotos).
+        if (!folder || !/^[A-Za-z0-9-]+\/app\/[A-Za-z0-9_-]{8,64}\/[a-z]+_\d+$/.test(folder)) throw new HttpError(422, "Vistoria inválida.");
+        await ensureOwn(clientId, folder.split("/")[0]);
+        path = `${folder}.jpg`;
+      } else path = `${clientId}/whatsapp-${randomUUID()}.${kind}`;
+      const contentType = kind === "pdf" ? "application/pdf" : kind === "png" ? "image/png" : "image/jpeg";
+      const { error } = await db.storage.from(bucket).upload(path, bytes, { contentType, upsert: bucket === "vistorias" });
+      if (error) throw new HttpError(500, "Não foi possível guardar o arquivo. Tente de novo.");
+      return path;
+    },
+    async incident(clientId, rentalId, category, description, photos, requestId) {
+      if (dryRun) return { id: "simulacao" };
+      return createIncident({ clientId, rentalId, category, description, photos, requestId, via: "whatsapp" });
+    },
+    async document(clientId, kind, path) {
+      if (dryRun) return { id: "simulacao" };
+      return submitDocument({ clientId, kind, path, via: "whatsapp" });
+    },
+    async contractLink(clientId, processId) {
+      // Mesmo dono do app: processo → contrato → locação do cliente.
+      const { data: p } = await db.from("contract_signature_processes").select("id,contract_id,status").eq("id", processId).maybeSingle();
+      const { data: c } = p ? await db.from("contracts").select("rental_id").eq("id", p.contract_id).maybeSingle() : { data: null };
+      const { data: r } = c ? await db.from("rentals").select("id").eq("id", c.rental_id).eq("client_id", clientId).maybeSingle() : { data: null };
+      if (!p || !r) throw new HttpError(404, "Contrato não encontrado.");
+      if (dryRun) return { url: "https://exemplo/contrato-simulacao" };
+      try {
+        return { url: p.status === "completed" ? await signedFile(p.id as string) : await signatureLink(p.id as string, "client") };
+      } catch (e) {
+        if (e instanceof SignatureError) throw new HttpError(e.status, e.message);
+        throw e;
+      }
+    },
+
+    /* ---------- Etapa 3 ---------- */
+    async fleet() {
+      // Igual à view tenant_fleet do app: sem placa e sem vendidos (conflito de datas é barrado ao reservar).
+      const { data } = await db.from("vehicles").select("id,name,category,daily_rate,weekly_rate").neq("status", "sold").order("name").limit(50);
+      return (data ?? []).map((v) => ({ id: v.id as string, name: v.name as string, category: (v.category as string | null) ?? null, dailyRate: (v.daily_rate as number | null) ?? null, weeklyRate: (v.weekly_rate as number | null) ?? null }));
+    },
+    async reservations(clientId) {
+      const { data } = await db.from("reservations").select("id,vehicle_id,start_date,end_date,status").eq("client_id", clientId).order("start_date", { ascending: false }).limit(20);
+      const ids = [...new Set((data ?? []).map((r) => r.vehicle_id as string))];
+      const { data: vs } = ids.length ? await db.from("vehicles").select("id,name").in("id", ids) : { data: [] };
+      const name = new Map((vs ?? []).map((v) => [v.id as string, v.name as string]));
+      return (data ?? []).map((r) => ({ id: r.id as string, vehicleName: name.get(r.vehicle_id as string) ?? "Veículo", startDate: r.start_date as string, endDate: r.end_date as string, status: r.status as string }));
+    },
+    async reserve(clientId, vehicleId, startDate, endDate) {
+      if (dryRun) {
+        const { data: v } = await db.from("vehicles").select("name").eq("id", vehicleId).maybeSingle();
+        return { vehicleName: (v?.name as string) ?? "Veículo" };
+      }
+      return requestReservation({ clientId, vehicleId, startDate, endDate, via: "whatsapp" });
+    },
+    async cancelReservation(clientId, id) {
+      if (dryRun) return;
+      await cancelReservation({ clientId, id, via: "whatsapp" });
+    },
+    async lead(name, vehicleId, startDate, endDate) {
+      const { data: v } = vehicleId ? await db.from("vehicles").select("id,name").eq("id", vehicleId).neq("status", "sold").maybeSingle() : { data: null };
+      if (dryRun) return;
+      const row = { phone, name, vehicle_id: (v?.id as string) ?? null, start_date: startDate, end_date: endDate, updated_at: new Date().toISOString() };
+      // Um lead aberto por telefone: nova escolha atualiza o mesmo registro.
+      const { data: open } = await db.from("customer_bot_leads").select("id").eq("phone", phone).in("status", ["new", "contacted"]).maybeSingle();
+      const { error } = open ? await db.from("customer_bot_leads").update(row).eq("id", open.id) : await db.from("customer_bot_leads").insert(row);
+      if (error) throw new HttpError(500, "Não foi possível registrar seu interesse.");
+      await notifyStaff([{ type: "lead.whatsapp", category: "reservations", severity: "info", title: "Novo interessado pelo WhatsApp", body: `${name} · ${phone}${v ? ` · ${v.name}` : ""}${startDate ? ` · ${formatDate(startDate)}${endDate ? ` a ${formatDate(endDate)}` : ""}` : ""}`, url: "/admin/requests?tab=leads", dedupeKey: `lead:${phone}:${new Date().toISOString().slice(0, 13)}` }], { companyAlert: false });
+    },
   };
 }
 
@@ -192,7 +304,7 @@ export async function runCustomerBot(
       };
     }
   }
-  const flowCfg: CustomerConfig = { orgName: brand().name, appUrl: appUrlFor(), methods: await methods() };
+  const flowCfg: CustomerConfig = { orgName: brand().name, appUrl: appUrlFor(), today: todaySP(), methods: await methods() };
   const { replies, session: next } = await handleCustomer(ev, session, flowCfg, ports(phone, Boolean(opts.dryRun)), opts.media);
 
   if (!opts.dryRun) {
@@ -205,6 +317,38 @@ export async function runCustomerBot(
     await opts.transport(card);
   }
   return { replies: replies.map(toCard), session: next };
+}
+
+/** Horário comercial (8h–20h, São Paulo): fora dele a cobrança segue pela Evolution, como sempre. */
+export const businessHours = (now = new Date()) => {
+  const h = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Sao_Paulo", hour: "numeric", hourCycle: "h23" }).format(now));
+  return h >= 8 && h < 20;
+};
+
+/**
+ * Cobrança com botões pelo número do Copiloto (opcional, padrão desligado).
+ * Retorna false quando não deve/consegue enviar — o chamador usa a Evolution (fallback, comportamento de sempre).
+ */
+export async function sendChargeWithButtons(phone: string, rentalId: string, receiptId: string, text: string): Promise<boolean> {
+  try {
+    const db = serviceDb();
+    const { data: cfg } = await db.from("copilot_config").select("enabled,customer_bot_enabled,charge_buttons_enabled,customer_rate_per_hour,instance_key").maybeSingle();
+    if (!cfg?.enabled || !cfg.customer_bot_enabled || !cfg.charge_buttons_enabled || !isWhaileysEnabled() || !businessHours()) return false;
+    const to = toWhatsAppNumber(phone);
+    if (!to || (await whaileysStatus(cfg.instance_key as string)).state !== "open") return false;
+    const { data: gate } = await db.rpc("customer_bot_take", { p_org: requireOrg().org.id, p_phone: to, p_limit: cfg.customer_rate_per_hour ?? 30 });
+    if (gate !== "ok") return false;
+    const buttons = chargeButtons(`${rentalId}|${receiptId}`, await methods());
+    const card = toCard({ text: `${text}\n\n📱 *App Oficial:* ${appUrlFor()}`, buttons });
+    const { messageId } = await whaileysSend(cfg.instance_key as string, to, card);
+    await db.from("copilot_messages").insert({ phone: to, direction: "out", provider_id: messageId, kind: "buttons", text: null });
+    // Número digitado ("1", "2") também funciona: as opções ficam na sessão do cliente.
+    await db.from("customer_bot_sessions").upsert({ phone: to, step: "menu", data: { opts: buttons.map((b) => b.id) }, expires_at: new Date(Date.now() + 24 * 3600_000).toISOString() }, { onConflict: "organization_id,phone" });
+    return true;
+  } catch (e) {
+    console.error("[charge-buttons]", (e as Error).message);
+    return false;
+  }
 }
 
 /** Envio real pela instância do Copiloto + registro do id (anti-loop). */

@@ -85,6 +85,13 @@ export async function sendCharge(
     "Pague pelo QR Code acima ou copie o código PIX da próxima mensagem.",
     `Recebedor: ${settings.pix.name}`,
   ].join("\n");
+  // Opcional (Copiloto → "Cobrança com botões"): card com [Pagar Pix] [Cartão] [App] que cai direto no pagamento.
+  // Desligado, fora do horário ou motor fora do ar: Evolution exatamente como antes.
+  const { sendChargeWithButtons } = await import("@/lib/server/customer-bot"); // dinâmico: evita ciclo charge ↔ copilot
+  const btnText = waText.replace("Pague pelo QR Code acima ou copie o código PIX da próxima mensagem.", "Toque em uma opção abaixo para pagar agora.");
+  if (await sendChargeWithButtons(client.phone, rental.id, receipt.id, btnText)) {
+    sent.push(`WhatsApp ${client.phone} (botões)`);
+  } else {
   const wa = await sendWhatsApp(db, {
     kind: "charge",
     phone: client.phone,
@@ -97,6 +104,7 @@ export async function sendCharge(
     await sendWhatsApp(db, { kind: "charge", phone: client.phone, rentalId: rental.id, text: code });
     sent.push(`WhatsApp ${client.phone}`);
   } else if (wa.error !== "WhatsApp não configurado.") errors.push(`WhatsApp: ${wa.error}`);
+  }
 
   const push = await sendPushToClient(client.id, {
     title,

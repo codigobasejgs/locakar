@@ -1,7 +1,7 @@
 import { FUEL_LABEL, FUEL_ORDER, INSPECTION_ITEMS } from "@/lib/contract";
 import { notifyStaff, serviceDb } from "@/lib/server/push";
 import { HttpError } from "@/lib/server/supabase";
-import { audit, filesExist, readBody, requestId, safePath, tenantOptions, tenantRoute, text } from "@/lib/server/tenant";
+import { audit, filesExist, readBody, requestId, safePath, tenantOptions, tenantRoute, text, type Tenant } from "@/lib/server/tenant";
 import { DAMAGE_SLOT, MAX_DAMAGE_PHOTOS, PHOTO_SLOTS, TENANT_INSPECTION_KIND, signatureSvg } from "@/lib/tenant";
 import type { FuelLevel } from "@/types";
 
@@ -15,7 +15,9 @@ import type { FuelLevel } from "@/types";
 export const dynamic = "force-dynamic";
 export const OPTIONS = tenantOptions;
 
-export const GET = tenantRoute(async (_request, { db }) => {
+export const GET = tenantRoute(async (request, { db }) => {
+  const draftRental = new URL(request.url).searchParams.get("draft");
+  if (draftRental) return whatsappDraft(db, draftRental, new URL(request.url).searchParams.get("kind") ?? "");
   const { data, error } = await db
     .from("tenant_inspections")
     .select("id,rental_id,kind,km,fuel,items,photos,damages,notes,status,admin_notes,created_at")
@@ -42,6 +44,31 @@ export const GET = tenantRoute(async (_request, { db }) => {
     })),
   };
 });
+
+/**
+ * Rascunho vindo do WhatsApp: fotos já enviadas pelo autoatendimento em vistorias/<rentalId>/app/wa-<kind>-<id>/.
+ * O app reaproveita o mesmo requestId e os caminhos (nada é reenviado); o cliente só confere, faz o checklist e assina.
+ */
+async function whatsappDraft(db: Tenant["db"], rentalId: string, kind: string) {
+  if (!(kind in TENANT_INSPECTION_KIND) || !/^[A-Za-z0-9-]{1,64}$/.test(rentalId)) return { draft: null };
+  const { data: rental } = await db.from("tenant_rentals").select("id").eq("id", rentalId).maybeSingle();
+  if (!rental) return { draft: null };
+  const storage = serviceDb().storage.from("vistorias");
+  const { data: folders } = await storage.list(`${rentalId}/app`, { limit: 100 });
+  // Nome com o instante em base36 (tamanho fixo): o maior é o mais recente.
+  const candidates = (folders ?? []).map((f) => f.name).filter((n) => n.startsWith(`wa-${kind}-`)).sort().reverse();
+  for (const requestId of candidates.slice(0, 3)) {
+    const { data: used } = await db.from("tenant_inspections").select("id").eq("request_id", requestId).maybeSingle();
+    if (used) continue; // já virou vistoria enviada
+    const { data: files } = await storage.list(`${rentalId}/app/${requestId}`, { limit: 50 });
+    const photos = (files ?? []).map((f) => ({ slot: f.name.split("_")[0], path: `${rentalId}/app/${requestId}/${f.name}` })).filter((p) => PHOTO_SLOTS.some((s) => s.key === p.slot));
+    if (!photos.length) continue;
+    const { data: urls } = await storage.createSignedUrls(photos.map((p) => p.path), 3600);
+    const urlByPath = new Map((urls ?? []).map((u) => [u.path, u.signedUrl]));
+    return { draft: { requestId, photos: photos.map((p) => ({ ...p, url: urlByPath.get(p.path) ?? null })).filter((p) => p.url) } };
+  }
+  return { draft: null };
+}
 
 export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
   const body = await readBody(request);

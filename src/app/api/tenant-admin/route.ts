@@ -13,11 +13,12 @@ import { brand, scoped } from "@/lib/server/org-context";
 
 /**
  * Painel ↔ App do Locatário. Somente equipe.
- * GET ?view=requests|incidents|documents|inspections&rentalId=|security → listas com links temporários (10 min)
+ * GET ?view=requests|incidents|documents|inspections&rentalId=|security|leads → listas com links temporários (10 min)
  * POST { action: "request.approve", id, planType?, rateAmount?, depositAmount?, startDate?, endDate? }
  *      { action: "request.reject", id, reason }
  *      { action: "request.request_correction", id, notes }
  *      { action: "incident.status", id, status, adminNotes? }
+ *      { action: "lead.status", id, status }
  *      { action: "document.review", id, approve, reason? }
  *      { action: "inspection.review", id, approve, adminNotes? }
  */
@@ -162,6 +163,17 @@ export const GET = scoped(async function GET(request: Request) {
           photos: (r.photos as { slot: string; path: string }[]).map((p) => ({ slot: p.slot, url: urls.get(p.path) ?? null })),
         })),
       });
+    }
+
+    // Interessados do WhatsApp (visitante "Quero alugar"): tabela só do servidor, lida com a chave de serviço da locadora.
+    if (view === "leads") {
+      const admin = serviceDb();
+      const { data, error } = await admin.from("customer_bot_leads").select("id,phone,name,vehicle_id,start_date,end_date,status,created_at,updated_at").order("updated_at", { ascending: false }).limit(200);
+      if (error) throw new HttpError(500, "Não foi possível carregar os interessados.");
+      const ids = [...new Set((data ?? []).map((l) => l.vehicle_id).filter(Boolean))];
+      const { data: vs } = ids.length ? await admin.from("vehicles").select("id,name").in("id", ids) : { data: [] };
+      const name = new Map((vs ?? []).map((v) => [v.id, v.name as string]));
+      return Response.json({ leads: (data ?? []).map((l) => ({ id: l.id, phone: l.phone, name: l.name, vehicleName: l.vehicle_id ? (name.get(l.vehicle_id) ?? null) : null, startDate: l.start_date, endDate: l.end_date, status: l.status, createdAt: l.created_at, updatedAt: l.updated_at })) });
     }
 
     if (view === "security") {
@@ -436,6 +448,16 @@ export const POST = scoped(async function POST(request: Request) {
         tag: `request-correction-${id}`,
       }, "inicio");
 
+      return Response.json({ ok: true });
+    }
+
+    if (body.action === "lead.status") {
+      const status = ["new", "contacted", "converted", "discarded"].includes(String(body.status)) ? String(body.status) : null;
+      if (!status) throw new HttpError(422, "Status inválido.");
+      const { data: row, error } = await admin.from("customer_bot_leads").update({ status, updated_at: now }).eq("id", id).select("id").maybeSingle();
+      if (error?.code === "23505") throw new HttpError(409, "Este telefone já tem outro interesse em aberto.");
+      if (!row) throw new HttpError(404, "Interessado não encontrado.");
+      await audit({ actorType: "staff", actorId: reviewer, action: "lead.status", entity: "customer_bot_leads", entityId: id, details: { status }, ip });
       return Response.json({ ok: true });
     }
 
