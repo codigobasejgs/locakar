@@ -28,6 +28,8 @@ export const whaileysStatus = (key: string) => call<WhaileysStatus>(`/sessions/$
 export const whaileysConnect = (key: string, phone?: string) => call<WhaileysStatus>(`/sessions/${key}/connect`, { method: "POST", body: JSON.stringify(phone ? { phone } : {}) });
 export const whaileysLogout = (key: string) => call<{ ok: boolean }>(`/sessions/${key}`, { method: "DELETE" });
 export const whaileysSend = (key: string, to: string, card: OutgoingCard) => call<{ messageId: string }>(`/sessions/${key}/send`, { method: "POST", body: JSON.stringify({ to, ...card }) });
+/** Gestores autorizados: o motor usa para descobrir o número de quem escreve só com LID. */
+export const whaileysKnownPhones = (key: string, phones: string[]) => call<{ ok: boolean }>(`/sessions/${key}/known-phones`, { method: "POST", body: JSON.stringify({ phones }) });
 
 /** Assinatura do webhook: HMAC-SHA256 de `${timestamp}.${corpo}`, janela de 5 minutos. */
 export function verifyWhaileysSignature(raw: string, timestamp: string | null, signature: string | null, secret = process.env.WHAILEYS_WEBHOOK_SECRET ?? "", now = Date.now()) {

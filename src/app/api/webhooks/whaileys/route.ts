@@ -4,7 +4,7 @@ import { parseMessage } from "@/lib/copilot/parse";
 import { loadCopilotConfig, runCopilot, whaileysTransport } from "@/lib/server/copilot";
 import { globalDb, loadOrg, runWithOrg, scoped } from "@/lib/server/org-context";
 import { serviceDb } from "@/lib/server/push";
-import { isWhaileysEnabled, verifyWhaileysSignature } from "@/lib/server/whaileys";
+import { isWhaileysEnabled, verifyWhaileysSignature, whaileysKnownPhones } from "@/lib/server/whaileys";
 
 /**
  * Webhook do motor Whaileys (Copiloto). Separado do fluxo da Evolution API.
@@ -39,7 +39,12 @@ export const POST = scoped(async function POST(request: Request) {
       await db.from("copilot_config").update({ connected_jid: body.me.id, connected_lid: body.me.lid ?? null, updated_at: new Date().toISOString() }).eq("organization_id", org.id);
     }
     const g = guard(body.key!, body.me ?? { id: cfg.connected_jid, lid: cfg.connected_lid }, cfg.admin_phones);
-    if (!g.ok) return Response.json({ ignored: true });
+    if (!g.ok) {
+      // Gestor escrevendo só com LID: o motor ainda não sabe quais números resolver (reinício ou lista nova).
+      // Reenvia os autorizados; a próxima mensagem já chega com o número. Nunca libera esta mensagem.
+      if (g.reason === "remetente sem número" && cfg.admin_phones.length) after(() => whaileysKnownPhones(cfg.instance_key, cfg.admin_phones).catch(() => {}));
+      return Response.json({ ignored: true });
+    }
 
     // Unique (organization_id, provider_id): mensagem repetida ou resposta do próprio bot não processa de novo.
     const { error } = await db.from("copilot_messages").insert({ phone: g.phone, direction: "in", provider_id: msgId, kind: "in", text: null });

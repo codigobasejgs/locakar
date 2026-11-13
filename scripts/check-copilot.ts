@@ -39,6 +39,8 @@ assert.equal(guard({ remoteJid: "551112345678@s.whatsapp.net", fromMe: false }, 
 assert.equal(guard({ remoteJid: "5511900001111@s.whatsapp.net", fromMe: false }, me, admins).ok, false, "número não autorizado");
 assert.equal(guard({ remoteJid: "999@lid", fromMe: false }, me, admins).ok, false, "só LID sem número: recusa");
 assert.equal(guard({ remoteJid: "999@lid", fromMe: false, senderPn: "5511912345678@s.whatsapp.net" }, me, admins).ok, true, "LID com senderPn autorizado");
+assert.deepEqual(guard({ remoteJid: "999@lid", fromMe: false }, me, admins), { ok: false, reason: "remetente sem número" }, "LID sem número: motivo dispara o reenvio dos gestores");
+assert.equal(guard({ remoteJid: "999@lid", fromMe: false, senderPn: "5511900001111@s.whatsapp.net" }, me, admins).ok, false, "LID resolvido para número não autorizado continua bloqueado");
 assert.equal(guard({ remoteJid: "120363@g.us", fromMe: false, participant: "5511912345678@s.whatsapp.net" }, me, admins).ok, false, "grupo ignorado");
 
 // ---------- Níveis ----------

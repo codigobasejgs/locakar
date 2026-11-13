@@ -6,7 +6,7 @@ import { scoped } from "@/lib/server/org-context";
 import { serviceDb } from "@/lib/server/push";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { audit, clientIp } from "@/lib/server/tenant";
-import { isWhaileysEnabled, whaileysConnect, whaileysLogout, whaileysSend, whaileysStatus, type OutgoingCard } from "@/lib/server/whaileys";
+import { isWhaileysEnabled, whaileysConnect, whaileysKnownPhones, whaileysLogout, whaileysSend, whaileysStatus, type OutgoingCard } from "@/lib/server/whaileys";
 import { toWhatsAppNumber } from "@/lib/utils";
 
 /**
@@ -49,6 +49,8 @@ export const POST = scoped(async function POST(request: Request) {
       const { error } = await db.from("copilot_config").update({ enabled: Boolean(body.enabled), level, mode, admin_phones: [...new Set(phones as string[])], updated_at: new Date().toISOString() }).eq("instance_key", cfg.instance_key);
       if (error) throw new HttpError(409, "Não foi possível salvar.");
       await audit({ actorType: "staff", actorId: userId, action: "copilot.config_saved", entity: "copilot_config", details: { level, mode, enabled: Boolean(body.enabled), phones: phones.length }, ip: clientIp(request) });
+      // Motor resolve LID → número só dos gestores cadastrados (WhatsApp esconde o número em alguns contatos).
+      if (isWhaileysEnabled()) await whaileysKnownPhones(cfg.instance_key, [...new Set(phones as string[])]).catch(() => {});
       return Response.json({ ok: true });
     }
 

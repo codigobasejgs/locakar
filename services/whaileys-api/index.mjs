@@ -41,9 +41,11 @@ let registry = {}; // nome -> { webhookUrl, webhookSecret, tokenHash, createdAt 
 async function loadRegistry() { try { registry = JSON.parse(await readFile(REGISTRY, "utf8")); } catch { registry = {}; } }
 async function saveRegistry() { const tmp = `${REGISTRY}.tmp`; await writeFile(tmp, JSON.stringify(registry, null, 1), { mode: 0o600 }); await rename(tmp, REGISTRY); }
 
+// Números que o sistema cliente autorizou (gestores): usados só para resolver LID → número.
+const knownPhones = new Map(); // nome -> string[]
 function config(name) {
-  if (registry[name]) return registry[name];
-  if (LEGACY.test(name) && WEBHOOK_URL && WEBHOOK_SECRET) return { webhookUrl: WEBHOOK_URL, webhookSecret: WEBHOOK_SECRET, legacy: true };
+  if (registry[name]) return { ...registry[name], knownPhones: knownPhones.get(name) };
+  if (LEGACY.test(name) && WEBHOOK_URL && WEBHOOK_SECRET) return { webhookUrl: WEBHOOK_URL, webhookSecret: WEBHOOK_SECRET, legacy: true, knownPhones: knownPhones.get(name) };
   return null;
 }
 const validUrl = (u) => { try { const x = new URL(u); return x.protocol === "https:" || (x.protocol === "http:" && /^(localhost|127\.0\.0\.1)$/.test(x.hostname)); } catch { return false; } };
@@ -61,11 +63,34 @@ async function post(cfg, body) {
   }
 }
 
+/**
+ * Contato só por LID (privacidade nova do WhatsApp): o número real some do evento.
+ * Resolve LID → número pelo próprio WhatsApp (onWhatsApp dos números já conhecidos) e preenche key.senderPn.
+ * ponytail: cache em memória por sessão; reinício refaz as consultas sob demanda.
+ */
+async function resolvePn(s, lidJid, known) {
+  const lid = lidJid.split("@")[0].split(":")[0];
+  if (s.lidToPn?.has(lid)) return s.lidToPn.get(lid);
+  s.lidToPn ??= new Map();
+  for (const phone of known) {
+    if ([...s.lidToPn.values()].includes(phone)) continue;
+    const [r] = await s.sock.onWhatsApp(phone).catch(() => []);
+    const l = r?.lid ? String(r.lid).split("@")[0].split(":")[0] : null;
+    if (l) s.lidToPn.set(l, phone);
+  }
+  return s.lidToPn.get(lid) ?? null;
+}
+
 async function forward(name, s, msg) {
   const cfg = config(name);
   const jid = msg.key?.remoteJid || "";
   if (!cfg || !msg.message || !msg.key?.id || sent.has(msg.key.id)) return;
   if (/@(g\.us|broadcast|newsletter)$/.test(jid) || jid === "status@broadcast") return;
+  // Remetente só com LID: completa senderPn se for um número que o sistema cliente declarou conhecer.
+  if (/@lid$/.test(jid) && !msg.key.fromMe && !/@s\.whatsapp\.net$/.test(msg.key.senderPn || "") && cfg.knownPhones?.length) {
+    const pn = await resolvePn(s, jid, cfg.knownPhones).catch(() => null);
+    if (pn) msg.key.senderPn = `${pn}@s.whatsapp.net`;
+  }
   const inner = msg.message.ephemeralMessage?.message || msg.message.viewOnceMessage?.message || msg.message.viewOnceMessageV2?.message || msg.message;
   const type = Object.keys(MEDIA).find((t) => inner[t]);
   let media;
@@ -209,7 +234,7 @@ const server = createServer(async (req, res) => {
     }
 
     // Operação da sessão: admin/LocaKar com API_KEY; demais sistemas com o token da própria instância.
-    const m = url.pathname.match(/^\/sessions\/([^/]+)(\/(connect|send))?$/);
+    const m = url.pathname.match(/^\/sessions\/([^/]+)(\/(connect|send|known-phones))?$/);
     if (!m) return json(res, 404, { error: "not found" });
     const name = m[1];
     if (!config(name)) return json(res, 404, { error: "not found" });
@@ -224,6 +249,14 @@ const server = createServer(async (req, res) => {
       return json(res, 200, status(name));
     }
     if (req.method === "POST" && m[3] === "send") return json(res, 200, await send(name, await readBody(req)));
+    if (req.method === "POST" && m[3] === "known-phones") {
+      const body = await readBody(req);
+      const list = Array.isArray(body.phones) ? body.phones.map((p) => String(p).replace(/\D/g, "")) : [];
+      if (list.length > 50 || list.some((p) => !/^\d{12,13}$/.test(p))) throw fail(400, "Envie até 50 números no formato 55 + DDD + número.");
+      knownPhones.set(name, [...new Set(list)]);
+      sessions.get(name)?.lidToPn?.clear();
+      return json(res, 200, { ok: true, count: knownPhones.get(name).length });
+    }
     if (req.method === "DELETE" && !m[2]) { await stop(name); return json(res, 200, { ok: true }); }
     return json(res, 405, { error: "method" });
   } catch (e) {
