@@ -35,14 +35,17 @@ export function CopilotSettings() {
   const [phones, setPhones] = useState("");
   const [busy, setBusy] = useState(false);
   const [pairPhone, setPairPhone] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
+  // Falha de carga vira aviso fixo no cartão (sem toast repetido a cada atualização).
   const load = useCallback(async () => {
     try {
       const j = await api<State>();
       setS(j);
+      setError(null);
       setDraft((d) => d ?? j.config);
       setPhones((p) => p || j.config.adminPhones.join("\n"));
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { setError((e as Error).message); }
   }, []);
 
   useEffect(() => {
@@ -50,9 +53,9 @@ export function CopilotSettings() {
     let alive = true;
     const tick = async () => alive && (await load());
     tick();
-    const id = setInterval(tick, s?.session.state === "open" ? 60_000 : 15_000);
+    const id = setInterval(tick, s?.session.state === "open" || error ? 60_000 : 15_000);
     return () => { alive = false; clearInterval(id); };
-  }, [load, s?.session.state]);
+  }, [load, s?.session.state, error]);
 
   const act = async (body: object, ok?: string) => {
     setBusy(true);
@@ -62,6 +65,7 @@ export function CopilotSettings() {
   };
 
   if (!isSupabaseEnabled) return <p className="text-sm text-muted sm:col-span-2">Disponível com o banco de dados conectado.</p>;
+  if (error && !s) return <p className="text-sm text-amber-300 sm:col-span-2">Copiloto indisponível: {error}</p>;
   if (!s || !draft) return <div className="h-40 animate-pulse rounded-xl bg-white/[0.04] sm:col-span-2" aria-busy="true" aria-label="Carregando" />;
   const connected = s.session.state === "open";
 
