@@ -35,6 +35,7 @@ import { OrgTextsForm } from "@/components/admin/org-texts-form";
 import { OrgShareLink } from "@/components/admin/org-share-link";
 import { PageHeader } from "@/components/admin/page-header";
 import { PaymentMethodsSettings } from "@/components/admin/payment-methods-settings";
+import { GatewaysSettings } from "@/components/admin/gateways-settings";
 import { PixSettingsFields } from "@/components/admin/pix-settings";
 import { PushSettings } from "@/components/admin/push-settings";
 import { SelsynSettings } from "@/components/admin/selsyn-settings";
@@ -323,6 +324,10 @@ export default function SettingsPage() {
 
             <Section id="config-asaas" tour="settings-asaas" icon={Landmark} title="Asaas (Cobranças automáticas)" description="Cobranças Pix, boleto, cartão e fatura com baixa automática por webhook. Opcional: desligado, o PIX e a baixa manual continuam iguais.">
               <AsaasSettings />
+            </Section>
+
+            <Section id="config-gateways" tour="settings-gateways" icon={Wallet} title="Mercado Pago, PagBank e Pagar.me (Stone)" description="Links de pagamento Pix, cartão e boleto com baixa automática. Conecte a conta aqui e ative em “Meios de pagamento ativos”.">
+              <GatewaysSettings />
             </Section>
           </div>
         )}

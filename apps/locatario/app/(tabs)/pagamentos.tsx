@@ -22,6 +22,8 @@ import { pickProofImage, pickProofFile, sendPaymentProof } from "../../services/
 import { useBrandName } from "../../context/OrgProvider";
 
 type Step = "pix" | "proof" | "sent";
+type Gateway = "mercadopago" | "pagbank" | "pagarme";
+const GATEWAY_LABEL: Record<Gateway, string> = { mercadopago: "Mercado Pago", pagbank: "PagBank", pagarme: "Pagar.me" };
 
 export default function PagamentosScreen() {
   const brandName = useBrandName();
@@ -34,20 +36,22 @@ export default function PagamentosScreen() {
   const [image, setImage] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  // Checkout InfinitePay aberto: id da tentativa. Ao voltar ao app, consulta o status e baixa sozinho.
-  const [card, setCard] = useState<{ id: string; installmentId: string } | null>(null);
+  // Checkout aberto (InfinitePay ou gateway de link): id da tentativa. Ao voltar ao app, consulta o status e baixa sozinho.
+  const [card, setCard] = useState<{ id: string; installmentId: string; gateway?: Gateway } | null>(null);
   const [cardBusy, setCardBusy] = useState(false);
   const [cardPaid, setCardPaid] = useState(false);
   const cardRef = useRef(card);
   cardRef.current = card;
   const cardEnabled = Boolean(summary?.infinitepay?.checkout);
+  // Mercado Pago / PagBank / Pagar.me ativos (a LOCAKAR escolhe em Meios de pagamento).
+  const gateways = (summary?.paymentMethods ?? []).filter((m): m is Gateway => m === "mercadopago" || m === "pagbank" || m === "pagarme");
   // Asaas: métodos habilitados pela LOCAKAR; parcela com cobrança Asaas aberta sempre mostra o pagamento online.
   const asaasMethods = summary?.asaas ? [...summary.asaas.methods, ...(summary.asaas.allowUndefined ? ["UNDEFINED"] : [])] : [];
   const asaasFor = (i: Installment) => Boolean(i.asaas) || asaasMethods.length > 0;
   // PIX QR Code (comprovante) só quando ativo; comprovante recusado sempre pode ser reenviado.
   const pixFor = (i: Installment) => Boolean(i.pixCode) || i.proofStatus === "rejected";
   const ipFor = (i: Installment) => cardEnabled || Boolean(i.infinitepay);
-  const anyMethod = (i: Installment) => asaasFor(i) || ipFor(i) || pixFor(i);
+  const anyMethod = (i: Installment) => asaasFor(i) || ipFor(i) || pixFor(i) || gateways.length > 0;
 
   const installments = activeRental?.installments ?? [];
   const insets = useSafeAreaInsets();
@@ -71,13 +75,13 @@ export default function PagamentosScreen() {
     if (!current) return;
     if (!silent) setCardBusy(true);
     try {
-      const r = await api<{ status: string }>("/api/tenant/infinitepay", { method: "POST", body: { action: "check", id: current.id } });
+      const r = await api<{ status: string }>(current.gateway ? "/api/tenant/gateways" : "/api/tenant/infinitepay", { method: "POST", body: { action: "check", id: current.id } });
       if (r.status === "paid") {
         setCardPaid(true);
         setCard(null);
         refresh();
       } else if (!silent) {
-        setMessage(r.status === "amount_mismatch" ? `O valor pago é diferente do cobrado. Fale com a ${brandName}.` : "Ainda não recebemos a confirmação da InfinitePay. Se você já pagou, aguarde alguns segundos e toque de novo.");
+        setMessage(r.status === "amount_mismatch" ? `O valor pago é diferente do cobrado. Fale com a ${brandName}.` : `Ainda não recebemos a confirmação ${current.gateway ? `do ${GATEWAY_LABEL[current.gateway]}` : "da InfinitePay"}. Se você já pagou, aguarde alguns segundos e toque de novo.`);
       }
     } catch (e) {
       if (!silent) setMessage((e as Error).message);
@@ -101,6 +105,20 @@ export default function PagamentosScreen() {
     try {
       const r = open.infinitepay ?? await api<{ id: string; url: string }>("/api/tenant/infinitepay", { method: "POST", body: { action: "checkout", rentalId: activeRental.id, installmentId: open.id } });
       setCard({ id: r.id, installmentId: open.id });
+      await Linking.openURL(r.url);
+    } catch (e) {
+      setMessage((e as Error).message);
+    }
+    setCardBusy(false);
+  };
+
+  const payWithGateway = async (g: Gateway) => {
+    if (!open || !activeRental) return;
+    setMessage(null);
+    setCardBusy(true);
+    try {
+      const r = await api<{ id: string; url: string }>("/api/tenant/gateways", { method: "POST", body: { action: "checkout", provider: g, rentalId: activeRental.id, installmentId: open.id } });
+      setCard({ id: r.id, installmentId: open.id, gateway: g });
       await Linking.openURL(r.url);
     } catch (e) {
       setMessage((e as Error).message);
@@ -174,7 +192,7 @@ export default function PagamentosScreen() {
               {i.proofStatus === "rejected" && !i.paid && i.rejectionReason && <Text style={styles.rejected}>Motivo da recusa: {i.rejectionReason}</Text>}
               {!i.paid && i.proofStatus !== "pending_review" && (
                 anyMethod(i) ? (
-                  <Button label={i.proofStatus === "rejected" ? "Pagar ou reenviar comprovante" : asaasFor(i) || cardEnabled ? "Pagar agora" : "Pagar com PIX"} size="sm" onPress={() => openInstallment(i)} />
+                  <Button label={i.proofStatus === "rejected" ? "Pagar ou reenviar comprovante" : asaasFor(i) || cardEnabled || gateways.length ? "Pagar agora" : "Pagar com PIX"} size="sm" onPress={() => openInstallment(i)} />
                 ) : (
                   <Text style={styles.muted}>Não há meios de pagamento online disponíveis no momento.</Text>
                 )
@@ -231,13 +249,27 @@ export default function PagamentosScreen() {
                       <Text style={styles.cardTitle}>Cartão de crédito ou débito</Text>
                       <Text style={styles.muted}>Pague com cartão em até 12x ou Pix pela InfinitePay. A confirmação é automática, sem enviar comprovante.</Text>
                       <Button label={cardBusy ? "Abrindo pagamento..." : "Pagar com cartão (InfinitePay)"} loading={cardBusy && !card} icon={<CreditCard color={Colors.text} size={18} />} onPress={payWithCard} />
-                      {card?.installmentId === open.id && (
+                      {!card?.gateway && card?.installmentId === open.id && (
                         <Button label={cardBusy ? "Verificando..." : "Já paguei — verificar pagamento"} variant="outline" size="sm" disabled={cardBusy} onPress={() => checkCard(false)} />
                       )}
                     </View>
                   )}
 
-                  {ipFor(open) && pixFor(open) && <Text style={styles.or}>ou</Text>}
+                  {gateways.length > 0 && (asaasFor(open) || ipFor(open)) && <Text style={styles.or}>ou</Text>}
+                  {gateways.length > 0 && (
+                    <View style={styles.cardBox}>
+                      <Text style={styles.cardTitle}>Pix, cartão ou boleto</Text>
+                      <Text style={styles.muted}>Pague pelo link seguro. Cartão em até 12x. A confirmação é automática, sem enviar comprovante.</Text>
+                      {gateways.map((g) => (
+                        <Button key={g} label={cardBusy ? "Abrindo pagamento..." : `Pagar com ${GATEWAY_LABEL[g]}`} loading={cardBusy && !card} variant={g === gateways[0] ? "primary" : "outline"} icon={<CreditCard color={Colors.text} size={18} />} onPress={() => payWithGateway(g)} />
+                      ))}
+                      {card?.gateway && card.installmentId === open.id && (
+                        <Button label={cardBusy ? "Verificando..." : "Já paguei — verificar pagamento"} variant="outline" size="sm" disabled={cardBusy} onPress={() => checkCard(false)} />
+                      )}
+                    </View>
+                  )}
+
+                  {(ipFor(open) || gateways.length > 0) && pixFor(open) && <Text style={styles.or}>ou</Text>}
 
                   {!anyMethod(open) && <Text style={styles.body}>Não há meios de pagamento online disponíveis no momento. Fale com a {brandName}.</Text>}
 

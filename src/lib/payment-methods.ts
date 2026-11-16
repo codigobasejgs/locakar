@@ -4,19 +4,23 @@
  *  - PIX manual  → settings.data.pix.enabled      (ausente = ligado, comportamento anterior)
  *  - InfinitePay → settings.data.infinitepay.enabled
  *  - Asaas       → asaas_config.enabled            (só servidor; credenciais nunca saem de lá)
+ *  - Mercado Pago, PagBank, Pagar.me → payment_gateways.enabled (só servidor)
  * Desligar só impede NOVAS cobranças/escolhas; cobranças, webhooks, comprovantes e histórico continuam.
  */
 import { isPixReady } from "./billing";
+import { GATEWAYS, GATEWAY_IDS, type GatewayId } from "./gateways";
 import { normalizeHandle, type InfinitePaySettings } from "./infinitepay";
 import type { PixSettings } from "@/types";
 
-export type PaymentMethodId = "asaas" | "infinitepay" | "pix_manual";
-export const PAYMENT_METHOD_IDS: PaymentMethodId[] = ["asaas", "infinitepay", "pix_manual"];
+export type PaymentMethodId = "asaas" | "infinitepay" | "pix_manual" | GatewayId;
+export const PAYMENT_METHOD_IDS: PaymentMethodId[] = ["asaas", "infinitepay", ...GATEWAY_IDS, "pix_manual"];
+export const isGatewayMethod = (id: PaymentMethodId): id is GatewayId => (GATEWAY_IDS as string[]).includes(id);
 
 export const PAYMENT_METHODS: Record<PaymentMethodId, { label: string; description: string; client: string }> = {
   asaas: { label: "Asaas", description: "Automatize cobranças e confirmações de pagamento através do Asaas.", client: "Pagamento online · confirmação automática" },
   infinitepay: { label: "InfinitePay", description: "Aproximação no celular (InfiniteTap) e link de pagamento Pix/cartão (Checkout).", client: "Cartão ou Pix pela InfinitePay" },
   pix_manual: { label: "PIX QR Code", description: "Receba via Pix diretamente na conta cadastrada. O cliente envia o comprovante e o pagamento é aprovado manualmente.", client: "Pix · envio de comprovante" },
+  ...(Object.fromEntries(GATEWAY_IDS.map((id) => [id, { label: GATEWAYS[id].label, description: GATEWAYS[id].description, client: GATEWAYS[id].client }])) as Record<GatewayId, { label: string; description: string; client: string }>),
 };
 
 export type MethodStatus = "active" | "inactive" | "not_configured" | "error";

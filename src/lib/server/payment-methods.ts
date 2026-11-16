@@ -1,7 +1,9 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { infinitePayState, methodStatus, pixState, type PaymentMethodId, type PaymentMethodState } from "@/lib/payment-methods";
+import { GATEWAY_IDS } from "@/lib/gateways";
+import { PAYMENT_METHODS, infinitePayState, isGatewayMethod, methodStatus, pixState, type PaymentMethodId, type PaymentMethodState } from "@/lib/payment-methods";
 import { envCols, loadAsaasConfig, readyForCharges, type AsaasConfigRow } from "@/lib/server/asaas";
+import { gatewayState, loadGateways, setGatewayEnabled } from "@/lib/server/gateways";
 import { requireOrg } from "@/lib/server/org-context";
 import { loadSettings } from "@/lib/server/push";
 import { HttpError } from "@/lib/server/supabase";
@@ -18,9 +20,10 @@ export function asaasState(cfg: AsaasConfigRow | null): PaymentMethodState {
 }
 
 export async function getPaymentMethods(db: SupabaseClient, settings?: CompanySettings) {
-  const [s, cfg] = await Promise.all([settings ?? loadSettings(db), loadAsaasConfig(db)]);
+  const [s, cfg, gw] = await Promise.all([settings ?? loadSettings(db), loadAsaasConfig(db), loadGateways(db)]);
   const ip = infinitePayState(s.infinitepay);
-  return { settings: s, asaasConfig: cfg, methods: [asaasState(cfg), ip, pixState(s.pix)] as PaymentMethodState[], infinitepay: ip };
+  const gateways = GATEWAY_IDS.map((id) => gatewayState(id, gw[id]));
+  return { settings: s, asaasConfig: cfg, methods: [asaasState(cfg), ip, ...gateways, pixState(s.pix)] as PaymentMethodState[], infinitepay: ip };
 }
 
 /** Disponível para NOVA operação = ligado e configurado. Lifecycle de operações existentes não passa por aqui. */
@@ -29,7 +32,7 @@ export const usable = (m: PaymentMethodState) => m.enabled && m.configured;
 export async function assertMethodEnabled(db: SupabaseClient, id: PaymentMethodId, settings?: CompanySettings) {
   const { methods } = await getPaymentMethods(db, settings);
   const m = methods.find((x) => x.id === id)!;
-  if (!usable(m)) throw new HttpError(409, id === "pix_manual" ? "Pagamento por Pix com comprovante está desativado no momento." : `${id === "asaas" ? "Asaas" : "InfinitePay"} está desativado para novas cobranças.`);
+  if (!usable(m)) throw new HttpError(409, id === "pix_manual" ? "Pagamento por Pix com comprovante está desativado no momento." : `${PAYMENT_METHODS[id].label} está desativado para novas cobranças.`);
 }
 
 /** Cobranças/análises em aberto do meio (aviso antes de desativar). */
@@ -37,7 +40,7 @@ export async function openCount(db: SupabaseClient, id: PaymentMethodId) {
   const q =
     id === "pix_manual"
       ? db.from("payment_receipts").select("id", { count: "exact", head: true }).eq("status", "pending_review")
-      : db.from("payment_transactions").select("id", { count: "exact", head: true }).eq("provider", id).in("status", id === "asaas" ? ["started", "link_created"] : ["link_created", "awaiting_confirmation"]);
+      : db.from("payment_transactions").select("id", { count: "exact", head: true }).eq("provider", id).in("status", id === "infinitepay" ? ["link_created", "awaiting_confirmation"] : ["started", "link_created"]);
   const { count } = await q;
   return count ?? 0;
 }
@@ -54,6 +57,8 @@ export async function setMethodEnabled(db: SupabaseClient, id: PaymentMethodId, 
     if (id === "asaas") {
       const { error } = await db.from("asaas_config").update({ enabled, updated_by: actor.id });
       if (error) throw new HttpError(500, "Não foi possível salvar.");
+    } else if (isGatewayMethod(id)) {
+      await setGatewayEnabled(db, id, enabled);
     } else {
       const { error } = await db.rpc("set_payment_method_enabled", { p_org: requireOrg().org.id, p_method: id, p_enabled: enabled });
       if (error) throw new HttpError(503, "Aplique as migrations multiempresa (20261013*) para salvar os switches.");

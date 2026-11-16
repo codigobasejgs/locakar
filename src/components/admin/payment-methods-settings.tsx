@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Landmark, Loader2, QrCode, Settings2 } from "lucide-react";
+import { CreditCard, Handshake, Landmark, Loader2, QrCode, Settings2, ShoppingBag, Store } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +10,8 @@ import { PAYMENT_METHODS, STATUS_LABEL, type PaymentMethodId, type PaymentMethod
 import { cn } from "@/lib/utils";
 
 type Method = PaymentMethodState & { open: number };
-const ICON: Record<PaymentMethodId, typeof Landmark> = { asaas: Landmark, infinitepay: CreditCard, pix_manual: QrCode };
-const SECTION: Record<PaymentMethodId, string> = { asaas: "config-asaas", infinitepay: "config-infinitepay", pix_manual: "config-pix" };
+const ICON: Record<PaymentMethodId, typeof Landmark> = { asaas: Landmark, infinitepay: CreditCard, mercadopago: Handshake, pagbank: ShoppingBag, pagarme: Store, pix_manual: QrCode };
+const SECTION: Record<PaymentMethodId, string> = { asaas: "config-asaas", infinitepay: "config-infinitepay", mercadopago: "config-gateways", pagbank: "config-gateways", pagarme: "config-gateways", pix_manual: "config-pix" };
 const TONE = { active: "success", inactive: "neutral", not_configured: "warning", error: "danger" } as const;
 /** Avisa as outras seções (ex.: Asaas) que a disponibilidade mudou. */
 export const METHODS_EVENT = "locakar:payment-methods";

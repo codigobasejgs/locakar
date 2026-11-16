@@ -46,7 +46,7 @@ export function Hero() {
             transition={{ duration: 0.9, delay: 0.35, ease }}
             className="mt-5 max-w-[650px] text-base text-pretty text-zinc-300 sm:mt-6 sm:text-lg"
           >
-            Mobilidade, praticidade e atendimento personalizado para você seguir o seu caminho.
+            Indaiatuba e região
           </motion.p>
 
           <motion.div

@@ -8,11 +8,12 @@ import { addDays, formatCurrency, formatDate, formatNumber } from "../utils";
 import type { Opt, Reply } from "../copilot/flow";
 import { isMenuCommand, type CopilotEvent } from "../copilot/parse";
 import { DOCUMENT_KIND, INCIDENT_CATEGORY, PHOTO_SLOTS, TENANT_INSPECTION_KIND } from "../tenant";
+import { GATEWAYS, isGateway, type GatewayId } from "../gateways";
 import { firstName, pinMatches, pickByCpf, type ClientRef } from "./identify";
 
 export type { Opt, Reply };
 export interface CustomerSession { step: string; data: Record<string, unknown>; clientId: string | null; verified: boolean; locked: boolean }
-export interface CustomerConfig { orgName: string; appUrl: string; today: string; methods: { asaasPix: boolean; asaasBoleto: boolean; infinitepay: boolean; pixManual: boolean } }
+export interface CustomerConfig { orgName: string; appUrl: string; today: string; methods: { asaasPix: boolean; asaasBoleto: boolean; infinitepay: boolean; pixManual: boolean; gateways?: GatewayId[] } }
 export interface OpenInstallment { rentalId: string; receiptId: string; label: string; dueDate: string; amount: number; total: number; daysLate: number; plate?: string }
 export type PinResult = "verified" | "wrong" | "locked";
 export type Media = { mimetype: string; data: string };
@@ -35,6 +36,8 @@ export interface CustomerPorts {
   pin(clientId: string, ok: boolean): Promise<PinResult>;
   asaas(clientId: string, rentalId: string, receiptId: string, kind: "PIX" | "BOLETO"): Promise<{ pix?: string | null; invoiceUrl?: string | null; line?: string | null }>;
   infinitepay(clientId: string, rentalId: string, receiptId: string): Promise<{ url: string }>;
+  /** Link Mercado Pago / PagBank / Pagar.me (Pix, cartão ou boleto). */
+  gateway(clientId: string, provider: GatewayId, rentalId: string, receiptId: string): Promise<{ url: string }>;
   pixManual(clientId: string, rentalId: string, receiptId: string): Promise<{ code: string | null; key: string; name: string; amount: number }>;
   proof(clientId: string, rentalId: string, receiptId: string, media: Media): Promise<{ amount: number }>;
   /* Etapa 2 */
@@ -68,7 +71,7 @@ export function chargeButtons(ref: string, m: CustomerConfig["methods"]): Opt[] 
   const pix = m.asaasPix ? `m:asaas_pix:${ref}` : m.pixManual ? `m:pixm:${ref}` : null;
   return [
     ...(pix ? [{ id: pix, title: "💳 Pagar Pix" }] : []),
-    ...(m.infinitepay ? [{ id: `m:ip:${ref}`, title: "🔗 Cartão" }] : []),
+    ...(m.infinitepay ? [{ id: `m:ip:${ref}`, title: "🔗 Cartão" }] : m.gateways?.length ? [{ id: `m:${m.gateways[0]}:${ref}`, title: "🔗 Cartão" }] : []),
     { id: APP_ID, title: "📱 Abrir App" },
   ];
 }
@@ -176,6 +179,7 @@ export async function handleCustomer(
       ...(m.asaasPix ? [{ id: `m:asaas_pix:${ref}`, title: "⚡ Pix", description: "Código copia e cola" }] : []),
       ...(m.asaasBoleto ? [{ id: `m:asaas_boleto:${ref}`, title: "🧾 Boleto", description: "Linha digitável" }] : []),
       ...(m.infinitepay ? [{ id: `m:ip:${ref}`, title: "💳 Cartão ou Pix", description: "Link InfinitePay (até 12x)" }] : []),
+      ...(m.gateways ?? []).map((g) => ({ id: `m:${g}:${ref}`, title: `💳 ${GATEWAYS[g].label.replace(/ \(.*\)$/, "")}`.slice(0, 24), description: "Pix, cartão até 12x ou boleto" })),
       ...(m.pixManual ? [{ id: `m:pixm:${ref}`, title: "📲 Pix + comprovante", description: "Envie o comprovante aqui" }] : []),
     ];
     if (!opts.length) return say(done(cfg, "No momento o pagamento online está indisponível. Fale com a locadora."));
@@ -186,7 +190,7 @@ export async function handleCustomer(
     const [rentalId, receiptId] = ref.split("|");
     const i = await findInstallment(ref);
     if (!i) return say(done(cfg, "Esta parcela não está mais em aberto."));
-    const enabled = method === "asaas_pix" ? cfg.methods.asaasPix : method === "asaas_boleto" ? cfg.methods.asaasBoleto : method === "ip" ? cfg.methods.infinitepay : method === "pixm" ? cfg.methods.pixManual : false;
+    const enabled = method === "asaas_pix" ? cfg.methods.asaasPix : method === "asaas_boleto" ? cfg.methods.asaasBoleto : method === "ip" ? cfg.methods.infinitepay : method === "pixm" ? cfg.methods.pixManual : isGateway(method) ? Boolean(cfg.methods.gateways?.includes(method)) : false;
     if (!enabled) return methodChoice(ref); // botão antigo de método desligado: mostra só os ativos
     if (method === "asaas_pix" || method === "asaas_boleto") {
       const r = await ports.asaas(clientId!, rentalId, receiptId, method === "asaas_pix" ? "PIX" : "BOLETO");
@@ -200,6 +204,10 @@ export async function handleCustomer(
     if (method === "ip") {
       const r = await ports.infinitepay(clientId!, rentalId, receiptId);
       return say(done(cfg, `💳 *Pagar ${formatCurrency(i.total)}*\nPix ou cartão em até 12x pela InfinitePay:\n${r.url}\n\nA confirmação é automática.`));
+    }
+    if (isGateway(method)) {
+      const r = await ports.gateway(clientId!, method, rentalId, receiptId);
+      return say(done(cfg, `💳 *Pagar ${formatCurrency(i.total)}*\nPix, cartão em até 12x ou boleto pelo ${GATEWAYS[method].label.replace(/ \(.*\)$/, "")}:\n${r.url}\n\nA confirmação é automática.`));
     }
     const r = await ports.pixManual(clientId!, rentalId, receiptId);
     keep("proof", { ref });

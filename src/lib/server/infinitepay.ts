@@ -77,6 +77,7 @@ export async function paymentCheck(body: { handle: string; order_nsu: string; tr
 
 interface TxRow {
   id: string;
+  provider?: string;
   flow: TransactionFlow;
   rental_id: string;
   receipt_id: string;
@@ -95,8 +96,10 @@ interface TxRow {
 export async function confirmPaid(
   db: SupabaseClient,
   tx: TxRow,
-  data: { paidCents: number; method?: string | null; installments?: number | null; transactionNsu?: string; slug?: string; receiptUrl?: string; captureMethod?: string },
+  data: { paidCents: number; method?: string | null; installments?: number | null; transactionNsu?: string; slug?: string; receiptUrl?: string; captureMethod?: string; providerPaymentId?: string },
   actor: { type: "staff" | "system"; id?: string | null; ip?: string | null },
+  /** Outros gateways de link (Mercado Pago, PagBank, Pagar.me) reaproveitam a mesma baixa idempotente. */
+  gateway: { name: string; label: string; event: string } = { name: "InfinitePay", label: methodLabel(tx.flow, data.method ?? tx.method, data.installments ?? tx.installments), event: "infinitepay" },
 ) {
   const now = new Date().toISOString();
   const { data: won, error } = await db
@@ -111,6 +114,7 @@ export async function confirmPaid(
       ...(data.slug ? { invoice_slug: data.slug } : {}),
       ...(data.receiptUrl ? { receipt_url: data.receiptUrl } : {}),
       ...(data.captureMethod ? { capture_method: data.captureMethod } : {}),
+      ...(data.providerPaymentId ? { provider_payment_id: data.providerPaymentId } : {}),
       last_error: null,
     })
     .eq("id", tx.id)
@@ -119,7 +123,7 @@ export async function confirmPaid(
     .maybeSingle();
   // 23505: outra tentativa já quitou esta parcela ou o transaction_nsu já foi usado.
   if (error?.code === "23505") {
-    log("infinitepay_webhook_duplicate", { tx: tx.id });
+    log(`${gateway.event}_webhook_duplicate`, { tx: tx.id });
     return false;
   }
   if (error) throw new Error(error.message);
@@ -131,23 +135,23 @@ export async function confirmPaid(
   ]);
   const rental = rentalRow ? fromRow<Rental>(rentalRow) : null;
   const index = rental ? rental.receipts.findIndex((r) => r.id === tx.receipt_id) : -1;
-  const label = methodLabel(tx.flow, data.method ?? tx.method, data.installments ?? tx.installments);
+  const label = gateway.label;
   const amount = data.paidCents / 100;
   const ref = [data.transactionNsu && `NSU ${data.transactionNsu}`, data.receiptUrl && `Comprovante: ${data.receiptUrl}`].filter(Boolean).join(" · ");
 
   if (rental && index >= 0 && !rental.receipts[index].paid) {
     const receipts = rental.receipts.map((r) =>
       r.id === tx.receipt_id
-        ? { ...r, paid: true, paidAt: todaySP(), amountPaid: amount, paymentMethod: label, notes: [r.notes, ref].filter(Boolean).join(" · ") || undefined, settledBy: "InfinitePay" }
+        ? { ...r, paid: true, paidAt: todaySP(), amountPaid: amount, paymentMethod: label, notes: [r.notes, ref].filter(Boolean).join(" · ") || undefined, settledBy: gateway.name }
         : r,
     );
     await db.from("rentals").update({ receipts, updated_at: now }).eq("id", rental.id);
   }
   // Cobrança Asaas aberta desta parcela é cancelada (import dinâmico: asaas.ts já importa este módulo).
-  await (await import("@/lib/server/asaas")).releaseChargeIfSettled(db, tx.rental_id, tx.receipt_id, { type: actor.type === "staff" ? "staff" : "system", id: actor.id }, "InfinitePay");
+  await (await import("@/lib/server/asaas")).releaseChargeIfSettled(db, tx.rental_id, tx.receipt_id, { type: actor.type === "staff" ? "staff" : "system", id: actor.id }, gateway.name);
 
-  await audit({ actorType: actor.type, actorId: actor.id ?? null, action: "infinitepay_payment_confirmed", entity: "payment_transactions", entityId: tx.id, details: { rentalId: tx.rental_id, receiptId: tx.receipt_id, amountCents: data.paidCents, flow: tx.flow, method: label, transactionNsu: data.transactionNsu ?? null }, ip: actor.ip ?? null });
-  log("infinitepay_payment_confirmed", { tx: tx.id, flow: tx.flow });
+  await audit({ actorType: actor.type, actorId: actor.id ?? null, action: `${gateway.event}_payment_confirmed`, entity: "payment_transactions", entityId: tx.id, details: { rentalId: tx.rental_id, receiptId: tx.receipt_id, amountCents: data.paidCents, flow: tx.flow, method: label, transactionNsu: data.transactionNsu ?? null }, ip: actor.ip ?? null });
+  log(`${gateway.event}_payment_confirmed`, { tx: tx.id, flow: tx.flow });
 
   await Promise.all([
     notifyStaff([
@@ -155,14 +159,14 @@ export async function confirmPaid(
         type: "payment.received",
         category: "payments",
         severity: "success",
-        title: "Pagamento InfinitePay confirmado",
+        title: `Pagamento ${gateway.name} confirmado`,
         body: `${client?.name ?? "Cliente"} · ${formatCurrency(amount)} · ${label}`,
         url: "/admin/pagamentos",
-        dedupeKey: `infinitepay:${tx.id}:paid`,
+        dedupeKey: `${gateway.event}:${tx.id}:paid`,
       },
     ], { db }),
     client
-      ? sendPushToClient(client.id, { title: "Pagamento confirmado", body: `Recebemos ${formatCurrency(amount)} (${label}).`, url: "/", severity: "success", tag: `ip-${tx.id}` }, "pagamentos")
+      ? sendPushToClient(client.id, { title: "Pagamento confirmado", body: `Recebemos ${formatCurrency(amount)} (${label}).`, url: "/", severity: "success", tag: `${gateway.event}-${tx.id}` }, "pagamentos")
       : null,
     client?.email
       ? sendEmail(db, {
@@ -180,9 +184,9 @@ export async function confirmPaid(
               ["Forma", label],
               ...(data.transactionNsu ? ([["NSU", data.transactionNsu]] as [string, string][]) : []),
             ],
-            ...(data.receiptUrl ? { cta: { label: "Ver comprovante InfinitePay", url: data.receiptUrl } } : {}),
+            ...(data.receiptUrl ? { cta: { label: `Ver comprovante ${gateway.name}`, url: data.receiptUrl } } : {}),
           }),
-        }).catch((e) => console.error("[infinitepay] e-mail:", (e as Error).message))
+        }).catch((e) => console.error(`[${gateway.event}] e-mail:`, (e as Error).message))
       : null,
   ]);
   return true;

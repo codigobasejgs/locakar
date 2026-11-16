@@ -46,7 +46,7 @@ Três partes que conversam entre si, todas no mesmo projeto e no mesmo banco de 
 
 Página única, pensada para levar o visitante ao WhatsApp comercial.
 
-- **Abertura (Hero):** logo circular centralizado acima da frase, frase exata *"Seu nome não define seu trabalho. Alugue mesmo negativado!"*, subtexto *"Mobilidade, praticidade e atendimento personalizado para você seguir o seu caminho."*, botões para conhecer a frota e falar no WhatsApp, sobre o vídeo cinematográfico da marca.
+- **Abertura (Hero):** logo circular centralizado acima da frase, frase exata *"Seu nome não define seu trabalho. Alugue mesmo negativado!"*, subtexto *"Indaiatuba e região"*, botões para conhecer a frota e falar no WhatsApp, sobre o vídeo cinematográfico da marca.
 - **Seções:**
   - **Frota:** modelos com fotos reais, especificações de fábrica (câmbio, combustível, lugares, ar-condicionado) e botão de consulta no WhatsApp para cada modelo.
   - **Como funciona:** 4 passos objetivos (escolha, contato, combinação e retirada).

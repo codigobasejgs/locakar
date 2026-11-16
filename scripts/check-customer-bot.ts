@@ -62,6 +62,7 @@ function ports(clients = [maria], opts: { pin?: "verified" | "wrong" | "locked" 
     pin: async (_id, ok) => { calls.push(`pin:${ok}`); return opts.pin ?? (ok ? "verified" : "wrong"); },
     asaas: async (_c, _r, _rc, kind) => { calls.push(`asaas:${kind}`); return { pix: "00020126PIXCOPIAECOLA", invoiceUrl: "https://fatura" }; },
     infinitepay: async () => { calls.push("ip"); return { url: "https://checkout/ip" }; },
+    gateway: async (_c, g, r, rc) => { calls.push(`gw:${g}:${r}|${rc}`); return { url: `https://checkout/${g}` }; },
     pixManual: async () => { calls.push("pixm"); return { code: "000201MANUAL", key: "chave@pix", name: "LOCADORA", amount: 378 }; },
     proof: async (_c, r, rc, m) => { calls.push(`proof:${r}|${rc}:${m.mimetype}`); return { amount: 378 }; },
   };
@@ -305,6 +306,19 @@ const appInLast = (rs: { text: string; buttons?: { id: string }[] }[]) => {
     assert.deepEqual(btn({}), ["m:asaas_pix:r1|r1-r2", "m:ip:r1|r1-r2", "app"]);
     assert.deepEqual(btn({ asaasPix: false }), ["m:pixm:r1|r1-r2", "m:ip:r1|r1-r2", "app"], "sem Asaas: Pix manual");
     assert.deepEqual(btn({ asaasPix: false, pixManual: false, infinitepay: false }), ["app"]);
+    // Gateways de link (Mercado Pago / PagBank / Pagar.me): aparecem só se ativos e caem direto no link.
+    const gwCfg = cfg({ infinitepay: false, gateways: ["mercadopago", "pagarme"] });
+    const menuGw = await handleCustomer({ kind: "action", id: "pay:r1|r1-r2" }, fresh({ clientId: "c1" }), gwCfg, p);
+    const gwOpts = render(menuGw.replies[0]).options;
+    assert.deepEqual(gwOpts.map((o) => o.id), ["m:asaas_pix:r1|r1-r2", "m:mercadopago:r1|r1-r2", "m:pagarme:r1|r1-r2", "m:pixm:r1|r1-r2"]);
+    assert.deepEqual(gwOpts.slice(1, 3).map((o) => o.title), ["💳 Mercado Pago", "💳 Pagar.me"], "nome sem o parêntese");
+    const mp = await handleCustomer({ kind: "action", id: "m:mercadopago:r1|r1-r2" }, fresh({ clientId: "c1" }), gwCfg, p);
+    assert.match(mp.replies[0].text, /https:\/\/checkout\/mercadopago/);
+    assert.ok(appInLast(mp.replies));
+    const off2 = await handleCustomer({ kind: "action", id: "m:pagbank:r1|r1-r2" }, fresh({ clientId: "c1" }), gwCfg, p);
+    assert.match(off2.replies[0].text, /Como deseja pagar/, "gateway desligado: não cria link");
+    assert.ok(calls.includes("gw:mercadopago:r1|r1-r2") && !calls.some((c) => c.startsWith("gw:pagbank")));
+    assert.deepEqual(chargeButtons("r1|r1-r2", { ...gwCfg.methods, asaasPix: false }).map((b) => b.id), ["m:pixm:r1|r1-r2", "m:mercadopago:r1|r1-r2", "app"], "sem InfinitePay: Cartão vai ao gateway");
     // Número digitado após a cobrança (opções gravadas na sessão).
     assert.deepEqual(parseMessage({ conversation: "2" }, ["m:asaas_pix:r1|r1-r2", "m:ip:r1|r1-r2", "app"]), { kind: "action", id: "m:ip:r1|r1-r2" });
   }

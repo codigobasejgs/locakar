@@ -8,6 +8,9 @@ import { normalizeHandle } from "@/lib/infinitepay";
 import { infinitePayState, pixState } from "@/lib/payment-methods";
 import { bankSlipLine, createCharge, loadAsaasConfig, pixQrCode, readyForCharges } from "@/lib/server/asaas";
 import { createReceiptCheckout } from "@/lib/server/infinitepay";
+import { createGatewayLink } from "@/lib/server/gateways";
+import { GATEWAY_IDS } from "@/lib/gateways";
+import { getPaymentMethods, usable } from "@/lib/server/payment-methods";
 import { brand, requireOrg, siteUrl } from "@/lib/server/org-context";
 import { loadSettings, notifyStaff, serviceDb } from "@/lib/server/push";
 import { signatureLink, signedFile } from "@/lib/server/signature/service";
@@ -99,6 +102,11 @@ function ports(phone: string, dryRun: boolean): CustomerPorts {
       const handle = normalizeHandle(ip?.handle ?? "");
       if (!infinitePayState(ip).checkout || !handle) throw new HttpError(409, "Pagamento com cartão indisponível no momento.");
       const r = await createReceiptCheckout(db, { handle, rentalId, receiptId, clientId, actor: { type: "client", id: clientId, ip: null } });
+      return { url: r.url };
+    },
+    async gateway(clientId, provider, rentalId, receiptId) {
+      if (dryRun) return { url: `https://exemplo/${provider}/simulacao` };
+      const r = await createGatewayLink(db, provider, { rentalId, receiptId, clientId, actor: { type: "client", id: clientId, ip: null } });
       return { url: r.url };
     },
     async pixManual(clientId, rentalId, receiptId) {
@@ -257,11 +265,13 @@ async function methods() {
   const settings = await loadSettings(db);
   const asaas = await loadAsaasConfig(db).catch(() => null);
   const asaasOn = readyForCharges(asaas);
+  const all = await getPaymentMethods(db, settings);
   return {
     asaasPix: asaasOn && Boolean(asaas?.methods.includes("PIX")),
     asaasBoleto: asaasOn && Boolean(asaas?.methods.includes("BOLETO")),
     infinitepay: infinitePayState(settings.infinitepay).checkout,
     pixManual: pixState(settings.pix).enabled && pixState(settings.pix).configured,
+    gateways: GATEWAY_IDS.filter((id) => all.methods.some((m) => m.id === id && usable(m))),
   };
 }
 

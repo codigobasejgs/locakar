@@ -129,7 +129,7 @@ export interface TenantSummary {
   /** Asaas ativo: formas de pagamento online habilitadas pela LOCAKAR. */
   asaas?: { methods: string[]; allowUndefined: boolean; sandbox: boolean } | null;
   /** Meios ativos definidos pela LOCAKAR (Configurações → Meios de pagamento). */
-  paymentMethods?: ("asaas" | "infinitepay" | "pix_manual")[];
+  paymentMethods?: ("asaas" | "infinitepay" | "pix_manual" | "mercadopago" | "pagbank" | "pagarme")[];
   support: { whatsapp: string | null; display: string | null; email?: string | null; text?: string | null };
   /** Marca da locadora (white label). */
   brand?: { slug: string; name: string; logo: string | null; logoLight: string | null; logoCompact: string | null; primary: string | null; secondary: string | null; accent: string | null; welcome: string | null };

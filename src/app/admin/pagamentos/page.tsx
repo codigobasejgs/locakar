@@ -20,7 +20,9 @@ import { InfinitePayDialog } from "@/components/admin/infinitepay-dialog";
 import { AsaasChargeDialog, asaasApi, releaseAsaasCharge, type AsaasCharge, type AsaasPanelConfig } from "@/components/admin/asaas-charge-dialog";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { ChargeMethodDialog } from "@/components/admin/charge-method-dialog";
-import type { PaymentMethodId, PaymentMethodState } from "@/lib/payment-methods";
+import { GatewayChargeDialog } from "@/components/admin/gateway-charge-dialog";
+import { isGatewayMethod, type PaymentMethodId, type PaymentMethodState } from "@/lib/payment-methods";
+import type { GatewayId } from "@/lib/gateways";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Card, EmptyState, StatCard } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/form";
@@ -77,6 +79,7 @@ export default function PagamentosPage() {
     ? methodStates.filter((m) => m.enabled && m.configured).map((m) => m.id)
     : isSupabaseEnabled ? [] : ([settings.pix.enabled !== false && settings.pix.key ? "pix_manual" : null, infinitePay?.enabled ? "infinitepay" : null].filter(Boolean) as PaymentMethodId[]);
   const [chargeTarget, setChargeTarget] = useState<UnifiedPaymentItem | null>(null);
+  const [gatewayTarget, setGatewayTarget] = useState<{ provider: GatewayId; payment: UnifiedPaymentItem } | null>(null);
   const asaasOn = Boolean(asaas?.config.ready);
   const asaasOpen = (p: UnifiedPaymentItem) => p.asaas?.status === "link_created" || p.asaas?.status === "started";
   const releaseAsaas = async (p: UnifiedPaymentItem, reason: string) => {
@@ -302,6 +305,7 @@ export default function PagamentosPage() {
     setChargeTarget(null);
     if (m === "asaas") setAsaasTarget(p);
     else if (m === "infinitepay") setInfinitePayTarget(p);
+    else if (isGatewayMethod(m)) setGatewayTarget({ provider: m, payment: p });
     else handleChargeWhatsApp(p);
   };
   const handleCharge = (p: UnifiedPaymentItem) => {
@@ -594,6 +598,17 @@ export default function PagamentosPage() {
 
       {/* Cobrar: escolha entre os meios ativos */}
       {chargeTarget && <ChargeMethodDialog payment={chargeTarget} methods={activeMethods} onClose={() => setChargeTarget(null)} onPick={(m) => pickMethod(chargeTarget, m)} />}
+
+      {/* Link Mercado Pago / PagBank / Pagar.me */}
+      {gatewayTarget && (
+        <GatewayChargeDialog
+          key={`${gatewayTarget.provider}:${gatewayTarget.payment.id}`}
+          provider={gatewayTarget.provider}
+          payment={gatewayTarget.payment}
+          onClose={() => setGatewayTarget(null)}
+          onPaid={() => reload("rentals", gatewayTarget.payment.rentalId)}
+        />
+      )}
 
       {/* Cobrança Asaas (modal Cobrar / detalhes) */}
       {asaas && asaasTarget && (

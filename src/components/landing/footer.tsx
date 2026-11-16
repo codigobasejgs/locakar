@@ -14,7 +14,7 @@ export function Footer() {
         <div>
           <Logo className="w-36" />
           <p className="mt-4 max-w-xs text-sm text-zinc-400">
-            Mobilidade, praticidade e atendimento personalizado para você seguir o seu caminho.
+            Indaiatuba e região
           </p>
           <InstallButton appName={COMPANY.name} size="sm" className="mt-5" label="Instalar o app" />
         </div>

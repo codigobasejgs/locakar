@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, CreditCard, Landmark, QrCode, Settings2 } from "lucide-react";
+import { ChevronRight, CreditCard, Handshake, Landmark, QrCode, Settings2, ShoppingBag, Store } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -8,10 +8,13 @@ import { PAYMENT_METHODS, type PaymentMethodId } from "@/lib/payment-methods";
 import { formatCurrency } from "@/lib/utils";
 import type { UnifiedPaymentItem } from "./payment-actions-sheet";
 
-const ICON: Record<PaymentMethodId, typeof Landmark> = { asaas: Landmark, infinitepay: CreditCard, pix_manual: QrCode };
+const ICON: Record<PaymentMethodId, typeof Landmark> = { asaas: Landmark, infinitepay: CreditCard, mercadopago: Handshake, pagbank: ShoppingBag, pagarme: Store, pix_manual: QrCode };
 const HINT: Record<PaymentMethodId, string> = {
   asaas: "Pix, boleto, cartão ou fatura · baixa automática",
   infinitepay: "Aproximação ou link Pix/cartão · baixa automática",
+  mercadopago: "Link Pix, cartão até 12x ou boleto · baixa automática",
+  pagbank: "Link Pix, cartão ou boleto · baixa automática",
+  pagarme: "Link Pix, cartão até 12x ou boleto (Stone) · baixa automática",
   pix_manual: "QR Code da sua conta pelo WhatsApp · cliente envia comprovante",
 };
 
