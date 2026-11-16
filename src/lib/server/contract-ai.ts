@@ -1,4 +1,5 @@
 import "server-only";
+import { geminiText, parseAiJson } from "@/lib/ai-output";
 import { CONTRACT_VARIABLES, type FieldMapping, type ManualField } from "@/lib/contract-variables";
 import { docxText } from "./docx";
 import { decrypt, hasSecretKey } from "./secret";
@@ -121,12 +122,16 @@ ${variableKeys.join(", ")}
   }
 
   const result = await res.json();
-  const textOutput = result.output_text || result.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!textOutput) throw new Error("A IA não retornou uma resposta válida para o documento.");
+  const textOutput = geminiText(result);
+  if (!textOutput) {
+    // Diagnóstico sem conteúdo do contrato: só a forma da resposta.
+    console.error("[contract-ai] resposta sem texto", JSON.stringify({ status: result?.status, keys: Object.keys(result ?? {}), steps: (result?.steps ?? []).map((s: { type?: string }) => s.type) }));
+    throw new Error(result?.status && result.status !== "completed" ? `A IA não concluiu a análise (status ${result.status}). Tente novamente.` : "A IA não retornou uma resposta válida para o documento. Tente novamente.");
+  }
 
   let parsed: { fields: FieldMapping[] };
   try {
-    parsed = JSON.parse(textOutput);
+    parsed = parseAiJson(textOutput);
   } catch {
     throw new Error("Formato de saída da IA inválido.");
   }

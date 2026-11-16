@@ -7,7 +7,7 @@ import { useAdminData, useLookups } from "@/hooks/use-admin-data";
 import { numOrUndef, numToStr, strOrUndef, type useCrud } from "@/hooks/use-crud";
 import { INTEREST_LABEL, PERIOD_LABEL, buildReceipts } from "@/lib/billing";
 import { CONTRACT_TYPES, RENTAL_STATUS, WEEKDAYS, statusOptions, toOptions } from "@/lib/constants";
-import { findConflict } from "@/lib/reservations";
+import { busyVehicleIds, canRent, findConflict, isOngoing } from "@/lib/reservations";
 import { addDays, formatDate, newId, todayISO } from "@/lib/utils";
 import type { BillingConfig, BillingPeriod, InterestPeriod, Rental, RentalStatus } from "@/types";
 
@@ -94,8 +94,13 @@ type RentalCrud = ReturnType<typeof useCrud<"rentals", RentalDraft>>;
 /** Formulário de locação (compartilhado entre a lista e a página de detalhes). */
 export function RentalForm({ crud }: { crud: RentalCrud }) {
   const { data, update } = useAdminData();
-  const { clientOptions, vehicleOptions, vehicleById } = useLookups();
+  const { clientOptions, vehicleById } = useLookups();
   const { draft, bind, set } = crud;
+  // Só veículos que podem ser locados agora; na edição, o veículo atual continua na lista.
+  const busy = busyVehicleIds(data?.rentals ?? [], crud.editing?.id);
+  const vehicleOptions = (data?.vehicles ?? [])
+    .filter((v) => v.id === crud.editing?.vehicleId || canRent(v, busy))
+    .map((v) => ({ value: v.id, label: `${v.plate} · ${v.name}` }));
   const count = draft.firstDue && draft.until >= draft.firstDue ? buildReceipts({ id: "p", firstDue: draft.firstDue, until: draft.until, amount: 0, period: draft.period }).length : 0;
   const preview = count ? `${count} parcela(s) ${PERIOD_LABEL[draft.period].toLowerCase()}(s)` : undefined;
 
@@ -105,6 +110,10 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
     const kmEnd = numOrUndef(draft.kmEnd);
     if (kmStart != null && kmEnd != null && kmEnd < kmStart) return void toast.error("KM final menor que o KM inicial.");
 
+    const chosen = vehicleById.get(draft.vehicleId);
+    if (chosen && chosen.id !== crud.editing?.vehicleId && !canRent(chosen, busyVehicleIds(data!.rentals, crud.editing?.id))) {
+      return void toast.error(chosen.status === "maintenance" ? "Veículo em manutenção." : chosen.status === "sold" ? "Veículo vendido." : "Veículo já está em uma locação em curso.");
+    }
     const id = crud.editing?.id ?? newId();
     const candidate = { id, vehicleId: draft.vehicleId, startDate: draft.startDate, endDate: draft.endDate, status: draft.status };
     const conflict = findConflict(data!.rentals, candidate);
@@ -163,12 +172,17 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
       notes: strOrUndef(draft.notes),
     });
 
-    // Mantém o status do veículo coerente com a locação.
-    const vehicle = vehicleById.get(draft.vehicleId);
-    if (ok && vehicle && vehicle.status !== "sold") {
-      const next = draft.status === "active" || draft.status === "late" ? "rented" : draft.status === "finished" ? "available" : null;
-      if (next && vehicle.status !== next) await update("vehicles", vehicle.id, { status: next });
-    }
+    // Mantém o status do veículo coerente com a locação (inclusive o carro antigo, se o veículo foi trocado).
+    if (!ok) return;
+    const others = data!.rentals.filter((r) => r.id !== id);
+    const sync = async (vehicleId: string, ongoingHere: boolean) => {
+      const v = vehicleById.get(vehicleId);
+      if (!v || v.status === "sold" || v.status === "maintenance") return;
+      const next = ongoingHere || busyVehicleIds(others).has(vehicleId) ? "rented" : "available";
+      if (v.status !== next && (next === "rented" || v.status === "rented")) await update("vehicles", v.id, { status: next });
+    };
+    await sync(draft.vehicleId, isOngoing(draft.status));
+    if (crud.editing && crud.editing.vehicleId !== draft.vehicleId) await sync(crud.editing.vehicleId, false);
   };
 
   return (
@@ -192,7 +206,7 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
             if (rate && !draft.weeklyRate) set("weeklyRate", String(rate));
           }}
           options={vehicleOptions}
-          placeholder="Selecione"
+          placeholder={vehicleOptions.length ? "Selecione" : "Nenhum veículo disponível"}
           required
         />
       </Field>

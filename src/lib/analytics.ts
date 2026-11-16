@@ -4,6 +4,7 @@ import type { CompanySettings, FleetVehicle, Rental } from "@/types";
 import { billingOf, lateCharges } from "./billing";
 import type { Tone } from "./constants";
 import { ROUTES } from "./constants";
+import { busyVehicleIds, vehicleState } from "./reservations";
 import { addDays, daysBetween, formatCurrency, formatDate, lastMonths, monthKey, monthLabel } from "./utils";
 
 const sum = (values: (number | undefined)[]) => values.reduce<number>((acc, v) => acc + (v ?? 0), 0);
@@ -187,7 +188,9 @@ export interface ExecutiveTotals {
 export function dashboardExecutiveTotals(data: Collections, today: string, from?: string, to?: string): ExecutiveTotals {
   const activeVehicles = data.vehicles.filter((v) => v.status !== "sold");
   const fleetInvested = sum(activeVehicles.map((v) => v.purchaseValue));
-  const count = (s: string) => data.vehicles.filter((v) => v.status === s).length;
+  // Status a partir das locações em curso: locação excluída/cancelada não deixa carro "alugado" fantasma.
+  const busy = busyVehicleIds(data.rentals);
+  const count = (s: string) => data.vehicles.filter((v) => vehicleState(v, busy) === s).length;
   const available = count("available");
   const rented = count("rented");
   const reserved = count("reserved");

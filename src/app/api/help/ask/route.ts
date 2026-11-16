@@ -3,6 +3,7 @@ import { articles } from "@/help";
 import { canReadArticle } from "@/help/access";
 import { ASSISTANT_INSTRUCTIONS, NOT_FOUND, articleContext } from "@/help/assistant";
 import { searchArticles } from "@/help/search";
+import { geminiText } from "@/lib/ai-output";
 import { getAIKey, loadContractAIConfig } from "@/lib/server/contract-ai";
 import { globalDb, scoped } from "@/lib/server/org-context";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
@@ -38,7 +39,7 @@ async function ask(provider: "gemini" | "openai", key: string, model: string, qu
   });
   if (!r.ok) throw new HttpError(502, "O assistente está indisponível agora. Use a busca acima.");
   const j = await r.json();
-  return String(j.output_text || j.candidates?.[0]?.content?.parts?.[0]?.text || "");
+  return geminiText(j);
 }
 
 async function aiConfig() {

@@ -1,4 +1,5 @@
 import "server-only";
+import { geminiText, parseAiJson } from "@/lib/ai-output";
 import type { AiIntent } from "@/lib/copilot/flow";
 import { getAIKey, loadContractAIConfig } from "./contract-ai";
 
@@ -86,6 +87,5 @@ export async function interpret(input: { text?: string; media?: { kind: "audio" 
   });
   if (!res.ok) throw new Error(`IA indisponível (HTTP ${res.status}).`);
   const j = await res.json();
-  const text = j.output_text ?? j.outputs?.at?.(-1)?.text ?? j.candidates?.[0]?.content?.parts?.[0]?.text;
-  try { return toIntent(JSON.parse(text ?? "{}")); } catch { return { intent: "unknown" }; }
+  try { return toIntent(parseAiJson(geminiText(j) || "{}")); } catch { return { intent: "unknown" }; }
 }

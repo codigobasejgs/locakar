@@ -37,6 +37,7 @@ import {
   type DateRange,
 } from "@/lib/analytics";
 import { CHART_COLORS, RENTAL_STATUS, ROUTES, TONE_COLOR, VEHICLE_STATUS } from "@/lib/constants";
+import { busyVehicleIds, vehicleState } from "@/lib/reservations";
 import { formatCurrency, formatDate, formatNumber, todaySP } from "@/lib/utils";
 import type { FleetVehicle, VehicleStatus } from "@/types";
 
@@ -52,7 +53,8 @@ export default function DashboardPage() {
 
   const view = useMemo(() => {
     if (!data) return null;
-    const count = (s: VehicleStatus) => data.vehicles.filter((v) => v.status === s).length;
+    const busy = busyVehicleIds(data.rentals);
+    const count = (s: VehicleStatus) => data.vehicles.filter((v) => vehicleState(v, busy) === s).length;
     const months = defaultMonths();
     const series = monthlySeries(data, months);
 
@@ -81,6 +83,7 @@ export default function DashboardPage() {
         .filter((r) => r.endDate >= today && r.status !== "cancelled" && r.status !== "completed")
         .sort((a, b) => a.startDate.localeCompare(b.startDate))
         .slice(0, 5),
+      busy,
       recentRentals: [...data.rentals].sort((a, b) => b.startDate.localeCompare(a.startDate)).slice(0, 5),
     };
   }, [data, settings, today, range]);
@@ -223,7 +226,7 @@ export default function DashboardPage() {
                       </div>
                     </td>
                     <td className="py-3 pr-3">
-                      <StatusBadge map={VEHICLE_STATUS} value={v.status} />
+                      <StatusBadge map={VEHICLE_STATUS} value={vehicleState(v, view.busy)} />
                     </td>
                     <td className="py-3 pr-3 text-right tabular-nums text-zinc-300">
                       {info.purchaseValue ? formatCurrency(info.purchaseValue) : "—"}
