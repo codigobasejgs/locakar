@@ -1,7 +1,7 @@
 import { FAQ, PLATFORM } from "@/components/platform-landing/content";
 import { PlatformFooter } from "@/components/platform-landing/footer";
 import { PlatformHeader } from "@/components/platform-landing/interactive";
-import { Automations, BeforeAfter, Bento, Copilot, Faq, FinalCta, Hero, Plans, Security, TrustBar, WhiteLabelApp, WhiteLabelPanel } from "@/components/platform-landing/sections";
+import { Automations, BeforeAfter, Bento, Copilot, Faq, FinalCta, Hero, Plans, Security, TrustBar, VideoTour, WhiteLabelApp, WhiteLabelPanel } from "@/components/platform-landing/sections";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -42,6 +42,7 @@ export default function PlatformPage() {
       <main id="conteudo">
         <Hero />
         <TrustBar />
+        <VideoTour />
         <Bento />
         <Copilot />
         <Automations />

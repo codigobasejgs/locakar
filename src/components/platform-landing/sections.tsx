@@ -102,6 +102,48 @@ export function Hero() {
   );
 }
 
+/* ---------- Vídeo de apresentação ---------- */
+
+// ponytail: sem autoplay e com preload="none" (8 MB só baixam no play); legenda .vtt quando houver narração transcrita.
+export function VideoTour() {
+  const points = ["App do locatário com Pix e parcelas", "Copiloto respondendo no WhatsApp", "CRLV-e e Tabela FIPE para carros e motos"];
+  return (
+    <section id="video" aria-labelledby="fe-video" className="relative overflow-hidden py-24 sm:py-32">
+      <div className="fe-glow-soft pointer-events-none absolute right-[-10rem] top-1/2 size-[40rem] -translate-y-1/2" aria-hidden="true" />
+      <Container className="relative grid items-center gap-12 lg:grid-cols-2">
+        <div>
+          <Heading eyebrow="Tour em 15 segundos" id="fe-video" title={<>Veja o Frota Easy <span className="fe-gradient-text">em ação</span>.</>} text="Do aplicativo do seu cliente ao Copiloto no WhatsApp: tudo o que a sua locadora ganha, em menos de um minuto." />
+          <ul className="mt-8 grid gap-3">
+            {points.map((p) => (
+              <li key={p} className="fe-text-2 flex items-center gap-3 text-[15px]">
+                <Check className="size-4 shrink-0 text-[var(--fe-accent-text)]" aria-hidden="true" /> {p}
+              </li>
+            ))}
+          </ul>
+          <TrackedLink href={PLATFORM.signup} event="hero_cta_clicked" params={{ place: "video" }} className="fe-btn fe-btn-primary mt-9">
+            Testar grátis por {PLATFORM.trialDays} dias <ArrowRight className="size-4" aria-hidden="true" />
+          </TrackedLink>
+        </div>
+        <Reveal className="mx-auto w-full max-w-[340px]">
+          <div className="overflow-hidden rounded-[2rem] border border-[var(--fe-line-strong)] bg-[#0e0e14] shadow-[0_40px_100px_-30px_rgb(122_0_255/0.6)]">
+            <video
+              className="block aspect-[9/16] h-auto w-full bg-[#0e0e14]"
+              src="/video/frota-easy-tour.mp4"
+              poster="/video/frota-easy-tour-poster.webp"
+              width={1080}
+              height={1920}
+              controls
+              playsInline
+              preload="none"
+              aria-label="Vídeo de apresentação do Frota Easy: app do locatário, Copiloto no WhatsApp e cadastro de veículos com CRLV-e e FIPE"
+            />
+          </div>
+        </Reveal>
+      </Container>
+    </section>
+  );
+}
+
 /* ---------- Faixa de confiança ---------- */
 
 export function TrustBar() {
