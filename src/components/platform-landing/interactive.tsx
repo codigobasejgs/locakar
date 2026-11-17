@@ -1,12 +1,12 @@
 "use client";
 
-import { Menu, Moon, Sun, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { track, type TrackEvent } from "@/lib/track";
 import { cn } from "@/lib/utils";
-import { NAV, PLATFORM, WA } from "./content";
+import { NAV, PLATFORM } from "./content";
 
 /** Link com evento de analytics. Externo abre em nova aba. */
 export function TrackedLink({
@@ -54,120 +54,108 @@ export function ViewTracker({ event }: { event: TrackEvent }) {
   return <span ref={ref} aria-hidden="true" />;
 }
 
-const THEME_KEY = "plataforma-theme";
-
-function applyTheme(theme: "light" | "dark" | null) {
-  const el = document.querySelector<HTMLElement>(".pl");
-  if (!el) return;
-  if (theme) el.dataset.theme = theme;
-  else delete el.dataset.theme;
+export function BrandLogo({ className, priority }: { className?: string; priority?: boolean }) {
+  return <Image src="/brand/frotaeasy/logo-horizontal-dark.webp" alt={`${PLATFORM.name} — ${PLATFORM.slogan}`} width={820} height={217} priority={priority} className={cn("h-auto", className)} />;
 }
 
-function resolvedTheme(): "light" | "dark" {
-  const set = document.querySelector<HTMLElement>(".pl")?.dataset.theme;
-  if (set === "light" || set === "dark") return set;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-export function PlatformHeader() {
+/** Cabeçalho fixo em vidro. Âncoras (#) funcionam na própria landing; nas páginas legais voltam para "/". */
+export function PlatformHeader({ home = "/" }: { home?: string }) {
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
-
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    let saved: string | null = null;
-    try {
-      saved = localStorage.getItem(THEME_KEY);
-    } catch {
-      /* armazenamento indisponível */
-    }
-    if (saved === "light" || saved === "dark") applyTheme(saved);
-    const id = requestAnimationFrame(() => setTheme(resolvedTheme()));
-    return () => cancelAnimationFrame(id);
+    const on = () => setScrolled(window.scrollY > 8);
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
   }, []);
-
-  const toggle = () => {
-    const next = resolvedTheme() === "dark" ? "light" : "dark";
-    applyTheme(next);
-    setTheme(next);
-    try {
-      localStorage.setItem(THEME_KEY, next);
-    } catch {
-      /* armazenamento indisponível */
-    }
-  };
+  const anchor = (h: string) => (home === "/" || home === "/plataforma" ? h : `${home}${h}`);
 
   return (
-    <header className="pl-glass sticky top-0 z-50 border-x-0 border-t-0" style={{ top: "env(safe-area-inset-top, 0px)" }}>
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
-        <Link href="/plataforma" className="flex shrink-0 items-center gap-2.5" aria-label={`${PLATFORM.name} — início`}>
-          <Image src="/plataforma/mark.svg" alt="" width={32} height={32} className="size-8" />
-          <span className="font-display text-[15px] font-semibold tracking-tight">
-            LOCAKAR <span className="pl-accent">SaaS</span>
-          </span>
+    <header className={cn("sticky top-0 z-50 transition-colors", scrolled ? "fe-glass" : "border-b border-transparent")} style={{ top: "env(safe-area-inset-top, 0px)" }}>
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:h-[72px] sm:px-6">
+        <Link href={home} className="shrink-0 rounded-lg" aria-label={`${PLATFORM.name} — início`}>
+          <BrandLogo priority className="w-[132px] sm:w-[150px]" />
         </Link>
 
-        <nav aria-label="Seções" className="ml-4 hidden items-center gap-5 lg:flex">
+        <nav aria-label="Seções" className="ml-6 hidden items-center gap-1 xl:flex">
           {NAV.map((n) => (
-            <a key={n.href} href={n.href} className="pl-text-2 text-sm font-medium hover:text-[var(--pl-accent)]">
+            <a key={n.href} href={anchor(n.href)} className="fe-text-2 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors hover:text-white">
               {n.label}
             </a>
           ))}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={toggle}
-            className="pl-btn-ghost inline-flex size-10 items-center justify-center rounded-lg border"
-            aria-label={theme === "dark" ? "Usar tema claro" : "Usar tema escuro"}
-          >
-            {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-          </button>
-          <Link href="/admin/login" className="pl-btn pl-btn-ghost hidden !min-h-10 lg:inline-flex">
-            Área do Locador
+          <Link href={PLATFORM.login} className="fe-btn fe-btn-ghost hidden !min-h-11 !px-5 !text-sm md:inline-flex">
+            Entrar no Sistema
           </Link>
-          <Link href="/plataforma/cadastro" className="pl-btn pl-btn-primary hidden !min-h-10 lg:inline-flex">
-            Criar minha locadora
-          </Link>
+          <TrackedLink href={PLATFORM.signup} event="hero_cta_clicked" params={{ place: "header" }} className="fe-btn fe-btn-primary hidden !min-h-11 !px-5 !text-sm sm:inline-flex">
+            Testar Frota Easy
+          </TrackedLink>
           <button
             type="button"
             onClick={() => setOpen(!open)}
-            className="pl-btn-ghost inline-flex size-10 items-center justify-center rounded-lg border lg:hidden"
+            className="fe-btn-ghost inline-flex size-11 items-center justify-center rounded-full border xl:hidden"
             aria-expanded={open}
-            aria-controls="pl-menu"
+            aria-controls="fe-menu"
             aria-label={open ? "Fechar menu" : "Abrir menu"}
           >
-            {open ? <X className="size-5" /> : <Menu className="size-5" />}
+            {open ? <X className="size-5" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
           </button>
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-6xl flex-wrap gap-2 px-4 pb-3 sm:px-6 lg:hidden">
-        <Link href="/admin/login" className="pl-btn pl-btn-ghost !min-h-10 flex-1">
-          Área do Locador
-        </Link>
-        <Link href="/plataforma/cadastro" className="pl-btn pl-btn-primary !min-h-10 flex-1">
-          Criar minha locadora
-        </Link>
-      </div>
-
-      <nav id="pl-menu" aria-label="Seções" className={cn("border-t pl-line px-4 pb-4 lg:hidden", !open && "hidden")}>
-        <ul className="mx-auto grid max-w-6xl gap-1 pt-2">
+      <nav id="fe-menu" aria-label="Seções" className={cn("fe-glass border-t px-4 pb-5 xl:hidden", !open && "hidden")}>
+        <ul className="mx-auto grid max-w-7xl gap-1 pt-2">
           {NAV.map((n) => (
             <li key={n.href}>
-              <a href={n.href} onClick={() => setOpen(false)} className="pl-text-2 block rounded-lg px-2 py-2.5 font-medium">
+              <a href={anchor(n.href)} onClick={() => setOpen(false)} className="fe-text-2 flex min-h-11 items-center rounded-lg px-2 font-medium hover:text-white">
                 {n.label}
               </a>
             </li>
           ))}
-          <li className="pt-2 sm:hidden">
-            <TrackedLink href={WA.know} event="hero_cta_clicked" params={{ place: "menu" }} className="pl-btn pl-btn-primary w-full">
-              Quero conhecer o sistema
-            </TrackedLink>
+          <li className="mt-3 grid gap-2 sm:grid-cols-2">
+            <Link href={PLATFORM.login} className="fe-btn fe-btn-ghost">Entrar no Sistema</Link>
+            <TrackedLink href={PLATFORM.signup} event="hero_cta_clicked" params={{ place: "menu" }} className="fe-btn fe-btn-primary">Testar Frota Easy</TrackedLink>
           </li>
         </ul>
       </nav>
     </header>
+  );
+}
+
+const SHOWCASE = [
+  { id: "dash", label: "Dashboard", img: "/plataforma/dashboard-dark.webp", w: 1600, h: 1000, alt: "Dashboard executivo com frota disponível, alugados, faturamento, atrasos e lucro líquido", caption: "Indicadores da operação em tempo real: ocupação, faturamento, atrasos e lucro líquido por veículo." },
+  { id: "fleet", label: "Frota + FIPE", img: "/plataforma/vehicles-dark.webp", w: 1600, h: 1000, alt: "Cadastro da frota com placas, status e valor FIPE de cada veículo", caption: "Cadastro pelo CRLV-e com valor FIPE automático, documentos, fotos, hodômetro, IPVA e licenciamento." },
+  { id: "rentals", label: "Locações", img: "/plataforma/rentals-dark.webp", w: 1600, h: 1000, alt: "Lista de locações com status, períodos e parcelas", caption: "Locações com parcelas, multa e juros automáticos, contrato e vistoria em um só lugar." },
+  { id: "finance", label: "Financeiro", img: "/plataforma/finance-dark.webp", w: 1600, h: 1000, alt: "Financeiro com recebimentos, despesas e resultado", caption: "Recebimentos, despesas e resultado do período, com baixa automática pelos meios de pagamento." },
+  { id: "reports", label: "Relatórios", img: "/plataforma/reports-dark.webp", w: 1600, h: 1000, alt: "Relatórios gerenciais com gráficos por período", caption: "Relatórios por período, veículo e cliente para decidir com números." },
+] as const;
+
+/** Vitrine do produto com abas (telas reais do painel, dados fictícios). */
+export function ProductShowcase() {
+  const [active, setActive] = useState<(typeof SHOWCASE)[number]["id"]>("dash");
+  const current = SHOWCASE.find((s) => s.id === active)!;
+  return (
+    <div className="grid gap-5">
+      <div role="tablist" aria-label="Telas do sistema" className="mx-auto flex max-w-full flex-wrap justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] p-1.5">
+        {SHOWCASE.map((s) => (
+          <button key={s.id} id={`fe-tab-${s.id}`} type="button" role="tab" aria-selected={active === s.id} aria-controls="fe-showcase" onClick={() => setActive(s.id)} className="fe-tab">
+            {s.label}
+          </button>
+        ))}
+      </div>
+      <div id="fe-showcase" role="tabpanel" aria-labelledby={`fe-tab-${current.id}`} className="fe-window">
+        <div className="fe-window-bar" aria-hidden="true">
+          <span /><span /><span />
+          <p className="fe-muted ml-3 truncate text-[11px]">app.frotaeasy.com.br/admin</p>
+        </div>
+        {SHOWCASE.map((s) => (
+          <Image key={s.id} src={s.img} alt={s.alt} width={s.w} height={s.h} sizes="(min-width: 1280px) 1100px, 100vw" loading={s.id === "dash" ? "eager" : "lazy"} className={cn("block h-auto w-full", s.id !== active && "hidden")} />
+        ))}
+      </div>
+      <p className="fe-text-2 mx-auto max-w-2xl text-center text-sm" aria-live="polite">{current.caption}</p>
+    </div>
   );
 }
 
@@ -185,61 +173,19 @@ export function BrandSwitcher() {
     <div className="grid gap-5">
       <div role="tablist" aria-label="Exemplos de marca" className="flex flex-wrap justify-center gap-2">
         {BRAND_VIEWS.map((b) => (
-          <button
-            key={b.id}
-            type="button"
-            role="tab"
-            aria-selected={active === b.id}
-            aria-controls="pl-brand-panel"
-            onClick={() => setActive(b.id)}
-            className={cn(
-              "inline-flex min-h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors",
-              active === b.id ? "pl-line-strong pl-surface pl-text" : "pl-line pl-muted",
-            )}
-          >
+          <button key={b.id} type="button" role="tab" aria-selected={active === b.id} aria-controls="fe-brand-panel" onClick={() => setActive(b.id)} className="fe-tab inline-flex items-center gap-2 border-white/10">
             <span className="size-3 rounded-full" style={{ background: b.color }} aria-hidden="true" />
             {b.name}
           </button>
         ))}
       </div>
-      <div id="pl-brand-panel" role="tabpanel" aria-label={`Painel com a marca ${current.name}`} className="relative">
+      <div id="fe-brand-panel" role="tabpanel" aria-label={`Painel com a marca ${current.name}`} className="fe-window">
         {BRAND_VIEWS.map((b) => (
-          <Image
-            key={b.id}
-            src={`/plataforma/${b.img}.webp`}
-            alt={`Dashboard do painel com logo e cores da locadora fictícia ${b.name}`}
-            width={1200}
-            height={750}
-            sizes="(min-width: 1024px) 960px, 100vw"
-            loading="lazy"
-            className={cn("pl-shadow h-auto w-full rounded-xl border pl-line", b.id !== active && "hidden")}
-          />
+          <Image key={b.id} src={`/plataforma/${b.img}.webp`} alt={`Painel com logo e cores da locadora fictícia ${b.name}`} width={1200} height={750} sizes="(min-width: 1024px) 760px, 100vw" loading="lazy" className={cn("block h-auto w-full", b.id !== active && "hidden")} />
         ))}
       </div>
-      <p className="pl-muted text-center text-xs">Locadoras e logos fictícios, criados só para esta demonstração.</p>
+      <p className="fe-muted text-center text-xs">Locadoras e logos fictícios, criados só para esta demonstração.</p>
     </div>
   );
 }
 
-/** Comparação lado a lado do tema claro e escuro, arrastando o divisor. */
-export function ThemeCompare() {
-  const [pos, setPos] = useState(50);
-  return (
-    <div className="pl-compare grid gap-4">
-      <div className="pl-shadow relative overflow-hidden rounded-xl border pl-line">
-        <Image src="/plataforma/dashboard-light.webp" alt="Dashboard no tema claro" width={1600} height={1000} sizes="(min-width: 1024px) 960px, 100vw" loading="lazy" className="block h-auto w-full" />
-        <div className="absolute inset-0" style={{ clipPath: `inset(0 0 0 ${pos}%)` }}>
-          <Image src="/plataforma/dashboard-dark.webp" alt="Dashboard no tema escuro" width={1600} height={1000} sizes="(min-width: 1024px) 960px, 100vw" loading="lazy" className="block h-auto w-full" />
-        </div>
-        <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-[var(--pl-accent)]" style={{ left: `${pos}%` }} aria-hidden="true" />
-        <span className="pl-glass pointer-events-none absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold">Claro</span>
-        <span className="pl-glass pointer-events-none absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold">Escuro</span>
-      </div>
-      <label className="pl-muted mx-auto flex w-full max-w-sm items-center gap-3 text-sm">
-        <Sun className="size-4 shrink-0" aria-hidden="true" />
-        <input type="range" min={0} max={100} value={pos} onChange={(e) => setPos(Number(e.target.value))} className="w-full" aria-label="Comparar tema claro e escuro" />
-        <Moon className="size-4 shrink-0" aria-hidden="true" />
-      </label>
-    </div>
-  );
-}

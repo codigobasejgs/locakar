@@ -144,10 +144,10 @@ export default function SuperAdminPage() {
       <div className="mx-auto max-w-6xl space-y-8">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-6">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-400">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#c79bff]">
               <ShieldCheck className="size-4" /> Super Admin da plataforma
             </div>
-            <h1 className="mt-1 font-display text-2xl font-bold">{PLATFORM.name}</h1>
+            <h1 className="mt-1 font-display text-2xl font-bold">Plataforma {PLATFORM.name}</h1>
             <p className="mt-1 text-xs text-muted">Todas as locadoras, planos, equipes e acessos.</p>
           </div>
           <div className="flex gap-2">

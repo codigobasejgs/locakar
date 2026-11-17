@@ -194,7 +194,7 @@ export default function PerfilScreen() {
         label="Central de Ajuda e Treinamento"
         variant="outline"
         icon={<HelpCircle color={colors.text} size={18} />}
-        onPress={() => Linking.openURL(`https://www.locakar.com.br/ajuda?org=${slug}`)}
+        onPress={() => Linking.openURL(`https://www.frotaeasy.com.br/ajuda?org=${slug}`)}
       />
 
       <Button

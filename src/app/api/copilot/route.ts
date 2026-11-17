@@ -11,7 +11,7 @@ import { isWhaileysEnabled, whaileysConnect, whaileysKnownPhones, whaileysLogout
 import { toWhatsAppNumber } from "@/lib/utils";
 
 /**
- * Copiloto LocaKar (painel). Somente dono/administrador (permissão "integrations").
+ * Copiloto Frota Easy (painel). Somente dono/administrador (permissão "integrations").
  * GET → configuração + estado da sessão Whaileys (QR/código de pareamento).
  * POST { action: save | connect | disconnect | test | simulate }.
  */

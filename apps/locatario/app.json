@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "br.com.locakar.locatario",
-      "associatedDomains": ["applinks:www.locakar.com.br"],
+      "associatedDomains": ["applinks:www.frotaeasy.com.br", "applinks:www.locakar.com.br"],
       "infoPlist": {
         "NSCameraUsageDescription": "A LOCAKAR usa a câmera quando você fotografa um comprovante, a vistoria do carro, uma ocorrência ou seus documentos.",
         "NSPhotoLibraryUsageDescription": "A LOCAKAR acessa a galeria quando você escolhe um comprovante, uma foto do carro ou um documento para enviar.",

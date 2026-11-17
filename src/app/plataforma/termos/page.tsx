@@ -38,7 +38,7 @@ export default function TermsPage() {
         <h2>4. Dados da locadora e dos locatários</h2>
         <p>
           A locadora é a controladora dos dados dos seus clientes e decide como usá-los. O {PLATFORM.name} trata esses dados apenas para operar o sistema, conforme a{" "}
-          <a href="/plataforma/privacidade" className="pl-link">
+          <a href="/plataforma/privacidade" className="fe-link">
             Política de Privacidade
           </a>
           .

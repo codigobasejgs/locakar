@@ -1,13 +1,14 @@
 "use client";
 
 import { Lock, Mail } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
-import { Logo } from "@/components/ui/logo";
 import { authService } from "@/lib/auth";
 import { ROUTES } from "@/lib/constants";
+import { PLATFORM } from "@/lib/platform";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
 
 /** Só aceita retorno para dentro do painel (evita redirecionamento aberto via ?next=). */
@@ -36,15 +37,16 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-ink px-4 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2.5rem,env(safe-area-inset-top))]">
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-[48rem] -translate-x-1/2 rounded-full bg-magenta/20 blur-[120px]" aria-hidden />
+    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-[#0B0B0F] px-4 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2.5rem,env(safe-area-inset-top))]">
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-[48rem] -translate-x-1/2 rounded-full bg-[#7A00FF]/25 blur-[120px]" aria-hidden />
       <div className="relative w-full max-w-sm">
         <div className="mb-8 flex justify-center">
-          <Logo priority className="w-44 logo-glow" />
+          {/* Login do sistema Frota Easy; depois de entrar, o painel assume o white label da locadora. */}
+          <Image src="/brand/frotaeasy/logo-full-dark.webp" alt={`${PLATFORM.name} — ${PLATFORM.slogan}`} width={900} height={671} priority className="h-auto w-48" />
         </div>
         <div className="rounded-3xl border border-line-strong bg-panel/80 p-6 shadow-2xl shadow-black/50 backdrop-blur-xl sm:p-8">
           <h1 className="font-display text-xl font-semibold">Acesso ao painel</h1>
-          <p className="mt-1 text-sm text-muted">Entre com suas credenciais de administrador.</p>
+          <p className="mt-1 text-sm text-muted">Área do locador · entre com o e-mail da sua equipe.</p>
 
           <form onSubmit={submit} className="mt-6 space-y-4">
             <Field label="E-mail" htmlFor="email">
@@ -76,8 +78,8 @@ export default function LoginPage() {
           )}
         </div>
         <p className="mt-6 text-center text-sm">
-          <Link href={ROUTES.home} className="text-muted hover:text-white">
-            ← Voltar ao site
+          <Link href="/" className="text-muted hover:text-white">
+            ← Voltar ao site da {PLATFORM.name}
           </Link>
         </p>
       </div>

@@ -4,16 +4,16 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { APP_NAMES, PWA } from "@/lib/pwa";
 
 export const metadata: Metadata = {
-  title: { default: "Painel", template: "%s · Painel LOCAKAR" },
+  title: { default: "Painel", template: "%s · Frota Easy" },
   robots: { index: false, follow: false },
-  // App instalável separado: "LOCAKAR Gestão", escopo /admin/.
+  // App instalável separado: "Frota Easy", escopo /admin/.
   manifest: PWA.adminManifest,
   applicationName: APP_NAMES.admin.short,
   appleWebApp: { title: APP_NAMES.admin.short },
   // Declarar `icons` aqui substitui os herdados do layout raiz: o favicon precisa vir junto.
   icons: {
-    icon: [{ url: "/icon.png", sizes: "96x96", type: "image/png" }],
-    apple: [{ url: "/icons/admin-180.png", sizes: "180x180", type: "image/png" }],
+    icon: [{ url: "/brand/frotaeasy/favicon-48.png", sizes: "48x48", type: "image/png" }],
+    apple: [{ url: "/brand/frotaeasy/admin-180.png", sizes: "180x180", type: "image/png" }],
   },
 };
 

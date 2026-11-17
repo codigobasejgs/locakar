@@ -61,7 +61,7 @@ export default function CadastroScreen() {
     const redirectUrl =
       Platform.OS === "web" && typeof window !== "undefined"
         ? `${window.location.origin}/locatario?org=${currentOrgSlug()}`
-        : `https://www.locakar.com.br/locatario?org=${currentOrgSlug()}`;
+        : `https://www.frotaeasy.com.br/locatario?org=${currentOrgSlug()}`;
 
     const { data: signUpData, error: err } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),

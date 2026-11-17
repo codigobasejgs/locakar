@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 import { SUPABASE_URL } from "./src/lib/supabase/env";
 
+// Frota Easy (o SaaS) em frotaeasy.com.br; a locadora LOCAKAR segue com o site dela em locakar.com.br.
+const PLATFORM_HOST = String.raw`(?:www\.)?frotaeasy\.com\.br`;
+const LOCAKAR_HOST = String.raw`(?:www\.)?locakar\.com\.br`;
+
 const nextConfig: NextConfig = {
   // Evita que um package-lock.json em pasta-pai seja tomado como raiz do workspace.
   turbopack: { root: process.cwd() },
@@ -16,11 +20,24 @@ const nextConfig: NextConfig = {
     "/api/email": ["./public/logos/locakar-logo-light.png"],
     "/api/sign": ["./public/logos/locakar-logo-light.png"],
   },
-  async rewrites() {
+  async redirects() {
     return [
-      // SPA do App do Locatário (Expo web export): rotas internas /locatario/* servem o index.html.
-      { source: "/locatario/:path*", destination: "/locatario/index.html" },
+      // A landing do sistema mudou de casa: locakar.com.br/plataforma → frotaeasy.com.br (cadastro, termos e Super Admin continuam abrindo onde estão).
+      { source: "/plataforma", has: [{ type: "host", value: LOCAKAR_HOST }], destination: "https://www.frotaeasy.com.br/", permanent: true },
+      // Domínio sem www → com www (um endereço canônico para SEO e cookies de sessão).
+      { source: "/:path*", has: [{ type: "host", value: "frotaeasy.com.br" }], destination: "https://www.frotaeasy.com.br/:path*", permanent: true },
     ];
+  },
+  async rewrites() {
+    return {
+      // Raiz de frotaeasy.com.br mostra a landing da Frota Easy (o "/" de locakar.com.br continua sendo o site da locadora).
+      beforeFiles: [{ source: "/", has: [{ type: "host", value: PLATFORM_HOST }], destination: "/plataforma" }],
+      afterFiles: [
+        // SPA do App do Locatário (Expo web export): rotas internas /locatario/* servem o index.html.
+        { source: "/locatario/:path*", destination: "/locatario/index.html" },
+      ],
+      fallback: [],
+    };
   },
   async headers() {
     return [

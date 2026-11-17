@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { brandWarnings, isHex } from "@/lib/contrast";
 import { INVITABLE_ROLES, type Permission } from "@/lib/permissions";
-import { globalDb, loadOrg, scoped } from "@/lib/server/org-context";
+import { globalDb, loadOrg, scoped, siteUrl } from "@/lib/server/org-context";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import type { OrgBranding, OrgRole, OrgTexts } from "@/types";
 
@@ -134,7 +134,7 @@ export const POST = scoped(async function POST(request: Request) {
         .select("id, email, role, expires_at")
         .single();
       if (error) throw new HttpError(500, error.message);
-      const link = `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.locakar.com.br"}/convite/${token}`;
+      const link = `${siteUrl()}/convite/${token}`;
       return Response.json({ ok: true, invite: inv, link });
     }
 

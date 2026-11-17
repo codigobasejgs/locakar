@@ -7,17 +7,17 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "env": { "EXPO_PUBLIC_API_URL": "https://www.locakar.com.br" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://www.frotaeasy.com.br" }
     },
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://www.locakar.com.br" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://www.frotaeasy.com.br" }
     },
     "production": {
       "autoIncrement": true,
       "android": { "buildType": "app-bundle" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://www.locakar.com.br" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://www.frotaeasy.com.br" }
     }
   },
   "submit": {

@@ -1,7 +1,7 @@
-import Image from "next/image";
+import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { PLATFORM, WA } from "./content";
-import { TrackedLink } from "./interactive";
+import { BrandLogo, TrackedLink } from "./interactive";
 
 export function PlatformFooter() {
   const year = new Date().getFullYear();
@@ -9,18 +9,19 @@ export function PlatformFooter() {
     {
       title: "Produto",
       links: [
-        { href: "/plataforma#produto", label: "Visão geral" },
-        { href: "/plataforma#funcionalidades", label: "Funcionalidades" },
-        { href: "/plataforma#app", label: "App do locatário" },
-        { href: "/plataforma#planos", label: "Planos" },
+        { href: "/#funcionalidades", label: "Funcionalidades" },
+        { href: "/#copiloto", label: "Copiloto WhatsApp" },
+        { href: "/#automacoes", label: "Automações" },
+        { href: "/#app", label: "App do Locatário" },
+        { href: "/#planos", label: "Planos" },
       ],
     },
     {
-      title: "Plataforma",
+      title: "Acesso",
       links: [
-        { href: "/plataforma#integracoes", label: "Integrações" },
-        { href: "/plataforma#seguranca", label: "Segurança" },
-        { href: "/plataforma#faq", label: "Perguntas frequentes" },
+        { href: PLATFORM.login, label: "Entrar no Sistema" },
+        { href: PLATFORM.signup, label: "Criar minha locadora" },
+        { href: "/#faq", label: "Perguntas frequentes" },
       ],
     },
     {
@@ -32,30 +33,32 @@ export function PlatformFooter() {
     },
   ];
   return (
-    <footer className="pl-surface border-t pl-line">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <footer className="border-t border-white/[0.07] bg-[var(--fe-bg-2)]">
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-[1.5fr_repeat(3,1fr)] lg:px-8">
         <div>
-          <Link href="/plataforma" className="inline-flex items-center gap-2.5">
-            <Image src="/plataforma/mark.svg" alt="" width={32} height={32} className="size-8" />
-            <span className="font-display font-semibold">
-              LOCAKAR <span className="pl-accent">SaaS</span>
-            </span>
+          <Link href="/" className="inline-block rounded-lg" aria-label={`${PLATFORM.name} — início`}>
+            <BrandLogo className="w-[170px]" />
           </Link>
-          <p className="pl-muted mt-4 max-w-xs text-sm leading-relaxed">Sistema de gestão para locadoras de veículos, com aplicativo para o locatário na marca da sua locadora.</p>
-          <p className="pl-text-2 mt-5 text-sm">
-            Contato:{" "}
-            <TrackedLink href={WA.know} event="whatsapp_clicked" params={{ place: "footer" }} className="pl-link">
+          <p className="fe-muted mt-5 max-w-xs text-sm leading-relaxed">
+            {PLATFORM.name} — {PLATFORM.slogan}. Frota, contratos, cobranças, Copiloto no WhatsApp e app do locatário com a marca da sua locadora.
+          </p>
+          <p className="fe-text-2 mt-5 text-sm">
+            Comercial:{" "}
+            <TrackedLink href={WA.know} event="whatsapp_clicked" params={{ place: "footer" }} className="fe-link">
               WhatsApp {PLATFORM.whatsapp.display}
             </TrackedLink>
+          </p>
+          <p className="fe-muted mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-xs">
+            <ShieldCheck className="size-4 text-[var(--fe-ok)]" aria-hidden="true" /> Dados isolados por locadora · LGPD
           </p>
         </div>
         {cols.map((c) => (
           <nav key={c.title} aria-label={c.title}>
-            <h2 className="pl-eyebrow">{c.title}</h2>
-            <ul className="mt-4 grid gap-2.5">
+            <h2 className="fe-eyebrow">{c.title}</h2>
+            <ul className="mt-5 grid gap-1">
               {c.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="pl-text-2 text-sm hover:text-[var(--pl-accent)]">
+                  <Link href={l.href} className="fe-text-2 inline-flex min-h-9 items-center text-sm hover:text-white">
                     {l.label}
                   </Link>
                 </li>
@@ -64,9 +67,9 @@ export function PlatformFooter() {
           </nav>
         ))}
       </div>
-      <div className="border-t pl-line">
-        <p className="pl-muted mx-auto max-w-6xl px-4 py-5 text-xs sm:px-6">
-          © {year} {PLATFORM.name}. Telas com dados fictícios de demonstração.
+      <div className="border-t border-white/[0.07]">
+        <p className="fe-muted mx-auto max-w-7xl px-4 py-6 text-xs sm:px-6 lg:px-8">
+          © {year} {PLATFORM.name}. Todos os direitos reservados. Telas com dados fictícios de demonstração.
         </p>
       </div>
     </footer>

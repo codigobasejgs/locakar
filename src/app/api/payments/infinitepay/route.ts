@@ -1,5 +1,5 @@
 import { infinitePayState } from "@/lib/payment-methods";
-import { COMPANY } from "@/lib/company";
+import { PLATFORM } from "@/lib/platform";
 import {
   buildTapDeeplink,
   isValidOrderId,
@@ -25,7 +25,7 @@ import { brand, scoped } from "@/lib/server/org-context";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || COMPANY.siteUrl).replace(/\/+$/, "");
+const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || PLATFORM.siteUrl).replace(/\/+$/, "");
 const PUBLIC_COLS =
   "id,flow,rental_id,receipt_id,client_id,amount_cents,method,installments,status,handle,checkout_url,invoice_slug,transaction_nsu,capture_method,paid_amount_cents,receipt_url,nsu,authorization_code,card_brand,merchant_document,warning,last_error,created_at,updated_at,paid_at";
 

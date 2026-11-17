@@ -1,17 +1,18 @@
 import type { MetadataRoute } from "next";
 import { ROUTES } from "@/lib/constants";
-import { APP_NAMES, PWA } from "@/lib/pwa";
+import { APP_NAMES } from "@/lib/pwa";
 
 export const dynamic = "force-static";
 
 /** Manifest do sistema de gestão: app separado, com escopo "/admin" e ícone próprio. */
 export function GET() {
-  const icon = (size: number) => ({ src: `/icons/admin-${size}.png`, sizes: `${size}x${size}`, type: "image/png" });
+  const icon = (size: number) => ({ src: `/brand/frotaeasy/admin-${size}.png`, sizes: `${size}x${size}`, type: "image/png" });
+  const maskable = (size: number) => ({ src: `/brand/frotaeasy/maskable-${size}.png`, sizes: `${size}x${size}`, type: "image/png", purpose: "maskable" as const });
   const manifest: MetadataRoute.Manifest = {
     id: "/admin/",
     name: APP_NAMES.admin.name,
     short_name: APP_NAMES.admin.short,
-    description: "Sistema de gestão da LOCAKAR: frota, locações, reservas e financeiro.",
+    description: "Frota Easy — sistema de gestão para locadoras: frota, locações, cobranças, contratos e financeiro.",
     lang: "pt-BR",
     dir: "ltr",
     start_url: `${ROUTES.admin}?source=pwa`,
@@ -20,15 +21,15 @@ export function GET() {
     display: "standalone",
     display_override: ["window-controls-overlay", "standalone"],
     orientation: "any",
-    theme_color: PWA.themeColor,
-    background_color: PWA.backgroundColor,
+    theme_color: "#0B0B0F",
+    background_color: "#0B0B0F",
     categories: ["business", "productivity", "finance"],
     launch_handler: { client_mode: ["navigate-existing", "auto"] },
     icons: [
       { ...icon(192), purpose: "any" },
       { ...icon(512), purpose: "any" },
-      { ...icon(192), purpose: "maskable" },
-      { ...icon(512), purpose: "maskable" },
+      maskable(192),
+      maskable(512),
     ],
     shortcuts: [
       { name: "Nova locação", short_name: "Locações", url: ROUTES.rentals, icons: [icon(192)] },

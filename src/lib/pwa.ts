@@ -3,6 +3,7 @@
  * Dois apps instaláveis: o site (escopo "/") e o sistema de gestão (escopo "/admin").
  */
 import { COMPANY } from "./company";
+import { PLATFORM } from "./platform";
 
 export const PWA = {
   themeColor: "#050505",
@@ -45,5 +46,6 @@ export function appleStartupImages() {
 
 export const APP_NAMES = {
   site: { name: `${COMPANY.name} — Locadora de Veículos`, short: COMPANY.name },
-  admin: { name: `${COMPANY.name} Gestão`, short: "LOCAKAR Gestão" },
+  // Painel de gestão é o sistema Frota Easy (a marca de cada locadora aparece dentro dele, pelo white label).
+  admin: { name: `${PLATFORM.name} — ${PLATFORM.slogan}`, short: PLATFORM.name },
 } as const;

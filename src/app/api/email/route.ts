@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { COMPANY } from "@/lib/company";
 import { FUEL_LABEL } from "@/lib/contract";
+import { PLATFORM } from "@/lib/platform";
 import { contractPdf, inspectionPdf } from "@/lib/pdf";
 import { emailLayout, sendEmail } from "@/lib/server/email";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
@@ -45,7 +46,8 @@ interface Message {
 
 export const maxDuration = 60;
 
-const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || COMPANY.siteUrl;
+// Links do sistema (assinatura, app) usam o endereço da plataforma; o rodapé do WhatsApp segue com a locadora.
+const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || PLATFORM.siteUrl).replace(/\/+$/, "");
 const first = (name: string) => name.split(" ")[0];
 const WA_FOOTER = `\n\n_${COMPANY.name} · ${COMPANY.site}_`;
 

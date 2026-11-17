@@ -49,9 +49,12 @@ export function clientIp(request: Request) {
 }
 
 /** CORS do app: builds nativos não enviam Origin; no navegador (Expo web) libera só localhost. */
+const ALLOWED_ORIGINS = new Set(["https://www.frotaeasy.com.br", "https://frotaeasy.com.br", "https://www.locakar.com.br", "https://locakar.com.br"]);
+
 export function corsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get("origin");
-  const allowed = Boolean(origin && (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || origin === "https://www.locakar.com.br" || origin === "https://locakar.com.br"));
+  // App web em frotaeasy.com.br (novo) e locakar.com.br (instalações antigas continuam funcionando).
+  const allowed = Boolean(origin && (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || ALLOWED_ORIGINS.has(origin)));
   if (!origin || !allowed) return {};
   return {
     "Access-Control-Allow-Origin": origin,

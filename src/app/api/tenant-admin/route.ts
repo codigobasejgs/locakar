@@ -1,4 +1,3 @@
-import { COMPANY } from "@/lib/company";
 import { RISK_FACTOR_LABEL, riskLevel } from "@/lib/antifraud";
 import { buildReceipts } from "@/lib/billing";
 import { buildContractText } from "@/lib/contract";
@@ -9,7 +8,7 @@ import { audit, clientIp } from "@/lib/server/tenant";
 import { sendWhatsApp } from "@/lib/server/whatsapp";
 import { DOCUMENT_KIND, INCIDENT_CATEGORY, INCIDENT_STATUS } from "@/lib/tenant";
 import { formatCurrency, formatDate, newId } from "@/lib/utils";
-import { brand, scoped } from "@/lib/server/org-context";
+import { brand, scoped, siteUrl } from "@/lib/server/org-context";
 
 /**
  * Painel ↔ App do Locatário. Somente equipe.
@@ -360,7 +359,7 @@ export const POST = scoped(async function POST(request: Request) {
 
       await audit({ actorType: "staff", actorId: reviewer, action: "rental_request.approved", entity: "rental_requests", entityId: id, details: { rentalId, contractId }, ip });
 
-      const signUrl = `${COMPANY.siteUrl}/assinar/${token}`;
+      const signUrl = `${siteUrl()}/assinar/${token}`;
       await sendPushToClient(client.id, {
         title: "Locação aprovada!",
         body: `Parabéns, ${client.name}! Sua solicitação do ${vehicle.name} foi aprovada. Assine o contrato para retirar o carro.`,

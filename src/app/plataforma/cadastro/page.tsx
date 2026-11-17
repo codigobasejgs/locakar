@@ -1,6 +1,7 @@
 "use client";
 
-import { Building2, CheckCircle2, Sparkles } from "lucide-react";
+import { CheckCircle2, Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -79,14 +80,11 @@ export default function CadastroPlataformaPage() {
   };
 
   return (
-    <main className="grid min-h-dvh place-items-center bg-ink px-4 py-12 text-white">
+    <main className="grid min-h-dvh place-items-center bg-[#0B0B0F] px-4 py-12 text-white">
       <div className="w-full max-w-md">
         <div className="text-center">
-          <Link href="/plataforma" className="inline-flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-            <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 text-white shadow-lg">
-              <Building2 className="size-5" />
-            </span>
-            <span>{PLATFORM.name}</span>
+          <Link href="/" className="inline-block rounded-lg" aria-label={`${PLATFORM.name} — início`}>
+            <Image src="/brand/frotaeasy/logo-horizontal-dark.webp" alt={`${PLATFORM.name} — ${PLATFORM.slogan}`} width={820} height={217} priority className="h-auto w-48" />
           </Link>
           <h1 className="mt-6 font-display text-2xl font-bold">Comece seu teste grátis</h1>
           <p className="mt-2 text-sm text-zinc-400">
