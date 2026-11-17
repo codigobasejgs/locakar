@@ -8,7 +8,7 @@
  * Web Push (VAPID): evento "push" mostra a notificação; clique abre a tela certa do painel.
  * Troque VERSION a cada mudança relevante neste arquivo.
  */
-const VERSION = "v7";
+const VERSION = "v8";
 const PAGES = `locakar-pages-${VERSION}`;
 const STATIC = `locakar-static-${VERSION}`;
 const MEDIA = `locakar-media-${VERSION}`;
@@ -111,11 +111,20 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // WhatsApp, Instagram, Google Fonts CSS: sempre rede
   if (request.headers.has("range") || url.pathname.startsWith("/video/")) return;
-  if (url.pathname === "/sw.js" || url.pathname.startsWith("/api/")) return;
+  if (url.pathname === "/sw.js" || url.pathname.startsWith("/api/") || url.pathname.startsWith("/pwa/")) return;
   // App do Locatário: consome preloadResponse no navigate para evitar cancelamento e passa direto para a rede.
   if (url.pathname.startsWith("/locatario")) {
     if (request.mode === "navigate") {
-      event.respondWith((async () => (await event.preloadResponse) || fetch(event.request))());
+      // Offline: o app instalado abre a tela "sem conexão" em vez do erro do navegador.
+      event.respondWith(
+        (async () => {
+          try {
+            return (await event.preloadResponse) || (await fetch(event.request));
+          } catch {
+            return (await caches.match(OFFLINE_URL)) || new Response("Sem conexão.", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+          }
+        })(),
+      );
     }
     return;
   }

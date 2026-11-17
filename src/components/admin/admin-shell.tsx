@@ -7,13 +7,12 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Toaster } from "sonner";
 import { DropdownMenu } from "radix-ui";
-import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
 import { AdminDataProvider, useAdminData } from "@/hooks/use-admin-data";
 import { BrandingStyle, OrganizationProvider } from "@/hooks/use-organization";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useTheme } from "@/hooks/use-theme";
-import { OrgBrandLogo, OrgStatusBanner, OrgSwitcher } from "./org-ui";
+import { OrgBrandLogo, OrgInstallButton, OrgStatusBanner, OrgSwitcher } from "./org-ui";
 import { buildAlerts } from "@/lib/analytics";
 import { authService } from "@/lib/auth";
 import { CATEGORY_LABEL, unreadCount } from "@/lib/push-events";
@@ -63,7 +62,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function SidebarFooter() {
-  return <div className="border-t border-line p-3"><InstallButton appName="Gestão" size="sm" variant="ghost" label="Instalar app de gestão" className="w-full justify-start px-3 sm:hidden" /></div>;
+  return <div className="border-t border-line p-3"><OrgInstallButton size="sm" variant="ghost" label="Instalar app de gestão" className="w-full justify-start px-3 sm:hidden" /></div>;
 }
 
 function UserMenu({ email }: { email: string | null }) {
@@ -254,7 +253,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         <span className="mx-2 text-zinc-600">/</span>
         <span className="font-medium text-white">{item.label}</span>
       </nav>
-      <InstallButton appName="LOCAKAR Gestão" size="sm" variant="ghost" label="Instalar" className="hidden sm:inline-flex" />
+      <OrgInstallButton size="sm" variant="ghost" label="Instalar" className="hidden sm:inline-flex" />
       <ContextualHelpButton />
       <OrgSwitcher />
       {!isSupabaseEnabled && (

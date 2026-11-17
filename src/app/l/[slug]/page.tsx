@@ -37,6 +37,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     alternates: { canonical: `/l/${org.slug}` },
     openGraph: { title: name, description, url: `/l/${org.slug}`, images: org.branding?.logo ? [org.branding.logo] : undefined },
+    // Ícone da locadora se o cliente salvar esta página na tela de início (o app completo se instala pelo botão do app).
+    icons: { icon: `/pwa/${org.slug}/icon-192.png`, apple: `/pwa/${org.slug}/apple-180.png` },
+    appleWebApp: { capable: true, title: name.length <= 15 ? name : name.split(/\s+/)[0] },
   };
 }
 

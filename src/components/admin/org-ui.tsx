@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Building2, Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { InstallButton } from "@/components/pwa/install-button";
 import { Logo } from "@/components/ui/logo";
 import { useOrganization } from "@/hooks/use-organization";
 import { ROLE_LABEL } from "@/lib/permissions";
@@ -19,6 +20,12 @@ export function OrgBrandLogo({ className = "w-28", variant = "light" }: { classN
     );
   }
   return <Logo className={className} variant={variant} />;
+}
+
+/** "Instalar" o app de gestão com o nome da locadora ativa. */
+export function OrgInstallButton(props: Omit<React.ComponentProps<typeof InstallButton>, "appName">) {
+  const { org } = useOrganization();
+  return <InstallButton {...props} appName={`${org?.branding?.displayName || org?.name || "Gestão"} · Gestão`} />;
 }
 
 /** Locadora em que você está (sempre visível); com mais de uma, vira seletor. */

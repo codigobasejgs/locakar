@@ -68,7 +68,7 @@ export function OrgShareLink() {
           <p className="text-xs text-muted">Divulgue no Instagram, WhatsApp, Google ou no adesivo do carro. O cliente vê sua frota e já entra no app com a sua marca.</p>
         </div>
         <Row icon={Link2} label="Página da locadora" url={page} copied={copied === page} onCopy={() => copy(page)} hint="Frota disponível, WhatsApp e botão para o app." />
-        <Row icon={Smartphone} label="Link direto do app" url={app} copied={copied === app} onCopy={() => copy(app)} hint="Abre o app do locatário já na sua locadora (cadastro e login com a sua marca)." />
+        <Row icon={Smartphone} label="Link direto do app" url={app} copied={copied === app} onCopy={() => copy(app)} hint="Abre o app do locatário já na sua locadora. O cliente toca em “Instalar app” e ganha o ícone e o nome da sua locadora na tela do celular." />
       </div>
       {qr && (
         <div className="flex flex-col items-center gap-2">

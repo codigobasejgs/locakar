@@ -130,7 +130,8 @@ function BrandingForm({ org }: { org: Organization }) {
         </div>
 
         <div className="rounded-2xl border border-line bg-surface p-4 text-center space-y-3">
-          <p className="font-semibold text-xs text-white">Ícone / Logo Compacto</p>
+          <p className="font-semibold text-xs text-white">Ícone do app (quadrado)</p>
+          <p className="text-[11px] text-muted">Vira o ícone dos apps instalados (painel e cliente), sobre a cor principal. Sem ele, usamos o logo.</p>
           <div className="grid h-24 place-items-center rounded-xl bg-black/40 border border-line p-2">
             {b.logoCompact ? (
               // eslint-disable-next-line @next/next/no-img-element

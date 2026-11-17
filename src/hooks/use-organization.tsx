@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useOrgAppHead } from "@/components/pwa/org-app-head";
 import { brandTokens } from "@/lib/contrast";
 import { getSupabase } from "@/lib/supabase/client";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
@@ -127,6 +128,8 @@ export function useOrganization() {
 export function BrandingStyle({ theme }: { theme: "dark" | "light" }) {
   const { org } = useOrganization();
   const tokens = useMemo(() => brandTokens(org?.branding, theme), [org?.branding, theme]);
+  // App de gestão instalável com nome e ícone da locadora ativa.
+  useOrgAppHead("admin", isSupabaseEnabled ? org : null);
   if (!tokens) return null;
   const css = Object.entries(tokens).map(([k, v]) => `${k}:${v}!important;`).join("");
   return <style dangerouslySetInnerHTML={{ __html: `:root, .admin-shell { ${css} }` }} />;

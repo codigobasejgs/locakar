@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { BadgeAlert, CalendarDays, CarFront, CircleAlert, CreditCard, FileText, Info, MessageCircle, Sparkles, TriangleAlert } from "lucide-react-native";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { InstallAppCard } from "../../components/domain/InstallAppCard";
 import { InstallmentBadge, nextToPay } from "../../components/domain/InstallmentStatus";
 import { InfoTile, PLAN_UNIT, QuickAction, RentalStatusCard, StatusNote } from "../../components/domain/HomeCards";
 import { SkeletonList } from "../../components/domain/Screen";
@@ -151,6 +152,8 @@ export default function InicioScreen() {
         </Text>
         <Text style={styles.greetingSub}>Sua locação na {brandName}</Text>
       </View>
+
+      <InstallAppCard />
 
       {error && <ErrorBanner message={offline ? "Sem internet: mostrando os dados salvos no celular." : error} onRetry={refresh} />}
 

@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { View } from "react-native";
 import { setOrgWhatsapp } from "../constants/company";
+import { useOrgAppHead } from "../hooks/useInstallApp";
 import { API_URL } from "../services/api";
 import { DEFAULT_ORG, fetchOrgBrand, initOrg, setOrgSlug, type OrgBrand } from "../services/org";
 
@@ -54,6 +55,8 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   setOrgWhatsapp(brand?.whatsapp ?? null);
+  // Web: o app instalado na tela de início leva o nome e o ícone desta locadora.
+  useOrgAppHead(slug ?? "", brand?.name);
   if (!slug) return <View style={{ flex: 1, backgroundColor: "#050505" }} />;
   return <OrgContext.Provider value={{ slug, brand, switchOrg, applyBrand }}>{children}</OrgContext.Provider>;
 }

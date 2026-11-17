@@ -1,8 +1,12 @@
 import { currentOrgSlug } from "./org";
 import { supabase } from "./supabase";
 
-/** Servidor da LOCAKAR. Em desenvolvimento aponte para o seu computador: EXPO_PUBLIC_API_URL=http://192.168.x.x:3000 */
-export const API_URL = (process.env.EXPO_PUBLIC_API_URL || "https://www.locakar.com.br").replace(/\/+$/, "");
+/**
+ * Servidor da Frota Easy (a plataforma). Em desenvolvimento aponte para o seu computador: EXPO_PUBLIC_API_URL=http://192.168.x.x:3000
+ * Na versão web servida pelo próprio site (frotaeasy.com.br/locatario ou o domínio antigo), usa a mesma origem: sem CORS e sem depender de DNS.
+ */
+const sameOrigin = typeof window !== "undefined" && /^https:\/\/(www\.)?(frotaeasy|locakar)\.com\.br$/.test(window.location?.origin ?? "") ? window.location.origin : null;
+export const API_URL = (sameOrigin || process.env.EXPO_PUBLIC_API_URL || "https://www.frotaeasy.com.br").replace(/\/+$/, "");
 
 export class ApiError extends Error {
   constructor(

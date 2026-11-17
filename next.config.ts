@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/email": ["./public/logos/locakar-logo-light.png"],
     "/api/sign": ["./public/logos/locakar-logo-light.png"],
+    // Ícones dos apps instaláveis: logos que vivem no próprio site (ex.: LOCAKAR).
+    "/pwa/[slug]/[file]": ["./public/logos/*.{png,jpg,jpeg,webp}", "./public/brand/**/*.{png,jpg,jpeg,webp}"],
   },
   async redirects() {
     return [

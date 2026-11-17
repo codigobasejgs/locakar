@@ -2,6 +2,7 @@ import { Link } from "expo-router";
 import { useState } from "react";
 import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { InstallAppCard } from "../../components/domain/InstallAppCard";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Spacing, type ThemeColors } from "../../constants/theme";
@@ -66,6 +67,10 @@ export default function LoginScreen() {
             )}
             <Button label="Entrar" size="lg" loading={loading} onPress={login} />
             <Button label="Esqueci minha senha" variant="ghost" onPress={forgot} />
+          </View>
+
+          <View style={{ marginTop: Spacing.xl }}>
+            <InstallAppCard />
           </View>
 
           <View style={styles.footer}>
