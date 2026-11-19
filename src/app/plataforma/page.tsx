@@ -1,8 +1,8 @@
 import { FAQ, PLATFORM } from "@/components/platform-landing/content";
 import { PlatformFooter } from "@/components/platform-landing/footer";
-import { PlatformHeader, PromoBar } from "@/components/platform-landing/interactive";
+import { OfferWidget, PlatformHeader, PromoBar } from "@/components/platform-landing/interactive";
 import { brl, planPrice, promoDeadline } from "@/lib/plans";
-import { publicPlans } from "@/lib/server/plan";
+import { publicPlans, recentSignups } from "@/lib/server/plan";
 import { Automations, BeforeAfter, Bento, Copilot, Faq, FinalCta, Hero, Plans, Security, TrustBar, VideoTour, WhiteLabelApp, WhiteLabelPanel } from "@/components/platform-landing/sections";
 
 const jsonLd = {
@@ -35,7 +35,7 @@ export const revalidate = 300;
 
 /** Landing da Frota Easy. Responde em /plataforma e na raiz de frotaeasy.com.br (rewrite em next.config.ts). */
 export default async function PlatformPage() {
-  const plans = await publicPlans();
+  const [plans, signups] = await Promise.all([publicPlans(), recentSignups()]);
   const from = Math.min(...plans.map((p) => planPrice(p).cents));
   const deadline = promoDeadline(plans);
   const promo = plans.filter((p) => planPrice(p).promo);
@@ -66,6 +66,7 @@ export default async function PlatformPage() {
         <FinalCta />
       </main>
       <PlatformFooter />
+      {(deadline || signups.length > 0) && <OfferWidget deadline={deadline} price={brl(promoFrom ?? from)} signups={signups} />}
     </>
   );
 }

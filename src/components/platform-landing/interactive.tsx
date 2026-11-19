@@ -258,3 +258,83 @@ export function PromoBar({ label, deadline }: { label: string; deadline: string 
     </a>
   );
 }
+
+/* ---------- Relógio flutuante da oferta + prova social real ---------- */
+
+const ago = (iso: string, now: number) => {
+  const m = Math.max(1, Math.round((now - Date.parse(iso)) / 60_000));
+  if (m < 60) return `há ${m} min`;
+  const h = Math.round(m / 60);
+  return h < 24 ? `há ${h} h` : `há ${Math.round(h / 24)} dia${h >= 48 ? "s" : ""}`;
+};
+
+/**
+ * Canto inferior: relógio até o fim real da oferta (some quando acaba ou ao fechar) e, de tempos em tempos,
+ * um aviso de cadastro real de locadora (cidade + quando; sem nome). Pausa com prefers-reduced-motion.
+ */
+export function OfferWidget({ deadline, price, signups }: { deadline: string | null; price: string; signups: { city: string | null; at: string }[] }) {
+  const [now, setNow] = useState<number | null>(null);
+  const [closed, setClosed] = useState(false);
+  const [toast, setToast] = useState<number | null>(null);
+  useEffect(() => {
+    const first = requestAnimationFrame(() => setNow(Date.now()));
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      cancelAnimationFrame(first);
+      clearInterval(t);
+    };
+  }, []);
+  useEffect(() => {
+    if (!signups.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let i = 0;
+    let hide: ReturnType<typeof setTimeout>;
+    const show = () => {
+      setToast(i++ % signups.length);
+      hide = setTimeout(() => setToast(null), 6000);
+    };
+    const start = setTimeout(show, 12_000);
+    const loop = setInterval(show, 35_000);
+    return () => {
+      clearTimeout(start);
+      clearTimeout(hide);
+      clearInterval(loop);
+    };
+  }, [signups.length]);
+
+  const left = deadline && now != null ? Date.parse(deadline) - now : null;
+  const showClock = !closed && left != null && left > 0;
+  const s = toast != null && now != null ? signups[toast] : null;
+  if (!showClock && !s) return null;
+  const d = left ? Math.floor(left / 86_400_000) : 0;
+  const clock = left ? `${d > 0 ? `${d}d ` : ""}${pad(Math.floor(left / 3_600_000) % 24)}:${pad(Math.floor(left / 60_000) % 60)}:${pad(Math.floor(left / 1000) % 60)}` : "";
+
+  return (
+    <div className="pointer-events-none fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-40 flex max-w-[calc(100vw-2rem)] flex-col items-start gap-2 sm:left-6">
+      {s && (
+        <p role="status" className="fe-card pointer-events-auto flex items-center gap-3 bg-[#14141c]/95 px-4 py-3 text-sm shadow-2xl backdrop-blur-xl">
+          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--fe-ok)]/15 text-[var(--fe-ok)]" aria-hidden="true">✓</span>
+          <span>
+            <span className="block font-semibold">Nova locadora no {PLATFORM.name}</span>
+            <span className="fe-muted text-xs">{s.city ? `${s.city} · ` : ""}{ago(s.at, now!)}</span>
+          </span>
+        </p>
+      )}
+      {showClock && (
+        <div className="pointer-events-auto flex items-center gap-1 rounded-2xl border border-[rgb(166_77_255/0.5)] bg-[#14141c]/95 py-1.5 pl-3 pr-1.5 shadow-[0_10px_40px_-10px_rgb(122_0_255/0.8)] backdrop-blur-xl">
+          <a href="#planos" onClick={() => track("pricing_viewed", { place: "offer_clock" })} className="flex items-center gap-2 py-1 text-xs sm:text-sm">
+            <span aria-hidden="true">⏱️</span>
+            <span>
+              <span className="font-semibold">{price}/mês</span>
+              <span className="fe-muted"> · termina em </span>
+              <span className="font-bold tabular-nums text-[var(--fe-accent-text)]" aria-hidden="true">{clock}</span>
+              <span className="sr-only">{new Date(Date.parse(deadline!)).toLocaleDateString("pt-BR")}</span>
+            </span>
+          </a>
+          <button type="button" onClick={() => setClosed(true)} aria-label="Fechar aviso da oferta" className="grid size-9 place-items-center rounded-xl text-white/60 hover:bg-white/10 hover:text-white">
+            <X className="size-4" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

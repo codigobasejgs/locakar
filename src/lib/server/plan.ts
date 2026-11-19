@@ -32,3 +32,20 @@ export const upgradeMessage = (f: PlanFeature) => `${FEATURE_LABEL[f]}: recurso 
 export async function requirePlanFeature(feature: PlanFeature) {
   if (!(await hasPlanFeature(requireOrg().org.id, feature))) throw new HttpError(402, upgradeMessage(feature));
 }
+
+/**
+ * Prova social real (landing): locadoras que entraram na plataforma nos últimos 30 dias.
+ * Só cidade/UF e data — nunca nome, e-mail ou documento. Sem dados: lista vazia (nada é exibido).
+ */
+export async function recentSignups(): Promise<{ city: string | null; at: string }[]> {
+  if (!process.env.SUPABASE_SECRET_KEY) return [];
+  const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const { data } = await globalDb()
+    .from("organizations")
+    .select("city,state,created_at")
+    .gte("created_at", since)
+    .neq("status", "cancelled")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  return (data ?? []).map((o) => ({ city: o.city ? `${o.city}${o.state ? `/${o.state}` : ""}` : null, at: o.created_at as string }));
+}
