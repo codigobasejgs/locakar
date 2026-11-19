@@ -4,6 +4,8 @@ import { parseTxReference, type AsaasEnvironment, type PaymentSnapshot } from "@
 import { sameHash, tokenHash } from "@/lib/server/asaas-crypto";
 import { AsaasError, applySnapshot, envCols, loadAsaasConfig, reconcileTx, TX_COLS, type AsaasConfigRow, type AsaasTx } from "@/lib/server/asaas";
 import { audit } from "@/lib/server/tenant";
+import { parseInvoiceReference } from "@/lib/platform-billing";
+import { reconcileAsaasInvoice } from "@/lib/server/platform-billing";
 
 /** Ambiente cujo token confere com o header asaas-access-token (comparação de hash em tempo constante). */
 export function webhookEnvironment(cfg: AsaasConfigRow | null, token: string | null): AsaasEnvironment | null {
@@ -58,6 +60,13 @@ export async function processEvent(db: SupabaseClient, id: string) {
     if (!ev?.payment || !ev.event.startsWith("PAYMENT_")) {
       await finish("ignored", "Evento sem cobrança ou fora do escopo da integração.");
       return "ignored";
+    }
+    // Assinatura Frota Easy (fatura da plataforma, mesma conta Asaas): concilia a fatura, não uma parcela.
+    const invoiceId = parseInvoiceReference(ev.payment.externalReference);
+    if (invoiceId) {
+      const decision = await reconcileAsaasInvoice(invoiceId, ev.payment);
+      await finish(decision === "unknown" ? "ignored" : "done", decision === "unknown" ? "Fatura da plataforma não encontrada." : null);
+      return "done";
     }
     const tx = await findTx(db, ev.payment);
     if (!tx) {

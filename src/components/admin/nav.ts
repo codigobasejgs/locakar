@@ -17,6 +17,7 @@ import {
   Wallet,
   Wrench,
   HelpCircle,
+  BadgeDollarSign,
   type LucideIcon,
 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
@@ -46,6 +47,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: ROUTES.finance, label: "Financeiro", icon: Wallet, description: "Receitas, despesas e saldo" },
   { href: ROUTES.monitoring, label: "Rastreamento", icon: Satellite, description: "Posições, sensores e relatórios Selsyn" },
   { href: ROUTES.security, label: "Segurança", icon: ShieldCheck, description: "Antifraude, aparelhos e auditoria do app" },
+  { href: ROUTES.subscription, label: "Assinatura", icon: BadgeDollarSign, description: "Plano, pagamento e faturas" },
   { href: ROUTES.settings, label: "Configurações", icon: Settings, description: "Empresa e preferências do painel" },
   { href: ROUTES.help, label: "Ajuda e Treinamento", icon: HelpCircle, description: "Tutoriais, manuais e FAQ" },
 ];

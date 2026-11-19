@@ -29,6 +29,7 @@ export const ROUTES = {
   payments: "/admin/pagamentos",
   reports: "/admin/reports",
   settings: "/admin/settings",
+  subscription: "/admin/assinatura",
   requests: "/admin/requests",
   incidents: "/admin/incidents",
   security: "/admin/security",

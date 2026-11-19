@@ -1,5 +1,6 @@
 // Planos Frota Easy: preço exibido (promoção liga/desliga) e recursos liberados por plano.
 import assert from "node:assert/strict";
+import { daysToRenew, invoiceAmount, invoiceReference, parseInvoiceReference } from "../src/lib/platform-billing";
 import { DEFAULT_PLANS, PLAN_FEATURES, planHasFeature, planPrice, promoDeadline, sellable } from "../src/lib/plans";
 
 const plan = (id: string) => DEFAULT_PLANS.find((p) => p.id === id)!;
@@ -34,5 +35,14 @@ assert.equal(planHasFeature(plan("profissional").entitlements, "ai_copilot"), fa
 assert.equal(planHasFeature(null, "ai_copilot"), true);
 assert.equal(planHasFeature({ modules: {} }, "tracking_selsyn"), true);
 assert.equal(planHasFeature({ features: { ai_copilot: false } }, "periodic_checkin"), true, "só false explícito bloqueia");
+
+// ---------- Fatura da assinatura ----------
+assert.equal(invoiceAmount(plan("completo"), before), 7990, "fatura no preço promocional");
+assert.equal(invoiceAmount(plan("completo"), after), 10990, "após o prazo, fatura no preço de tabela");
+assert.equal(invoiceAmount({ ...plan("essencial"), price_cents: null }), null, "plano sem preço não é cobrável");
+const ref = invoiceReference("6f1c1f3e-2b7a-4c1d-9e8f-0a1b2c3d4e5f");
+assert.equal(parseInvoiceReference(ref), "6f1c1f3e-2b7a-4c1d-9e8f-0a1b2c3d4e5f");
+assert.equal(parseInvoiceReference("locakar-tx:6f1c1f3e-2b7a-4c1d-9e8f-0a1b2c3d4e5f"), null, "parcela de locação não vira fatura");
+assert.equal(daysToRenew("2026-12-01T00:00:00Z", Date.parse("2026-11-29T00:00:00Z")), 2);
 
 console.log("✓ plans ok");

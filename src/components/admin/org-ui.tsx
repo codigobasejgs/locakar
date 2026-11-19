@@ -108,12 +108,12 @@ export function OrgStatusBanner() {
         <AlertTriangle className="size-4 shrink-0" />
         <span>
           {pastDue
-            ? "O período de teste da sua locadora terminou. Regularize sua assinatura para não perder o acesso."
+            ? "Sua assinatura está vencida. Pague para não perder o acesso."
             : "Locadora suspensa. Suas operações estão bloqueadas para gravação até a regularização."}
         </span>
       </div>
-      <a href="https://wa.me/5519989615873?text=Quero%20regularizar%20a%20assinatura%20da%20minha%20locadora" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
-        Falar com o suporte
+      <a href="/admin/assinatura" className="underline hover:text-white">
+        Pagar assinatura
       </a>
     </div>
   );

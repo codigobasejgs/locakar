@@ -56,6 +56,17 @@ export async function requireStaff(permission?: Permission) {
   };
 }
 
+/** Locadora ativa da sessão (painel), sem lançar: null se deslogado ou sem vínculo. Para metadata do app instalável. */
+export async function activeOrgForSession() {
+  if (!process.env.SUPABASE_SECRET_KEY) return null;
+  const supabase = await serverSupabase();
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims?.sub) return null;
+  const { data: m } = await supabase.rpc("current_membership");
+  const orgId = (m as { organization_id?: string } | null)?.organization_id;
+  return orgId ? loadOrg(orgId) : null;
+}
+
 export class HttpError extends Error {
   constructor(
     public status: number,
