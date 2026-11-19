@@ -21,7 +21,7 @@ export default function VeiculoScreen() {
   const { colors: Colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
-  const { activeRental: r, refreshing, refresh } = useLocatario();
+  const { activeRental: r, summary, refreshing, refresh } = useLocatario();
   const vehicle = useApi<{ maintenance: Maintenance[] }>("/api/tenant/vehicle");
   const inspections = useApi<{ inspections: AppInspection[] }>("/api/tenant/inspections");
   const v = r?.vehicle;
@@ -69,7 +69,7 @@ export default function VeiculoScreen() {
           <View style={{ flexDirection: "row", gap: Spacing.sm, flexWrap: "wrap" }}>
             {!mine.some((i) => i.kind === "delivery") && <Button label="Retirada" size="sm" onPress={() => router.push({ pathname: "/vistoria", params: { kind: "delivery" } })} style={{ flexGrow: 1 }} />}
             <Button label="Devolução" size="sm" variant="outline" onPress={() => router.push({ pathname: "/vistoria", params: { kind: "return" } })} style={{ flexGrow: 1 }} />
-            <Button label="Periódica" size="sm" variant="outline" onPress={() => router.push({ pathname: "/vistoria", params: { kind: "periodic" } })} style={{ flexGrow: 1 }} />
+            {summary?.features?.periodicCheckin !== false && <Button label="Periódica" size="sm" variant="outline" onPress={() => router.push({ pathname: "/vistoria", params: { kind: "periodic" } })} style={{ flexGrow: 1 }} />}
           </View>
         </Card>
       )}

@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { VehicleFipePanel } from "./vehicle-fipe-panel";
+import { UpgradeCard } from "./plan-gate";
+import { usePlanFeature } from "@/hooks/use-organization";
 import { vehicle360, type DateRange } from "@/lib/analytics";
 import { FUEL_LABEL } from "@/lib/contract";
 import { FINE_STATUS, MAINTENANCE_STATUS, RENTAL_STATUS, ROUTES, VEHICLE_STATUS } from "@/lib/constants";
@@ -34,6 +36,7 @@ interface Vehicle360DialogProps {
 }
 
 export function Vehicle360Dialog({ vehicle, data, today, dashboardRange, onClose }: Vehicle360DialogProps) {
+  const advanced = usePlanFeature("advanced_reports");
   const [useAllTime, setUseAllTime] = useState(false);
   const [tab, setTab] = useState<"locacoes" | "manutencao" | "vistorias" | "multas">("locacoes");
 
@@ -58,7 +61,7 @@ export function Vehicle360Dialog({ vehicle, data, today, dashboardRange, onClose
       description="Raio-X completo: lucratividade, custos, manutenções, vistorias e multas."
       size="lg"
     >
-      <div className="flex flex-col gap-5">
+      {!advanced ? <UpgradeCard feature="advanced_reports" /> : <div className="flex flex-col gap-5">
         {/* Cabeçalho do Carro */}
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-surface p-4 sm:p-5">
           <div className="flex items-center gap-4">
@@ -305,7 +308,7 @@ export function Vehicle360Dialog({ vehicle, data, today, dashboardRange, onClose
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </Dialog>
   );
 }

@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select } from "@/components/ui/form";
 import { useAdminData } from "@/hooks/use-admin-data";
+import { usePlanFeature } from "@/hooks/use-organization";
 import { numOrUndef, numToStr, strOrUndef, useCrud } from "@/hooks/use-crud";
 import { VEHICLE_STATUS, statusOptions } from "@/lib/constants";
 import { crlvFields, parseCrlvPdf } from "@/lib/crlv";
@@ -107,6 +108,7 @@ const toDraft = (v: FleetVehicle): Draft => ({
 
 export default function VehiclesPage() {
   const { data, reload } = useAdminData();
+  const trackingOn = usePlanFeature("tracking_selsyn");
   const crud = useCrud("vehicles", { empty, toDraft, noun: "Veículo" });
   const { draft, bind, set } = crud;
   const vehicles = data!.vehicles;
@@ -713,7 +715,7 @@ export default function VehiclesPage() {
             />
 
             <VehicleFipePanel key={`fipe-${v.id}`} vehicleId={v.id} onChanged={() => reload("vehicles", v.id)} />
-            <VehicleTrackingPanel key={v.id} vehicle={v} />
+            {trackingOn && <VehicleTrackingPanel key={v.id} vehicle={v} />}
 
             {/* Documento CRLV */}
             {v.crlvUrl && (

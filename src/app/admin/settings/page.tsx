@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { AsaasSettings } from "@/components/admin/asaas-settings";
 import { AutentiqueSettings } from "@/components/admin/autentique-settings";
 import { ContractTemplatesManager } from "@/components/admin/contract-templates-manager";
+import { PlanGate } from "@/components/admin/plan-gate";
 import { CopilotSettings } from "@/components/admin/copilot-settings";
 import { FipeSettings } from "@/components/admin/fipe-settings";
 import { InfinitePaySettingsFields } from "@/components/admin/infinitepay-settings";
@@ -258,7 +259,7 @@ export default function SettingsPage() {
               title="Modelos de Contrato Inteligentes"
               description="Cadastre os modelos em PDF ou DOCX da sua locadora. A IA detecta os campos variáveis para preenchimento determinístico nas locações."
             >
-              <ContractTemplatesManager />
+              <PlanGate feature="smart_contracts"><ContractTemplatesManager /></PlanGate>
             </Section>
 
             <Section tour="settings-contract-signer" icon={FileSignature} title="Representante e Cláusulas Gerais" description="Dados do assinante pela locadora e cláusulas padrão para emissão.">
@@ -339,16 +340,16 @@ export default function SettingsPage() {
               <FipeSettings />
             </Section>
             <Section tour="settings-selsyn" icon={SlidersHorizontal} title="Selsyn — Rastreamento" description="Posições, sensores e relatórios da frota. Credencial somente no backend.">
-              <SelsynSettings />
+              <PlanGate feature="tracking_selsyn"><SelsynSettings /></PlanGate>
             </Section>
             <Section id="config-autentique" tour="settings-autentique" icon={FileSignature} title="Autentique — Assinatura eletrônica" description="Envia o contrato da locação para assinatura do locatário e da locadora. Token e segredo ficam cifrados no servidor.">
-              <AutentiqueSettings />
+              <PlanGate feature="smart_contracts"><AutentiqueSettings /></PlanGate>
             </Section>
             <Section tour="settings-whatsapp" icon={MessageCircle} title="WhatsApp das notificações" description="Número que envia contratos, termos, comprovantes, multas e alertas automáticos aos clientes.">
               <WhatsAppConnection />
             </Section>
             <Section tour="settings-copilot" icon={Bot} title="Copiloto Frota Easy (WhatsApp com botões)" description="Administre a locadora pelo WhatsApp: cobranças, baixas, despesas, manutenções e relatórios por botões e listas. IA só quando você escolher.">
-              <CopilotSettings />
+              <PlanGate feature="whatsapp_buttons"><CopilotSettings /></PlanGate>
             </Section>
             <Section tour="settings-email" icon={Mail} title="E-mails" description="Envio pelo Resend: contratos, termos de entrega/devolução, comprovantes e multas.">
               <p className="text-sm text-zinc-300 sm:col-span-2">

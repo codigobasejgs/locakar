@@ -12,6 +12,7 @@ import { createGatewayLink } from "@/lib/server/gateways";
 import { GATEWAY_IDS } from "@/lib/gateways";
 import { getPaymentMethods, usable } from "@/lib/server/payment-methods";
 import { brand, requireOrg, siteUrl } from "@/lib/server/org-context";
+import { hasPlanFeature } from "@/lib/server/plan";
 import { loadSettings, notifyStaff, serviceDb } from "@/lib/server/push";
 import { signatureLink, signedFile } from "@/lib/server/signature/service";
 import { SignatureError } from "@/lib/server/signature/types";
@@ -314,7 +315,7 @@ export async function runCustomerBot(
       };
     }
   }
-  const flowCfg: CustomerConfig = { orgName: brand().name, appUrl: appUrlFor(), today: todaySP(), methods: await methods() };
+  const flowCfg: CustomerConfig = { orgName: brand().name, appUrl: appUrlFor(), today: todaySP(), methods: await methods(), periodicCheckin: await hasPlanFeature(requireOrg().org.id, "periodic_checkin") };
   const { replies, session: next } = await handleCustomer(ev, session, flowCfg, ports(phone, Boolean(opts.dryRun)), opts.media);
 
   if (!opts.dryRun) {

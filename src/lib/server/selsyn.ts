@@ -4,6 +4,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { buildSelsynRequest, SelsynError, type Json } from "@/lib/selsyn";
 import { requireStaff, HttpError } from "@/lib/server/supabase";
 import { requireOrg } from "@/lib/server/org-context";
+import { requirePlanFeature } from "@/lib/server/plan";
 import { serviceDb } from "@/lib/server/push";
 import { audit } from "@/lib/server/tenant";
 
@@ -46,6 +47,8 @@ export async function readSelsynBody(request: Request): Promise<Record<string, u
 /** Único transporte Selsyn. Chave no header x-api-key (a API real recusa a chave na query). */
 export async function querySelsyn(userId: string, operationId: string, input: Record<string, unknown>, requestId: unknown = randomUUID()) {
   assertSelsynTenant();
+  // Toda consulta/comando passa aqui: rastreamento só no plano com tracking_selsyn.
+  await requirePlanFeature("tracking_selsyn");
   const key = process.env.SELSYN_API_KEY;
   if (key && /[\s"']/.test(key)) throw new SelsynError("INVALID_CREDENTIAL_FORMAT", "A credencial contém espaço, quebra de linha ou aspas. Corrija o valor no servidor; a chave não foi alterada automaticamente.", 409);
   if (!key) throw new SelsynError("NOT_CONFIGURED", "Configure SELSYN_API_KEY no backend para consultar.", 503);

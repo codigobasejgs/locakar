@@ -3,7 +3,8 @@ import { parseMessage } from "@/lib/copilot/parse";
 import { loadCopilotConfig, runCopilot, toCard } from "@/lib/server/copilot";
 import { runCustomerBot } from "@/lib/server/customer-bot";
 import { copilotAiKey } from "@/lib/server/copilot-ai";
-import { scoped } from "@/lib/server/org-context";
+import { requireOrg, scoped } from "@/lib/server/org-context";
+import { hasPlanFeature, requirePlanFeature } from "@/lib/server/plan";
 import { serviceDb } from "@/lib/server/push";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { audit, clientIp } from "@/lib/server/tenant";
@@ -28,8 +29,10 @@ export const GET = scoped(async function GET() {
   try {
     await requireStaff("integrations");
     const cfg = await loadCopilotConfig();
-    const ai = await copilotAiKey();
-    return Response.json({ config: { enabled: cfg.enabled, mode: cfg.mode, level: cfg.level, adminPhones: cfg.admin_phones, customerBot: Boolean(cfg.customer_bot_enabled), chargeButtons: Boolean(cfg.charge_buttons_enabled), customerRate: cfg.customer_rate_per_hour ?? 30 }, aiAvailable: Boolean(ai), aiProvider: ai?.provider ?? null, session: await state(cfg.instance_key) });
+    // IA só no plano com ai_copilot: o painel mostra "somente botões" e o card de upgrade.
+    const aiPlan = await hasPlanFeature(requireOrg().org.id, "ai_copilot");
+    const ai = aiPlan ? await copilotAiKey() : null;
+    return Response.json({ aiPlan, config: { enabled: cfg.enabled, mode: cfg.mode, level: cfg.level, adminPhones: cfg.admin_phones, customerBot: Boolean(cfg.customer_bot_enabled), chargeButtons: Boolean(cfg.charge_buttons_enabled), customerRate: cfg.customer_rate_per_hour ?? 30 }, aiAvailable: Boolean(ai), aiProvider: ai?.provider ?? null, session: await state(cfg.instance_key) });
   } catch (e) {
     return errorResponse(e);
   }
@@ -41,6 +44,8 @@ export const POST = scoped(async function POST(request: Request) {
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const cfg = await loadCopilotConfig();
     const db = serviceDb();
+
+    if (body.action === "save" || body.action === "simulate" || body.action === "connect") await requirePlanFeature("whatsapp_buttons");
 
     if (body.action === "save") {
       const level = Number(body.level), mode = body.mode;

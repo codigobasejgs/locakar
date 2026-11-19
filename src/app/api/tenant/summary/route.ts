@@ -8,6 +8,7 @@ import { todaySP } from "@/lib/utils";
 import { fromRow } from "@/repositories/mapping";
 import type { Rental } from "@/types";
 import { requireOrg, scoped } from "@/lib/server/org-context";
+import { hasPlanFeature } from "@/lib/server/plan";
 
 /**
  * Tudo que a tela inicial do App do Locatário precisa, em uma chamada.
@@ -158,6 +159,8 @@ export const GET = scoped(async function GET(request: Request) {
           weeklyRate: v.weekly_rate,
         })),
         pendingRequest,
+        // Recursos do plano da locadora que mudam o app (ex.: vistoria periódica).
+        features: { periodicCheckin: await hasPlanFeature(org.id, "periodic_checkin") },
         pix: pixOn && settings?.pix.name ? { name: settings.pix.name } : null,
         // Meios ativos (Configurações → Meios de pagamento). O app só mostra o que vier aqui.
         paymentMethods: availability?.methods.filter((m) => usable(m) && (m.id !== "infinitepay" || ipOn)).map((m) => m.id) ?? [],

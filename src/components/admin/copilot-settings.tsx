@@ -7,11 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/form";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
+import { UpgradeCard } from "./plan-gate";
 
 type Card = { text: string; buttons?: { id: string; title: string }[]; sections?: { rows: { id: string; title: string; description?: string }[] }[] };
 interface State {
   config: { enabled: boolean; mode: "buttons" | "hybrid"; level: number; adminPhones: string[]; customerBot: boolean; chargeButtons: boolean; customerRate: number };
   aiAvailable: boolean;
+  /** Plano inclui o Copiloto IA (ausente = servidor antigo: liberado). */
+  aiPlan?: boolean;
   session: { engine: boolean; state?: string; qr?: string | null; pairingCode?: string | null; me?: { id: string | null } | null; error?: string };
 }
 
@@ -120,9 +123,10 @@ export function CopilotSettings() {
         <Field label="Nível de permissão" htmlFor="cp-level" hint="Validado no servidor: nível 1 nunca grava nada.">
           <Select id="cp-level" value={String(draft.level)} options={LEVELS} onChange={(e) => setDraft({ ...draft, level: Number(e.target.value) })} />
         </Field>
-        <Field label="Modo de operação" htmlFor="cp-mode" hint={s.aiAvailable ? "Botões e listas nunca usam IA." : "Sem chave de IA: só menus e botões."}>
+        <Field label="Modo de operação" htmlFor="cp-mode" hint={s.aiPlan === false ? "Seu plano usa só menus e botões (sem IA)." : s.aiAvailable ? "Botões e listas nunca usam IA." : "Sem chave de IA: só menus e botões."}>
           <Select id="cp-mode" value={draft.mode} options={[{ value: "hybrid", label: "Híbrido: botões + IA só para áudio, foto, PDF e texto livre (recomendado)" }, { value: "buttons", label: "Somente botões e menus (zero IA)" }]} onChange={(e) => setDraft({ ...draft, mode: e.target.value as "buttons" | "hybrid" })} />
         </Field>
+        {s.aiPlan === false && <UpgradeCard feature="ai_copilot" />}
         <Field label="Gestores autorizados (um por linha)" htmlFor="cp-phones" className="sm:col-span-2" hint="Além da conversa com você mesmo, só estes números podem usar o Copiloto. Nenhum outro número recebe dados.">
           <Textarea id="cp-phones" value={phones} onChange={(e) => setPhones(e.target.value)} placeholder="(11) 99999-9999" />
         </Field>

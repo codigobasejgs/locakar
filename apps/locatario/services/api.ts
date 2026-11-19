@@ -127,6 +127,8 @@ export interface TenantSummary {
   rentals: TenantRental[];
   fleet?: FleetVehicle[];
   pendingRequest?: PendingRentalRequest | null;
+  /** Recursos do plano da locadora (ausente = servidor antigo: tudo liberado). */
+  features?: { periodicCheckin: boolean };
   pix: { name: string } | null;
   /** Checkout InfinitePay ativo (cartão até 12x ou Pix pela InfinitePay). */
   infinitepay?: { checkout: boolean } | null;

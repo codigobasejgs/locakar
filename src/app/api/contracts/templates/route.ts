@@ -3,6 +3,7 @@ import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { analyzeContractDocument, getAIKey, loadContractAIConfig } from "@/lib/server/contract-ai";
 import { createHash } from "node:crypto";
 import { requireOrg, scoped } from "@/lib/server/org-context";
+import { requirePlanFeature } from "@/lib/server/plan";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -90,6 +91,7 @@ export const POST = scoped(async function POST(request: Request) {
 
     // 2. Analisar documento com IA UMA ÚNICA VEZ
     if (body.action === "analyze") {
+      await requirePlanFeature("smart_contracts");
       const { templateId } = body;
       const { data: template } = await db.from("contract_templates").select("*").eq("id", templateId).maybeSingle();
       if (!template) throw new HttpError(404, "Template não encontrado.");

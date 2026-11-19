@@ -1,4 +1,5 @@
 import "server-only";
+import { revalidatePath } from "next/cache";
 import { globalDb, scoped } from "@/lib/server/org-context";
 import { HttpError, errorResponse, serverSupabase } from "@/lib/server/supabase";
 import type { OrgRole } from "@/types";
@@ -41,7 +42,7 @@ export const GET = scoped(async function GET(request: Request) {
 
     const [overview, plans, admins, config, audit, help] = await Promise.all([
       db.rpc("platform_overview"),
-      db.from("plans").select("id, name, active, entitlements").order("name"),
+      db.from("plans").select("id, name, active, entitlements, price_cents, promo_price_cents, promo_active, promo_label, highlight, sort").order("sort"),
       db.rpc("platform_admin_list"),
       db.from("platform_config").select("trial_days, grace_days").eq("id", 1).maybeSingle(),
       db.from("platform_audit").select("id, actor_id, action, organization_id, details, created_at").order("created_at", { ascending: false }).limit(50),
@@ -95,8 +96,26 @@ export const POST = scoped(async function POST(request: Request) {
       case "plan": {
         needOrg();
         const planId = String(body.planId);
+        if (!/^[a-z0-9_-]{2,40}$/.test(planId)) throw new HttpError(400, "Plano inválido.");
         fail((await db.from("subscriptions").upsert({ organization_id: orgId, plan_id: planId, updated_at: now })).error);
         await log({ planId });
+        break;
+      }
+      case "plan_price": {
+        // Preço de tabela, promoção e selo de cada plano (sem mexer no código). Recursos continuam nas features do plano.
+        const planId = String(body.planId || "");
+        if (!/^[a-z0-9_-]{2,40}$/.test(planId)) throw new HttpError(400, "Plano inválido.");
+        const cents = (v: unknown) => (v === null || v === "" ? null : Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 10_000_000 ? Number(v) : NaN);
+        const price = cents(body.priceCents), promo = cents(body.promoPriceCents);
+        if (Number.isNaN(price) || Number.isNaN(promo)) throw new HttpError(400, "Valores em centavos, de 0 a 100.000,00.");
+        const promoActive = Boolean(body.promoActive);
+        if (promoActive && (promo == null || price == null || promo >= price)) throw new HttpError(400, "Promoção ativa exige preço promocional menor que o de tabela.");
+        const patch = { price_cents: price, promo_price_cents: promo, promo_active: promoActive, promo_label: str(body.promoLabel, 60) || null };
+        const { data: updated, error } = await db.from("plans").update(patch).eq("id", planId).select("id");
+        fail(error);
+        if (!updated?.length) throw new HttpError(404, "Plano não encontrado.");
+        await log({ planId, ...patch }, null);
+        revalidatePath("/plataforma");
         break;
       }
       case "extend_trial": {

@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check": "node node_modules/jiti/lib/jiti-cli.mjs scripts/check.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-copilot.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-customer-bot.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-gateways.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-fleet.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-pwa.ts",
+    "check": "node node_modules/jiti/lib/jiti-cli.mjs scripts/check.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-copilot.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-customer-bot.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-gateways.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-fleet.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-pwa.ts && node node_modules/jiti/lib/jiti-cli.mjs scripts/check-plans.ts",
     "locatario": "npm --prefix apps/locatario start",
     "help:validate": "node scripts/help/validate.cjs && node scripts/check-help.cjs",
     "help:audit": "node scripts/help/audit.cjs",

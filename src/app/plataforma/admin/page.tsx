@@ -7,7 +7,8 @@ import { Toaster, toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { Field, Input, Select } from "@/components/ui/form";
+import { Checkbox, Field, Input, Select } from "@/components/ui/form";
+import { brl, planPrice, type PlanRow } from "@/lib/plans";
 import { ROLE_LABEL } from "@/lib/permissions";
 import { articles } from "@/help";
 import { PLATFORM } from "@/lib/platform";
@@ -39,7 +40,7 @@ interface AuditItem { id: number; action: string; organization_id: string | null
 interface Data {
   me: string;
   organizations: OrgItem[];
-  plans: { id: string; name: string }[];
+  plans: PlanRow[];
   admins: Admin[];
   config: { trial_days: number; grace_days: number };
   audit: AuditItem[];
@@ -63,7 +64,7 @@ const ACTION_LABEL: Record<string, string> = {
   status: "Status alterado", plan: "Plano alterado", extend_trial: "Teste prorrogado", update_org: "Dados editados",
   add_member: "Membro adicionado", member_role: "Função alterada", remove_member: "Membro removido",
   support_access: "Acesso de suporte", add_admin: "Super Admin adicionado", remove_admin: "Super Admin removido",
-  config: "Configuração da plataforma", delete_org: "Locadora excluída",
+  config: "Configuração da plataforma", delete_org: "Locadora excluída", plan_price: "Preço de plano alterado",
 };
 const ROLE_OPTIONS = (Object.keys(ROLE_LABEL) as OrgRole[]).map((r) => ({ value: r, label: ROLE_LABEL[r] }));
 const fmtDate = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("pt-BR") : "—");
@@ -253,6 +254,7 @@ export default function SuperAdminPage() {
               </div>
             </section>
 
+            <PlanPricing plans={data.plans} run={run} />
             <div className="grid gap-6 lg:grid-cols-2">
               <PlatformConfig config={data.config} run={run} />
               <Admins admins={data.admins} me={data.me} run={run} />
@@ -271,7 +273,7 @@ export default function SuperAdminPage() {
 
 type Run = (body: Record<string, unknown>, ok: string) => Promise<boolean>;
 
-function OrgDialog({ org, plans, run, onClose }: { org: OrgItem; plans: { id: string; name: string }[]; run: Run; onClose: () => void }) {
+function OrgDialog({ org, plans, run, onClose }: { org: OrgItem; plans: PlanRow[]; run: Run; onClose: () => void }) {
   const [form, setForm] = useState({
     name: org.name, slug: org.slug, legal_name: org.legal_name ?? "", document: org.document ?? "",
     email: org.email ?? "", phone: org.phone ?? "", whatsapp: org.whatsapp ?? "",
@@ -311,7 +313,7 @@ function OrgDialog({ org, plans, run, onClose }: { org: OrgItem; plans: { id: st
             </Field>
             <Field label="Plano" htmlFor="org-plan" className="w-48">
               <Select id="org-plan" value={org.plan_id ?? ""} placeholder="Sem plano" onChange={(e) => act({ action: "plan", planId: e.target.value }, "Plano atualizado.")}
-                options={plans.map((p) => ({ value: p.id, label: p.name }))} />
+                options={plans.map((p) => ({ value: p.id, label: p.price_cents == null ? p.name : p.name + " · " + brl(planPrice(p).cents) + "/mês" }))} />
             </Field>
             <Field label="Prorrogar teste (dias)" htmlFor="org-days" className="w-40" hint={`Fim atual: ${fmtDate(org.trial_ends_at)}`}>
               <Input id="org-days" type="number" min={1} max={365} value={days} onChange={(e) => setDays(e.target.value)} />
@@ -396,6 +398,67 @@ function Section({ title, danger, children }: { title: string; danger?: boolean;
       <h3 className={`mb-3 text-sm font-semibold ${danger ? "text-red-200" : "text-white"}`}>{title}</h3>
       {children}
     </section>
+  );
+}
+
+/** Preços dos planos: tabela, promoção (liga/desliga) e selo. A landing atualiza na hora ao salvar. */
+function PlanPricing({ plans, run }: { plans: PlanRow[]; run: Run }) {
+  const sale = plans.filter((p) => p.id !== "trial");
+  return (
+    <section className="rounded-2xl border border-line bg-surface p-5">
+      <h2 className="text-sm font-semibold">Planos e preços</h2>
+      <p className="mt-1 text-xs text-muted">
+        Promoção de lançamento: marque ou desmarque “Promoção ativa”. Desligada, a landing volta ao preço de tabela (sem “De/Por”). Os recursos de cada plano não mudam.
+      </p>
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        {sale.map((p) => (
+          <PlanPriceForm key={`${p.id}-${p.price_cents}-${p.promo_price_cents}-${p.promo_active}-${p.promo_label}`} plan={p} run={run} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const toReais = (c: number | null) => (c == null ? "" : (c / 100).toFixed(2).replace(".", ","));
+const toCents = (v: string) => (v.trim() === "" ? null : Math.round(Number(v.replace(/\./g, "").replace(",", ".")) * 100));
+
+function PlanPriceForm({ plan, run }: { plan: PlanRow; run: Run }) {
+  const [price, setPrice] = useState(toReais(plan.price_cents));
+  const [promo, setPromo] = useState(toReais(plan.promo_price_cents));
+  const [active, setActive] = useState(plan.promo_active);
+  const [label, setLabel] = useState(plan.promo_label ?? "");
+  const preview = planPrice({ price_cents: toCents(price), promo_price_cents: toCents(promo), promo_active: active });
+  const id = (k: string) => `plan-${plan.id}-${k}`;
+  return (
+    <div className="space-y-3 rounded-xl border border-line p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-semibold">{plan.name}</p>
+        <code className="text-[11px] text-muted">{plan.id}</code>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Tabela (R$)" htmlFor={id("price")}>
+          <Input id={id("price")} inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="109,90" />
+        </Field>
+        <Field label="Promocional (R$)" htmlFor={id("promo")}>
+          <Input id={id("promo")} inputMode="decimal" value={promo} onChange={(e) => setPromo(e.target.value)} placeholder="79,90" />
+        </Field>
+      </div>
+      <Checkbox label="Promoção ativa" checked={active} onChange={(e) => setActive(e.target.checked)} />
+      <Field label="Selo da promoção" htmlFor={id("label")}>
+        <Input id={id("label")} maxLength={60} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Por tempo limitado" />
+      </Field>
+      <p className="text-xs text-muted" aria-live="polite">
+        Na landing: {preview.fromCents != null && <><s>{brl(preview.fromCents)}</s> → </>}
+        <strong className="text-white">{brl(preview.cents)}/mês</strong>
+      </p>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => run({ action: "plan_price", planId: plan.id, priceCents: toCents(price), promoPriceCents: toCents(promo), promoActive: active, promoLabel: label }, `Preços do ${plan.name} salvos.`)}
+      >
+        Salvar {plan.name}
+      </Button>
+    </div>
   );
 }
 

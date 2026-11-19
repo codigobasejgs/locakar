@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Reveal } from "@/components/landing/reveal";
+import { brl, planHasFeature, planPrice, type PlanFeature, type PlanRow } from "@/lib/plans";
 import { FAQ, PLATFORM, WA } from "./content";
 import { BrandSwitcher, ProductShowcase, TrackedLink, ViewTracker } from "./interactive";
 
@@ -409,41 +410,182 @@ export function Security() {
 
 /* ---------- Planos ---------- */
 
-export function Plans() {
-  const included = ["Frota, clientes, locações e reservas ilimitadas", "Contratos e assinatura digital", "Cobranças automáticas e baixa por webhook", "Copiloto no WhatsApp e autoatendimento", "App do locatário com a sua marca", "Equipe com papéis e suporte no WhatsApp"];
+const PLAN_COPY: Record<string, { tagline: string; includes: string[]; excludes?: string[]; base?: string }> = {
+  essencial: {
+    tagline: "Para organizar a locadora e cobrar sem planilha.",
+    includes: [
+      "Veículos com CRLV-e e FIPE automática",
+      "Clientes, locações e reservas",
+      "Pix manual, Asaas e InfinitePay",
+      "Financeiro, despesas, manutenções e multas",
+      "Relatórios básicos",
+      "App do locatário com a sua marca",
+    ],
+    excludes: ["Sem Copiloto IA no WhatsApp", "Sem check-in periódico semanal/mensal"],
+  },
+  profissional: {
+    tagline: "Para automatizar o dia a dia pelo WhatsApp.",
+    base: "Tudo do Essencial, mais:",
+    includes: ["Check-in / vistoria periódica semanal ou mensal", "Copiloto e autoatendimento por botões no WhatsApp", "Contratos inteligentes + assinatura Autentique"],
+    excludes: ["Sem IA multimodal (áudio e foto)"],
+  },
+  completo: {
+    tagline: "Tudo liberado, com inteligência artificial.",
+    base: "Tudo do Profissional, mais:",
+    includes: ["Copiloto IA no WhatsApp: áudio, foto e PDF de nota fiscal", "Rastreamento e telemetria (Selsyn)", "Relatórios gerenciais avançados (Visão 360°)"],
+  },
+};
+
+const COMPARE: { label: string; feature?: PlanFeature }[] = [
+  { label: "Frota, clientes, locações e financeiro" },
+  { label: "App do locatário white label" },
+  { label: "Pix, Asaas e InfinitePay" },
+  { label: "Check-in / vistoria periódica", feature: "periodic_checkin" },
+  { label: "WhatsApp com botões (sem IA)", feature: "whatsapp_buttons" },
+  { label: "Contratos + assinatura Autentique", feature: "smart_contracts" },
+  { label: "Copiloto IA: áudio, foto e PDF", feature: "ai_copilot" },
+  { label: "Rastreamento Selsyn", feature: "tracking_selsyn" },
+  { label: "Relatórios avançados (Visão 360°)", feature: "advanced_reports" },
+];
+
+function PriceTag({ plan }: { plan: PlanRow }) {
+  const p = planPrice(plan);
+  return (
+    <div className="mt-6">
+      {p.fromCents != null && (
+        <p className="fe-muted text-sm">
+          De <s className="decoration-[var(--fe-danger)]/70">{brl(p.fromCents)}</s> por
+        </p>
+      )}
+      <p className="mt-1 flex items-baseline gap-1">
+        <span className="text-4xl font-bold tracking-tight sm:text-5xl">{brl(p.cents)}</span>
+        <span className="fe-muted text-sm font-semibold">/mês</span>
+      </p>
+    </div>
+  );
+}
+
+export function Plans({ plans }: { plans: PlanRow[] }) {
+  const promo = plans.filter((p) => planPrice(p).promo);
+  const promoFrom = promo.length ? Math.min(...promo.map((p) => planPrice(p).cents)) : null;
   return (
     <section id="planos" aria-labelledby="fe-plans" className="relative overflow-hidden border-y border-white/[0.07] bg-[var(--fe-bg-2)] py-24 sm:py-32">
       <ViewTracker event="pricing_viewed" />
       <Container>
-        <Heading center id="fe-plans" eyebrow="Planos" title="Comece grátis. Cresça sem trocar de sistema." text="Proposta sob medida para o tamanho da sua frota. Teste com a sua operação real antes de decidir." />
-        <Reveal className="relative mx-auto mt-14 max-w-4xl">
-          <div className="fe-glow pointer-events-none absolute left-1/2 top-0 size-[32rem] -translate-x-1/2 -translate-y-1/3 opacity-70" aria-hidden="true" />
-          <div className="fe-card relative grid overflow-hidden border-[rgb(166_77_255/0.45)] md:grid-cols-[1fr_1.1fr]">
-            <div className="border-b border-white/10 p-8 sm:p-10 md:border-b-0 md:border-r">
-              <p className="fe-chip !text-[10px]">Teste completo</p>
-              <p className="mt-6 text-6xl font-bold tracking-tight">{PLATFORM.trialDays}<span className="fe-muted ml-2 text-2xl font-semibold">dias grátis</span></p>
-              <p className="fe-text-2 mt-4 text-sm leading-relaxed">Todas as funcionalidades liberadas. Sem cartão de crédito. Depois, um plano mensal no tamanho da sua frota.</p>
-              <div className="mt-8 grid gap-3">
-                <TrackedLink href={PLATFORM.signup} event="hero_cta_clicked" params={{ place: "plans" }} className="fe-btn fe-btn-primary w-full">
-                  Começar agora <ArrowRight className="size-4" aria-hidden="true" />
-                </TrackedLink>
-                <TrackedLink href={WA.proposal} event="demo_requested" params={{ place: "plans" }} className="fe-btn fe-btn-ghost w-full">
-                  Solicitar proposta
-                </TrackedLink>
-              </div>
+        <Heading center id="fe-plans" eyebrow="Planos" title="Um plano para cada fase da sua locadora." text={`Comece com ${PLATFORM.trialDays} dias grátis, com os recursos do Completo (exceto rastreamento) e sem cartão de crédito. Depois, escolha o plano.`} />
+
+        {promoFrom != null && (
+          <Reveal className="mx-auto mt-10 max-w-3xl">
+            <p className="fe-chip mx-auto flex w-fit max-w-full flex-wrap justify-center !whitespace-normal text-center !normal-case !tracking-normal !text-sm">
+              <Zap className="size-4 shrink-0" aria-hidden="true" />
+              <span>
+                <strong>Condição especial de lançamento:</strong> libere todos os recursos do {PLATFORM.name} por {brl(promoFrom)}/mês por tempo limitado.
+              </span>
+            </p>
+          </Reveal>
+        )}
+
+        <div className="mt-12 grid items-stretch gap-5 lg:grid-cols-3">
+          {plans.map((plan, i) => {
+            const copy = PLAN_COPY[plan.id];
+            const p = planPrice(plan);
+            return (
+              <Reveal key={plan.id} delay={i * 0.06} className="h-full">
+                <article
+                  aria-labelledby={`plan-${plan.id}`}
+                  className={`fe-card relative flex h-full flex-col p-7 sm:p-8 ${plan.highlight ? "border-[rgb(166_77_255/0.7)] bg-gradient-to-b from-[rgb(122_0_255/0.16)] to-transparent shadow-[0_30px_90px_-30px_rgb(122_0_255/0.75)]" : ""}`}
+                >
+                  {plan.highlight && <div className="fe-glow pointer-events-none absolute -top-24 left-1/2 size-72 -translate-x-1/2 opacity-60" aria-hidden="true" />}
+                  <div className="relative flex flex-wrap items-center justify-between gap-2">
+                    <h3 id={`plan-${plan.id}`} className="text-xl font-bold">{plan.name}</h3>
+                    {plan.highlight && <span className="rounded-full bg-gradient-to-r from-[#7a00ff] to-[#a64dff] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">Mais escolhido</span>}
+                  </div>
+                  {p.promo && plan.promo_label && <p className="fe-chip relative mt-3 w-fit !text-[10px]">{plan.highlight ? "Tudo liberado • Tempo limitado" : plan.promo_label}</p>}
+                  {copy && <p className="fe-text-2 relative mt-3 text-sm">{copy.tagline}</p>}
+                  <div className="relative">
+                    <PriceTag plan={plan} />
+                  </div>
+                  <TrackedLink
+                    href={PLATFORM.signup}
+                    event="hero_cta_clicked"
+                    params={{ place: `plan_${plan.id}` }}
+                    className={`fe-btn relative mt-7 w-full ${plan.highlight ? "fe-btn-primary" : "fe-btn-ghost"}`}
+                  >
+                    Testar {PLATFORM.trialDays} dias grátis <ArrowRight className="size-4" aria-hidden="true" />
+                  </TrackedLink>
+                  {copy && (
+                    <div className="relative mt-7 border-t border-white/10 pt-6">
+                      {copy.base && <p className="mb-3 text-sm font-semibold">{copy.base}</p>}
+                      <ul className="grid gap-3">
+                        {copy.includes.map((t) => (
+                          <li key={t} className="fe-text-2 flex items-start gap-3 text-[15px]">
+                            <Check className="mt-0.5 size-4 shrink-0 text-[var(--fe-ok)]" aria-hidden="true" /> {t}
+                          </li>
+                        ))}
+                        {copy.excludes?.map((t) => (
+                          <li key={t} className="fe-muted flex items-start gap-3 text-sm">
+                            <X className="mt-0.5 size-4 shrink-0 opacity-70" aria-hidden="true" /> {t}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </article>
+              </Reveal>
+            );
+          })}
+        </div>
+
+        <Reveal className="mt-14">
+          <details className="fe-card group overflow-hidden lg:[&>summary]:hidden" open>
+            <summary className="flex min-h-[56px] cursor-pointer items-center justify-between px-5 font-semibold">
+              Comparar planos
+              <span className="fe-faq-icon text-2xl leading-none text-[var(--fe-accent-text)] transition-transform" aria-hidden="true">+</span>
+            </summary>
+            <div className="overflow-x-auto">
+              <table className="w-full table-fixed text-left text-xs sm:text-sm">
+                <caption className="sr-only">Comparativo de recursos dos planos {PLATFORM.name}</caption>
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th scope="col" className="w-[40%] p-2.5 font-semibold sm:w-auto sm:p-4">Recurso</th>
+                    {plans.map((p) => (
+                      <th key={p.id} scope="col" className={`p-2 text-center text-[11px] font-semibold sm:p-4 sm:text-sm ${p.highlight ? "text-[var(--fe-accent-text)]" : ""}`}>
+                        <span className="sm:hidden" aria-hidden="true">{p.name.slice(0, 4)}.</span>
+                        <span className="sr-only sm:not-sr-only">{p.name}</span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARE.map((row) => (
+                    <tr key={row.label} className="border-b border-white/[0.06] last:border-0">
+                      <th scope="row" className="fe-text-2 p-2.5 font-medium sm:p-4">{row.label}</th>
+                      {plans.map((p) => {
+                        const on = !row.feature || planHasFeature(p.entitlements, row.feature);
+                        return (
+                          <td key={p.id} className="p-2 text-center sm:p-4">
+                            {on ? <Check className="mx-auto size-5 text-[var(--fe-ok)]" aria-label="Incluso" /> : <X className="mx-auto size-5 text-white/30" aria-label="Não incluso" />}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="p-8 sm:p-10">
-              <p className="text-sm font-semibold">Incluso em todos os planos</p>
-              <ul className="mt-5 grid gap-3.5">
-                {included.map((i) => (
-                  <li key={i} className="fe-text-2 flex items-start gap-3 text-[15px]">
-                    <Check className="mt-0.5 size-4 shrink-0 text-[var(--fe-ok)]" aria-hidden="true" /> {i}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          </details>
         </Reveal>
+
+        {promoFrom != null && (
+          <p className="fe-muted mx-auto mt-8 max-w-2xl text-center text-xs leading-relaxed">
+            Valor promocional de lançamento por tempo limitado. Após o período promocional, novos assinantes seguem o valor de tabela de cada plano.
+          </p>
+        )}
+        <p className="mt-6 text-center text-sm">
+          <TrackedLink href={WA.proposal} event="demo_requested" params={{ place: "plans" }} className="fe-link">
+            Frota grande ou várias unidades? Fale com a gente
+          </TrackedLink>
+        </p>
       </Container>
     </section>
   );

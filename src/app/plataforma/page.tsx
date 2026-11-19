@@ -1,6 +1,8 @@
 import { FAQ, PLATFORM } from "@/components/platform-landing/content";
 import { PlatformFooter } from "@/components/platform-landing/footer";
 import { PlatformHeader } from "@/components/platform-landing/interactive";
+import { planPrice } from "@/lib/plans";
+import { publicPlans } from "@/lib/server/plan";
 import { Automations, BeforeAfter, Bento, Copilot, Faq, FinalCta, Hero, Plans, Security, TrustBar, VideoTour, WhiteLabelApp, WhiteLabelPanel } from "@/components/platform-landing/sections";
 
 const jsonLd = {
@@ -14,7 +16,6 @@ const jsonLd = {
       url: PLATFORM.url,
       description: PLATFORM.seo.description,
       inLanguage: "pt-BR",
-      offers: { "@type": "Offer", price: "0", priceCurrency: "BRL", description: `${PLATFORM.trialDays} dias grátis` },
       featureList: [
         "Gestão de frota com CRLV-e e FIPE",
         "Contratos com assinatura eletrônica",
@@ -29,12 +30,18 @@ const jsonLd = {
   ],
 };
 
+// Preços vêm do banco (Super Admin); a página é refeita a cada 5 min ou na hora ao salvar um plano.
+export const revalidate = 300;
+
 /** Landing da Frota Easy. Responde em /plataforma e na raiz de frotaeasy.com.br (rewrite em next.config.ts). */
-export default function PlatformPage() {
+export default async function PlatformPage() {
+  const plans = await publicPlans();
+  const from = Math.min(...plans.map((p) => planPrice(p).cents));
+  const offers = { "@type": "AggregateOffer", priceCurrency: "BRL", lowPrice: (from / 100).toFixed(2), offerCount: plans.length, description: `${PLATFORM.trialDays} dias grátis` };
   return (
     <>
       {/* "<" escapado: conteúdo estático, mas segue a recomendação de JSON-LD sem injeção. */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...jsonLd, "@graph": jsonLd["@graph"].map((n, i) => (i === 0 ? { ...n, offers } : n)) }).replace(/</g, "\\u003c") }} />
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-[var(--fe-surface)] focus:px-4 focus:py-3">
         Pular para o conteúdo
       </a>
@@ -50,7 +57,7 @@ export default function PlatformPage() {
         <WhiteLabelApp />
         <WhiteLabelPanel />
         <Security />
-        <Plans />
+        <Plans plans={plans} />
         <Faq />
         <FinalCta />
       </main>

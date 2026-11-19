@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useOrgAppHead } from "@/components/pwa/org-app-head";
 import { brandTokens } from "@/lib/contrast";
+import { planHasFeature, type PlanFeature, type PlanRow } from "@/lib/plans";
 import { getSupabase } from "@/lib/supabase/client";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
 import type { OrgRole, OrgStatus, Organization } from "@/types";
@@ -19,6 +20,8 @@ interface OrgContextValue {
   role: OrgRole | null;
   status: OrgStatus | null;
   memberships: MembershipInfo[];
+  /** Plano da locadora (nome + recursos). null = carregando ou sem assinatura (nada bloqueado). */
+  plan: { id: string; name: string; entitlements: PlanRow["entitlements"] } | null;
   loading: boolean;
   switchOrg(orgId: string): Promise<void>;
   reload(): Promise<void>;
@@ -52,6 +55,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const [role, setRole] = useState<OrgRole | null>(isSupabaseEnabled ? null : "owner");
   const [status, setStatus] = useState<OrgStatus | null>(isSupabaseEnabled ? null : "active");
   const [memberships, setMemberships] = useState<MembershipInfo[]>([]);
+  const [plan, setPlan] = useState<OrgContextValue["plan"]>(null);
   const [loading, setLoading] = useState(isSupabaseEnabled);
 
   const load = useCallback(async () => {
@@ -61,10 +65,12 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       const { data: m } = await sb.rpc("current_membership");
       const current = m as { organization_id: string; role: OrgRole; status: OrgStatus } | null;
       if (!current?.organization_id) return;
-      const [{ data: o }, { data: mems }] = await Promise.all([
+      const [{ data: o }, { data: mems }, { data: sub }] = await Promise.all([
         sb.from("organizations").select("*").eq("id", current.organization_id).maybeSingle(),
         sb.from("memberships").select("organization_id, role, organizations(*)"),
+        sb.from("subscriptions").select("plans(id, name, entitlements)").eq("organization_id", current.organization_id).maybeSingle(),
       ]);
+      setPlan(((sub as { plans?: OrgContextValue["plan"] } | null)?.plans) ?? null);
       if (o) {
         setOrg(o as Organization);
         setRole(current.role);
@@ -111,8 +117,8 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   );
 
   const value = useMemo(
-    () => ({ org, role, status, memberships, loading, switchOrg, reload: load }),
-    [org, role, status, memberships, loading, switchOrg, load],
+    () => ({ org, role, status, memberships, plan, loading, switchOrg, reload: load }),
+    [org, role, status, memberships, plan, loading, switchOrg, load],
   );
 
   return <OrgContext.Provider value={value}>{children}</OrgContext.Provider>;
@@ -122,6 +128,12 @@ export function useOrganization() {
   const ctx = useContext(OrgContext);
   if (!ctx) throw new Error("useOrganization deve ser usado dentro de <OrganizationProvider>.");
   return ctx;
+}
+
+/** O plano da locadora libera o recurso? Enquanto carrega, libera (o servidor é quem bloqueia de verdade). */
+export function usePlanFeature(f: PlanFeature) {
+  const { plan } = useOrganization();
+  return planHasFeature(plan?.entitlements, f);
 }
 
 /** Aplica os tokens CSS de marca da locadora (cores) sobre o shell. */

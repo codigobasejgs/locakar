@@ -4,6 +4,7 @@ import { SignatureError } from "@/lib/server/signature/types";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
 import { clientIp } from "@/lib/server/tenant";
 import { scoped } from "@/lib/server/org-context";
+import { requirePlanFeature } from "@/lib/server/plan";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -36,6 +37,7 @@ export const POST = scoped(async function POST(request: Request, ctx: { params: 
     const state = await signatureState(serviceDb(), id);
     const processId = state?.process.id as string | undefined;
 
+    if (action === "send") await requirePlanFeature("smart_contracts");
     if (action === "send") return Response.json({ state: await sendContract(id, userId, clientIp(request)) }, noStore);
     if (!processId) throw new HttpError(404, "Este contrato ainda não foi enviado para assinatura.");
     if (action === "sync") return Response.json({ state: await syncProcess(processId) }, noStore);

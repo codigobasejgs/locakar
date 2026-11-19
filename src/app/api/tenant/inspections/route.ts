@@ -1,4 +1,6 @@
 import { FUEL_LABEL, FUEL_ORDER, INSPECTION_ITEMS } from "@/lib/contract";
+import { requireOrg } from "@/lib/server/org-context";
+import { hasPlanFeature } from "@/lib/server/plan";
 import { notifyStaff, serviceDb } from "@/lib/server/push";
 import { HttpError } from "@/lib/server/supabase";
 import { audit, filesExist, readBody, requestId, safePath, tenantOptions, tenantRoute, text, type Tenant } from "@/lib/server/tenant";
@@ -78,6 +80,10 @@ export const POST = tenantRoute(async (request, { db, clientId, ip }) => {
   const km = typeof body.km === "number" && Number.isInteger(body.km) && body.km >= 0 && body.km < 5_000_000 ? body.km : null;
   const fuel = FUEL_ORDER.includes(body.fuel as FuelLevel) ? (body.fuel as FuelLevel) : null;
   if (!rentalId || !kind || km == null || !fuel) throw new HttpError(422, "Preencha tipo, quilometragem e combustível.");
+  // Check-in periódico (semanal/mensal) só no plano com periodic_checkin; retirada e devolução sempre.
+  if (kind === "periodic" && !(await hasPlanFeature(requireOrg().org.id, "periodic_checkin"))) {
+    throw new HttpError(402, "A vistoria periódica não está disponível para esta locadora. Fale com a locadora.");
+  }
 
   // Locação do próprio cliente (view com RLS), em andamento.
   const { data: rental } = await db.from("tenant_rentals").select("id,vehicle_id,status,km_start").eq("id", rentalId).maybeSingle();

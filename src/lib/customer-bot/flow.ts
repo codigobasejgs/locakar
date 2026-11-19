@@ -13,7 +13,7 @@ import { firstName, pinMatches, pickByCpf, type ClientRef } from "./identify";
 
 export type { Opt, Reply };
 export interface CustomerSession { step: string; data: Record<string, unknown>; clientId: string | null; verified: boolean; locked: boolean }
-export interface CustomerConfig { orgName: string; appUrl: string; today: string; methods: { asaasPix: boolean; asaasBoleto: boolean; infinitepay: boolean; pixManual: boolean; gateways?: GatewayId[] } }
+export interface CustomerConfig { orgName: string; appUrl: string; today: string; /** Plano com check-in periódico (ausente = liberado). */ periodicCheckin?: boolean; methods: { asaasPix: boolean; asaasBoleto: boolean; infinitepay: boolean; pixManual: boolean; gateways?: GatewayId[] } }
 export interface OpenInstallment { rentalId: string; receiptId: string; label: string; dueDate: string; amount: number; total: number; daysLate: number; plate?: string }
 export type PinResult = "verified" | "wrong" | "locked";
 export type Media = { mimetype: string; data: string };
@@ -292,11 +292,12 @@ export async function handleCustomer(
     say({ text: `📅 *Reservas*${mine.length ? `\nVocê tem ${mine.length} reserva(s) ativa(s):\n${mine.map((r) => `• ${r.vehicleName} · ${formatDate(r.startDate)} a ${formatDate(r.endDate)} · ${r.status === "pending" ? "aguardando confirmação" : "confirmada"}`).join("\n")}` : ""}`, list: { button: "Opções", rows } });
   };
 
+  const inspectionKinds = () => Object.entries(TENANT_INSPECTION_KIND).filter(([k]) => k !== "periodic" || cfg.periodicCheckin !== false);
   const inspectionStart = async (rentalId?: string) => {
     const rental = rentalId ? (await activeRentals()).find((r) => r.id === rentalId) : await pickRental("insp_r", "📸 Vistoria de qual veículo?");
     if (!rental) return;
     keep("insp_kind", { rentalId: rental.id });
-    say({ text: `📸 *Vistoria* · ${rental.vehicle?.plate ?? ""}\nQual o tipo?`, buttons: Object.entries(TENANT_INSPECTION_KIND).map(([k, v]) => ({ id: `insp_k:${k}`, title: v })) });
+    say({ text: `📸 *Vistoria* · ${rental.vehicle?.plate ?? ""}\nQual o tipo?`, buttons: inspectionKinds().map(([k, v]) => ({ id: `insp_k:${k}`, title: v })) });
   };
 
   const askPhoto = (d: Record<string, unknown>) => {
@@ -381,7 +382,7 @@ export async function handleCustomer(
     }
     if (cmd === "insp_r") return inspectionStart(arg);
     if (cmd === "insp_k") {
-      if (!(arg in TENANT_INSPECTION_KIND) || !session.data.rentalId) return inspectionStart();
+      if (!inspectionKinds().some(([k]) => k === arg) || !session.data.rentalId) return inspectionStart();
       const d = { rentalId: session.data.rentalId, kind: arg, requestId: newReq(`wa-${arg}`), photos: {} };
       say({ text: `📸 Vou pedir ${PHOTO_SLOTS.length} fotos, uma de cada vez. No fim, você só confere e assina no App.` });
       askPhoto(d);

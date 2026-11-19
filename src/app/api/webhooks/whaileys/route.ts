@@ -4,6 +4,7 @@ import { parseMessage } from "@/lib/copilot/parse";
 import { loadCopilotConfig, runCopilot, whaileysTransport } from "@/lib/server/copilot";
 import { customerTransport, runCustomerBot } from "@/lib/server/customer-bot";
 import { globalDb, loadOrg, runWithOrg, scoped } from "@/lib/server/org-context";
+import { hasPlanFeature } from "@/lib/server/plan";
 import { serviceDb } from "@/lib/server/push";
 import { isWhaileysEnabled, verifyWhaileysSignature, whaileysKnownPhones } from "@/lib/server/whaileys";
 
@@ -31,7 +32,8 @@ export const POST = scoped(async function POST(request: Request) {
 
   const { data: owner } = await globalDb().from("copilot_config").select("organization_id,enabled").eq("instance_key", body.instanceKey).maybeSingle();
   const org = owner?.enabled ? await loadOrg(owner.organization_id as string) : null;
-  if (!org) return Response.json({ ignored: true });
+  // Plano sem WhatsApp por botões (Essencial): o número não responde nada.
+  if (!org || !(await hasPlanFeature(org.id, "whatsapp_buttons"))) return Response.json({ ignored: true });
 
   return runWithOrg({ org }, async () => {
     const db = serviceDb();

@@ -14,6 +14,7 @@ import { fromRow } from "@/repositories/mapping";
 import { mergeSettings } from "@/repositories/types";
 import type { Client, CompanySettings, FleetVehicle, Rental } from "@/types";
 import { interpret, copilotAiKey } from "./copilot-ai";
+import { hasPlanFeature } from "./plan";
 import { instanceKeyFor, whaileysSend, type OutgoingCard } from "./whaileys";
 
 export interface CopilotConfig {
@@ -124,7 +125,8 @@ export async function runCopilot(
 ) {
   const db = serviceDb();
   const cfg = await loadCopilotConfig();
-  const ai = cfg.mode === "hybrid" ? await copilotAiKey() : null;
+  // IA (áudio, foto, PDF, texto livre) só no plano com ai_copilot; sem ela o Copiloto segue em botões.
+  const ai = cfg.mode === "hybrid" && (await hasPlanFeature(requireOrg().org.id, "ai_copilot")) ? await copilotAiKey() : null;
   const flowCfg = { level: cfg.level, mode: cfg.mode, aiAvailable: Boolean(ai), orgName: brand().name };
   const orgId = requireOrg().org.id;
 
