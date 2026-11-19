@@ -412,13 +412,19 @@ function PlanPricing({ plans, run }: { plans: PlanRow[]; run: Run }) {
       </p>
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         {sale.map((p) => (
-          <PlanPriceForm key={`${p.id}-${p.price_cents}-${p.promo_price_cents}-${p.promo_active}-${p.promo_label}`} plan={p} run={run} />
+          <PlanPriceForm key={`${p.id}-${p.price_cents}-${p.promo_price_cents}-${p.promo_active}-${p.promo_label}-${p.promo_ends_at}`} plan={p} run={run} />
         ))}
       </div>
     </section>
   );
 }
 
+/** ISO → valor de <input type="datetime-local"> no fuso do navegador. */
+const toLocalInput = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+};
 const toReais = (c: number | null) => (c == null ? "" : (c / 100).toFixed(2).replace(".", ","));
 const toCents = (v: string) => (v.trim() === "" ? null : Math.round(Number(v.replace(/\./g, "").replace(",", ".")) * 100));
 
@@ -427,7 +433,9 @@ function PlanPriceForm({ plan, run }: { plan: PlanRow; run: Run }) {
   const [promo, setPromo] = useState(toReais(plan.promo_price_cents));
   const [active, setActive] = useState(plan.promo_active);
   const [label, setLabel] = useState(plan.promo_label ?? "");
-  const preview = planPrice({ price_cents: toCents(price), promo_price_cents: toCents(promo), promo_active: active });
+  const [ends, setEnds] = useState(toLocalInput(plan.promo_ends_at));
+  const endsIso = ends ? new Date(ends).toISOString() : null;
+  const preview = planPrice({ price_cents: toCents(price), promo_price_cents: toCents(promo), promo_active: active, promo_ends_at: endsIso });
   const id = (k: string) => `plan-${plan.id}-${k}`;
   return (
     <div className="space-y-3 rounded-xl border border-line p-4">
@@ -444,6 +452,9 @@ function PlanPriceForm({ plan, run }: { plan: PlanRow; run: Run }) {
         </Field>
       </div>
       <Checkbox label="Promoção ativa" checked={active} onChange={(e) => setActive(e.target.checked)} />
+      <Field label="Fim da promoção" htmlFor={id("ends")} hint="Cronômetro da landing. Depois desta data o preço volta ao de tabela sozinho. Vazio = sem prazo.">
+        <Input id={id("ends")} type="datetime-local" value={ends} onChange={(e) => setEnds(e.target.value)} />
+      </Field>
       <Field label="Selo da promoção" htmlFor={id("label")}>
         <Input id={id("label")} maxLength={60} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Por tempo limitado" />
       </Field>
@@ -454,7 +465,7 @@ function PlanPriceForm({ plan, run }: { plan: PlanRow; run: Run }) {
       <Button
         variant="outline"
         size="sm"
-        onClick={() => run({ action: "plan_price", planId: plan.id, priceCents: toCents(price), promoPriceCents: toCents(promo), promoActive: active, promoLabel: label }, `Preços do ${plan.name} salvos.`)}
+        onClick={() => run({ action: "plan_price", planId: plan.id, priceCents: toCents(price), promoPriceCents: toCents(promo), promoActive: active, promoLabel: label, promoEndsAt: endsIso ?? "" }, `Preços do ${plan.name} salvos.`)}
       >
         Salvar {plan.name}
       </Button>

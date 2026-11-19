@@ -1,6 +1,6 @@
 // Planos Frota Easy: preço exibido (promoção liga/desliga) e recursos liberados por plano.
 import assert from "node:assert/strict";
-import { DEFAULT_PLANS, PLAN_FEATURES, planHasFeature, planPrice, sellable } from "../src/lib/plans";
+import { DEFAULT_PLANS, PLAN_FEATURES, planHasFeature, planPrice, promoDeadline, sellable } from "../src/lib/plans";
 
 const plan = (id: string) => DEFAULT_PLANS.find((p) => p.id === id)!;
 
@@ -14,6 +14,14 @@ assert.equal(planPrice({ price_cents: 7990, promo_price_cents: 9990, promo_activ
 assert.equal(planPrice({ price_cents: 7990, promo_price_cents: null, promo_active: true }).cents, 7990, "promo sem valor usa tabela");
 assert.deepEqual(sellable(DEFAULT_PLANS).map((p) => p.id), ["essencial", "profissional", "completo"], "vitrine na ordem");
 assert.deepEqual(sellable([...DEFAULT_PLANS, { ...plan("essencial"), id: "trial", price_cents: null, sort: 0 }]).map((p) => p.id).includes("trial"), false, "teste grátis fora da vitrine");
+
+// Prazo: antes do fim vale a promoção; depois volta sozinho ao preço de tabela; o cronômetro some.
+const before = Date.parse("2026-12-31T12:00:00-03:00"), after = Date.parse("2027-01-01T00:00:01-03:00");
+assert.equal(planPrice(plan("completo"), before).promo, true);
+assert.deepEqual(planPrice(plan("completo"), after), { cents: 10990, fromCents: null, promo: false }, "prazo vencido = preço de tabela");
+assert.equal(promoDeadline(DEFAULT_PLANS, before), new Date("2026-12-31T23:59:59-03:00").toISOString(), "cronômetro usa o prazo real");
+assert.equal(promoDeadline(DEFAULT_PLANS, after), null, "oferta acabou: sem cronômetro");
+assert.equal(promoDeadline([{ ...plan("completo"), promo_ends_at: null }], before), null, "promoção sem prazo não mostra cronômetro");
 
 // ---------- Recursos ----------
 const on = (id: string) => PLAN_FEATURES.filter((f) => planHasFeature(plan(id).entitlements, f));

@@ -19,7 +19,7 @@ export async function publicPlans(): Promise<PlanRow[]> {
   if (!process.env.SUPABASE_SECRET_KEY) return DEFAULT_PLANS;
   const { data, error } = await globalDb()
     .from("plans")
-    .select("id,name,price_cents,promo_price_cents,promo_active,promo_label,highlight,sort,entitlements")
+    .select("id,name,price_cents,promo_price_cents,promo_active,promo_label,promo_ends_at,highlight,sort,entitlements")
     .eq("active", true);
   const rows = sellable((data as PlanRow[] | null) ?? []);
   return error || !rows.length ? DEFAULT_PLANS : rows;

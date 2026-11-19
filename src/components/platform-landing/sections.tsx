@@ -7,6 +7,7 @@ import {
   Check,
   CircleDollarSign,
   ClipboardCheck,
+  CreditCard,
   FileSignature,
   Gauge,
   GraduationCap,
@@ -15,6 +16,7 @@ import {
   MessageCircle,
   PlayCircle,
   QrCode,
+  Rocket,
   Receipt,
   ScanLine,
   ShieldCheck,
@@ -27,9 +29,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Reveal } from "@/components/landing/reveal";
-import { brl, planHasFeature, planPrice, type PlanFeature, type PlanRow } from "@/lib/plans";
+import { brl, planHasFeature, planPrice, promoDeadline, type PlanFeature, type PlanRow } from "@/lib/plans";
 import { FAQ, PLATFORM, WA } from "./content";
-import { BrandSwitcher, ProductShowcase, TrackedLink, ViewTracker } from "./interactive";
+import { BrandSwitcher, Countdown, ProductShowcase, TrackedLink, ViewTracker } from "./interactive";
 
 /* ---------- Composição ---------- */
 
@@ -448,6 +450,14 @@ const COMPARE: { label: string; feature?: PlanFeature }[] = [
   { label: "Relatórios avançados (Visão 360°)", feature: "advanced_reports" },
 ];
 
+/** Quebra de objeções logo abaixo dos planos (risco zero). */
+const GUARANTEES = [
+  { icon: BadgeCheck, t: `${PLATFORM.trialDays} dias grátis`, d: "Use com a sua operação real antes de pagar." },
+  { icon: CreditCard, t: "Sem cartão de crédito", d: "Cadastro em minutos, sem dados de pagamento." },
+  { icon: Rocket, t: "Implantação guiada", d: "A equipe ajuda a cadastrar frota, clientes e contratos." },
+  { icon: ShieldCheck, t: "Sem fidelidade", d: "Cancele quando quiser. Seus dados são seus." },
+];
+
 function PriceTag({ plan }: { plan: PlanRow }) {
   const p = planPrice(plan);
   return (
@@ -468,6 +478,10 @@ function PriceTag({ plan }: { plan: PlanRow }) {
 export function Plans({ plans }: { plans: PlanRow[] }) {
   const promo = plans.filter((p) => planPrice(p).promo);
   const promoFrom = promo.length ? Math.min(...promo.map((p) => planPrice(p).cents)) : null;
+  const deadline = promoDeadline(plans);
+  // Economia anual do Completo na promoção (âncora: "você economiza").
+  const best = plans.find((p) => p.highlight && planPrice(p).promo);
+  const yearSave = best ? ((planPrice(best).fromCents ?? 0) - planPrice(best).cents) * 12 : 0;
   return (
     <section id="planos" aria-labelledby="fe-plans" className="relative overflow-hidden border-y border-white/[0.07] bg-[var(--fe-bg-2)] py-24 sm:py-32">
       <ViewTracker event="pricing_viewed" />
@@ -482,6 +496,12 @@ export function Plans({ plans }: { plans: PlanRow[] }) {
                 <strong>Condição especial de lançamento:</strong> libere todos os recursos do {PLATFORM.name} por {brl(promoFrom)}/mês por tempo limitado.
               </span>
             </p>
+            {deadline && <Countdown deadline={deadline} className="mt-6" />}
+            {yearSave > 0 && (
+              <p className="fe-text-2 mt-4 text-center text-sm">
+                No {best!.name}, você economiza <strong className="text-white">{brl(yearSave)} por ano</strong> e mantém esse preço enquanto a assinatura estiver ativa.
+              </p>
+            )}
           </Reveal>
         )}
 
@@ -511,8 +531,9 @@ export function Plans({ plans }: { plans: PlanRow[] }) {
                     params={{ place: `plan_${plan.id}` }}
                     className={`fe-btn relative mt-7 w-full ${plan.highlight ? "fe-btn-primary" : "fe-btn-ghost"}`}
                   >
-                    Testar {PLATFORM.trialDays} dias grátis <ArrowRight className="size-4" aria-hidden="true" />
+                    {p.promo ? "Garantir este preço" : `Testar ${PLATFORM.trialDays} dias grátis`} <ArrowRight className="size-4" aria-hidden="true" />
                   </TrackedLink>
+                  <p className="fe-muted relative mt-2.5 text-center text-xs">{PLATFORM.trialDays} dias grátis · sem cartão · cancele quando quiser</p>
                   {copy && (
                     <div className="relative mt-7 border-t border-white/10 pt-6">
                       {copy.base && <p className="mb-3 text-sm font-semibold">{copy.base}</p>}
@@ -574,6 +595,20 @@ export function Plans({ plans }: { plans: PlanRow[] }) {
               </table>
             </div>
           </details>
+        </Reveal>
+
+        <Reveal className="mt-12">
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Garantias">
+            {GUARANTEES.map((g) => (
+              <li key={g.t} className="fe-card flex items-start gap-3 p-4">
+                <g.icon className="mt-0.5 size-5 shrink-0 text-[var(--fe-accent-text)]" aria-hidden="true" />
+                <span>
+                  <span className="block text-sm font-semibold">{g.t}</span>
+                  <span className="fe-muted text-xs">{g.d}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </Reveal>
 
         {promoFrom != null && (

@@ -8,16 +8,17 @@ alter table public.plans
   add column if not exists promo_price_cents int check (promo_price_cents is null or promo_price_cents between 0 and 10000000),
   add column if not exists promo_active      boolean not null default false,
   add column if not exists promo_label       text check (promo_label is null or length(promo_label) <= 60),
+  add column if not exists promo_ends_at     timestamptz,  -- fim real da promoção: depois dele vale o preço de tabela
   add column if not exists highlight         boolean not null default false,
   add column if not exists sort              int not null default 0,
   add column if not exists updated_at        timestamptz not null default now();
 
 -- Módulos atuais (todos liberados) + recursos por plano em entitlements.features.
-insert into public.plans (id, name, price_cents, promo_price_cents, promo_active, promo_label, highlight, sort, entitlements) values
-  ('essencial', 'Essencial', 7990, 7990, false, null, false, 1,
+insert into public.plans (id, name, price_cents, promo_price_cents, promo_active, promo_label, promo_ends_at, highlight, sort, entitlements) values
+  ('essencial', 'Essencial', 7990, 7990, false, null, null, false, 1,
    '{"modules":{"reservations":true,"finance":true,"maintenance":true,"fines":true,"contracts":true,"inspections":true,"tracking":false,"fipe":true,"payments":true,"reports":true,"tenant_app":true},"maxVehicles":null,"maxUsers":null,"maxContractTemplates":5,
      "features":{"whatsapp_buttons":false,"smart_contracts":false,"periodic_checkin":false,"ai_copilot":false,"tracking_selsyn":false,"advanced_reports":false}}'::jsonb),
-  ('profissional', 'Profissional', 9990, 7990, true, 'Por tempo limitado', false, 2,
+  ('profissional', 'Profissional', 9990, 7990, true, 'Por tempo limitado', '2026-12-31 23:59:59-03', false, 2,
    '{"modules":{"reservations":true,"finance":true,"maintenance":true,"fines":true,"contracts":true,"inspections":true,"tracking":false,"fipe":true,"payments":true,"reports":true,"tenant_app":true},"maxVehicles":null,"maxUsers":null,"maxContractTemplates":5,
      "features":{"whatsapp_buttons":true,"smart_contracts":true,"periodic_checkin":true,"ai_copilot":false,"tracking_selsyn":false,"advanced_reports":false}}'::jsonb)
 on conflict (id) do nothing;
@@ -28,6 +29,7 @@ update public.plans set
   promo_price_cents = coalesce(promo_price_cents, 7990),
   promo_active = case when price_cents is null then true else promo_active end,
   promo_label = coalesce(promo_label, 'Oferta de lançamento • Por tempo limitado'),
+  promo_ends_at = case when price_cents is null then '2026-12-31 23:59:59-03'::timestamptz else promo_ends_at end,
   highlight = true, sort = 3,
   entitlements = entitlements || jsonb_build_object('features', coalesce(entitlements -> 'features', '{}'::jsonb) ||
     '{"whatsapp_buttons":true,"smart_contracts":true,"periodic_checkin":true,"ai_copilot":true,"tracking_selsyn":true,"advanced_reports":true}'::jsonb)

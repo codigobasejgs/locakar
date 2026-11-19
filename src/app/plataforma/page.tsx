@@ -1,7 +1,7 @@
 import { FAQ, PLATFORM } from "@/components/platform-landing/content";
 import { PlatformFooter } from "@/components/platform-landing/footer";
-import { PlatformHeader } from "@/components/platform-landing/interactive";
-import { planPrice } from "@/lib/plans";
+import { PlatformHeader, PromoBar } from "@/components/platform-landing/interactive";
+import { brl, planPrice, promoDeadline } from "@/lib/plans";
 import { publicPlans } from "@/lib/server/plan";
 import { Automations, BeforeAfter, Bento, Copilot, Faq, FinalCta, Hero, Plans, Security, TrustBar, VideoTour, WhiteLabelApp, WhiteLabelPanel } from "@/components/platform-landing/sections";
 
@@ -37,6 +37,9 @@ export const revalidate = 300;
 export default async function PlatformPage() {
   const plans = await publicPlans();
   const from = Math.min(...plans.map((p) => planPrice(p).cents));
+  const deadline = promoDeadline(plans);
+  const promo = plans.filter((p) => planPrice(p).promo);
+  const promoFrom = promo.length ? Math.min(...promo.map((p) => planPrice(p).cents)) : null;
   const offers = { "@type": "AggregateOffer", priceCurrency: "BRL", lowPrice: (from / 100).toFixed(2), offerCount: plans.length, description: `${PLATFORM.trialDays} dias grátis` };
   return (
     <>
@@ -45,6 +48,7 @@ export default async function PlatformPage() {
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-[var(--fe-surface)] focus:px-4 focus:py-3">
         Pular para o conteúdo
       </a>
+      {deadline && promoFrom != null && <PromoBar label={`🚀 Oferta de lançamento: todos os recursos por ${brl(promoFrom)}/mês`} deadline={deadline} />}
       <PlatformHeader />
       <main id="conteudo">
         <Hero />

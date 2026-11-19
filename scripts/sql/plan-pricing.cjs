@@ -22,6 +22,8 @@ const assert = require('assert/strict');
   assert.equal(by.completo.f.ai_copilot, true);
   assert.equal(by.completo.f.tracking_selsyn, true);
   assert.equal(by.trial.price_cents, null, 'teste grátis fora da vitrine');
+  const [{ ends }] = await q(`select promo_ends_at ends from plans where id = 'completo'`);
+  assert.equal(new Date(ends).toISOString(), new Date('2026-12-31T23:59:59-03:00').toISOString(), 'prazo da oferta de lançamento');
 
   // Locadora padrão (LOCAKAR) no Completo.
   const [{ id: org }] = await q(`select default_organization_id id from platform_config where id = 1`);

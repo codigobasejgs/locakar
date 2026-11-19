@@ -42,7 +42,7 @@ export const GET = scoped(async function GET(request: Request) {
 
     const [overview, plans, admins, config, audit, help] = await Promise.all([
       db.rpc("platform_overview"),
-      db.from("plans").select("id, name, active, entitlements, price_cents, promo_price_cents, promo_active, promo_label, highlight, sort").order("sort"),
+      db.from("plans").select("id, name, active, entitlements, price_cents, promo_price_cents, promo_active, promo_label, promo_ends_at, highlight, sort").order("sort"),
       db.rpc("platform_admin_list"),
       db.from("platform_config").select("trial_days, grace_days").eq("id", 1).maybeSingle(),
       db.from("platform_audit").select("id, actor_id, action, organization_id, details, created_at").order("created_at", { ascending: false }).limit(50),
@@ -110,7 +110,10 @@ export const POST = scoped(async function POST(request: Request) {
         if (Number.isNaN(price) || Number.isNaN(promo)) throw new HttpError(400, "Valores em centavos, de 0 a 100.000,00.");
         const promoActive = Boolean(body.promoActive);
         if (promoActive && (promo == null || price == null || promo >= price)) throw new HttpError(400, "Promoção ativa exige preço promocional menor que o de tabela.");
-        const patch = { price_cents: price, promo_price_cents: promo, promo_active: promoActive, promo_label: str(body.promoLabel, 60) || null };
+        const endsRaw = str(body.promoEndsAt, 40);
+        const ends = endsRaw ? new Date(endsRaw) : null;
+        if (ends && Number.isNaN(ends.getTime())) throw new HttpError(400, "Data de fim da promoção inválida.");
+        const patch = { price_cents: price, promo_price_cents: promo, promo_active: promoActive, promo_label: str(body.promoLabel, 60) || null, promo_ends_at: ends?.toISOString() ?? null };
         const { data: updated, error } = await db.from("plans").update(patch).eq("id", planId).select("id");
         fail(error);
         if (!updated?.length) throw new HttpError(404, "Plano não encontrado.");

@@ -189,3 +189,72 @@ export function BrandSwitcher() {
   );
 }
 
+
+/* ---------- Contagem regressiva da oferta (prazo real, vem do plano) ---------- */
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** Contagem até `deadline`. No servidor e antes de hidratar mostra só a data (sem divergência de HTML). */
+export function Countdown({ deadline, className }: { deadline: string; className?: string }) {
+  const end = Date.parse(deadline);
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    // Primeiro tique já no próximo frame (sem esperar 1 s); intervalo depois.
+    const first = requestAnimationFrame(() => setNow(Date.now()));
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      cancelAnimationFrame(first);
+      clearInterval(t);
+    };
+  }, []);
+  const date = new Date(end).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", timeZone: "America/Sao_Paulo" });
+  const left = now == null ? null : Math.max(0, end - now);
+  if (left === 0) return null;
+  const parts = left == null ? null : [
+    { v: Math.floor(left / 86_400_000), l: "dias" },
+    { v: Math.floor(left / 3_600_000) % 24, l: "horas" },
+    { v: Math.floor(left / 60_000) % 60, l: "min" },
+    { v: Math.floor(left / 1000) % 60, l: "seg" },
+  ];
+  return (
+    <div className={cn("flex flex-col items-center gap-2", className)}>
+      <p className="fe-muted text-xs font-semibold uppercase tracking-[0.14em]">Oferta termina em {date}</p>
+      {parts && (
+        // Leitor de tela: só o prazo, sem anunciar cada segundo.
+        <div className="flex gap-2" aria-hidden="true">
+          {parts.map((p) => (
+            <div key={p.l} className="fe-card grid min-w-[64px] place-items-center px-3 py-2">
+              <span className="text-2xl font-bold tabular-nums">{pad(p.v)}</span>
+              <span className="fe-muted text-[10px] uppercase tracking-wider">{p.l}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Faixa da oferta no topo da página: preço + prazo, leva aos planos. Some quando a oferta acaba. */
+export function PromoBar({ label, deadline }: { label: string; deadline: string }) {
+  const [left, setLeft] = useState<string | null>(null);
+  useEffect(() => {
+    const end = Date.parse(deadline);
+    const tick = () => {
+      const ms = end - Date.now();
+      if (ms <= 0) return setLeft("");
+      const d = Math.floor(ms / 86_400_000);
+      setLeft(d > 0 ? `${d}d ${pad(Math.floor(ms / 3_600_000) % 24)}h ${pad(Math.floor(ms / 60_000) % 60)}min` : `${pad(Math.floor(ms / 3_600_000))}:${pad(Math.floor(ms / 60_000) % 60)}:${pad(Math.floor(ms / 1000) % 60)}`);
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [deadline]);
+  if (left === "") return null;
+  return (
+    <a href="#planos" onClick={() => track("pricing_viewed", { place: "promo_bar" })} className="relative z-50 block bg-gradient-to-r from-[#7a00ff] to-[#a64dff] px-4 py-2 text-center text-xs font-semibold text-white sm:text-sm">
+      {label}
+      {left && <span className="ml-2 inline-block rounded-md bg-black/25 px-2 py-0.5 tabular-nums">termina em {left}</span>}
+      <span className="ml-2 underline underline-offset-2">Ver planos</span>
+    </a>
+  );
+}
