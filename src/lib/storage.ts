@@ -1,5 +1,9 @@
 /** Wrapper seguro de localStorage (SSR, modo privado e cota cheia não quebram a aplicação). */
-const PREFIX = "locakar:v1:";
+import { demoSlug } from "./demo";
+
+// Cada locadora da demonstração tem os próprios dados neste navegador.
+const DEMO = demoSlug();
+const PREFIX = DEMO ? `fe-demo:${DEMO}:` : "locakar:v1:";
 
 export const storage = {
   get<T>(key: string): T | null {

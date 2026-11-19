@@ -83,7 +83,7 @@ export function Hero() {
             <TrackedLink href={PLATFORM.signup} event="hero_cta_clicked" params={{ place: "hero" }} className="fe-btn fe-btn-primary !min-h-[52px] !px-7 !text-base">
               Quero automatizar minha locadora <ArrowRight className="size-4" aria-hidden="true" />
             </TrackedLink>
-            <TrackedLink href={WA.demo} event="demo_requested" params={{ place: "hero" }} className="fe-btn fe-btn-ghost !min-h-[52px] !px-7 !text-base">
+            <TrackedLink href="/demo" event="demo_requested" params={{ place: "hero" }} className="fe-btn fe-btn-ghost !min-h-[52px] !px-7 !text-base">
               <PlayCircle className="size-4" aria-hidden="true" /> Ver demonstração ao vivo
             </TrackedLink>
           </div>

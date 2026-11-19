@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useOrgAppHead } from "@/components/pwa/org-app-head";
 import { brandTokens } from "@/lib/contrast";
+import { currentDemo, demoOrganization } from "@/lib/demo";
 import { planHasFeature, type PlanFeature, type PlanRow } from "@/lib/plans";
 import { getSupabase } from "@/lib/supabase/client";
 import { isSupabaseEnabled } from "@/lib/supabase/env";
@@ -50,8 +51,11 @@ const DEMO_ORG: Organization = {
   created_at: new Date().toISOString(),
 };
 
+const DEMO = currentDemo();
+const START_ORG = DEMO ? demoOrganization(DEMO) : DEMO_ORG;
+
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
-  const [org, setOrg] = useState<Organization | null>(isSupabaseEnabled ? null : DEMO_ORG);
+  const [org, setOrg] = useState<Organization | null>(isSupabaseEnabled ? null : START_ORG);
   const [role, setRole] = useState<OrgRole | null>(isSupabaseEnabled ? null : "owner");
   const [status, setStatus] = useState<OrgStatus | null>(isSupabaseEnabled ? null : "active");
   const [memberships, setMemberships] = useState<MembershipInfo[]>([]);

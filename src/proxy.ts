@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { DEMO_COOKIE } from "@/lib/demo";
 import { SUPABASE_KEY, SUPABASE_URL, isSupabaseEnabled } from "@/lib/supabase/env";
 
 const LOGIN = "/admin/login";
@@ -11,7 +12,8 @@ const PUBLIC_ADMIN = new Set([LOGIN, "/admin/manifest.webmanifest"]);
  * É uma camada de UX — a segurança dos dados é garantida pelo RLS no banco.
  */
 export async function proxy(request: NextRequest) {
-  if (!isSupabaseEnabled) return NextResponse.next();
+  // Demonstração: o painel roda com dados locais no navegador; as APIs seguem exigindo sessão real.
+  if (!isSupabaseEnabled || request.cookies.has(DEMO_COOKIE)) return NextResponse.next();
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {

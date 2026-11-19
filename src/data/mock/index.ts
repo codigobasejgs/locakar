@@ -4,6 +4,7 @@
  * Datas são relativas ao dia do primeiro acesso para o painel sempre parecer "vivo".
  */
 import { PUBLIC_FLEET } from "@/data/fleet";
+import { currentDemo } from "@/lib/demo";
 import { addDays, cpfCheckDigits, todayISO } from "@/lib/utils";
 import type {
   Client,
@@ -19,6 +20,8 @@ import type {
 } from "@/types";
 
 const [MOBI, KWID] = PUBLIC_FLEET;
+// Demonstração (/demo): cada locadora fictícia tem nomes, placas, DDD e preços próprios.
+const DEMO = currentDemo();
 const d = (offset: number) => addDays(todayISO(), offset);
 
 /* ---------- Veículos ---------- */
@@ -46,7 +49,7 @@ export const seedVehicles = (): FleetVehicle[] =>
       name: base.name,
       year,
       status,
-      plate: `LKR${i}${String.fromCharCode(65 + i)}${String(10 + i * 7).slice(-2)}`,
+      plate: `${DEMO?.plate ?? "LKR"}${i}${String.fromCharCode(65 + i)}${String(10 + i * 7).slice(-2)}`,
       vehicleType: "Carro",
       purchaseDate: d(-420 - i * 35),
       purchaseValue,
@@ -56,14 +59,14 @@ export const seedVehicles = (): FleetVehicle[] =>
       ipvaStatus: i % 4 === 3 ? "open" : "paid",
       licensingMonth: ["Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"][i],
       licensingStatus: i === 9 ? "open" : i === 8 ? "late" : "paid",
-      weeklyRate: model === "mobi" ? 650 : 700,
+      weeklyRate: model === "mobi" ? (DEMO?.rates[0] ?? 650) : (DEMO?.rates[1] ?? 700),
       notes: status === "maintenance" ? "Revisão preventiva em andamento." : undefined,
     };
   });
 
 /* ---------- Clientes ---------- */
 
-const CLIENT_NAMES = [
+const CLIENT_NAMES = DEMO?.clients ?? [
   "Ana Beatriz Moreira",
   "Bruno Carvalho Lima",
   "Camila Duarte Rocha",
@@ -85,7 +88,7 @@ export const seedClients = (): Client[] =>
       code: i + 1,
       registeredAt: d(-300 + i * 22),
       name,
-      phone: `(19) 90000-${String(1000 + i * 111).slice(-4)}`,
+      phone: `(${DEMO?.ddd ?? "19"}) 90000-${String(1000 + i * 111).slice(-4)}`,
       cpf: `${base9.slice(0, 3)}.${base9.slice(3, 6)}.${base9.slice(6, 9)}-${cpfCheckDigits(base9)}`,
       address: `${STREETS[i % STREETS.length]}, ${100 + i * 37} — Centro`,
       firstLicenseDate: d(-3650 - i * 180),

@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { useOrganization } from "@/hooks/use-organization";
 import { PLATFORM } from "@/lib/platform";
 import { getSupabase } from "@/lib/supabase/client";
+import { isSupabaseEnabled } from "@/lib/supabase/env";
 import { emptyProgress, progressKey, readProgress, saveProgress, type HelpProgress } from "../progress";
 import type { HelpAccess } from "../types";
 
@@ -69,6 +70,7 @@ export function AdminHelpProvider({ children }: { children: React.ReactNode }) {
   const { org, role } = useOrganization();
   const [session, setSession] = useState<{ id: string; platformAdmin: boolean; modules?: Record<string, boolean> }>({ id: "anon", platformAdmin: false });
   useEffect(() => {
+    if (!isSupabaseEnabled) return;
     let alive = true;
     const db = getSupabase();
     Promise.all([

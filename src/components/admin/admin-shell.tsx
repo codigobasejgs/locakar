@@ -4,7 +4,7 @@ import { Bell, Check, ExternalLink, LogOut, Menu, Moon, ShieldCheck, Smartphone,
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Toaster } from "sonner";
 import { DropdownMenu } from "radix-ui";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,8 @@ import { buildAlerts } from "@/lib/analytics";
 import { authService } from "@/lib/auth";
 import { CATEGORY_LABEL, unreadCount } from "@/lib/push-events";
 import { getSupabase } from "@/lib/supabase/client";
-import { isSupabaseEnabled } from "@/lib/supabase/env";
+import { exitDemo } from "@/lib/demo";
+import { isDemo, isSupabaseEnabled } from "@/lib/supabase/env";
 import { ROUTES } from "@/lib/constants";
 import { cn, todayISO } from "@/lib/utils";
 import { ADMIN_NAV, findNavItem } from "./nav";
@@ -256,10 +257,10 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
       <OrgInstallButton size="sm" variant="ghost" label="Instalar" className="hidden sm:inline-flex" />
       <ContextualHelpButton />
       <OrgSwitcher />
-      {!isSupabaseEnabled && (
-        <span className="hidden rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300 md:inline">
-          Modo demonstração · dados locais
-        </span>
+      {isDemo && (
+        <button type="button" onClick={exitDemo} title="Sair da demonstração" className="hidden rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300 hover:bg-amber-400/20 md:inline">
+          Demonstração · dados fictícios · Sair
+        </button>
       )}
       <button
         type="button"
@@ -331,8 +332,15 @@ function Content({ children }: { children: React.ReactNode }) {
 }
 
 /** Login fica fora do shell (sem sidebar e sem carregar dados). */
-export function AdminFrame({ children }: { children: React.ReactNode }) {
-  return usePathname() === ROUTES.login ? children : <AdminShell>{children}</AdminShell>;
+const noop = () => () => {};
+
+export function AdminFrame({ children, demo = false }: { children: React.ReactNode; demo?: boolean }) {
+  // Demonstração (cookie lido no servidor): dados só no navegador, então o painel monta só no cliente
+  // (servidor e primeira renderização do cliente mostram o mesmo placeholder: sem erro de hidratação).
+  const mounted = useSyncExternalStore(noop, () => true, () => false);
+  const pathname = usePathname();
+  if ((demo || isDemo) && !mounted) return <div className="min-h-dvh bg-ink" aria-busy="true" />;
+  return pathname === ROUTES.login ? children : <AdminShell>{children}</AdminShell>;
 }
 
 function AdminShell({ children }: { children: React.ReactNode }) {
@@ -374,6 +382,12 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           <HelpPalette />
           <div className="min-h-dvh bg-ink text-white admin-shell">
           <OrgStatusBanner />
+          {isDemo && (
+            <div role="note" className="no-print flex items-center justify-between gap-3 border-b border-amber-500/25 bg-amber-500/10 px-4 py-2 text-xs text-amber-200 md:hidden">
+              <span>Demonstração com dados fictícios.</span>
+              <button type="button" onClick={exitDemo} className="min-h-8 underline">Sair</button>
+            </div>
+          )}
           {/* Sidebar desktop */}
         <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-[#070708] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] lg:flex">
           <Link href={ROUTES.admin} className="flex h-16 items-center border-b border-line px-6" aria-label="Dashboard">

@@ -6,6 +6,7 @@ import { registerDevice, unregisterDevice } from "../services/device";
 import { supabase } from "../services/supabase";
 import { LocatarioContext, type TenantState } from "../hooks/useLocatario";
 import { setOrgSlug } from "../services/org";
+import { isDemo } from "../services/demo";
 import { useOrg } from "./OrgProvider";
 
 /** Tabelas que a equipe altera e o app mostra: mudou, a tela recarrega sozinha (Supabase Realtime + RLS). */
@@ -53,6 +54,11 @@ export function LocatarioProvider({ children }: { children: React.ReactNode }) {
   }, [applyBrand]);
 
   useEffect(() => {
+    // Demonstração: locatária fictícia já "logada", sem Supabase.
+    if (isDemo) {
+      load();
+      return;
+    }
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (data.session) load();
@@ -75,7 +81,7 @@ export function LocatarioProvider({ children }: { children: React.ReactNode }) {
   // Depois do aceite de privacidade: registra o aparelho (push + segurança) uma vez por sessão.
   const consent = summary?.consent;
   useEffect(() => {
-    if (state !== "ready" || !consent || registered.current) return;
+    if (isDemo || state !== "ready" || !consent || registered.current) return;
     registered.current = true;
     registerDevice(consent.scopes.includes("push")).catch(() => {
       registered.current = false; // tenta de novo na próxima atualização
@@ -85,7 +91,7 @@ export function LocatarioProvider({ children }: { children: React.ReactNode }) {
   // Tempo real: aprovação de comprovante, resposta de ocorrência, documento conferido...
   const clientId = summary?.client.id;
   useEffect(() => {
-    if (!clientId) return;
+    if (!clientId || isDemo) return;
     const channel = supabase.channel(`locatario-${clientId}`);
     for (const table of LIVE_TABLES) {
       channel.on("postgres_changes", { event: "*", schema: "public", table, filter: `client_id=eq.${clientId}` }, () => {
@@ -112,6 +118,11 @@ export function LocatarioProvider({ children }: { children: React.ReactNode }) {
   }, [summary]);
 
   const signOut = useCallback(async () => {
+    if (isDemo) {
+      document.cookie = "fe_demo=; path=/; max-age=0";
+      window.location.assign("/demo");
+      return;
+    }
     await unregisterDevice(); // antes de sair: precisa do token para parar o push deste aparelho
     await clearCache();
     await supabase.auth.signOut();

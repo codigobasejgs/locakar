@@ -1,4 +1,5 @@
 import { currentOrgSlug } from "./org";
+import { demoApi, isDemo } from "./demo";
 import { supabase } from "./supabase";
 
 /**
@@ -19,6 +20,13 @@ export class ApiError extends Error {
 
 /** Chama /api/tenant/* com o token da sessão. O servidor descobre o cliente pelo token, nunca por um id enviado aqui. */
 export async function api<T>(path: string, init: { method?: "GET" | "POST"; body?: unknown } = {}): Promise<T> {
+  if (isDemo) {
+    try {
+      return demoApi<T>(path, init.method ?? "GET");
+    } catch (e) {
+      throw new ApiError(409, (e as Error).message);
+    }
+  }
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new ApiError(401, "Sessão expirada. Entre novamente.");

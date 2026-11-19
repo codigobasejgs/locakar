@@ -59,7 +59,7 @@ export function BrandLogo({ className, priority }: { className?: string; priorit
 }
 
 /** Cabeçalho fixo em vidro. Âncoras (#) funcionam na própria landing; nas páginas legais voltam para "/". */
-export function PlatformHeader({ home = "/" }: { home?: string }) {
+export function PlatformHeader({ home = "/", onLanding = false }: { home?: string; onLanding?: boolean }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -68,7 +68,8 @@ export function PlatformHeader({ home = "/" }: { home?: string }) {
     window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, []);
-  const anchor = (h: string) => (home === "/" || home === "/plataforma" ? h : `${home}${h}`);
+  // Na própria landing a âncora rola a página; nas demais (termos, demo) leva para a landing na seção.
+  const anchor = (h: string) => (onLanding ? h : `${home === "/plataforma" ? "/" : home}${h}`);
 
   return (
     <header className={cn("sticky top-0 z-50 transition-colors", scrolled ? "fe-glass" : "border-b border-transparent")} style={{ top: "env(safe-area-inset-top, 0px)" }}>

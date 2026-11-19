@@ -49,7 +49,7 @@ export default async function PlatformPage() {
         Pular para o conteúdo
       </a>
       {deadline && promoFrom != null && <PromoBar label={`🚀 Oferta de lançamento: todos os recursos por ${brl(promoFrom)}/mês`} deadline={deadline} />}
-      <PlatformHeader />
+      <PlatformHeader onLanding />
       <main id="conteudo">
         <Hero />
         <TrustBar />

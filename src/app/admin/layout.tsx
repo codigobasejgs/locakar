@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { DEMO_COOKIE } from "@/lib/demo";
 import { AdminFrame } from "@/components/admin/admin-shell";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { APP_NAMES, PWA } from "@/lib/pwa";
@@ -40,7 +42,8 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * Área administrativa com sistema global de temas Dark / Light (sem FOUC).
  */
-export default function AdminLayout({ children }: LayoutProps<"/admin">) {
+export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
+  const demo = (await cookies()).has(DEMO_COOKIE);
   return (
     <>
       <script
@@ -49,7 +52,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
         }}
       />
       <ThemeProvider>
-        <AdminFrame>{children}</AdminFrame>
+        <AdminFrame demo={demo}>{children}</AdminFrame>
       </ThemeProvider>
     </>
   );

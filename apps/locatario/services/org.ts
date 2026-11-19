@@ -1,6 +1,7 @@
 import * as Linking from "expo-linking";
 import { Platform } from "react-native";
 import { readCache, writeCache } from "./cache";
+import { demoBrand, demoSlug } from "./demo";
 
 /**
  * Locadora em que o app abre. Vem do link de divulgação (…/locatario?org=<slug> ou locakar://…?org=<slug>),
@@ -38,6 +39,8 @@ function slugFromUrl(url: string | null) {
 
 /** Lê o link de abertura (ou o salvo) e fixa a locadora desta sessão do app. */
 export async function initOrg(): Promise<string> {
+  const demo = demoSlug();
+  if (demo) return (current = demo);
   const fromLink =
     Platform.OS === "web" && typeof window !== "undefined" ? slugFromUrl(window.location.href) : slugFromUrl(await Linking.getInitialURL());
   const saved = await readCache<string>("org_slug");
@@ -54,6 +57,7 @@ export async function setOrgSlug(slug: string) {
 
 /** Marca pública da locadora (antes do login). Falha de rede: usa a última salva. */
 export async function fetchOrgBrand(apiUrl: string, slug = current): Promise<OrgBrand | null> {
+  if (demoSlug() === slug) return demoBrand(slug) as OrgBrand;
   const key = `org_brand:${slug}`;
   try {
     const res = await fetch(`${apiUrl}/api/public/org/${encodeURIComponent(slug)}`);
