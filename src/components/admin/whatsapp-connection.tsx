@@ -32,15 +32,33 @@ export function WhatsAppConnection() {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [testPhone, setTestPhone] = useState(maskPhone(COMPANY.whatsapp.e164.slice(2)));
 
+  const [pairPhone, setPairPhone] = useState("");
+  const [pairing, setPairing] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/whatsapp", { cache: "no-store" });
+      // Com código de pareamento na tela, só consulta o estado: pedir QR novo invalidaria o código.
+      const res = await fetch(pairing ? "/api/whatsapp?check=1" : "/api/whatsapp", { cache: "no-store" });
       const json = (await res.json()) as Status;
-      setStatus(res.ok ? json : { error: json.error ?? "Falha ao consultar o WhatsApp." });
+      setStatus((old) => (res.ok ? { ...json, qr: json.qr ?? (json.connected ? undefined : old?.qr) } : { error: json.error ?? "Falha ao consultar o WhatsApp." }));
+      if (json.connected) setPairing(null);
     } catch {
       setStatus({ error: "Sem conexão com o servidor." });
     }
-  }, []);
+  }, [pairing]);
+
+  const pair = async () => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/whatsapp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "pair", phone: pairPhone }) });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.pairingCode) throw new Error(json.error ?? "Não foi possível gerar o código.");
+      setPairing(json.pairingCode as string);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+    setBusy(false);
+  };
 
   useEffect(() => {
     if (!isSupabaseEnabled) return;
@@ -155,9 +173,22 @@ export function WhatsAppConnection() {
           <li>Aponte a câmera para o QR Code ao lado.</li>
         </ol>
         <p className="text-xs text-muted">O QR Code se renova sozinho a cada 20 segundos. Esta tela muda para “Conectado” assim que o celular ler o código.</p>
-        <Button variant="outline" size="sm" onClick={load} disabled={busy}>
+        <Button variant="outline" size="sm" onClick={() => { setPairing(null); void load(); }} disabled={busy}>
           <RefreshCw /> Gerar novo QR Code
         </Button>
+        <div className="space-y-2 border-t border-line pt-3">
+          <p className="font-medium text-white">Sem câmera? Conecte por código</p>
+          <div className="flex flex-wrap items-end gap-2">
+            <Input aria-label="Celular do WhatsApp que será conectado" placeholder="(11) 99999-9999" inputMode="tel" value={pairPhone} onChange={(e) => setPairPhone(maskPhone(e.target.value))} className="h-9 max-w-48" />
+            <Button variant="outline" size="sm" onClick={pair} disabled={busy || pairPhone.replace(/\D/g, "").length < 10}>Gerar código</Button>
+          </div>
+          {pairing && (
+            <div role="status" className="space-y-1 rounded-xl border border-line bg-white/[0.03] p-3">
+              <p className="font-mono text-2xl tracking-[0.3em] text-white">{pairing}</p>
+              <p className="text-xs text-muted">No celular: Dispositivos conectados → Conectar dispositivo → <strong>Conectar com número de telefone</strong> → digite o código. Vale por cerca de 1 minuto.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

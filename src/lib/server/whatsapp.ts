@@ -17,6 +17,20 @@ export function whatsAppInstance() {
   return slug === "locakar" ? process.env.EVOLUTION_INSTANCE || "locakar" : `org-${slug}`;
 }
 
+/** Chamada à Evolution API com a chave global (nunca sai do servidor). Não lança em HTTP de erro. */
+export async function evo(path: string, init?: RequestInit, timeout = 15_000) {
+  const base = process.env.EVOLUTION_API_URL!.replace(/\/+$/, "");
+  const res = await fetch(`${base}${path}`, {
+    ...init,
+    headers: { apikey: process.env.EVOLUTION_API_KEY!, "Content-Type": "application/json", ...init?.headers },
+    signal: AbortSignal.timeout(timeout),
+    cache: "no-store",
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- respostas variam entre versões da Evolution
+  const json: any = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, json };
+}
+
 export interface OutgoingWhatsApp {
   kind: EmailKind;
   phone?: string;

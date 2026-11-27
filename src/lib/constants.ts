@@ -31,6 +31,7 @@ export const ROUTES = {
   settings: "/admin/settings",
   subscription: "/admin/assinatura",
   requests: "/admin/requests",
+  conversations: "/admin/conversas",
   incidents: "/admin/incidents",
   security: "/admin/security",
   monitoring: "/admin/monitoring",

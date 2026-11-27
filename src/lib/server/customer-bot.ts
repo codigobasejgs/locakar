@@ -24,6 +24,7 @@ import { fromRow } from "@/repositories/mapping";
 import type { Rental } from "@/types";
 import { toCard, type CopilotConfig } from "./copilot";
 import { isWhaileysEnabled, whaileysSend, whaileysStatus, type OutgoingCard } from "./whaileys";
+import { recordMessage } from "./whatsapp-inbox";
 
 /** Link do App Oficial da locadora (mesmo padrão da página pública /l/<slug>). */
 export const appUrlFor = () => `${siteUrl()}/locatario?org=${brand().slug ?? ""}`;
@@ -367,5 +368,7 @@ export function customerTransport(cfg: CopilotConfig, phone: string, to: string)
   return async (card: OutgoingCard) => {
     const { messageId } = await whaileysSend(cfg.instance_key, to, card);
     await serviceDb().from("copilot_messages").insert({ phone, direction: "out", provider_id: messageId, kind: card.sections ? "list" : card.buttons ? "buttons" : "text", text: null });
+    // O motor não reenvia as próprias mensagens: a resposta do robô entra no histórico do painel aqui.
+    await recordMessage({ provider: "whaileys", key: { remoteJid: to, fromMe: true, id: messageId }, message: { conversation: card.text } }).catch(() => null);
   };
 }

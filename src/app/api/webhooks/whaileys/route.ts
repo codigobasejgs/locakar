@@ -1,12 +1,14 @@
 import { after } from "next/server";
 import { routeMessage, type IncomingKey, type SessionMe } from "@/lib/copilot/guard";
-import { parseMessage } from "@/lib/copilot/parse";
+import { isMenuCommand, parseMessage } from "@/lib/copilot/parse";
 import { loadCopilotConfig, runCopilot, whaileysTransport } from "@/lib/server/copilot";
 import { customerTransport, runCustomerBot } from "@/lib/server/customer-bot";
 import { globalDb, loadOrg, runWithOrg, scoped } from "@/lib/server/org-context";
 import { hasPlanFeature } from "@/lib/server/plan";
 import { serviceDb } from "@/lib/server/push";
 import { isWhaileysEnabled, verifyWhaileysSignature, whaileysKnownPhones } from "@/lib/server/whaileys";
+import { recordMessage } from "@/lib/server/whatsapp-inbox";
+import { replyWithAi } from "@/lib/server/whatsapp-ai";
 
 /**
  * Webhook do motor Whaileys. Separado do fluxo da Evolution API.
@@ -18,7 +20,7 @@ import { isWhaileysEnabled, verifyWhaileysSignature, whaileysKnownPhones } from 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-interface Payload { instanceKey?: string; me?: SessionMe; key?: IncomingKey; message?: unknown; media?: { mimetype?: string; data?: string } }
+interface Payload { instanceKey?: string; me?: SessionMe; key?: IncomingKey; message?: unknown; pushName?: string | null; messageTimestamp?: unknown; media?: { mimetype?: string; data?: string } }
 
 export const POST = scoped(async function POST(request: Request) {
   if (!isWhaileysEnabled()) return Response.json({ error: "disabled" }, { status: 503 });
@@ -43,6 +45,10 @@ export const POST = scoped(async function POST(request: Request) {
       await db.from("copilot_config").update({ connected_jid: body.me.id, connected_lid: body.me.lid ?? null, updated_at: new Date().toISOString() }).eq("organization_id", org.id);
     }
     const route = routeMessage(body.key!, body.me ?? { id: cfg.connected_jid, lid: cfg.connected_lid }, cfg.admin_phones, Boolean(cfg.customer_bot_enabled));
+    // Caixa de conversas: tudo que é conversa com cliente/visitante (inclusive o dono respondendo pelo celular).
+    // Copiloto (self-chat/gestor), grupos e eco ficam de fora.
+    const saved = route.to === "copilot" || (route.to === "ignore" && ["chat", "eco"].includes(route.reason)) ? null : await recordMessage({ provider: "whaileys", key: body.key!, message: body.message, pushName: body.pushName, timestamp: body.messageTimestamp });
+    if (route.to === "customer" && saved?.mode === "human") return Response.json({ paused: true });
     if (route.to === "ignore") {
       // Gestor escrevendo só com LID: o motor ainda não sabe quais números resolver (reinício ou lista nova).
       // Reenvia os autorizados; a próxima mensagem já chega com o número. Nunca libera esta mensagem.
@@ -61,8 +67,11 @@ export const POST = scoped(async function POST(request: Request) {
     if (ev.kind === "ignored") return Response.json({ ignored: true });
     const media = body.media?.data && body.media.mimetype ? { mimetype: body.media.mimetype, data: body.media.data } : undefined;
 
+    // Modo IA: texto livre vai para a IA; "menu", botões e mídia continuam no autoatendimento por botões.
+    const aiMode = route.to === "customer" && saved?.mode === "ai" && ev.kind === "text" && !isMenuCommand(ev.text) && (await hasPlanFeature(org.id, "ai_copilot"));
     after(() => runWithOrg({ org }, async () => {
-      if (route.to === "copilot") await runCopilot(ev, { ok: true, who: route.who, phone: route.phone, replyTo: route.replyTo }, { media, transport: whaileysTransport(cfg, route.phone, route.replyTo) }).catch((e) => console.error(`[copilot:${org.id}]`, (e as Error).message));
+      if (aiMode && route.to === "customer") await replyWithAi("whaileys", route.replyTo, route.phone, cfg.customer_rate_per_hour ?? 30, (text) => customerTransport(cfg, route.phone, route.replyTo)({ text })).catch((e) => console.error(`[whatsapp-ai:${org.id}]`, (e as Error).message));
+      else if (route.to === "copilot") await runCopilot(ev, { ok: true, who: route.who, phone: route.phone, replyTo: route.replyTo }, { media, transport: whaileysTransport(cfg, route.phone, route.replyTo) }).catch((e) => console.error(`[copilot:${org.id}]`, (e as Error).message));
       else await runCustomerBot(ev, route.phone, cfg, { media, transport: customerTransport(cfg, route.phone, route.replyTo) }).catch((e) => console.error(`[customer-bot:${org.id}]`, (e as Error).message));
       // Contexto curto: mantém só as últimas 50 mensagens do telefone.
       const { data: old } = await db.from("copilot_messages").select("id").eq("phone", route.phone).order("created_at", { ascending: false }).range(50, 500);

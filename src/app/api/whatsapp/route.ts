@@ -1,6 +1,7 @@
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/supabase";
-import { isWhatsAppEnabled, sendWhatsApp, whatsAppInstance } from "@/lib/server/whatsapp";
+import { evo, isWhatsAppEnabled, sendWhatsApp, whatsAppInstance } from "@/lib/server/whatsapp";
 import { brand, scoped } from "@/lib/server/org-context";
+import { toWhatsAppNumber } from "@/lib/utils";
 
 /**
  * Conexão do WhatsApp da LOCAKAR (Evolution API), usada em Configurações. Somente equipe.
@@ -11,18 +12,6 @@ import { brand, scoped } from "@/lib/server/org-context";
 export const dynamic = "force-dynamic";
 
 const instance = () => whatsAppInstance();
-
-async function evo(path: string, init?: RequestInit) {
-  const base = process.env.EVOLUTION_API_URL!.replace(/\/+$/, "");
-  const res = await fetch(`${base}${path}`, {
-    ...init,
-    headers: { apikey: process.env.EVOLUTION_API_KEY!, "Content-Type": "application/json", ...init?.headers },
-    signal: AbortSignal.timeout(15_000),
-    cache: "no-store",
-  });
-  const json = await res.json().catch(() => ({}));
-  return { ok: res.ok, status: res.status, json };
-}
 
 /** Cria a instância se ainda não existir (primeiro acesso em um servidor novo). */
 async function ensureInstance() {
@@ -37,13 +26,15 @@ async function ensureInstance() {
   return created.json.instance;
 }
 
-export const GET = scoped(async function GET() {
+export const GET = scoped(async function GET(request: Request) {
   try {
     await requireStaff();
     if (!isWhatsAppEnabled()) return Response.json({ configured: false });
     const info = await ensureInstance();
     const state = await evo(`/instance/connectionState/${encodeURIComponent(instance())}`);
     const connected = state.json?.instance?.state === "open";
+    // ?check=1: só o estado. Usado enquanto um código de pareamento está na tela (um QR novo invalidaria o código).
+    if (!connected && new URL(request.url).searchParams.get("check") === "1") return Response.json({ configured: true, instance: instance(), connected: false });
     if (connected) {
       const owner: string | undefined = info?.ownerJid;
       return Response.json({
@@ -74,6 +65,17 @@ export const POST = scoped(async function POST(request: Request) {
     if (!isWhatsAppEnabled()) throw new HttpError(409, "WhatsApp não configurado no servidor.");
     const body = (await request.json().catch(() => ({}))) as { action?: string; phone?: string };
 
+    if (body.action === "pair") {
+      // Código de pareamento: alternativa ao QR (WhatsApp → Dispositivos conectados → Conectar com número de telefone).
+      await requireStaff("integrations");
+      const number = toWhatsAppNumber(body.phone);
+      if (!number) throw new HttpError(400, "Informe o celular com DDD do WhatsApp que será conectado.");
+      await ensureInstance();
+      const r = await evo(`/instance/connect/${encodeURIComponent(instance())}?number=${number}`);
+      const pairingCode = typeof r.json?.pairingCode === "string" ? r.json.pairingCode : null;
+      if (!r.ok || !pairingCode) throw new HttpError(502, "O servidor do WhatsApp não gerou o código. Tente o QR Code ou gere de novo em instantes.");
+      return Response.json({ ok: true, pairingCode });
+    }
     if (body.action === "logout") {
       await evo(`/instance/logout/${encodeURIComponent(instance())}`, { method: "DELETE" });
       return Response.json({ ok: true });

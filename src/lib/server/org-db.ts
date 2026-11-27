@@ -11,7 +11,7 @@ export const TENANT_TABLES = new Set([
   "notifications", "client_push_subscriptions", "vehicle_fipe_history", "audit_log", "selsyn_requests", "settings",
   "signature_provider_config", "contract_signature_processes", "contract_signers", "signature_events", "selsyn_commands", "selsyn_session",
   "copilot_config", "copilot_sessions", "copilot_pending_actions", "copilot_messages", "customer_bot_sessions", "customer_bot_rate", "customer_bot_leads",
-  "payment_gateways", "charge_reminders",
+  "payment_gateways", "charge_reminders", "whatsapp_conversations", "whatsapp_messages",
 ]);
 
 const ORG = Symbol.for("locakar.organizationId");
