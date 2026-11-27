@@ -5,9 +5,9 @@ import { FormDialog } from "@/components/admin/crud-dialogs";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/form";
 import { useAdminData, useLookups } from "@/hooks/use-admin-data";
 import { numOrUndef, numToStr, strOrUndef, type useCrud } from "@/hooks/use-crud";
-import { INTEREST_LABEL, PERIOD_LABEL, buildReceipts } from "@/lib/billing";
+import { INTEREST_LABEL, PERIOD_LABEL, buildReceipts, contractTypeFor } from "@/lib/billing";
 import { CONTRACT_TYPES, RENTAL_STATUS, WEEKDAYS, statusOptions, toOptions } from "@/lib/constants";
-import { busyVehicleIds, canRent, findConflict, isOngoing } from "@/lib/reservations";
+import { busyClientIds, busyVehicleIds, canRent, findConflict, isOngoing } from "@/lib/reservations";
 import { addDays, formatDate, newId, todayISO } from "@/lib/utils";
 import type { BillingConfig, BillingPeriod, InterestPeriod, Rental, RentalStatus } from "@/types";
 
@@ -94,14 +94,18 @@ type RentalCrud = ReturnType<typeof useCrud<"rentals", RentalDraft>>;
 /** Formulário de locação (compartilhado entre a lista e a página de detalhes). */
 export function RentalForm({ crud }: { crud: RentalCrud }) {
   const { data, update } = useAdminData();
-  const { clientOptions, vehicleById } = useLookups();
+  const { clientOptions: allClients, vehicleById } = useLookups();
   const { draft, bind, set } = crud;
   // Só veículos que podem ser locados agora; na edição, o veículo atual continua na lista.
   const busy = busyVehicleIds(data?.rentals ?? [], crud.editing?.id);
+  // Cliente com locação em curso não aparece em nova locação; na edição, o cliente da própria locação continua.
+  const busyClients = busyClientIds(data?.rentals ?? [], crud.editing?.id);
+  const clientOptions = allClients.filter((c) => c.value === crud.editing?.clientId || !busyClients.has(c.value));
   const vehicleOptions = (data?.vehicles ?? [])
     .filter((v) => v.id === crud.editing?.vehicleId || canRent(v, busy))
     .map((v) => ({ value: v.id, label: `${v.plate} · ${v.name}` }));
-  const count = draft.firstDue && draft.until >= draft.firstDue ? buildReceipts({ id: "p", firstDue: draft.firstDue, until: draft.until, amount: 0, period: draft.period }).length : 0;
+  // A última cobrança é o Período final (campo único na tela).
+  const count = draft.firstDue && draft.endDate >= draft.firstDue ? buildReceipts({ id: "p", firstDue: draft.firstDue, until: draft.endDate, amount: 0, period: draft.period }).length : 0;
   const preview = count ? `${count} parcela(s) ${PERIOD_LABEL[draft.period].toLowerCase()}(s)` : undefined;
 
   const submit = async () => {
@@ -121,13 +125,15 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
       return void toast.error(`Veículo já locado de ${formatDate(conflict.startDate)} a ${formatDate(conflict.endDate)}.`);
     }
 
-    if (draft.until < draft.firstDue) return void toast.error("A última cobrança deve ser igual ou posterior à primeira.");
+    if (draft.endDate < draft.firstDue) return void toast.error("A primeira cobrança deve ser até o Período final.");
+    const chosenClient = draft.clientId !== crud.editing?.clientId && busyClientIds(data!.rentals, crud.editing?.id).has(draft.clientId);
+    if (chosenClient) return void toast.error("Este cliente já tem uma locação em andamento.");
     const amount = Number(draft.weeklyRate) || 0;
     const billing: BillingConfig = {
       period: draft.period,
       amount,
       firstDue: draft.firstDue,
-      until: draft.until,
+      until: draft.endDate,
       lateFeePercent: Number(draft.lateFeePercent) || 0,
       interestPercent: Number(draft.interestPercent) || 0,
       interestPeriod: draft.interestPeriod,
@@ -155,7 +161,7 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
       id,
       clientId: draft.clientId,
       vehicleId: draft.vehicleId,
-      contractType: draft.contractType,
+      contractType: contractTypeFor(draft.period),
       startDate: draft.startDate,
       startTime: strOrUndef(draft.startTime),
       endDate: draft.endDate,
@@ -195,7 +201,7 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
       tour="rentals-form"
     >
       <Field label="Locatário" htmlFor="f-clientId" required>
-        <Select {...bind("clientId")} options={clientOptions} placeholder="Selecione" required />
+        <Select {...bind("clientId")} options={clientOptions} placeholder={clientOptions.length ? "Selecione" : "Nenhum cliente disponível"} required />
       </Field>
       <Field label="Veículo (placa)" htmlFor="f-vehicleId" required>
         <Select
@@ -210,9 +216,6 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
           required
         />
       </Field>
-      <Field label="Tipo de contrato" htmlFor="f-contractType">
-        <Select {...bind("contractType")} options={toOptions(CONTRACT_TYPES)} />
-      </Field>
       <Field label="Status" htmlFor="f-status">
         <Select {...bind("status")} options={statusOptions(RENTAL_STATUS)} />
       </Field>
@@ -222,7 +225,7 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
       <Field label="Hora inicial" htmlFor="f-startTime">
         <Input {...bind("startTime")} type="time" />
       </Field>
-      <Field label="Período final" htmlFor="f-endDate" required>
+      <Field label="Período final" htmlFor="f-endDate" required hint={preview}>
         <Input {...bind("endDate")} type="date" min={draft.startDate} required />
       </Field>
       <Field label="Hora final" htmlFor="f-endTime">
@@ -241,10 +244,7 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
         <Input {...bind("weeklyRate")} type="number" min={0} step="0.01" required />
       </Field>
       <Field label="Primeira cobrança" htmlFor="f-firstDue" required>
-        <Input {...bind("firstDue")} type="date" required />
-      </Field>
-      <Field label="Última cobrança até" htmlFor="f-until" required hint={preview}>
-        <Input {...bind("until")} type="date" min={draft.firstDue} required />
+        <Input {...bind("firstDue")} type="date" max={draft.endDate} required />
       </Field>
       <Field label="Multa por atraso (%)" htmlFor="f-lateFeePercent" hint="Cobrada uma vez, após a carência">
         <Input {...bind("lateFeePercent")} type="number" min={0} max={100} step="0.01" placeholder="Ex.: 2" />
@@ -275,7 +275,7 @@ export function RentalForm({ crud }: { crud: RentalCrud }) {
         className="sm:col-span-2"
       />
       {draft.autoSend && (
-        <Field label="Enviar quantos dias antes do vencimento" htmlFor="f-remindDaysBefore" hint="0 = só no dia. Atrasadas são lembradas a cada 3 dias.">
+        <Field label="Enviar quantos dias antes do vencimento" htmlFor="f-remindDaysBefore" hint="0 = só no dia. Atrasadas são lembradas todos os dias até a quitação.">
           <Input {...bind("remindDaysBefore")} type="number" min={0} max={30} />
         </Field>
       )}

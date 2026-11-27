@@ -58,6 +58,9 @@ export function buildReceipts(args: { id: string; firstDue: string; until: strin
   return out;
 }
 
+/** Tipo de contrato (texto do contrato e escolha do modelo) = periodicidade da cobrança: um campo só na tela. */
+export const contractTypeFor = (period: BillingPeriod) => PERIOD_LABEL[period];
+
 /** Regras de cobrança da locação (locações antigas: semanal, sem juros, sem envio automático). */
 export function billingOf(rental: Pick<Rental, "billing" | "weeklyRate" | "receipts" | "startDate" | "endDate">): BillingConfig {
   return (
@@ -168,16 +171,19 @@ export function pixPayload(pix: Pick<PixSettings, "key" | "keyType" | "name" | "
 
 export const isPixReady = (pix?: PixSettings) => Boolean(pix && normalizePixKey(pix.key, pix.keyType) && pix.name.trim() && pix.city.trim());
 
-/** Parcelas que o cron cobra hoje: N dias antes, no dia do vencimento e, atrasadas, a cada 3 dias. */
+/** Parcelas que o cron cobra hoje: N dias antes, no dia do vencimento e, atrasadas, todo dia até quitar ou cancelar. */
 export function receiptsToCharge(rental: Pick<Rental, "billing" | "weeklyRate" | "receipts" | "startDate" | "endDate" | "status">, today: string) {
   const billing = billingOf(rental);
   if (!billing.autoSend || rental.status === "cancelled" || rental.status === "finished") return [];
   return rental.receipts.filter((r) => {
-    if (r.paid) return false;
+    if (r.paid || r.cancelled) return false;
     const d = daysBetween(today, r.dueDate);
-    return d === billing.remindDaysBefore || d === 0 || (d < 0 && -d % 3 === 0);
+    return d === billing.remindDaysBefore || d <= 0;
   });
 }
+
+/** Chave de idempotência do lembrete: no máximo um envio por parcela por dia (cron reexecutado não duplica). */
+export const chargeKey = (receiptId: string, today: string) => `charge:${receiptId}:${today}`;
 
 /**
  * Cobrança de uma parcela no dia: valor atualizado (multa/juros) e PIX copia e cola.

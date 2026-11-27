@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, ExternalLink, FileText, Landmark, Link as LinkIcon, RefreshCw, Trash2, X } from "lucide-react";
+import { Ban, ExternalLink, FileText, Landmark, Link as LinkIcon, Pencil, RefreshCw, Trash2, X } from "lucide-react";
 import { Dialog as D } from "radix-ui";
 import type { CompanyProfile, Rental } from "@/types";
 import { paymentReceiptDocument } from "@/lib/documents";
@@ -58,6 +58,7 @@ export function PaymentActionsSheet({
   payment,
   company,
   onClose,
+  onEdit,
   onCancel,
   onDelete,
   onViewDetails,
@@ -115,6 +116,27 @@ export function PaymentActionsSheet({
 
           {/* Lista de Ações do Menu "Mais" (conforme imagem #18) */}
           <div className="flex flex-col gap-1">
+            {/* 0. Editar parcela (saiu do card; agora só aqui) */}
+            <button
+              type="button"
+              disabled={payment.paid || payment.cancelled}
+              onClick={() => {
+                onClose();
+                onEdit(payment);
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent"
+            >
+              <div className="grid size-9 place-items-center rounded-full bg-white/5 text-zinc-300">
+                <Pencil className="size-4" />
+              </div>
+              <div>
+                <p className="text-white">Editar parcela</p>
+                <p className="text-xs text-muted">
+                  {payment.paid ? "Pagamento já realizado" : payment.cancelled ? "Parcela cancelada" : "Altera valor, vencimento e descrição"}
+                </p>
+              </div>
+            </button>
+
             {/* 1. Cancelar Pagamento */}
             <button
               type="button"

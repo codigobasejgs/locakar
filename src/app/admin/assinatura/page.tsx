@@ -84,7 +84,7 @@ export default function AssinaturaPage() {
 
   return (
     <>
-      <PageHeader title="Assinatura" description={`Seu plano ${PLATFORM.name}, pagamento e faturas.`} />
+      <PageHeader tour="subscription" title="Assinatura" description={`Seu plano ${PLATFORM.name}, pagamento e faturas.`} />
 
       <section className="mb-6 grid gap-3 rounded-2xl border border-line bg-surface p-5 sm:grid-cols-3">
         <div>

@@ -28,6 +28,7 @@ import { Card, EmptyState, StatCard } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/form";
 import { useAdminData, useLookups } from "@/hooks/use-admin-data";
 import { billingOf, chargeFor, lateCharges } from "@/lib/billing";
+import { PERIOD_OPTIONS, inPeriod, periodRange, type PaymentPeriod } from "@/lib/payment-period";
 import { formatCurrency, formatDate, parseISODate, toWhatsAppNumber, todaySP } from "@/lib/utils";
 
 export default function PagamentosPage() {
@@ -41,6 +42,11 @@ export default function PagamentosPage() {
   const [dueFilter, setDueFilter] = useState<"all" | "today" | "tomorrow" | "overdue" | "future">("all");
   const [methodFilter, setMethodFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"smart" | "due_asc" | "due_desc" | "amount_desc">("smart");
+  // Período pelo vencimento: padrão semana atual (a operação é semanal).
+  const [period, setPeriod] = useState<PaymentPeriod>("week");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const range = useMemo(() => periodRange(period, today, { from: customFrom, to: customTo }), [period, today, customFrom, customTo]);
 
   // Estados dos Modais de Ação
   const [settleTarget, setSettleTarget] = useState<UnifiedPaymentItem | null>(null);
@@ -152,7 +158,7 @@ export default function PagamentosPage() {
     let total = 0;
 
     for (const p of allPayments) {
-      if (p.cancelled) continue;
+      if (p.cancelled || !inPeriod(p.dueDate, range)) continue;
       if (p.paid) {
         recebido += p.amountPaid ?? p.amount;
         total += p.amountPaid ?? p.amount;
@@ -167,7 +173,7 @@ export default function PagamentosPage() {
     }
 
     return { emAberto, recebido, vencido, total };
-  }, [allPayments]);
+  }, [allPayments, range]);
 
   // Filtragem e Busca
   const filtered = useMemo(() => {
@@ -176,6 +182,9 @@ export default function PagamentosPage() {
     const tomorrow = new Date(y, m - 1, d + 1).toISOString().slice(0, 10);
 
     return allPayments.filter((p) => {
+      // 0. Período (vencimento)
+      if (!inPeriod(p.dueDate, range)) return false;
+
       // 1. Busca por texto
       if (q) {
         const match =
@@ -202,7 +211,10 @@ export default function PagamentosPage() {
 
       return true;
     });
-  }, [allPayments, search, statusFilter, dueFilter, methodFilter, today]);
+  }, [allPayments, search, statusFilter, dueFilter, methodFilter, today, range]);
+
+  // Vencidas antes do período escolhido: não podem sumir da vista do operador.
+  const overdueBefore = useMemo(() => allPayments.filter((p) => p.status === "overdue" && range.from && p.dueDate < range.from), [allPayments, range]);
 
   // Ordenação
   const sorted = useMemo(() => {
@@ -474,6 +486,34 @@ export default function PagamentosPage() {
             </div>
           </div>
 
+          {/* Período (vencimento): padrão semana atual; os totais acima seguem o período */}
+          <div data-tour="payments-period" className="flex flex-wrap items-center gap-2 border-t border-line pt-3 text-xs">
+            <span className="mr-1 font-semibold uppercase text-muted">Período:</span>
+            {PERIOD_OPTIONS.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                aria-pressed={period === o.value}
+                onClick={() => setPeriod(o.value)}
+                className={`rounded-lg px-2.5 py-1 font-medium transition-colors ${period === o.value ? "bg-magenta/25 text-white ring-1 ring-magenta/40" : "text-muted hover:text-white"}`}
+              >
+                {o.label}
+              </button>
+            ))}
+            {period === "custom" ? (
+              <span className="flex flex-wrap items-center gap-2">
+                <label className="flex items-center gap-1.5 text-muted">
+                  De <Input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="h-8 w-36 text-xs" aria-label="Data inicial" />
+                </label>
+                <label className="flex items-center gap-1.5 text-muted">
+                  até <Input type="date" value={customTo} min={customFrom || undefined} onChange={(e) => setCustomTo(e.target.value)} className="h-8 w-36 text-xs" aria-label="Data final" />
+                </label>
+              </span>
+            ) : (
+              <span className="text-muted">{formatDate(range.from!)} a {formatDate(range.to!)}</span>
+            )}
+          </div>
+
           {/* Linha 2: Filtros de Status & Vencimento */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3 text-xs">
             <div className="flex flex-wrap items-center gap-1.5">
@@ -514,10 +554,11 @@ export default function PagamentosPage() {
                 </select>
               </div>
 
-              {(search || statusFilter !== "all" || dueFilter !== "all" || methodFilter !== "all") && (
+              {(search || statusFilter !== "all" || dueFilter !== "all" || methodFilter !== "all" || period !== "week") && (
                 <button
                   type="button"
                   onClick={() => {
+                    setPeriod("week");
                     setSearch("");
                     setStatusFilter("all");
                     setDueFilter("all");
@@ -532,6 +573,26 @@ export default function PagamentosPage() {
           </div>
         </div>
       </Card>
+
+      {overdueBefore.length > 0 && (
+        <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-2.5 text-sm text-amber-200">
+          <span>
+            {overdueBefore.length} parcela(s) vencida(s) antes deste período · {formatCurrency(overdueBefore.reduce((s, p) => s + (p.lateCharges?.total ?? p.amount), 0))}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setPeriod("custom");
+              setCustomFrom("");
+              setCustomTo(today);
+              setStatusFilter("overdue");
+            }}
+            className="min-h-9 font-semibold underline"
+          >
+            Ver vencidas
+          </button>
+        </div>
+      )}
 
       {/* Lista de Cards de Pagamento (layout das imagens #17 e #18) */}
       {!sorted.length ? (
@@ -549,7 +610,6 @@ export default function PagamentosPage() {
               key={`${payment.rentalId}-${payment.id}`}
               payment={payment}
               onSettle={(p) => setSettleTarget(p)}
-              onEdit={(p) => setEditTarget(p)}
               onCharge={handleCharge}
               onMore={(p) => setMoreTarget(p)}
             />

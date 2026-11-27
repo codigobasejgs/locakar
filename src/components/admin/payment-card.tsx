@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, MoreHorizontal, Pencil, User, Car } from "lucide-react";
+import { CheckCircle2, MoreHorizontal, User, Car } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -13,12 +13,12 @@ interface PaymentCardProps {
   tour?: string;
   payment: UnifiedPaymentItem;
   onSettle: (p: UnifiedPaymentItem) => void;
-  onEdit: (p: UnifiedPaymentItem) => void;
   onCharge: (p: UnifiedPaymentItem) => void;
   onMore: (p: UnifiedPaymentItem) => void;
 }
 
-export function PaymentCard({ tour, payment, onSettle, onEdit, onCharge, onMore }: PaymentCardProps) {
+/** Ações: Dar baixa (valor atualizado, editável no recebimento), Cobrar e Mais (editar parcela fica lá). */
+export function PaymentCard({ tour, payment, onSettle, onCharge, onMore }: PaymentCardProps) {
   const isPaid = payment.status === "paid";
   const isOverdue = payment.status === "overdue";
   const isCancelled = payment.status === "cancelled";
@@ -119,7 +119,7 @@ export function PaymentCard({ tour, payment, onSettle, onEdit, onCharge, onMore 
       <div className="my-3.5 h-px bg-line" />
 
       {/* Ações Circulares Inferiores (conforme imagem #17) */}
-      <div data-tour={tour && `${tour}-actions`} className="grid grid-cols-4 gap-2 pt-0.5 text-center">
+      <div data-tour={tour && `${tour}-actions`} className="grid grid-cols-3 gap-2 pt-0.5 text-center">
         {/* 1. Dar baixa */}
         <button
           type="button"
@@ -135,20 +135,7 @@ export function PaymentCard({ tour, payment, onSettle, onEdit, onCharge, onMore 
           </span>
         </button>
 
-        {/* 2. Editar */}
-        <button
-          type="button"
-          disabled={isPaid || isCancelled}
-          onClick={() => onEdit(payment)}
-          className="group flex flex-col items-center gap-1.5 focus:outline-none disabled:opacity-40"
-        >
-          <div className="grid size-11 place-items-center rounded-full border border-line-strong bg-white/5 text-zinc-300 transition-all group-hover:scale-105 group-hover:bg-white/10 group-hover:text-white">
-            <Pencil className="size-4" />
-          </div>
-          <span className="text-[11px] font-medium text-zinc-300 group-hover:text-white">Editar</span>
-        </button>
-
-        {/* 3. Cobrar (WhatsApp) */}
+        {/* 2. Cobrar (WhatsApp) */}
         <button
           type="button"
           disabled={isPaid || isCancelled}
@@ -161,7 +148,7 @@ export function PaymentCard({ tour, payment, onSettle, onEdit, onCharge, onMore 
           <span className="text-[11px] font-medium text-zinc-300 group-hover:text-white">Cobrar</span>
         </button>
 
-        {/* 4. Mais */}
+        {/* 3. Mais */}
         <button
           type="button"
           onClick={() => onMore(payment)}

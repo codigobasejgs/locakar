@@ -227,8 +227,8 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
   assert.ok(fields["62"].endsWith("LKR001"));
   assert.equal(crc16(code.slice(0, -4)), fields["63"]);
   assert.throws(() => pixPayload({ key: "123", keyType: "cpf", name: "X", city: "Y" }, 1));
-  // Cron: cobra N dias antes, no dia e atrasadas a cada 3 dias; ignora pagas e locação encerrada.
-  const { receiptsToCharge } = await import("../src/lib/billing");
+  // Cron: cobra N dias antes, no dia e atrasadas TODO DIA até quitar; ignora pagas, canceladas e locação encerrada.
+  const { chargeKey, receiptsToCharge } = await import("../src/lib/billing");
   const rent = (autoSend: boolean, status = "active") => ({
     status, weeklyRate: 1, startDate: "2026-10-01", endDate: "2026-12-31",
     billing: { period: "weekly", amount: 1, firstDue: "2026-10-01", until: "2026-12-31", lateFeePercent: 0, interestPercent: 0, interestPeriod: "daily", graceDays: 0, autoSend, remindDaysBefore: 2 },
@@ -238,12 +238,20 @@ for (const icon of ["icon-192", "icon-512", "maskable-192", "maskable-512", "adm
       { id: "c", dueDate: "2026-10-04", amount: 1, paid: false },
       { id: "d", dueDate: "2026-10-05", amount: 1, paid: false },
       { id: "e", dueDate: "2026-10-10", amount: 1, paid: true },
+      { id: "f", dueDate: "2026-10-10", amount: 1, paid: false, cancelled: true }, // cancelada nunca é cobrada
     ],
   }) as never;
-  // 10/10: "a" vence hoje, "b" em 2 dias (lembrete), "c" atrasada 6 dias (múltiplo de 3), "d" 5 dias (não).
-  assert.deepEqual(receiptsToCharge(rent(true), "2026-10-10").map((r: { id: string }) => r.id), ["a", "b", "c"]);
-  // 07/10: "c" atrasada 3 dias; "d" atrasada 2 dias (não); nenhuma vence em 2 dias.
-  assert.deepEqual(receiptsToCharge(rent(true), "2026-10-07").map((r: { id: string }) => r.id), ["c"]);
+  // 10/10: "a" vence hoje, "b" em 2 dias (lembrete), "c" atrasada 6 dias e "d" 5 dias (atrasadas: todo dia).
+  assert.deepEqual(receiptsToCharge(rent(true), "2026-10-10").map((r: { id: string }) => r.id), ["a", "b", "c", "d"]);
+  // 07/10: "c" atrasada 3 dias e "d" 2 dias: as duas; nenhuma vence em 2 dias.
+  assert.deepEqual(receiptsToCharge(rent(true), "2026-10-07").map((r: { id: string }) => r.id), ["c", "d"]);
+  // 05/10 e 06/10 seguidos: atrasada é lembrada nos dois dias (antes pulava).
+  assert.ok(receiptsToCharge(rent(true), "2026-10-05").some((r: { id: string }) => r.id === "c"));
+  assert.ok(receiptsToCharge(rent(true), "2026-10-06").some((r: { id: string }) => r.id === "c"));
+  // Idempotência: uma chave por parcela por dia (o cron pula o que já enviou hoje); dia seguinte, chave nova.
+  assert.equal(chargeKey("c", "2026-10-07"), chargeKey("c", "2026-10-07"));
+  assert.notEqual(chargeKey("c", "2026-10-07"), chargeKey("c", "2026-10-08"));
+  assert.notEqual(chargeKey("c", "2026-10-07"), chargeKey("d", "2026-10-07"));
   assert.equal(receiptsToCharge(rent(false), "2026-10-10").length, 0);
   assert.equal(receiptsToCharge(rent(true, "finished"), "2026-10-10").length, 0);
 }

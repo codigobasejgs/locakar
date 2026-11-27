@@ -20,6 +20,11 @@ export function busyVehicleIds(rentals: readonly { id?: string; vehicleId: strin
   return new Set(rentals.filter((r) => r.id !== exceptRentalId && isOngoing(r.status)).map((r) => r.vehicleId));
 }
 
+/** Clientes com locação em curso (mesma regra dos veículos): somem do seletor de nova locação. */
+export function busyClientIds(rentals: readonly { id?: string; clientId: string; status?: string }[], exceptRentalId?: string) {
+  return new Set(rentals.filter((r) => r.id !== exceptRentalId && isOngoing(r.status)).map((r) => r.clientId));
+}
+
 /**
  * Status real do veículo a partir das locações (o status gravado pode ficar velho se uma locação
  * foi excluída/cancelada). Vendido e manutenção são decisão da equipe e prevalecem.

@@ -88,4 +88,13 @@ export const configuracoes: TourDef[] = [
       { id: "push", title: "Notificações da equipe", content: "Ative as notificações neste aparelho para receber os avisos do sino mesmo com o painel fechado. Escolha os vencimentos e categorias que interessam. Salve com \"Salvar alterações\" no topo.", target: "settings-push", quick: true },
     ],
   },
+  {
+    ...base, id: "subscription", title: "Assinatura", module: "configuracoes", route: "/admin/assinatura", permission: "settings", minutes: 1,
+    description: "Ver o plano, pagar a mensalidade e consultar as faturas.",
+    keywords: ["assinatura", "plano", "mensalidade", "fatura", "upgrade"], aliases: ["pagar o plano", "mudar de plano"],
+    learn: ["ver o plano atual e o vencimento", "pagar por Pix, boleto ou cartão", "consultar faturas"],
+    steps: [
+      { id: "intro", title: "Seu plano", content: "Aqui ficam o plano da {org}, a data de renovação, as formas de pagamento e o histórico de faturas.", target: "subscription-header", quick: true },
+    ],
+  },
 ];

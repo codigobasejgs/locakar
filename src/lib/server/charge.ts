@@ -17,7 +17,7 @@ import { brand } from "@/lib/server/org-context";
  */
 export async function sendCharge(
   db: SupabaseClient,
-  args: { rental: Rental; receipt: Receipt; client: Client; vehicle?: FleetVehicle; settings: CompanySettings; today: string; replyTo?: string; clientUrl?: string },
+  args: { rental: Rental; receipt: Receipt; client: Client; vehicle?: FleetVehicle; settings: CompanySettings; today: string; replyTo?: string; clientUrl?: string; alertKeys?: string[] },
 ) {
   const { rental, receipt, client, vehicle, settings, today } = args;
   if (!pixState(settings.pix).enabled) throw new Error("PIX QR Code está desativado em Configurações → Meios de pagamento.");
@@ -52,6 +52,7 @@ export async function sendCharge(
         replyTo: args.replyTo,
         subject: `${title} — ${brand().name}`,
         rentalId: rental.id,
+        alertKeys: args.alertKeys,
         html: emailLayout({
           title,
           intro: late
@@ -96,6 +97,7 @@ export async function sendCharge(
     kind: "charge",
     phone: client.phone,
     rentalId: rental.id,
+    alertKeys: args.alertKeys,
     text: waText,
     image: { filename: "pix-qrcode.png", content: png },
   });

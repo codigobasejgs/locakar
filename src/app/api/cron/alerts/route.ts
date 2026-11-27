@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import { updateFipeBatch } from "@/lib/server/fipe";
-import { isPixReady, receiptsToCharge } from "@/lib/billing";
+import { chargeKey, isPixReady, receiptsToCharge } from "@/lib/billing";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 import { GROUP_LABEL, REMIND_DAYS, buildNotices, dueForClient, type AlertGroup, type Notice } from "@/lib/notifications";
 import { noticeToEvent } from "@/lib/push-events";
@@ -161,15 +161,26 @@ async function processOrg(org: Organization, deadline: number) {
 
     // Cobranças com PIX
     let charges = 0;
+    // Um lembrete por parcela por dia: o que já saiu hoje (e-mail ou WhatsApp) não sai de novo se o cron rodar outra vez.
+    const chargedToday = new Set(data.emails.filter((e) => e.status === "sent" && e.kind === "charge").flatMap((e) => e.alertKeys ?? []));
     if (isPixReady(settings.pix) && settings.pix.enabled !== false) {
       for (const rental of data.rentals) {
         const client = data.clients.find((c) => c.id === rental.clientId) as Client | undefined;
         if (!client) continue;
         for (const receipt of receiptsToCharge(rental, today)) {
+          const key = chargeKey(receipt.id, today);
+          if (chargedToday.has(key)) continue;
+          // Reserva atômica (PK parcela+dia): execução concorrente do cron perde aqui e não envia de novo.
+          const claim = await db.from("charge_reminders").insert({ receipt_id: receipt.id, day: today });
+          // ponytail: outro erro (ex.: migration ainda não aplicada) não bloqueia a cobrança; vale o dedupe do email_log.
+          if (claim.error?.code === "23505") continue;
           try {
-            await sendCharge(db, { rental, receipt, client, vehicle: data.vehicles.find((v) => v.id === rental.vehicleId), settings, today, replyTo });
+            await sendCharge(db, { rental, receipt, client, vehicle: data.vehicles.find((v) => v.id === rental.vehicleId), settings, today, replyTo, alertKeys: [key] });
+            chargedToday.add(key);
             charges++;
           } catch (e) {
+            // Nada saiu: libera a reserva para a próxima execução tentar.
+            await db.from("charge_reminders").delete().eq("receipt_id", receipt.id).eq("day", today);
             report.failures.push(`${client.name}: ${(e as Error).message}`);
           }
         }
